@@ -218,7 +218,7 @@ const TMSwift=(()=>{
         if(name==="Dictionary"&&args.length===2)t={k:"dict",key:args[0],val:args[1]};
         if(name==="Optional"&&args.length)t={k:"opt",of:args[0]};
       }
-      while(is("?")&&!peek().space||is("!")&&!peek().space){p++;t={k:"opt",of:t}}
+      while((is("?")||is("!")||is("??"))&&!peek().space){if(is("??"))t={k:"opt",of:t};p++;t={k:"opt",of:t}}
       return t;
     }
     function typeDecl(){
@@ -955,8 +955,9 @@ const TMSwift=(()=>{
           if(!e.items.length)return new Arr([],null);
           let items=e.items.map(x=>copy(ev(x,env)));
           if(e.anyOK){const a=new Arr(items,{k:"name",name:"Any"});return a}
+          if(items.some(x=>x instanceof Chr)&&items.some(x=>typeof x==="string"))items=items.map((x,i)=>typeof x==="string"&&isStrLit(e.items[i])&&[...x].length===1?new Chr(x):x);
           if(items.some(x=>x instanceof D)&&items.some(x=>typeof x==="number")){items=items.map((x,i)=>{if(typeof x==="number"){if(!isLitE(e.items[i]))fail(`line ${e.line}: an array can only hold one type. Mixing Int and Double values needs Double(...)`);return new D(x)}return x})}
-          const t0=typeOfV(items[0]);if(items.some(x=>typeOfV(x)!==t0&&!(x instanceof Some||x===NIL)&&!(x instanceof Obj&&items[0] instanceof Obj)))fail(`line ${e.line}: heterogeneous collection literal could only be inferred to '[Any]'; all items in an array must be the same type`);
+          const t0=typeOfV(items[0]);if(items.some(x=>typeOfV(x)!==t0&&!(x instanceof Some||x===NIL)&&!((x instanceof Obj||x instanceof ECase)&&(items[0] instanceof Obj||items[0] instanceof ECase))))fail(`line ${e.line}: heterogeneous collection literal could only be inferred to '[Any]'; all items in an array must be the same type`);
           const a=new Arr(items,typeFromV(items[0]));a.lit=isLitE(e);return a}
         case "dictlit":{const d=new Dict(null,null);for(const [k,v] of e.pairs){const kv=ev(k,env);const vv=copy(ev(v,env));if(d.m.has(hkey(kv)))fatal(`Dictionary literal contains duplicate keys`);d.m.set(hkey(kv),[kv,vv])}const first=[...d.m.values()][0];if(first){d.kt=typeFromV(first[0]);d.vt=typeFromV(first[1])}return d}
         case "emptyof":{const t=e.type;if(t.k==="arr")return new Arr([],t.el);if(t.k==="dict")return new Dict(t.key,t.val);return new SetV(t.el)}
@@ -1319,7 +1320,7 @@ const TMSwift=(()=>{
           if(!d.type)fail(`line ${s.line}: type annotation missing in pattern. Write a type like var x: Int, or give it a value`);
           const c=cell(d.type.k==="opt"&&!s.isLet?NIL:undefined,d.type,s.isLet);if(!(d.type.k==="opt"&&!s.isLet))c.unset=true;
           env.def(d.pat.name,c,s.line);continue}
-        if(d.type&&d.type.k==="arr"&&d.type.el.k==="name"&&d.type.el.name==="Any"&&d.init.k==="arrlit")d.init.anyOK=true;
+        if(d.type&&d.type.k==="arr"&&d.type.el.k==="name"&&(d.type.el.name==="Any"||types[d.type.el.name]&&types[d.type.el.name].kind==="protocol")&&d.init.k==="arrlit")d.init.anyOK=true;
         let v=ev(d.init,env);
         if(v===undefined)fail(`line ${s.line}: this doesn't give back a value (it returns Void), so it can't be stored`);
         if(v instanceof Fn&&d.init.k==="name")v=v;
@@ -1383,7 +1384,7 @@ const TMSwift=(()=>{
         if(a.v&&a.v.substr)return a.v;
         return desc(a.v)},
       Character:(args,line)=>{const v=args[0].v;if(v instanceof Chr)return new Chr(v.s);if(typeof v!=="string"||[...v].length!==1)fail(`line ${line}: Character(...) needs exactly one character`);return new Chr(v)},
-      UnicodeScalar:(args,line)=>{const v=args[0].v;let c;if(isInt(v)){if(v<0||v>0x10FFFF||v>=0xD800&&v<=0xDFFF)return NIL;c=new Chr(String.fromCodePoint(v));c.scalar=true;return args[0].lit?c:new Some(c)}
+      UnicodeScalar:(args,line)=>{const v=args[0].v;let c;if(isInt(v)){if(v<0||v>0x10FFFF||v>=0xD800&&v<=0xDFFF)return NIL;c=new Chr(String.fromCodePoint(v));c.scalar=true;return args[0].lit||v<256?c:new Some(c)}
         const s=v instanceof Chr?v.s:v;if(typeof s!=="string"||[...s].length!==1)fail(`line ${line}: UnicodeScalar(...) needs exactly one character`);c=new Chr(s);c.scalar=true;return c},
       Optional:(args)=>{const v=args[0].v;return v instanceof Some||v===NIL?v:new Some(v)},
       Float:(args,line)=>{const v=CONV.Double(args,line);return v instanceof Some?new Some(F32(v.v.v)):v instanceof D?F32(v.v):v},
@@ -1445,6 +1446,7 @@ const TMSwift=(()=>{
     function runtimeType(v){
       const T=tyName;
       if(v instanceof Obj)return v.type.name+genArgs(v);
+      if(v instanceof Fn&&v.decl)return "("+v.decl.params.map(q=>tyName(q.type)).join(", ")+") -> "+(v.decl.ret?tyName(v.decl.ret):"()");
       if(v instanceof Some)return "Optional<"+runtimeType(v.v)+">";
       if(v instanceof Arr)return "Array<"+(v.et?T(v.et):v.items.length?runtimeType(v.items[0]):"Any")+">";
       if(v instanceof Dict)return "Dictionary<"+(v.kt?T(v.kt):"Any")+", "+(v.vt?T(v.vt):"Any")+">";
