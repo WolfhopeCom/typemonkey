@@ -348,6 +348,10 @@ span.repn{display:inline-block}
 .seg{display:flex;background:var(--surface2);border-radius:12px;padding:3px;gap:2px}
 .seg button{border:0;background:none;color:var(--fg);font-weight:800;font-size:.88rem;padding:7px 12px;border-radius:9px}
 .seg button[aria-checked="true"]{background:var(--surface);box-shadow:0 1px 3px #0002;color:var(--accent)}
+.bkcard h3{font-size:1.2rem}
+.muted{color:var(--muted)}
+.bkcode{width:100%;font-family:var(--mono);font-size:.82rem;line-height:1.45;background:var(--surface2);color:var(--fg);border:2px solid var(--line);border-radius:12px;padding:10px 12px;resize:vertical;word-break:break-all;white-space:pre-wrap}
+.bkcode:focus{border-color:var(--accent);outline:0}
 .unlocked{text-align:center;font-weight:800;color:var(--leaf);background:color-mix(in srgb,var(--leaf) 12%,var(--surface));border-radius:var(--r);padding:14px}
 html.bigtext{font-size:112.5%}html.bigtext body{font-size:18px}
 html.calm *{animation:none!important;transition:none!important}
@@ -49167,17 +49171,25 @@ const WINS=["Nailed it!","Clean code. Love it.","Ook ook! That's right!","You're
 
 /* ---------- State ---------- */
 const KEY="typemonkey-v1";
-const freshState=()=>({xp:0,bananas:0,streak:0,lastDay:null,done:[],progress:{},pro:false,look:{...DEFAULT_LOOK},owned:{fur:["orange"],hat:["none"],eyes:["round","none"],neck:["none"],pet:["none"]},review:{},settings:{theme:"system",text:"normal",calm:false},stats:{},badges:{}});
+const freshState=()=>({xp:0,bananas:0,streak:0,lastDay:null,done:[],progress:{},pro:false,look:{...DEFAULT_LOOK},owned:{fur:["orange"],hat:["none"],eyes:["round","none"],neck:["none"],pet:["none"]},review:{},settings:{theme:"system",text:"normal",calm:false,sound:true},stats:{},badges:{}});
+/* Fill in anything missing (older saves, restored backups) so the rest of the app can rely on the shape */
+function normState(raw){
+  const S={...freshState(),...(raw&&typeof raw==="object"?raw:{})};
+  if(!Array.isArray(S.done))S.done=[];if(!S.progress||typeof S.progress!=="object")S.progress={};
+  for(const k of ["xp","bananas","streak"])S[k]=Math.max(0,Math.floor(+S[k]||0));
+  if(S.inProgress){if(S.inProgress.id)S.progress[S.inProgress.id]={step:S.inProgress.step,earned:S.inProgress.earned,drafts:{}};delete S.inProgress}
+  S.look={...DEFAULT_LOOK,...(S.look||{})};S.owned=S.owned||{};for(const k of ["fur","hat","eyes","neck","pet"])S.owned[k]=Array.isArray(S.owned[k])?S.owned[k]:[];
+  if(!S.owned.pet.includes("none"))S.owned.pet.push("none");
+  ["orange"].forEach(x=>S.owned.fur.includes(x)||S.owned.fur.push(x));["none"].forEach(x=>S.owned.hat.includes(x)||S.owned.hat.push(x));
+  ["round","none"].forEach(x=>S.owned.eyes.includes(x)||S.owned.eyes.push(x));["none"].forEach(x=>S.owned.neck.includes(x)||S.owned.neck.push(x));S.review=S.review||{};
+  S.settings={theme:"system",text:"normal",calm:false,sound:true,...(S.settings||{})};delete S.tester;
+  S.stats=S.stats||{};S.badges=S.badges||{};
+  return S;
+}
 let S=freshState();
-try{const raw=localStorage.getItem(KEY);if(raw)S={...S,...JSON.parse(raw)}}catch(e){}
-if(S.inProgress){S.progress=S.progress||{};if(S.inProgress.id)S.progress[S.inProgress.id]={step:S.inProgress.step,earned:S.inProgress.earned,drafts:{}};delete S.inProgress}
+try{const raw=localStorage.getItem(KEY);if(raw)S=JSON.parse(raw)}catch(e){}
+S=normState(S);
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}renderStats();if(typeof checkAchievements==="function")setTimeout(checkAchievements,0)}
-S.look={...DEFAULT_LOOK,...(S.look||{})};S.owned=S.owned||{};for(const k of ["fur","hat","eyes","neck","pet"])S.owned[k]=S.owned[k]||[];
-if(!S.owned.pet.includes("none"))S.owned.pet.push("none");
-["orange"].forEach(x=>S.owned.fur.includes(x)||S.owned.fur.push(x));["none"].forEach(x=>S.owned.hat.includes(x)||S.owned.hat.push(x));
-["round","none"].forEach(x=>S.owned.eyes.includes(x)||S.owned.eyes.push(x));["none"].forEach(x=>S.owned.neck.includes(x)||S.owned.neck.push(x));S.review=S.review||{};
-S.settings={theme:"system",text:"normal",calm:false,...(S.settings||{})};delete S.tester;
-S.stats=S.stats||{};S.badges=S.badges||{};
 function applySettings(){
   const r=document.documentElement;const st=S.settings;
   if(st.theme==="system")r.removeAttribute("data-theme");else r.setAttribute("data-theme",st.theme);
@@ -49515,8 +49527,8 @@ function home(){
 }
 function foot(){
   $("#foot").innerHTML=`<span>TypeMonkey prototype · progress saves on this device only</span>
-   <div class="row"><button class="linkbtn" id="terms">Terms</button><button class="linkbtn" id="privacy">Privacy</button><button class="linkbtn" id="fset">Settings</button></div>`;
-  $("#terms").onclick=()=>legalPage("terms");$("#privacy").onclick=()=>legalPage("privacy");$("#fset").onclick=settingsPage;
+   <div class="row"><button class="linkbtn" id="terms">Terms</button><button class="linkbtn" id="privacy">Privacy</button><button class="linkbtn" id="fbackup">Back up progress</button><button class="linkbtn" id="fset">Settings</button></div>`;
+  $("#terms").onclick=()=>legalPage("terms");$("#privacy").onclick=()=>legalPage("privacy");$("#fset").onclick=settingsPage;$("#fbackup").onclick=backupPage;
 }
 function unlockFull(after){grownUpGate(()=>{S.pro=true;save();toast("Demo unlock: everything is open. In the real app this is the App Store / Google Play purchase.");after&&after()})}
 let rerender=home;
@@ -50292,6 +50304,7 @@ function settingsPage(){
     <div class="card setlist">
       <h3>Progress</h3>
       <div class="setrow"><div><b>Your stats</b><span>${S.done.length} lessons done · ${S.xp} XP · ${S.bananas} bananas · ${reviewSize()} in review</span></div></div>
+      <div class="setrow"><div><b>Back up my progress</b><span>Get a code to keep your progress safe or move it to another device</span></div><button class="btn sm" id="sbackup">Back up / restore</button></div>
       <div class="setrow"><div><b>Reset progress</b><span>Erase lessons, XP, bananas, outfits and review</span></div><button class="btn ghost sm" id="reset">Reset…</button></div>
       <div id="confirm"></div>
     </div>
@@ -50308,10 +50321,95 @@ function settingsPage(){
   bindSeg("theme",v=>st.theme=v);bindSeg("text",v=>st.text=v);bindSeg("calm",v=>st.calm=v==="on");
   if($("#sbuy"))$("#sbuy").onclick=()=>unlockFull(settingsPage);
   $("#restore").onclick=()=>toast(S.pro?"Your purchase is already active.":"In the real app this checks the App Store / Google Play for your purchase. Nothing to restore in the demo.");
+  $("#sbackup").onclick=backupPage;
   $("#sterms").onclick=()=>legalPage("terms");$("#sprivacy").onclick=()=>legalPage("privacy");
   $("#reset").onclick=()=>{$("#confirm").innerHTML=`<div class="feedback bad"><b>Erase everything?</b> This can't be undone.<div class="row" style="margin-top:8px"><button class="btn sm" id="yes">Erase everything</button><button class="btn ghost sm" id="no">Keep my progress</button></div></div>`;
     $("#yes").onclick=()=>{const keep=S.settings;S=freshState();S.settings=keep;save();applySettings();toast("Progress erased.");home()};
     $("#no").onclick=()=>$("#confirm").innerHTML=""};
+  $("#foot").innerHTML="";window.scrollTo(0,0);
+}
+
+/* ---------- Backup / restore: progress as a copyable code (TM1-<z|r><base64url>.<crc32>) ---------- */
+const BK={
+  crc(str){let c,crc=-1;for(let i=0;i<str.length;i++){c=(crc^str.charCodeAt(i))&255;for(let k=0;k<8;k++)c=c&1?(c>>>1)^0xEDB88320:c>>>1;crc=(crc>>>8)^c}return ((crc^-1)>>>0).toString(36).padStart(7,"0")},
+  b64(bytes){let s="";for(let i=0;i<bytes.length;i+=8192)s+=String.fromCharCode.apply(null,bytes.subarray(i,i+8192));return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")},
+  unb64(s){const b=atob(s.replace(/-/g,"+").replace(/_/g,"/")+"===".slice((s.length+3)%4));const u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u},
+  async pipe(bytes,Stream){const st=new Blob([bytes]).stream().pipeThrough(new Stream("deflate-raw"));return new Uint8Array(await new Response(st).arrayBuffer())},
+  async make(state){
+    const json=new TextEncoder().encode(JSON.stringify(state));let flag="r",data=json;
+    try{if(typeof CompressionStream!=="undefined"){const z=await BK.pipe(json,CompressionStream);if(z.length<json.length){flag="z";data=z}}}catch(e){flag="r";data=json}
+    const body=flag+BK.b64(data);return "TM1-"+body+"."+BK.crc(body);
+  },
+  /* -> {state} or {error:"friendly message"} */
+  async read(text){
+    const t=String(text||"").replace(/\s+/g,"");
+    if(!t)return {error:"Paste your backup code in the box first."};
+    const m=t.match(/TM1-([zr])([A-Za-z0-9_-]+)\.([0-9a-z]{7})/i);
+    if(!m)return {error:/TM\d-/i.test(t)&&!/TM1-/i.test(t)?"This code is from a different version of TypeMonkey. Try updating the app.":/TM1-/i.test(t)?"This code looks cut short. Make sure you copy the whole thing, from TM1- right to the end.":"That doesn't look like a TypeMonkey backup code. Backup codes start with TM1-."};
+    const body=m[1]+m[2];
+    if(BK.crc(body)!==m[3].toLowerCase())return {error:"Hmm, this code has a typo or a missing piece. Try copying the whole code again, from TM1- right to the end."};
+    let bytes;try{bytes=BK.unb64(m[2])}catch(e){return {error:"This code got scrambled somewhere. Try copying it again."}}
+    if(m[1]==="z"){
+      if(typeof DecompressionStream==="undefined")return {error:"This browser is too old to open this backup. Try a newer browser."};
+      try{bytes=await BK.pipe(bytes,DecompressionStream)}catch(e){return {error:"This code got scrambled somewhere. Try copying it again."}}
+    }
+    let st;try{st=JSON.parse(new TextDecoder().decode(bytes))}catch(e){return {error:"This code got scrambled somewhere. Try copying it again."}}
+    if(!st||typeof st!=="object"||Array.isArray(st)||!Array.isArray(st.done))return {error:"This code doesn't have any TypeMonkey progress in it."};
+    return {state:st};
+  },
+  summary(st){const n=st.done.length,b=Math.max(0,Math.floor(+st.bananas||0)),x=Math.max(0,Math.floor(+st.xp||0)),bd=Object.keys(st.badges||{}).length;
+    return `This backup has <b>${n} lesson${n===1?"":"s"} done</b>, <b>${b} banana${b===1?"":"s"}</b> and <b>${x} XP</b>${bd?`, plus ${bd} badge${bd===1?"":"s"}`:""}${st.pro?". The full version is unlocked in it":""}.`},
+  fileName(){const d=new Date();return `typemonkey-backup-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}.txt`}
+};
+async function copyText(text,ta){
+  try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);return true}}catch(e){}
+  try{if(ta){ta.focus();ta.select();ta.setSelectionRange(0,text.length)}if(document.execCommand&&document.execCommand("copy"))return true}catch(e){}
+  return false;
+}
+function backupPage(){
+  const back=rerender===backupPage?home:rerender;rerender=backupPage;setMode(false);
+  const ls=n=>`${n} lesson${n===1?"":"s"}`,bs=n=>`${n} banana${n===1?"":"s"}`;
+  $("#screen").innerHTML=`<div class="stack">
+    <div class="row"><button class="btn ghost sm" id="back">← Back</button></div>
+    <section class="hero"><div class="label">Your progress</div><h1>Back up my progress</h1><p>Your lessons, bananas and outfits are saved on this device only. A backup code keeps them safe, and lets you move them to another phone, tablet or computer.</p></section>
+    <div class="card bkcard">
+      <h3>1. Save your backup code</h3>
+      <p class="muted">You have ${ls(S.done.length)} done and ${bs(S.bananas)}. Copy this code and keep it somewhere safe, like a note or a message to yourself.</p>
+      <textarea id="bkcode" class="bkcode" readonly rows="4" aria-label="Your backup code" spellcheck="false">Making your code…</textarea>
+      <div class="row"><button class="btn" id="bkcopy" disabled>📋 Copy code</button><button class="btn ghost" id="bkdl" disabled>⬇️ Download backup file</button></div>
+      <div id="bkcopied" aria-live="polite"></div>
+    </div>
+    <div class="card bkcard">
+      <h3>2. Restore from a code</h3>
+      <p class="muted">On your other device, paste the code here. TypeMonkey shows you what's inside before anything changes.</p>
+      <textarea id="bkin" class="bkcode" rows="4" aria-label="Paste a backup code" placeholder="Paste a code that starts with TM1-" spellcheck="false" autocapitalize="off" autocorrect="off"></textarea>
+      <div class="row"><button class="btn" id="bkcheck">Check code</button><button class="btn ghost" id="bkload">📂 Load backup file</button><input type="file" id="bkfile" accept=".txt,text/plain" hidden></div>
+      <div id="bkresult" aria-live="polite"></div>
+    </div>
+    ${buddy("Tip: make a fresh backup code every few lessons, so it's always up to date!","happy")}
+  </div>`;
+  $("#back").onclick=()=>back();
+  let code="";
+  BK.make(S).then(c=>{code=c;const ta=$("#bkcode");if(!ta)return;ta.value=c;$("#bkcopy").disabled=false;$("#bkdl").disabled=false})
+    .catch(()=>{const ta=$("#bkcode");if(ta)ta.value="Sorry, TypeMonkey couldn't make a backup code on this device."});
+  $("#bkcode").onfocus=e=>e.target.select();
+  $("#bkcopy").onclick=async()=>{const ok=await copyText(code,$("#bkcode"));
+    $("#bkcopied").innerHTML=`<div class="feedback ${ok?"good":"bad"}">${ok?"✓ Copied! Now paste it somewhere safe.":"Your device didn't let TypeMonkey copy it. The code is selected, so copy it yourself (long-press, then Copy)."}</div>`;
+    if(!ok){const ta=$("#bkcode");ta.focus();ta.select()}};
+  $("#bkdl").onclick=()=>{try{const blob=new Blob([`TypeMonkey backup, made ${new Date().toLocaleString()}\nTo restore: open TypeMonkey, go to Settings > Back up my progress, then tap Load backup file (or paste the code below).\n\n${code}\n`],{type:"text/plain"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=BK.fileName();document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);toast("Backup file saved!")}catch(e){toast("Your device couldn't save a file. Use Copy code instead.")}};
+  const check=async(text)=>{const r=await BK.read(text);const box=$("#bkresult");if(!box)return;
+    if(r.error){box.innerHTML=`<div class="feedback bad">${esc(r.error)}</div>`;return}
+    box.innerHTML=`<div class="feedback good">✓ ${BK.summary(r.state)}<p style="margin:6px 0 0"><b>Replace the progress on this device with it?</b> What's here now (${ls(S.done.length)}, ${bs(S.bananas)}) will be replaced.</p>
+      <div class="row" style="margin-top:10px"><button class="btn sm" id="bkyes">Yes, restore it</button><button class="btn ghost sm" id="bkno">Cancel</button></div></div>`;
+    $("#bkno").onclick=()=>box.innerHTML="";
+    $("#bkyes").onclick=()=>{S=normState(r.state);save();applySettings();toast(`Welcome back! ${ls(S.done.length)} and ${bs(S.bananas)} restored.`);home()}};
+  $("#bkcheck").onclick=()=>check($("#bkin").value);
+  $("#bkload").onclick=()=>$("#bkfile").click();
+  $("#bkfile").onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;
+    if(f.size>5e6){$("#bkresult").innerHTML=`<div class="feedback bad">That file is too big to be a TypeMonkey backup.</div>`;return}
+    const rd=new FileReader();rd.onload=()=>{const txt=String(rd.result||"");const m=txt.match(/TM1-\S+/i);$("#bkin").value=m?m[0]:txt.slice(0,2000);check(m?m[0]:txt)};
+    rd.onerror=()=>{$("#bkresult").innerHTML=`<div class="feedback bad">TypeMonkey couldn't open that file. Try again, or paste the code instead.</div>`};rd.readAsText(f);e.target.value=""};
   $("#foot").innerHTML="";window.scrollTo(0,0);
 }
 
