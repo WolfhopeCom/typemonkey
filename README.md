@@ -104,3 +104,7 @@ Run both test scripts after editing lessons. They catch wrong answers, unsolvabl
 - Terms of Service and Privacy Policy screens (needed for the app stores; kids section needs COPPA review)
 - Native apps for iPhone, iPad, Android and desktop (wrap with Capacitor; Apple developer account $99/yr, Google Play $25 once)
 - Real in-app purchase through the App Store and Google Play
+
+## Native app
+
+`app/` wraps `index.html` for the App Store and Google Play with Capacitor 7. On a Mac: `cd app && npm install && python3 build_app.py --setup` once (creates `app/ios` and `app/android`), then `python3 build_app.py && npx cap open ios` (or `android`) after every change. See [app/README.md](app/README.md) for running on a phone, version numbers, and the in-app purchase checklist.
