@@ -2778,7 +2778,7 @@ function home(){
     nextPro?`You finished every free JavaScript lesson! Unlock the full course to keep going with ${Q(nextPro.l.title)}`:
     S.done.length?(nu?`Nice to see you! Next up: ${Q(nu.l.title)}`:"You've finished JavaScript! Try C# or C++ next, or build something in the Playground."):"Hey! I'm TypeMonkey, your coding buddy. Let's write your first line of code.";
   $("#screen").innerHTML=`<div class="stack">
-    <section class="hero"><h1>Learn to code, one banana at a time.</h1><p>Bite-size lessons, real code you run yourself, quizzes and mini-games. Built for teens, college students and anyone starting from zero.</p></section>
+    <section class="hero"><h1>Learn to code, one banana at a time.</h1><p>Bite-size lessons, real code you run yourself, quizzes and mini-games. Built for all ages and experience levels.</p></section>
     ${buddy(greet,resume?"cheer":"happy")}
     ${nu?`<div class="row"><button class="btn" id="cont">${resume?"Pick up where you left off":S.done.length?"Continue learning":"Start lesson 1"}</button></div>`:nextPro?`<div class="row"><button class="btn banana" id="unl">See the full course</button></div>`:""}
     <div class="tools">
