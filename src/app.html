@@ -119,6 +119,22 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 .run[disabled]{opacity:.4;cursor:not-allowed}
 .console{background:#000;color:#B8F5D3;font-family:var(--mono);font-size:.88rem;padding:10px 14px;min-height:44px;white-space:pre-wrap;word-break:break-word;border-top:1px solid #ffffff14}
 .console .err{color:#FF9C92}
+/* Build a Game: the console becomes a little arcade screen */
+.console.arcade{background:#170F2E;background-image:repeating-linear-gradient(0deg,#ffffff06 0 1px,transparent 1px 3px);color:#FFE36E;border-top:2px solid #7C5CFF}
+.console.arcade .dim{color:#8D7FC0}
+.console.arcade .err{color:#FF8FA3}
+.arcade-top{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.72rem;letter-spacing:.12em;color:#B9A8FF;margin-bottom:6px}
+.arcade-top button{background:#2A1F55;color:#E8E0FF;border:1px solid #5B47C7;border-radius:999px;padding:2px 10px;font-size:.72rem;letter-spacing:0}
+.tiles{line-height:1.15;letter-spacing:0}
+.arcade-win,.arcade-lose{margin-top:8px;padding:6px 10px;border-radius:10px;text-align:center;font-family:var(--display);font-size:1.05rem;letter-spacing:.06em;animation:pop .5s ease}
+.arcade-win{background:#FFC83D;color:#2A1300}.arcade-lose{background:#3A2350;color:#FFB4C2}
+@keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){.arcade-win,.arcade-lose{animation:none}}
+/* TypeMonkey Jr.: a sunny background so the kids' section stands out */
+body.jr{--bg:#FFF1BF;--surface:#FFFCF0;--surface2:#FFE8A3;--line:#F0D27C;--muted:#6E5A2A}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) body.jr{--bg:#2B2410;--surface:#3A3116;--surface2:#4A3E1A;--line:#5E4F22;--muted:#D6C48E}}
+:root[data-theme="dark"] body.jr{--bg:#2B2410;--surface:#3A3116;--surface2:#4A3E1A;--line:#5E4F22;--muted:#D6C48E}
+body{transition:background-color .3s}
 .console .dim{color:#5E7E70}
 
 .opts{display:flex;flex-direction:column;gap:8px}
@@ -565,7 +581,24 @@ const RUNNERS={
   sql:c=>{const r=TMSQL.run(c,ZOO_TABLES);if(!r.ok)return Promise.resolve([["err",r.error]]);const o=TMSQL.text(r).split("\n").map(l=>["log",l]);o.table=r;return Promise.resolve(o)}
 };
 const kindOf=c=>c.runnable===true?"js":c.runnable;
+const TILE={"#":"🧱",".":"⬛","$":"🪙","@":"🐵","E":"🚪",">":"🪜","p":"🧪"," ":"⬛"};
+const isMapLine=l=>l.length>=3&&/^[#.$@E>p ]+$/.test(l)&&/#/.test(l);
+const WIN=/\b(you win|wins( after|!)|escaped|found the stairs|got it in|you escape)/i,LOSE=/\b(you lose|defeated|out of lives|still lost|game over)/i;
+function arcadeConsole(el,out,hint){
+  const logs=out.filter(o=>o[0]==="log").map(o=>o[1]);const err=out.find(o=>o[0]==="err");
+  const hasMap=logs.some(isMapLine);
+  let textMode=el.dataset.text==="1";
+  const draw=()=>{
+    const body=out.length?out.map(([k,v])=>k==="err"?`<div class="err">✖ ${esc(v)}</div>`:(!textMode&&isMapLine(v))?`<div class="tiles">${[...v].map(c=>TILE[c]).join("")}</div>`:`<div>› ${esc(v)}</div>`).join(""):`<span class="dim">(nothing printed${hint?". "+hint:""})</span>`;
+    const last=logs.slice(-2).join(" ");
+    const banner=err?"":WIN.test(last)?`<div class="arcade-win">🏆 YOU WIN!</div>`:LOSE.test(last)?`<div class="arcade-lose">💀 GAME OVER, TRY AGAIN?</div>`:"";
+    el.innerHTML=`<div class="arcade-top"><span>🎮 GAME SCREEN</span>${hasMap?`<button type="button" class="tview">${textMode?"🧱 Show tiles":"ABC Show text"}</button>`:""}</div>${body}${banner}`;
+    const b=el.querySelector(".tview");if(b)b.onclick=()=>{textMode=!textMode;el.dataset.text=textMode?"1":"";draw()};
+  };
+  draw();
+}
 function paintConsole(el,out,hint){
+  if(typeof cur!=="undefined"&&cur&&cur.c&&cur.c.id==="game"&&el.id!=="out-p"&&!out.table){el.classList.add("arcade");return arcadeConsole(el,out,hint)}
   if(out.table&&out.table.columns.length){
     const r=out.table;
     el.innerHTML=`<div class="restbl"><table><thead><tr>${r.columns.map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${r.rows.length?r.rows.map(row=>`<tr>${row.map(v=>`<td class="${v===null?"null":""}">${esc(TMSQL.show(v))}</td>`).join("")}</tr>`).join(""):`<tr><td colspan="${r.columns.length}" class="null">(no rows)</td></tr>`}</tbody></table></div><div class="dim">${r.rows.length} row${r.rows.length===1?"":"s"}</div>`;
@@ -672,7 +705,7 @@ function nextUp(c){const L=flat(c);return L.find(x=>S.progress[x.l.id])||L.find(
 
 /* ---------- Home ---------- */
 function home(){
-  rerender=home;
+  rerender=home;setMode(false);
   const js=COURSES[0];const nu=nextUp(js);const resume=nu&&S.progress[nu.l.id];
   const nextPro=!nu&&flat(js).find(x=>x.l.steps&&status(js,x)==="pro");
   const greet=resume?`Welcome back! You were in the middle of ${Q(nu.l.title)}`:
@@ -716,11 +749,12 @@ function foot(){
 }
 function unlockFull(after){grownUpGate(()=>{S.pro=true;save();toast("Demo unlock: everything is open. In the real app this is the App Store / Google Play purchase.");after&&after()})}
 let rerender=home;
+function setMode(kids){document.body.classList.toggle("jr",!!kids)}
 
 /* ---------- Course page ---------- */
 function coursePage(cid){
   rerender=()=>coursePage(cid);
-  const c=courseById(cid);const L=flat(c);const [d,n]=countLessons(c);
+  const c=courseById(cid);setMode(c.kids);const L=flat(c);const [d,n]=countLessons(c);
   $("#screen").innerHTML=`<div class="stack">
     <div class="row"><button class="btn ghost sm" id="back">← Courses</button></div>
     <section class="hero"><div class="label">Course</div><h1>${c.name}</h1><p>${c.blurb||""}</p></section>
@@ -757,6 +791,7 @@ function saveSpot(){
 }
 function draft(k,v){const p=S.progress[cur.l.id];if(!p)return;p.drafts=p.drafts||{};if(v===undefined)return p.drafts[k];p.drafts[k]=v;save()}
 function shell(inner){
+  setMode(cur&&cur.c&&cur.c.kids);
   const pct=Math.round(cur.step/(cur.l.steps.length-1)*100);
   $("#screen").innerHTML=`<div class="stack">
     <div class="lessonbar"><button class="x" id="quit" aria-label="Leave lesson">×</button><div class="progress"><span style="width:${pct}%"></span></div></div>
@@ -768,7 +803,7 @@ function next(){cur.step++;renderStep()}
 function editorBlock(id,code,runnable,file){
   return `<div class="editor"><div class="head"><span>${file}</span>${runnable?`<button class="run" id="run-${id}">${runnable==="web"?"▶ Show page":"▶ Run"}</button>`:""}</div>
     ${runnable?`<textarea id="code-${id}" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="Code editor" rows="${Math.min(14,Math.max(5,code.split("\n").length+1))}">${esc(code)}</textarea>
-    ${runnable==="web"?`<div class="webview" id="out-${id}" aria-label="Page preview"></div>`:`<div class="console" id="out-${id}"><span class="dim">Console output appears here</span></div>`}`:`<pre>${esc(code)}</pre>`}</div>`;
+    ${runnable==="web"?`<div class="webview" id="out-${id}" aria-label="Page preview"></div>`:(cur&&cur.c&&cur.c.id==="game"?`<div class="console arcade" id="out-${id}"><div class="arcade-top"><span>🎮 GAME SCREEN</span></div><span class="dim">Press ▶ Run to play</span></div>`:`<div class="console" id="out-${id}"><span class="dim">Console output appears here</span></div>`)}`:`<pre>${esc(code)}</pre>`}</div>`;
 }
 function wireEditor(id,after,kind){
   const ta=$("#code-"+id);if(!ta)return;
@@ -1110,7 +1145,7 @@ function showBadge(){
   g.querySelector("#cel-ok").onclick=()=>{g.remove();showBadge()};
 }
 function badgesPage(){
-  const back=rerender===badgesPage?home:rerender;rerender=badgesPage;
+  const back=rerender===badgesPage?home:rerender;rerender=badgesPage;setMode(false);
   const list=badgeList();const got=list.filter(b=>S.badges[b.id]).length;
   $("#screen").innerHTML=`<div class="stack"><div class="row"><button class="btn ghost sm" id="back">← Back</button></div>
     <section class="hero"><div class="label">Badges</div><h1>${got} of ${list.length} earned</h1><p>Every badge comes with bonus bananas. Some are easy, some are legendary.</p></section>
@@ -1217,7 +1252,7 @@ function dailyDone(){
 /* ---------- TypeMonkey shop ---------- */
 const SHOP=[["fur","Fur",FURS],["hat","Hats",HATS],["eyes","Glasses",EYES],["neck","Neckwear",NECKS],["pet","Pets",PETS]];
 function shop(tab="hat",preview){
-  rerender=()=>shop(tab);
+  rerender=()=>shop(tab);setMode(false);
   const look=preview||S.look;const [slot,label,items]=SHOP.find(x=>x[0]===tab);
   $("#screen").innerHTML=`<div class="stack">
     <div class="row"><button class="btn ghost sm" id="back">← Home</button></div>
@@ -1248,7 +1283,7 @@ function shop(tab="hat",preview){
 /* ---------- Settings ---------- */
 const APP_VERSION="0.9 (prototype)";
 function settingsPage(){
-  const back=rerender===settingsPage?home:rerender;rerender=settingsPage;
+  const back=rerender===settingsPage?home:rerender;rerender=settingsPage;setMode(false);
   const st=S.settings;
   const seg=(id,val,opts)=>`<div class="seg" role="radiogroup" id="${id}">${opts.map(([v,l])=>`<button role="radio" aria-checked="${val===v}" data-v="${v}">${l}</button>`).join("")}</div>`;
   $("#screen").innerHTML=`<div class="stack">
@@ -1325,7 +1360,7 @@ const PLAY={
   cpp:{name:"C++",file:"main.cpp",run:"cpp",start:`#include <iostream>\n\nint main() {\n  for (int i = 1; i <= 3; i++) {\n    std::cout << "TypeMonkey says ook #" << i << "\\n";\n  }\n  return 0;\n}\n`}
 };
 function playground(lang="js"){
-  rerender=()=>playground(lang);
+  rerender=()=>playground(lang);setMode(false);
   const P=PLAY[lang];
   let saved;try{saved=(S.play||{})[lang]}catch(e){}
   $("#screen").innerHTML=`<div class="stack">
