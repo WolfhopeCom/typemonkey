@@ -644,6 +644,7 @@ function tableHTML(c,name){
 /* ---------- Courses ---------- */
 const COURSES=[
   {...COURSE_JS,tag:"console.log('hi')",runnable:true,lang:"script.js"},
+  {...COURSE_GAME,tag:"dice, mazes & dungeons",runnable:true,lang:"game.js"},
   {...COURSE_PY,tag:"print('hi')",runnable:"py",lang:"main.py"},
   {...COURSE_WEB,tag:"<h1>hi</h1>",runnable:"web",lang:"index.html"},
   {...COURSE_SQL,tag:"SELECT 'hi';",runnable:"sql",lang:"query.sql",rushHint:"Each result row is on its own line, columns split by |."},
@@ -682,10 +683,7 @@ function home(){
     <button class="daily ${dailyDoneToday()?"done":""}" id="daily"><span class="dicon">📅</span><span class="dtext"><b>${dailyDoneToday()?"Daily challenge done!":"Daily challenge"}</b><span>${dailyDoneToday()?`Come back tomorrow for a new one · 🔥 ${(S.daily||{}).streak||1}-day daily streak`:`3 quick questions · bonus bananas${(S.daily||{}).streak?` · keep your ${(S.daily||{}).streak}-day streak going`:""}`}</span></span><span class="pill ${dailyDoneToday()?"ok":"kid"}">${dailyDoneToday()?"✓":"+10 🍌"}</span></button>
     <div class="tools">
       <button class="tool" id="review"><b>🧠 Review${dueCount()?` <span class="due">${dueCount()}</span>`:""}</b><span>${dueCount()?"Questions you missed are ready to try again":reviewSize()?"All caught up! Missed questions come back here":"Questions you miss come back here later"}</span></button>
-      <button class="tool" id="practice"><b>⚡ Practice rush</b><span>60-second review of everything you've learned</span></button>
-      <button class="tool" id="shop"><b>🛍️ Shop</b><span>Spend bananas on outfits for TypeMonkey</span></button>
       <button class="tool" id="play"><b>›_ Playground</b><span>Write any code you want and run it</span></button>
-      <button class="tool" id="badges"><b>🏆 Badges <span class="due">${Object.keys(S.badges).length}/${badgeList().length}</span></b><span>Earn badges and bonus bananas</span></button>
     </div>
     <div class="label">Courses</div>
     <div class="courses">${COURSES.map(c=>{
@@ -695,11 +693,16 @@ function home(){
         <h3>${c.name}</h3><span class="tag">${esc(c.tag)}</span><span class="meta">${c.units.length} units · ${n} lessons${all>n?" (more coming)":""}</span>
         <div class="mini"><span style="width:${n?d/n*100:0}%"></span></div></button>`}).join("")}</div>
     ${S.pro?`<div class="unlocked">✓ Full version unlocked. Thanks for supporting TypeMonkey!</div>`:`<div class="paywall"><div><h3>Unlock the full version</h3><p>All ${COURSES.reduce((n,c)=>n+countLessons(c)[1],0)} lessons in all ${COURSES.length} courses, every project, and everything we add later. One-time purchase, no subscription.</p></div><button class="btn banana" id="homebuy">Unlock · $4.99</button></div>`}
+    <div class="label">Rewards</div>
+    <div class="tools">
+      <button class="tool" id="shop"><b>🛍️ Shop</b><span>Spend bananas on outfits for TypeMonkey</span></button>
+      <button class="tool" id="badges"><b>🏆 Badges <span class="due">${badgeList().filter(b=>S.badges[b.id]).length}/${badgeList().length}</span></b><span>Earn badges and bonus bananas</span></button>
+    </div>
   </div>`;
   if($("#cont"))$("#cont").onclick=()=>startLesson(nu.l.id);
   if($("#unl"))$("#unl").onclick=()=>coursePage("js");
   if($("#homebuy"))$("#homebuy").onclick=()=>unlockFull(home);
-  $("#practice").onclick=practice;$("#play").onclick=()=>playground();$("#shop").onclick=()=>shop();$("#review").onclick=startReview;$("#badges").onclick=badgesPage;$("#daily").onclick=startDaily;
+  $("#play").onclick=()=>playground();$("#shop").onclick=()=>shop();$("#review").onclick=startReview;$("#badges").onclick=badgesPage;$("#daily").onclick=startDaily;
   $$(".course").forEach(b=>b.onclick=()=>{const c=courseById(b.dataset.c);
     if(c.soon)toast(c.kids?"TypeMonkey Jr. is on the roadmap!":c.name+" is coming soon.");else coursePage(c.id)});
   foot();window.scrollTo(0,0);
@@ -1068,7 +1071,6 @@ function badgeList(){
     ["streak30","☄️","Legend","Keep a 30-day streak",()=>S.streak>=30,300],
     ["quiz_perfect","💯","Perfect score","Get every quiz right in a lesson",()=>st("perfectQuiz")>=1,15],
     ["rush_perfect","⚡","Lightning brain","Get every answer right in an Output Rush",()=>st("rushPerfect")>=1,25],
-    ["rush10","🏎️","Speed demon","Get 10 right in one Practice rush",()=>st("rushBest")>=10,40],
     ["polyglot","🌍","Polyglot","Run code in 4 different languages",()=>(S.stats.langs||[]).length>=4,40],
     ["explorer","🧭","Explorer","Start a lesson in 5 different courses",()=>(S.stats.started||[]).length>=5,30],
     ["tinkerer","🔧","Tinkerer","Run 20 programs in the Playground",()=>st("playRuns")>=20,25],

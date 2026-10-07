@@ -19,7 +19,7 @@ INTENTIONAL_DEMO_ERRORS = {"js4", "js15"}  # demos that show an error on purpose
 
 CHECK = r"""async () => {
   const R = [];
-  const c = COURSES.find(c => c.id === "js");
+  for (const c of COURSES.filter(c => c.id === "js" || c.id === "game"))
   for (const x of flat(c)) {
     const l = x.l; if (!l.steps) continue;
     for (const [code, opts] of l.pool || []) {
