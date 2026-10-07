@@ -170,6 +170,7 @@ const TMC=(()=>{
       const skipGen=()=>{if(isOp("<")){let d=0;do{if(isOp("<"))d++;else if(isOp(">"))d--;else if(isOp(">>"))d-=2;p++}while(d>0&&peek().k!=="eof")}};
       if(lang==="java"&&accept("extends")){parent=ident();skipGen();if(kind==="interface"){ifaces.push(parent);parent=null;while(accept(",")){ifaces.push(ident());skipGen()}}}
       if(lang==="java"&&accept("implements")){do{ifaces.push(ident());skipGen()}while(accept(","))}
+      if(lang==="cs"&&accept(":")){parent=ident();skipGen();while(accept(",")){ifaces.push(ident());skipGen()}}
       if(accept(":")){fail(`line ${peek().line}: inheritance (class ${name} : ...) isn't supported in TypeMonkey's runner yet`,"NotSupported")}
       expect("{");
       const cls={name,parent,ifaces,isInterface:kind==="interface",fields:[],methods:Object.create(null),ctors:[],statics:[],isStruct:kind==="struct",props:Object.create(null)};
@@ -195,7 +196,7 @@ const TMC=(()=>{
         if(isOp("(")){
           const params=paramList();while(is("const")||is("override"))p++;
           if(lang==="java"&&accept("throws")){do ident();while(accept(","))}
-          let body;if(lang==="java"&&accept(";"))body=null;else if(accept("=>")){body={k:"block",body:[{k:"return",e:expr()}]};expect(";")}else body=block();
+          let body;if((lang==="java"||lang==="cs")&&accept(";"))body=null;else if(accept("=>")){body={k:"block",body:[{k:"return",e:expr()}]};expect(";")}else body=block();
           const m={params,body,ret:type,isStatic,name:mname,owner:name,isAbstract:isAbstract||!body};const prev=cls.methods[mname];
           if(prev&&!prev.isProp){(prev.overloads||(prev.overloads=[prev])).push(m)}else cls.methods[mname]=m;continue;
         }
@@ -208,11 +209,11 @@ const TMC=(()=>{
           let init=null;if(accept("=")){init=expr();expect(";")}
           (isStatic?cls.statics:cls.fields).push({name:mname,type,init});continue;
         }
-        if(accept("=>")){const e=expr();expect(";");cls.methods[mname]={params:[],body:{k:"block",body:[{k:"return",e}]},ret:type,isProp:true,name:mname};continue}
+        if(accept("=>")){const e=expr();expect(";");cls.methods[mname]={params:[],body:{k:"block",body:[{k:"return",e}]},ret:type,isProp:true,name:mname,owner:name};continue}
         // field(s)
         let names=[[mname,null]];
         for(;;){
-          if(accept("=")){names[names.length-1][1]=expr()}
+          if(accept("=")){names[names.length-1][1]=lang==="cpp"&&isOp("{")?initList():expr()}
           else if(isOp("{")&&lang==="cpp"){p++;const a=isOp("}")?[]:args("}");expect("}");names[names.length-1][1]={k:"init",items:a}}
           if(accept(",")){names.push([ident(),null]);continue}
           break;
@@ -255,7 +256,7 @@ const TMC=(()=>{
           case "foreach":{p++;expect("(");const ty=tryType();const name=ident();expect("in");const coll=expr();expect(")");return {k:"forin",type:ty,name,coll,body:statement(),line}}
           case "break":p++;expect(";");return {k:"break"};
           case "continue":p++;expect(";");return {k:"continue"};
-          case "return":{p++;const e=isOp(";")?null:expr();expect(";");return {k:"return",e,line}}
+          case "return":{p++;const e=isOp(";")?null:lang==="cpp"&&isOp("{")?initList():expr();expect(";");return {k:"return",e,line}}
           case "switch":{p++;return switchParse(false,line)}
           case "yield":if(lang==="java"){p++;const e=expr();expect(";");return {k:"yield",e}}break;
           case "try":{p++;const body=block();const catches=[];
@@ -344,7 +345,7 @@ const TMC=(()=>{
       if(lvl>=BIN.length)return unary();
       let l=bin(lvl+1);
       for(;;){const t=peek();if(t.k==="op"&&BIN[lvl].includes(t.v)){p++;const r=bin(lvl+1);l={k:"bin",op:t.v,l,r,line:t.line}}
-        else if(lvl===7&&lang==="cs"&&t.k==="id"&&t.v==="is"){p++;const ty=tryType();l={k:"is",e:l,type:ty}}
+        else if(lvl===7&&lang==="cs"&&t.k==="id"&&t.v==="is"){p++;const ty=tryType();let bind=null;if(peek().k==="id"&&!["and","or","when"].includes(peek().v))bind=ident();l={k:"is",e:l,type:ty,bind}}
         else if(lvl===7&&lang==="java"&&t.k==="id"&&t.v==="instanceof"){p++;const ty=tryType()||{name:ident(),args:[]};let bind=null;if(peek().k==="id"&&!["instanceof"].includes(peek().v))bind=ident();l={k:"is",e:l,type:ty,bind}}
         else return l}
     }
@@ -482,11 +483,14 @@ const TMC=(()=>{
     /* type conversions */
     function tname(t){return t?t.name:"var"}
     function isClassT(t){return t&&classes[t.name]&&!t.ptr&&!t.ref}
+    function cppMap(t,items,line){const d=new Dict();d.kt=t.args&&t.args[0];d.vt=t.args&&t.args[1];if(t.name==="map")d.sorted=true;
+      for(const it of items||[]){if(!(it instanceof InitList)||it.items.length!==2)fail(`line ${line}: each map entry needs {key, value}`,"CompileError");const k=coerce(it.items[0],d.kt,line);d.m.set(dkey(k),[k,coerce(it.items[1],d.vt,line)])}
+      return d}
     function defaultFor(t){
       if(!t)return null;if(t.ptr)return null;if(t.arr)return null;
       if(INT_T.has(t.name))return 0;if(DBL_T.has(t.name))return new D(0);if(t.name==="bool")return false;if(t.name==="char")return new Ch(0);
       if(t.name==="string")return lang==="cpp"?"":null;
-      if(lang==="cpp"){if(t.name==="vector")return new Arr("vector",[],t.args[0]);if(classes[t.name])return construct(classes[t.name],[],0)}
+      if(lang==="cpp"){if(t.name==="vector")return new Arr("vector",[],t.args[0]);if(t.name==="map"||t.name==="unordered_map")return cppMap(t);if(classes[t.name])return construct(classes[t.name],[],0)}
       if(classes[t.name]&&classes[t.name].isStruct)return construct(classes[t.name],[],0);
       return null;
     }
@@ -495,6 +499,7 @@ const TMC=(()=>{
       if(t.ptr)return v;
       if(t.arr){if(v instanceof InitList)return new Arr("array",v.items.map(x=>coerce(x,{...t,arr:t.arr-1},line)),{...t,arr:t.arr-1});return v}
       if(v instanceof InitList){
+        if(lang==="cpp"&&(t.name==="map"||t.name==="unordered_map"))return cppMap(t,v.items,line);
         if(t.name==="vector"||t.name==="List"||t.name==="HashSet")return new Arr(t.name==="vector"?"vector":"list",v.items.map(x=>coerce(x,t.args[0],line)),t.args[0]);
         if(classes[t.name])return lang==="cpp"&&classes[t.name].ctors.length?construct(classes[t.name],v.items,line):aggregate(classes[t.name],v.items,line);
         if(v.items.length===1)return coerce(v.items[0],t,line);
@@ -580,6 +585,7 @@ const TMC=(()=>{
     function construct(cls,argVals,line,inits,env){
       if(lang==="java")return jconstruct(cls,argVals,line);
       const o=new Obj(cls);
+      if(lang==="cs"&&cls.sup){csInit(cls,o,argVals,line);applyInits(cls,o,inits,line,env);return o}
       const fenv=new Env(globalEnv);fenv.self=o;fenv.cls=cls;
       for(const f of cls.fields)o.f[f.name]=f.init?coerce(f.init.k==="init"?new InitList(f.init.items.map(x=>ev(x,fenv))):ev(f.init,fenv),f.type,line):defaultFor(f.type);
       if(cls.ctors.length){
@@ -592,7 +598,25 @@ const TMC=(()=>{
         }
       }else if(argVals.length&&lang==="cpp")return aggregate(cls,argVals.map(v=>({k:"val",v})),line);
       else if(argVals.length)fail(`line ${line}: ${cls.name} doesn't have a constructor that takes ${argVals.length} argument(s)`,"CompileError");
-      if(inits)for(const it of inits){if(!it.field)fail(`line ${line}: use Name = value in an object initializer`,"SyntaxError");if(!(it.field in o.f))fail(`line ${line}: '${cls.name}' does not contain a definition for '${it.field}'`,"CompileError");const f=cls.fields.find(x=>x.name===it.field);o.f[it.field]=coerce(it.val.k==="init"?new InitList(it.val.items.map(x=>ev(x,env))):ev(it.val,env),f.type,line)}
+      applyInits(cls,o,inits,line,env);
+      return o;
+    }
+    function csInit(cls,o,argVals,line){
+      const fenv=new Env(globalEnv);fenv.self=o;fenv.cls=cls;
+      const c=cls.ctors.length?pickOverload(cls.ctors,argVals.length,argVals):null;
+      if(cls.ctors.length&&!c)fail(`line ${line}: ${cls.name} doesn't have a constructor that takes ${argVals.length} argument(s)`,"CompileError");
+      if(!cls.ctors.length&&argVals.length)fail(`line ${line}: ${cls.name} doesn't have a constructor that takes ${argVals.length} argument(s)`,"CompileError");
+      const cenv=new Env(globalEnv);cenv.self=o;cenv.cls=cls;
+      if(c)bindParams(c.params,argVals,cenv,line);
+      const bi=c?c.init.find(x=>x[0]==="base"):null;
+      if(cls.sup){const ba=bi?bi[1].map(a=>ev(a,cenv)):[];if(!bi&&cls.sup.ctors.length&&!cls.sup.ctors.some(x=>x.params.length===0))fail(`line ${line}: ${cls.name}'s constructor must call : base(...) because ${cls.sup.name} needs ${cls.sup.ctors[0].params.length} argument(s)`,"CompileError");csInit(cls.sup,o,ba,line)}
+      else if(bi&&bi[1].length)fail(`line ${line}: ${cls.name} has no base class to pass arguments to`,"CompileError");
+      for(const f of cls.fields)o.f[f.name]=f.init?coerce(ev(f.init,fenv),f.type,line):defaultFor(f.type);
+      if(c){for(const [fname,a] of c.init){if(fname==="base")continue;if(fname==="this")fail(`line ${line}: : this(...) constructor chaining isn't supported in TypeMonkey's runner yet`,"NotSupported");const f=cls.fields.find(x=>x.name===fname);o.f[fname]=coerce(ev(a[0],cenv),f?f.type:null,line)}
+        execBlock(c.body,cenv,true)}
+    }
+    function applyInits(cls,o,inits,line,env){
+      if(inits)for(const it of inits){if(!it.field)fail(`line ${line}: use Name = value in an object initializer`,"SyntaxError");if(!(it.field in o.f))fail(`line ${line}: '${cls.name}' does not contain a definition for '${it.field}'`,"CompileError");let f=null;for(let k=cls;k&&!f;k=k.sup)f=k.fields.find(x=>x.name===it.field);o.f[it.field]=coerce(it.val.k==="init"?new InitList(it.val.items.map(x=>ev(x,env))):ev(it.val,env),f&&f.type,line)}
       return o;
     }
     function aggregate(cls,items,line){
@@ -690,7 +714,7 @@ const TMC=(()=>{
       if(v instanceof D){if(lang==="cpp")return fmtG(v.v);if(!isFinite(v.v))return isNaN(v.v)?"NaN":v.v>0?"∞":"-∞";let s=String(v.v);if(/e/.test(s)){s=s.replace(/e\+?/,"E+").replace("E+-","E-");if(!/E-/.test(s)&&!/E\+/.test(s))s=s.replace("E","E+")}return s}
       if(typeof v==="boolean")return lang==="cs"?(v?"True":"False"):(v?"1":"0");
       if(v instanceof Ch)return String.fromCodePoint(v.c);
-      if(v instanceof Obj){if(v.cls.methods.ToString&&lang==="cs")return str(callMethod(v,"ToString",[],0));return lang==="cs"?v.cls.name:`[${v.cls.name} object]`}
+      if(v instanceof Obj){if(lang==="cs"&&findMethod(v.cls,"ToString"))return str(callMethod(v,"ToString",[],0));return lang==="cs"?v.cls.name:`[${v.cls.name} object]`}
       if(v instanceof Arr)return lang==="cs"?(v.kind==="list"?`System.Collections.Generic.List\`1[${netName(v.elem)}]`:`${netName(v.elem)}[]`):fail("you can't print a whole vector with cout. Loop over it and print each item.","CompileError");
       if(v instanceof Dict)return `System.Collections.Generic.Dictionary\`2[System.String,System.Int32]`;
       if(v instanceof KV)return `[${str(v.k)}, ${str(v.v)}]`;
@@ -739,7 +763,7 @@ const TMC=(()=>{
         if(lang==="java"&&!(base instanceof Arr&&base.kind==="array")){if(base===null)fail(`line ${e.line}: Cannot load from array because it is null`,"NullPointerException");fail(`line ${e.line}: array required, but ${jtype(base)} found. ${base instanceof Arr?"Use .get(i) on a List.":base instanceof Dict?"Use .get(key) on a Map.":typeof base==="string"?"Use .charAt(i) on a String.":""}`,"CompileError")}
         if(lang==="java"&&!(typeof i==="number"||i instanceof Ch))fail(`line ${e.line}: incompatible types: ${jtype(i)} cannot be converted to int`,"CompileError");
         if(base instanceof Arr){const idx=nv(i);checkIdx(base,idx,e.line);return new LV(()=>base.items[idx],v=>{base.items[idx]=v})}
-        if(base instanceof Dict){const k=dkey(i);return new LV(()=>{if(!base.m.has(k))return lang==="cpp"?(base.m.set(k,[i,0]),0):dictMissing(i,e.line);return base.m.get(k)[1]},v=>base.m.set(k,[i,v]))}
+        if(base instanceof Dict){const k=dkey(i);return new LV(()=>{if(!base.m.has(k)){if(lang!=="cpp")return dictMissing(i,e.line);const d0=base.vt?defaultFor(base.vt):0;base.m.set(k,[i,d0]);return d0}return base.m.get(k)[1]},v=>base.m.set(k,[i,lang==="cpp"&&base.vt?coerce(v,base.vt,e.line):v]))}
         if(typeof base==="string"){if(lang==="cs")fail(`line ${e.line}: strings can't be changed in C#. Build a new string instead.`,"CompileError");
           const c=lval(e.e,env);const idx=nv(i);return new LV(()=>new Ch(c.get().codePointAt(idx)),v=>{const s=c.get();c.set(s.slice(0,idx)+str(v)+s.slice(idx+1))})}
         if(base instanceof Ptr)fail(`line ${e.line}: pointer arithmetic isn't supported in TypeMonkey's runner yet`,"NotSupported");
@@ -788,6 +812,7 @@ const TMC=(()=>{
         return str(a)+str(b);
       }
       if(op==="+"&&lang==="cpp"&&(a instanceof Ch&&typeof b==="string"))return String.fromCodePoint(a.c)+b;
+      if(lang==="cpp"&&(op==="+"||op==="-")&&a&&a.iter&&typeof b==="number"){const pos=op==="+"?a.pos+b:a.pos-b;if(pos<0||pos>a.iter.items.length)fail(`line ${line}: that iterator points outside the vector`,"RuntimeError");return {iter:a.iter,pos}}
       if(op==="+"&&lang==="cs"&&(a instanceof Ch||b instanceof Ch)&&(typeof a==="string"||typeof b==="string"))return str(a)+str(b);
       if(!isNum(a)&&typeof a!=="boolean"||!isNum(b)&&typeof b!=="boolean"){
         if(op==="=="||op==="!=")return null;
@@ -859,7 +884,7 @@ const TMC=(()=>{
           return arith(e.op,l,r,e.line);
         }
         case "is":{const v=ev(e.e,env);if(lang==="java"){const n=e.type.jname||e.type.name;const ok=v instanceof Obj?isA(v.cls,n)||n==="Object":v===null?false:n==="Object"||(n==="String"&&typeof v==="string")||(n==="Integer"&&typeof v==="number")||(n==="Double"&&v instanceof D);if(ok&&e.bind)env.vars.set(e.bind,new Cell(v,e.type));return ok}
-          return v instanceof Obj&&v.cls.name===e.type.name||(e.type.name==="int"&&typeof v==="number")||(e.type.name==="string"&&typeof v==="string")}
+          const ok=v instanceof Obj&&(lang==="cs"?isA(v.cls,e.type.name):v.cls.name===e.type.name)||(e.type.name==="int"&&typeof v==="number")||(e.type.name==="string"&&typeof v==="string");if(ok&&e.bind)env.vars.set(e.bind,new Cell(v,e.type));return ok}
         case "cast":{const v=ev(e.e,env);const t=e.type;
           if(lang==="java"&&(INT_T.has(t.name)||DBL_T.has(t.name)||t.name==="char")&&!isNum(v))fail(`line ${e.line||"?"}: incompatible types: ${jtype(v)} cannot be converted to ${jtname(t)}${typeof v==="string"?". Use Integer.parseInt() to turn text into a number":""}`,"CompileError");
           if(lang==="java"&&t.name==="long")return new Lg(Math.trunc(nv(v)));
@@ -891,9 +916,10 @@ const TMC=(()=>{
       const c=env.find(e.v);
       if(c){if(c instanceof Func)return c;return c.get()}
       if(env.self&&e.v in env.self.f)return env.self.f[e.v];
-      if(env.self&&env.self.cls.methods[e.v]&&env.self.cls.methods[e.v].isProp)return callMethod(env.self,e.v,[],e.line);
+      if(env.self){const pm=lang==="cs"?findMethod(env.self.cls,e.v):env.self.cls.methods[e.v];if(pm&&pm.isProp)return callMethod(env.self,e.v,[],e.line)}
       if(env.cls){let sc=classes[env.cls.name];
         if(lang==="java"){for(let c=sc;c;c=c.sup)if(c.staticVals&&e.v in c.staticVals)return c.staticVals[e.v];const m=env.self?findMethod(env.self.cls,e.v):findMethod(sc,e.v);if(m)return new Func({method:m,self:env.self,cls:env.self?env.self.cls:sc})}
+        else if(lang==="cs"){for(let c=sc;c;c=c.sup)if(c.staticVals&&e.v in c.staticVals)return c.staticVals[e.v];const m=findMethod(env.self?env.self.cls:sc,e.v)||findMethod(sc,e.v);if(m)return new Func({method:m,self:env.self,cls:classes[m.owner]||sc})}
         else{if(sc.staticVals&&e.v in sc.staticVals)return sc.staticVals[e.v];if(sc.methods[e.v])return new Func({method:sc.methods[e.v],self:env.self,cls:sc})}}
       if(funcs[e.v])return funcs[e.v];
       if(lang==="java"&&env.self&&["getClass","toString","hashCode","equals"].includes(e.v)){const o=env.self;return new Func({builtin:(...a)=>javaMethod(o,e.v,a,e.line,null,env)})}
@@ -950,7 +976,7 @@ const TMC=(()=>{
         if(v instanceof Dict){if(v.isSet){yield* jkeys(v);return}fail(`line ${line}: for-each not applicable to a Map. Loop over map.keySet(), map.values() or map.entrySet()`,"CompileError")}
         if(typeof v==="string")fail(`line ${line}: for-each not applicable to a String. Use s.toCharArray()`,"CompileError")}
       if(v instanceof Arr){for(let i=0;i<v.items.length;i++)yield v.items[i];return}
-      if(v instanceof Dict){for(const [,x] of v.m)yield new KV(x[0],x[1]);return}
+      if(v instanceof Dict){const es=[...v.m.values()];if(v.sorted)es.sort((x,y)=>cmpVals(x[0],y[0]));for(const x of es)yield new KV(x[0],x[1]);return}
       if(typeof v==="string"){for(const ch of v)yield new Ch(ch.codePointAt(0));return}
       if(v&&v.keysOf){yield* v.keysOf;return}
       fail(`line ${line}: you can only loop over a list, array, vector, dictionary or string`,"CompileError");
@@ -959,6 +985,10 @@ const TMC=(()=>{
     /* member access */
     function memberGet(e,env){
       if(lang==="java"&&e.e.k==="name"&&e.e.v==="super"){const sup=env.cls&&classes[env.cls.name].sup;const m=sup&&findMethod(sup,e.name);if(!m)fail(`line ${e.line}: the parent class has no method ${e.name}`,"CompileError");return new Func({method:m,self:env.self,cls:sup})}
+      if(lang==="cs"&&e.e.k==="name"&&e.e.v==="base"&&!env.find("base")){const sup=env.cls&&classes[env.cls.name]&&classes[env.cls.name].sup;if(!sup)fail(`line ${e.line}: base only works inside a class that inherits from another class`,"CompileError");
+        if(env.self&&e.name in env.self.f)return env.self.f[e.name];
+        const m=findMethod(sup,e.name);if(!m||m.isAbstract)fail(`line ${e.line}: the base class ${sup.name} has no ${m?"body for ":"member "}${e.name}`,"CompileError");
+        if(m.isProp)return invoke({method:m,self:env.self,cls:classes[m.owner]||sup},[],e.line);return new Func({method:m,self:env.self,cls:classes[m.owner]||sup})}
       const base=e.arrow?derefVal(ev(e.e,env),e.line):ev(e.e,env);
       const n=e.name;
       if(lang==="java")return jmemberGet(base,n,e,env);
@@ -966,7 +996,7 @@ const TMC=(()=>{
       if(base&&base.msg!==undefined&&(n==="Message"||n==="what"))return n==="what"?new Func({builtin:()=>base.msg}):base.msg;
       if(base instanceof Obj){
         if(n in base.f)return base.f[n];
-        const m=base.cls.methods[n];if(m){if(m.isProp)return callMethod(base,n,[],e.line);return new Func({method:m,self:base,cls:base.cls})}
+        const m=lang==="cs"?findMethod(base.cls,n):base.cls.methods[n];if(m){if(m.isProp)return callMethod(base,n,[],e.line);return new Func({method:m,self:base,cls:lang==="cs"?classes[m.owner]||base.cls:base.cls})}
         fail(`line ${e.line}: '${base.cls.name}' does not have a member named '${n}'`,"CompileError");
       }
       if(base&&base.isClass){const st=base.cls.staticVals;if(st&&n in st)return st[n];const m=base.cls.methods[n];if(m)return new Func({method:m,self:null,cls:base.cls});fail(`line ${e.line}: '${base.cls.name}' does not have a static member named '${n}'`,"CompileError")}
@@ -976,8 +1006,8 @@ const TMC=(()=>{
       }
       if(base instanceof Arr){
         if(n==="Length"&&base.kind==="array")return base.items.length;
-        if(n==="Count"&&base.kind==="list")return base.items.length;
-        if((n==="Length"||n==="Count")&&lang==="cs")fail(`line ${e.line}: ${base.kind==="array"?"arrays use .Length":"Lists use .Count"}, not .${n}`,"CompileError");
+        if(n==="Count"&&base.kind==="list"&&!e.isCall)return base.items.length;
+        if((n==="Length"||n==="Count")&&lang==="cs"&&!(n==="Count"&&e.isCall))fail(`line ${e.line}: ${base.kind==="array"?"arrays use .Length":"Lists use .Count"}, not .${n}`,"CompileError");
       }
       if(base instanceof Dict){if(n==="Count")return base.m.size;if(n==="Keys")return new Arr("list",[...base.m.values()].map(x=>x[0]),base.kt);if(n==="Values")return new Arr("list",[...base.m.values()].map(x=>x[1]),base.vt)}
       if(base instanceof KV){if(n==="Key"||n==="first")return base.k;if(n==="Value"||n==="second")return base.v}
@@ -1002,7 +1032,7 @@ const TMC=(()=>{
       if(base instanceof Obj&&!["equals","hashCode","toString","getClass","compareTo","name","ordinal"].includes(n))fail(`line ${e.line}: cannot find symbol: ${n} in class ${base.cls.name}`,"CompileError");
       return new Func({builtin:(...a)=>javaMethod(base,n,a,e.line,e.e,env),bound:true,name:n});
     }
-    function callMethod(o,name,args,line){if(lang==="java")return invoke({method:findMethod(o.cls,name),self:o,cls:o.cls},args,line);const m=o.cls.methods[name];return invoke({method:m,self:o,cls:o.cls},args,line)}
+    function callMethod(o,name,args,line){if(lang==="java")return invoke({method:findMethod(o.cls,name),self:o,cls:o.cls},args,line);const m=lang==="cs"?findMethod(o.cls,name):o.cls.methods[name];return invoke({method:m,self:o,cls:lang==="cs"?classes[m.owner]||o.cls:o.cls},args,line)}
 
     /* calls */
     function call(e,env){
@@ -1030,6 +1060,7 @@ const TMC=(()=>{
       tick();
       if(fn.method){
         let m=fn.method;if(m.overloads)m=pickOverload(m.overloads,argVals.length,argVals)||m;
+        if(lang==="cs"&&!m.body)fail(`line ${line}: ${m.name}() is abstract, so it has no body to run. A class that inherits it must override it.`,"CompileError");
         if(lang==="java"){if(m.isAbstract)fail(`line ${line}: ${m.name}() has no body here (it's abstract)`,"CompileError");if(fn.self&&!m.isStatic&&fn.self.cls!==fn.cls&&fn.cls&&fn.cls.methods[m.name]!==fn.method){}}
         const fenv=new Env(globalEnv);fenv.self=fn.self;fenv.cls=lang==="java"&&m.owner&&classes[m.owner]?classes[m.owner]:fn.cls;
         if(lang==="java"&&!fn.self&&!m.isStatic&&m.owner)fail(`line ${line}: non-static method ${m.name}() cannot be referenced from a static context`,"CompileError");
@@ -1074,6 +1105,8 @@ const TMC=(()=>{
           case "at":{const i=nv(a[0]);if(i<0||i>=s.length)fail(`line ${line}: std::out_of_range: string index ${i}`,"RuntimeError");return new Ch(s.codePointAt(i))}
           case "push_back":case "append":case "insert":{const lv=lval(baseExpr,env);if(n==="insert"){lv.set(s.slice(0,nv(a[0]))+str(a[1])+s.slice(nv(a[0])))}else lv.set(s+str(a[0]));return null}
           case "pop_back":{const lv=lval(baseExpr,env);lv.set(s.slice(0,-1));return null}
+          case "replace":case "erase":{if(lang!=="cpp")break;const st=nv(a[0]);if(st>s.length)fail(`line ${line}: std::out_of_range: ${n} position ${st} is past the end of the string`,"RuntimeError");const len=a.length>1?nv(a[1]):s.length;const lv=lval(baseExpr,env);lv.set(s.slice(0,st)+(n==="replace"?str(a[2]):"")+s.slice(st+Math.max(0,len)));return null}
+          case "rfind":return s.lastIndexOf(str(a[0]));
           case "c_str":return s;
         }
       }
@@ -1099,9 +1132,14 @@ const TMC=(()=>{
           case "ToArray":return new Arr("array",[...it],T);
           case "ToList":return new Arr("list",[...it],T);
           case "Sum":return it.reduce((s,x)=>arith("+",s,a[0]?invoke(a[0],[x],line):x,line),0);
-          case "Max":return it.reduce((m,x)=>compare(">",x,m,line)?x:m);
-          case "Min":return it.reduce((m,x)=>compare("<",x,m,line)?x:m);
-          case "Average":return new D(it.reduce((s,x)=>s+nv(x),0)/it.length);
+          case "Max":case "Min":{if(!it.length)fail(`line ${line}: Sequence contains no elements`,"InvalidOperationException");const vs=a[0]?it.map(x=>invoke(a[0],[x],line)):it;return vs.reduce((m,x)=>compare(n==="Max"?">":"<",x,m,line)?x:m)}
+          case "Average":{if(!it.length)fail(`line ${line}: Sequence contains no elements`,"InvalidOperationException");const vs=a[0]?it.map(x=>invoke(a[0],[x],line)):it;return new D(vs.reduce((s,x)=>s+nv(x),0)/vs.length)}
+          case "OrderBy":case "OrderByDescending":{const keyed=it.map(x=>[a[0]?invoke(a[0],[x],line):x,x]);const sg=n==="OrderBy"?1:-1;keyed.sort((x,y)=>sg*cmpVals(x[0],y[0]));return new Arr("list",keyed.map(x=>x[1]),T)}
+          case "First":case "Last":case "FirstOrDefault":case "LastOrDefault":{let r=a[0]?it.filter(x=>truth(invoke(a[0],[x],line))):it;if(n.startsWith("Last"))r=[...r].reverse();if(!r.length){if(n.endsWith("OrDefault"))return defaultFor(T);fail(`line ${line}: Sequence contains no ${a[0]?"matching ":""}elements`,"InvalidOperationException")}return r[0]}
+          case "Take":return new Arr("list",it.slice(0,Math.max(0,nv(a[0]))),T);
+          case "Skip":return new Arr("list",it.slice(Math.max(0,nv(a[0]))),T);
+          case "Distinct":return new Arr("list",it.filter((x,i)=>it.findIndex(y=>equal(x,y))===i),T);
+          case "All":return it.every(x=>truth(invoke(a[0],[x],line)));
           case "Count":if(a[0])return it.filter(x=>truth(invoke(a[0],[x],line))).length;return it.length;
           case "Exists":case "Any":return a[0]?it.some(x=>truth(invoke(a[0],[x],line))):it.length>0;
           case "Find":{const r=it.find(x=>truth(invoke(a[0],[x],line)));return r===undefined?defaultFor(T):r}
@@ -1121,6 +1159,8 @@ const TMC=(()=>{
           case "ContainsValue":return [...base.m.values()].some(x=>equal(x[1],a[0]));
           case "Clear":case "clear":base.m.clear();return null;
           case "size":return base.m.size;
+          case "empty":return base.m.size===0;
+          case "at":if(!base.m.has(dkey(a[0])))fail(`line ${line}: std::out_of_range: map::at (the key ${str(a[0])} isn't in the map)`,"RuntimeError");return base.m.get(dkey(a[0]))[1];
           case "GetValueOrDefault":return base.m.has(dkey(a[0]))?base.m.get(dkey(a[0]))[1]:(a[1]??defaultFor(base.vt));
         }
       }
@@ -1147,7 +1187,8 @@ const TMC=(()=>{
       int:{ns:{Parse:B(s=>{if(s===null)fail("int.Parse got null","ArgumentNullException");const t=str(s).trim();if(!/^[-+]?\d+$/.test(t))fail(`Input string was not in a correct format: "${str(s)}"`,"FormatException");return parseInt(t)}),
         TryParse:B(()=>fail("int.TryParse uses an out parameter, which isn't supported yet. Use int.Parse inside try/catch.","NotSupported")),MaxValue:2147483647,MinValue:-2147483648}},
       double:{ns:{Parse:B(s=>{const t=str(s).trim();if(t===""||isNaN(+t))fail(`Input string was not in a correct format: "${str(s)}"`,"FormatException");return new D(+t)})}},
-      string:{ns:{Join:B((sep,coll)=>[...iterate(coll,0)].map(x=>str(x)).join(str(sep))),IsNullOrEmpty:B(s=>s===null||s===""),Empty:"",Concat:B((...a)=>a.map(x=>str(x)).join(""))}},
+      string:{ns:{Join:B((sep,coll)=>[...iterate(coll,0)].map(x=>str(x)).join(str(sep))),IsNullOrEmpty:B(s=>s===null||s===""),Empty:"",Concat:B((...a)=>a.map(x=>str(x)).join("")),Format:B((f,...a)=>formatString(str(f),a)),IsNullOrWhiteSpace:B(s=>s===null||str(s).trim()===""),npos:-1}},
+      Array:{ns:{Sort:B(x=>{if(!(x instanceof Arr))fail("Array.Sort needs an array","CompileError");x.items.sort(cmpVals);return null}),Reverse:B(x=>{if(!(x instanceof Arr))fail("Array.Reverse needs an array","CompileError");x.items.reverse();return null}),IndexOf:B((x,v)=>x.items.findIndex(y=>equal(y,v)))}},
       Convert:{ns:{ToInt32:B(v=>typeof v==="string"?BUILTIN.int.ns.Parse.builtin(v):Math.round(nv(v))),ToDouble:B(v=>new D(typeof v==="string"?+v:nv(v))),ToString:B(v=>str(v))}},
       cout:STREAM,cerr:STREAM,endl:new Func({builtin:()=>null,endl:true}),
       boolalpha:{manip:"boolalpha"},fixed:{manip:"fixed"},
@@ -1466,6 +1507,8 @@ const TMC=(()=>{
           const coll=ev(s.coll,env);
           if(s.type&&s.type.ref&&lang==="cpp"&&coll instanceof Arr){
             for(let i=0;i<coll.items.length;i++){tick();const fe=new Env(env);const idx=i;fe.vars.set(s.name,new LV(()=>coll.items[idx],v=>coll.items[idx]=v));try{exec(s.body,fe)}catch(x){if(x===BRK)break;if(x!==CNT)throw x}}return}
+          if(s.type&&s.type.ref&&lang==="cpp"&&typeof coll==="string"){let lv=null;try{lv=lval(s.coll,env)}catch(x){lv=null}
+            if(lv){const n=coll.length;for(let i=0;i<n;i++){tick();const fe=new Env(env);const idx=i;fe.vars.set(s.name,new LV(()=>new Ch(lv.get().codePointAt(idx)),v=>{const cur=lv.get();lv.set(cur.slice(0,idx)+str(coerce(v,{name:"char"},s.line))+cur.slice(idx+1))}));try{exec(s.body,fe)}catch(x){if(x===BRK)break;if(x!==CNT)throw x}}return}}
           if(lang==="java"&&coll instanceof Arr&&coll.kind!=="array"){const it=coll.items;const n0=it.length;let cur=0;
             while(cur!==it.length){tick();if(it.length!==n0)fail(`line ${s.line}: (you changed the list while looping over it with for-each. Use removeIf, or loop over a copy)`,"ConcurrentModificationException");const v=it[cur++];const fe=new Env(env);fe.vars.set(s.name,new Cell(coerce(v,s.type,s.line),s.type));try{exec(s.body,fe)}catch(x){if(x===BRK)break;if(x!==CNT)throw x}}return}
           const items=[...iterate(coll,s.line)];
@@ -1530,10 +1573,13 @@ const TMC=(()=>{
         for(const i of c.ifaces||[])if(!classes[i]&&!["Comparable","Runnable","Cloneable"].includes(i))fail(`cannot find symbol: class ${i}`,"CompileError");
         if(c.isEnum){c.enumVals=c.vals.map((v,i)=>{const o=new Obj({name:c.name,isEnumVal:true,methods:Object.create(null),fields:[]});o.ev={name:v,ordinal:i};return o});c.statics=[];c.staticVals={}}
       }
+      if(lang==="cs")for(const c of Object.values(classes))if(c.parent){
+        if(classes[c.parent])c.sup=classes[c.parent];else if(/^I[A-Z]/.test(c.parent)){c.ifaces.unshift(c.parent)}else fail(`The type or namespace name '${c.parent}' could not be found (class ${c.name} : ${c.parent})`,"CompileError");
+        for(let k=c.sup;k;k=k.sup)if(k===c)fail(`Circular base type dependency involving '${c.name}'`,"CompileError")}
       if(lang==="java")for(const c of Object.values(classes)){for(let k=c.sup;k;k=k.sup){if(k===c)fail(`cyclic inheritance involving ${c.name}`,"CompileError");if(k.excChain)c.excChain=true}
 }
       for(const it of prog)if(it.k==="class"){const c=it.cls;if(c.isEnum){c.enumVals.forEach(o=>c.staticVals[o.ev.name]=o);continue}c.staticVals={};const se=new Env(globalEnv);se.cls=c;for(const f of c.statics)c.staticVals[f.name]=f.init?coerce(ev(f.init,se),f.type,0):defaultFor(f.type)}
-      for(const it of prog)if(it.k==="func"){const f=new Func({name:it.name,params:it.params,body:it.body,ret:it.ret,closure:globalEnv});if(lang==="java"&&funcs[it.name]){const pr=funcs[it.name];(pr.overloads||(pr.overloads=[pr])).push(f)}else funcs[it.name]=f}
+      for(const it of prog)if(it.k==="func"){const f=new Func({name:it.name,params:it.params,body:it.body,ret:it.ret,closure:globalEnv});if((lang==="java"||lang==="cpp")&&funcs[it.name]){const pr=funcs[it.name];(pr.overloads||(pr.overloads=[pr])).push(f)}else funcs[it.name]=f}
       const mainCls=Object.values(classes).find(c=>c.methods.Main&&c.methods.Main.isStatic);
       const jmain=lang==="java"&&Object.values(classes).find(c=>c.methods.main&&c.methods.main.isStatic);
       if(lang==="java"&&jmain){if(prog.some(it=>it.k!=="class"&&it.k!=="empty"))fail("Your code has statements outside of a class. In a full Java file, everything goes inside class Main { ... }","CompileError");
