@@ -1,7 +1,6 @@
 <title>TypeMonkey</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
+/*FONTS*/
 /* Layout: phone-first single column app shell; sticky stat bar, screens swap in the middle, TypeMonkey talks from a speech bubble */
 :root{
   --bg:#F2F5F1; --surface:#FFFEFB; --surface2:#E7EEE9; --fg:#1B2621; --muted:#5D6E66;
@@ -119,6 +118,8 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 .editor textarea{display:block;width:100%;min-height:150px;resize:vertical;background:transparent;color:var(--code-fg);border:0;outline:0;padding:12px 14px;font-family:var(--mono);font-size:.92rem;line-height:1.6;tab-size:2;white-space:pre;overflow-x:auto}
 /* Code fonts merge characters like ... or != into one "ligature" shape; on phones that made dots look invisible. Show every character as typed. */
 *{font-variant-ligatures:none;font-feature-settings:"liga" 0,"calt" 0}
+.boot{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:60vh;text-align:center;color:var(--muted)}.boot b{font-family:var(--display);font-size:1.4rem;color:var(--fg)}
+.boot-m{font-size:3.5rem;animation:bob 1.2s ease-in-out infinite}
 .editor pre{margin:0;padding:12px 14px;color:var(--code-fg);font-family:var(--mono);font-size:.92rem;line-height:1.6;overflow-x:auto}
 /* phones: wrap long code lines instead of scrolling sideways (the start of lines was disappearing) */
 @media (max-width:560px){.editor textarea,.editor pre{white-space:pre-wrap;overflow-wrap:anywhere;overflow-x:hidden;font-size:.86rem}}
@@ -413,7 +414,7 @@ html.calm *{animation:none!important;transition:none!important}
     <button class="gear" id="sndBtn" aria-label="Sounds on" aria-pressed="true" title="Sounds on or off">🔊</button>
     <button class="gear" id="gearBtn" aria-label="Settings"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg></button>
   </header>
-  <main id="screen"></main>
+  <main id="screen"><div class="boot" role="status"><div class="boot-m">🐒</div><b>TypeMonkey is waking up…</b><span>Getting the bananas ready</span></div></main>
   <footer class="foot" id="foot"></footer>
 </div>
 <div class="toast" id="toast" hidden></div>

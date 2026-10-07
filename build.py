@@ -48,6 +48,15 @@ def build(artifact: bool) -> pathlib.Path:
     vendor = (ROOT / "src" / "vendor" / "brython.js").read_text().replace("</script", "<\\/script")
     assert "/*VENDOR*/" in app, "vendor placeholder missing from src/app.html"
     app = app.replace("/*VENDOR*/", vendor)
+    # Fonts are bundled (Latin subsets, SIL Open Font License; see src/fonts/OFL-*.txt) so the app works offline
+    # and makes no outside requests (needed for the App Store Kids category).
+    import base64
+    def face(fam, file, weights):
+        b64 = base64.b64encode((ROOT / "src" / "fonts" / file).read_bytes()).decode()
+        return f"@font-face{{font-family:\"{fam}\";src:url(data:font/woff;base64,{b64}) format(\"woff\");font-weight:{weights};font-style:normal;font-display:swap}}"
+    fonts = "\n".join([face("Baloo 2", "baloo2.woff", "400 800"), face("Nunito", "nunito.woff", "200 1000"), face("JetBrains Mono", "jbmono.woff", "100 800")])
+    assert "/*FONTS*/" in app, "fonts placeholder missing from src/app.html"
+    app = app.replace("/*FONTS*/", fonts)
     assert "/*COURSE_DATA*/" in app, "placeholder missing from src/app.html"
     page = app.replace("/*COURSE_DATA*/", data)
     if artifact:
