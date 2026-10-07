@@ -72,15 +72,18 @@ CHECK = r"""async () => {
     const w = s.grid[0].length;
     if (!s.grid.every(r => r.length === w)) R.push(`${x.l.id} step ${i}: grid rows differ in length`);
     const m = mazeInfo(s.grid); if (!m.start || !m.goals.length) { R.push(`${x.l.id} step ${i}: missing S or B`); continue; }
-    const sol = simulate(s.grid, s.dir, s.solution);
+    const main = s.func ? s.solution.main : s.solution, fnb = s.func ? s.solution.fn : [];
+    const sol = simulate(s.grid, s.dir, main, fnb);
     if (sol.result !== "win") R.push(`${x.l.id} step ${i}: solution doesn't reach the banana (${sol.result})`);
-    if (s.max && blockCount(s.solution) > s.max) R.push(`${x.l.id} step ${i}: solution uses ${blockCount(s.solution)} blocks, max ${s.max}`);
-    const js = JSON.stringify(s.solution); const used = new Set(js.match(/"(fwd|left|right|ifR|ifL)"/g).map(t => t.slice(1, -1))); if (js.includes('"rep"')) used.add("rep"); if (js.includes('"until"')) used.add("until");
+    const nBlocks = blockCount(main) + fnb.length;
+    if (s.max && nBlocks > s.max) R.push(`${x.l.id} step ${i}: solution uses ${nBlocks} blocks, max ${s.max}`);
+    const js = JSON.stringify(main) + JSON.stringify(fnb); const used = new Set((js.match(/"(fwd|left|right|ifR|ifL|call)"/g) || []).map(t => t.slice(1, -1))); if (js.includes('"rep"')) used.add("rep"); if (js.includes('"until"')) used.add("until");
     for (const b of used) if (!s.blocks.includes(b)) R.push(`${x.l.id} step ${i}: solution needs block ${b} that isn't offered`);
     for (const p of JSON.stringify(s.solution).match(/"rep":(\d+)/g) || []) { const n = +p.split(":")[1]; if (n < 2 || n > 5) R.push(`${x.l.id} step ${i}: repeat ${n} is outside 2–5`); }
-    if (s.start && simulate(s.grid, s.dir, s.start).result === "win") R.push(`${x.l.id} step ${i}: buggy starter already wins`);
-    const plus = [...s.solution, "fwd"]; if (simulate(s.grid, s.dir, plus).result === "win") R.push(`${x.l.id} step ${i}: adding an extra Forward still wins`);
-    const plusTurn = [...s.solution, "left"]; if (simulate(s.grid, s.dir, plusTurn).result === "win") R.push(`${x.l.id} step ${i}: adding an extra turn still wins`);
+    if (s.start && simulate(s.grid, s.dir, s.start, s.startFn || []).result === "win") R.push(`${x.l.id} step ${i}: buggy starter already wins`);
+    if (simulate(s.grid, s.dir, [...main, "fwd"], fnb).result === "win") R.push(`${x.l.id} step ${i}: adding an extra Forward still wins`);
+    if (simulate(s.grid, s.dir, [...main, "left"], fnb).result === "win") R.push(`${x.l.id} step ${i}: adding an extra turn still wins`);
+    if (s.func && simulate(s.grid, s.dir, [...main, "call"], fnb).result === "win") R.push(`${x.l.id} step ${i}: an extra My move still wins`);
   }
   // Every course: structure sanity
   for (const c of COURSES) for (const x of flat(c)) {

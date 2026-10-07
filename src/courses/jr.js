@@ -1,7 +1,7 @@
 /* TypeMonkey Jr. · ages 7–12 · no typing. Maze steps: grid rows use # tree, . path, S start, B banana.
    dir is the starting direction (N/E/S/W). blocks are the buttons offered. start pre-fills a (buggy) program.
    solution must reach the banana within max blocks (checked by tests/verify_course.py). */
-const JF="fwd",JL="left",JRT="right",JIFR="ifR",JIFL="ifL",jrep=(n,...body)=>({rep:n,body}),juntil=(...body)=>({until:true,body});
+const JF="fwd",JL="left",JRT="right",JIFR="ifR",JIFL="ifL",JCALL="call",jrep=(n,...body)=>({rep:n,body}),juntil=(...body)=>({until:true,body});
 
 const JR_UNIT1={name:"Monkey moves",free:true,lessons:[
 {id:"jr1",title:"First steps",sub:"a program is a list of steps",steps:[
@@ -131,4 +131,66 @@ const JR_UNIT4={name:"Smart monkey",lessons:[
  {type:"done"}]}
 ]};
 
-const COURSE_JR={id:"jr",name:"TypeMonkey Jr.",blurb:"Puzzle adventures for ages 7–12. Snap blocks together to guide TypeMonkey to his bananas. No typing needed! Unit 1 is free.",units:[JR_UNIT1,JR_UNIT2,JR_UNIT3,JR_UNIT4]};
+const STAIRS5=["S####","..###","#..##","##..#","###.B"];
+const STAIRS6=["S#####","..####","#..###","##..##","###..#","####.B"];
+const HOPS3=["S.#####","#...###","###...#","#####.B"];
+const HOPS5=["S.#########","#...#######","###...#####","#####...###","#######...#","#########.B"];
+const JR_UNIT5={name:"My own blocks",lessons:[
+{id:"jr14",title:"Make a move",sub:"build your own block",steps:[
+ {type:"talk",title:"Your very own block!",mood:"cheer",
+  body:`<p>What if you could make a <b>brand-new block</b>? Tap <b>⭐ My move</b> and add blocks to it. Then in your main program, each <b>⭐</b> block does your whole move!</p><p>Real coders call this a <b>function</b>. Build it once, use it again and again.</p>`,
+  say:"It's like teaching me a dance move, then just shouting its name!"},
+ {type:"maze",title:"Stair dance",func:true,grid:STAIRS5,dir:"E",blocks:[JF,JL,JRT,JCALL],max:8,solution:{main:[JCALL,JCALL,JCALL,JCALL],fn:[JRT,JF,JL,JF]},
+  body:`<p>Every stair is the same: turn right, step, turn left, step. Put that in ⭐ My move, then use ⭐ four times.</p>`,say:"First tap ⭐ My move and build the stair move."},
+ {type:"quiz",q:"Why make your own block?",opts:["So you can reuse steps without building them again","To make the maze bigger","Because computers like stars"],a:0,why:"Functions save you from repeating yourself. Change the move once and every ⭐ changes too!"},
+ {type:"maze",title:"Hop, hop, hop",func:true,grid:HOPS3,dir:"E",blocks:[JF,JL,JRT,JCALL],max:8,solution:{main:[JCALL,JCALL,JCALL],fn:[JF,JRT,JF,JL,JF]},say:"Find the hop that repeats. How many blocks is one hop?"},
+ {type:"done"}]},
+{id:"jr15",title:"Moves and loops",sub:"put your block inside a repeat",steps:[
+ {type:"talk",title:"Super combo",mood:"think",
+  body:`<p>You can put ⭐ inside a <b>Repeat</b>! Then a tiny main program can make me do a huge amount of moves.</p>`,
+  say:"Repeat 5 times: ⭐. That's two blocks doing twenty moves!"},
+ {type:"maze",title:"Giant stairs again",func:true,grid:STAIRS6,dir:"E",blocks:[JF,JL,JRT,"rep",JCALL],max:6,solution:{main:[jrep(5,JCALL)],fn:[JRT,JF,JL,JF]}},
+ {type:"quiz",q:"⭐ My move has 4 blocks. You use ⭐ 3 times. How many steps and turns does TypeMonkey do?",opts:["12","7","4"],a:0,why:"3 times 4 blocks is 12."},
+ {type:"maze",title:"The long hop",func:true,grid:HOPS5,dir:"E",blocks:[JF,JL,JRT,"rep",JCALL],max:7,solution:{main:[jrep(5,JCALL)],fn:[JF,JRT,JF,JL,JF]},say:"Same hop as before, but five times. Use a Repeat!"},
+ {type:"done"}]},
+{id:"jr16",title:"Fix my move",sub:"debugging your own blocks",steps:[
+ {type:"talk",title:"One fix fixes everything",mood:"oops",
+  body:`<p>If ⭐ My move has a bug, every ⭐ has the same bug! The good news: fix it in one place and <b>every</b> ⭐ gets fixed.</p>`,
+  say:"Let's find the bug in my dance move."},
+ {type:"maze",title:"Wrong-way stairs",func:true,grid:STAIRS5,dir:"E",blocks:[JF,JL,JRT,JCALL],max:8,start:[JCALL,JCALL,JCALL,JCALL],startFn:[JRT,JF,JRT,JF],solution:{main:[JCALL,JCALL,JCALL,JCALL],fn:[JRT,JF,JL,JF]},say:"Press Go and watch. Then fix the move, not the main program!"},
+ {type:"maze",title:"Banana steps",func:true,grid:["S####","B.###","#.B##","##.B#","###.B"],dir:"E",blocks:[JF,JL,JRT,"rep",JCALL],max:6,solution:{main:[jrep(4,JCALL)],fn:[JRT,JF,JL,JF]},say:"Four bananas, one tiny move."},
+ {type:"done"}]},
+{id:"jr17",title:"Function master",sub:"smart blocks inside your own block",project:true,steps:[
+ {type:"talk",title:"The final combo",mood:"cheer",
+  body:`<p>Last challenge: put <b>smart blocks</b> inside ⭐ My move, and use <b>Repeat until 🍌</b> in the main program. That's exactly how real programs are built: small smart pieces, used over and over.</p>`,
+  say:"You're thinking like a real programmer now!"},
+ {type:"maze",title:"Hop until banana",func:true,grid:HOPS5,dir:"E",blocks:[JF,JL,JRT,"until",JCALL],max:7,solution:{main:[juntil(JCALL)],fn:[JF,JRT,JF,JL,JF]},say:"You don't even need to count the hops!"},
+ {type:"maze",title:"Smart spiral",func:true,grid:["S....","####.","B...."],dir:"E",blocks:[JF,JIFR,"until",JCALL],max:4,solution:{main:[juntil(JCALL)],fn:[JIFR,JF]}},
+ {type:"maze",title:"The grand tour",func:true,grid:["SB..B","####.","B..B."],dir:"E",blocks:[JF,JL,JRT,JIFR,"until",JCALL],max:4,solution:{main:[juntil(JCALL)],fn:[JIFR,JF]},win:"Function Master! You built a smart, reusable program! ⭐"},
+ {type:"done"}]}
+]};
+
+const JR_UNIT6={name:"Detective work",lessons:[
+{id:"jr18",title:"Pattern detective",sub:"what comes next?",steps:[
+ {type:"talk",title:"Patterns everywhere",mood:"think",
+  body:`<p>Coders spot patterns all day long. A pattern is something that repeats. Once you see it, you can use a loop!</p>`,
+  say:"Let's train your detective eyes. 🔍"},
+ {type:"quiz",q:"What comes next? 🍌 🥥 🍌 🥥 🍌 …",opts:["🥥","🍌","🍎"],a:0,why:"Banana, coconut, banana, coconut... the pattern repeats every 2."},
+ {type:"quiz",q:"What comes next? 2, 4, 6, 8, …",opts:["10","9","12"],a:0,why:"Each number is 2 more than the last one."},
+ {type:"quiz",q:"What comes next? 🔴 🔴 🔵 🔴 🔴 🔵 🔴 🔴 …",opts:["🔵","🔴","🟢"],a:0,why:"The pattern is red, red, blue. After two reds comes blue."},
+ {type:"quiz",q:"Which part repeats? Hop, clap, hop, clap, hop, clap",opts:["Hop, clap","Hop, hop","Clap, clap, clap"],a:0,why:"Hop, clap happens three times. So: Repeat 3 times: hop, clap."},
+ {type:"quiz",q:"What comes next? 1, 2, 4, 8, …",opts:["16","10","12"],a:0,why:"Each number doubles: 8 + 8 is 16."},
+ {type:"order",title:"Morning pattern",body:`<p>TypeMonkey's morning repeats every day. Put it in order.</p>`,lines:["Wake up","Eat a banana","Brush teeth","Go code!"],why:"Same steps, same order, every day. That's a routine, like a program."},
+ {type:"done"}]},
+{id:"jr19",title:"Debug detective",sub:"find the bug, fix the bug",steps:[
+ {type:"talk",title:"Case of the broken programs",mood:"oops",
+  body:`<p>Three programs are broken, and it's your job to crack the case! Press Go first to see what goes wrong. Watching closely is how real coders find bugs.</p>`,
+  say:"Grab your magnifying glass. 🔍"},
+ {type:"maze",title:"One step too far",grid:["S..B"],dir:"E",blocks:[JF],start:[JF,JF,JF,JF],solution:[JF,JF,JF],say:"Something is extra here..."},
+ {type:"maze",title:"Wrong turn",grid:["S...","###.","###B"],dir:"E",blocks:[JF,JL,JRT,"rep"],start:[jrep(3,JF),JL,jrep(2,JF)],solution:[jrep(3,JF),JRT,jrep(2,JF)],say:"The turn looks suspicious."},
+ {type:"maze",title:"The loop that forgot to look",grid:["S....","####.","B...."],dir:"E",blocks:[JF,JIFR,"until"],max:3,start:[juntil(JF)],solution:[juntil(JIFR,JF)],say:"My loop walks straight into trees. What block is missing?"},
+ {type:"quiz",q:"What's the FIRST thing a good detective does with a buggy program?",opts:["Run it and watch what happens","Delete everything","Guess a fix"],a:0,why:"Watching the program run shows you exactly where it goes wrong."},
+ {type:"done"}]}
+]};
+
+const COURSE_JR={id:"jr",name:"TypeMonkey Jr.",blurb:"Puzzle adventures for ages 7–12. Snap blocks together to guide TypeMonkey to his bananas. No typing needed! Unit 1 is free.",units:[JR_UNIT1,JR_UNIT2,JR_UNIT3,JR_UNIT4,JR_UNIT5,JR_UNIT6]};

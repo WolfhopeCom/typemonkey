@@ -207,6 +207,12 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 .blk.b-rep,.blk.b-until{background:var(--leaf);color:#fff;box-shadow:0 4px 0 color-mix(in srgb,var(--leaf) 60%,#000)}
 .blk.b-ifR,.blk.b-ifL{background:#7C5CFF;color:#fff;box-shadow:0 4px 0 #5A3FD0}
 .repblk.until{border-color:var(--leaf)}
+.blk.b-call{background:#FF6FAE;color:#fff;box-shadow:0 4px 0 #C93E80}
+.lanes{display:flex;gap:6px}
+.lane{flex:1;border:2px solid var(--line);background:var(--surface);color:var(--fg);border-radius:12px;padding:8px;font-weight:800}
+.lane[aria-pressed="true"]{border-color:#FF6FAE;background:color-mix(in srgb,#FF6FAE 14%,var(--surface))}
+.prog.fprog{background:#3A1730}
+.prog.active{outline:3px solid #FF6FAE;outline-offset:2px}
 span.repn{display:inline-block}
 .blk:active{transform:translateY(3px)}
 .due{display:inline-grid;place-items:center;min-width:24px;height:24px;padding:0 6px;border-radius:99px;background:var(--accent);color:var(--accent-ink);font-size:.85rem;font-family:var(--body);vertical-align:middle}
@@ -863,14 +869,14 @@ function order(s){
 /* ---------- TypeMonkey Jr.: maze puzzles ---------- */
 const DIRS={N:[0,-1],E:[1,0],S:[0,1],W:[-1,0]},LEFT={N:"W",W:"S",S:"E",E:"N"},RIGHT={N:"E",E:"S",S:"W",W:"N"},ROT={E:0,S:90,W:180,N:270};
 const BLOCKS={fwd:{icon:"👣",label:"Forward"},left:{icon:"↺",label:"Turn left"},right:{icon:"↻",label:"Turn right"},rep:{icon:"🔁",label:"Repeat"},
-  until:{icon:"🔁🍌",label:"Repeat until 🍌"},ifR:{icon:"🌴↻",label:"Tree ahead? Turn right"},ifL:{icon:"🌴↺",label:"Tree ahead? Turn left"}};
+  until:{icon:"🔁🍌",label:"Repeat until 🍌"},call:{icon:"⭐",label:"My move"},ifR:{icon:"🌴↻",label:"Tree ahead? Turn right"},ifL:{icon:"🌴↺",label:"Tree ahead? Turn left"}};
 const isBox=b=>typeof b==="object";
 function mazeInfo(g){let start;const goals=[];g.forEach((row,y)=>[...row].forEach((ch,x)=>{if(ch==="S")start=[x,y];if(ch==="B")goals.push([x,y])}));return {start,goal:goals[0],goals,w:g[0].length,h:g.length}}
 const blockCount=prog=>prog.reduce((n,b)=>n+(isBox(b)?1+b.body.length:1),0);
 /* runs a program; path entries are [x, y, dir, bump?, eatenKey?]
    The program must end exactly when the last banana is eaten: any move or turn after that is "extra".
    (Repeat until 🍌 stops by itself the moment the last banana is eaten.) */
-function simulate(grid,dir,prog){
+function simulate(grid,dir,prog,fn){
   const m=mazeInfo(grid);let [x,y]=m.start,d=dir;const path=[[x,y,d]];const left=new Set(m.goals.map(g=>g.join(",")));let steps=0,won=false;
   const treeAhead=()=>{const [dx,dy]=DIRS[d];const ch=(grid[y+dy]||"")[x+dx];return ch===undefined||ch==="#"};
   const one=t=>{
@@ -900,6 +906,9 @@ function simulate(grid,dir,prog){
           else{if(!b.body.length)return "loop";let guard=0;
             while(!won){if(++guard>80)return "loop";r=runList(b.body,true);if(r==="won"){r=null;break}if(r)return r}}
         }else for(let k=0;k<b.rep;k++){r=runList(b.body,inUntil);if(r==="won"){if(inUntil)return "won";r=null;continue}if(r)return r}
+      }else if(b==="call"){
+        if(won){r="extra";path.push([x,y,d,"bump"])}
+        else{if(++steps>500)return "loop";r=runList(fn||[],inUntil);if(r==="won"){if(inUntil)return "won";r=null}}
       }else{r=one(b);if(r==="won"){if(inUntil)return "won";r=null}}
       if(r)return r;
     }
@@ -910,10 +919,14 @@ function simulate(grid,dir,prog){
 }
 function maze(s){
   const m=mazeInfo(s.grid);let prog=JSON.parse(JSON.stringify(s.start||[]));let open=null,running=false,fails=0,won=false;
+  let fn=JSON.parse(JSON.stringify(s.startFn||[])),lane="main";const FN_OK=["fwd","left","right","ifR","ifL"];
+  const total=()=>blockCount(prog)+(s.func?fn.length:0);
   const cell=ch=>ch==="#"?"🌴":ch==="B"?"🍌":"";const nB=m.goals.length;
   shell(`<div class="card"><div class="label">Monkey maze${nB>1?` · collect all ${nB} bananas`:""}${s.max?` · use ${s.max} blocks or fewer`:""} · +15 XP</div><h2>${s.title}</h2>${s.body||""}
     <div class="maze" style="--w:${m.w};--h:${m.h}" id="mz">${s.grid.map((row,y)=>[...row].map((ch,x)=>`<div class="mc ${ch==="#"?"tree":"path"}" data-xy="${x},${y}">${cell(ch)}</div>`).join("")).join("")}<div class="mk" id="mk"><div class="mface" id="mface">${monkey("happy")}</div><span class="arr" id="arr">➜</span></div></div>
-    <div class="label">Your program</div><div class="prog" id="prog"></div>
+    ${s.func?`<div class="lanes" role="tablist"><button class="lane" data-lane="main" aria-pressed="true">Main program</button><button class="lane" data-lane="fn" aria-pressed="false">⭐ My move</button></div>
+    <div class="label">⭐ My move <span style="text-transform:none;letter-spacing:0;font-weight:600">(build it once, use it with the ⭐ block)</span></div><div class="prog fprog" id="fprog"></div>`:""}
+    <div class="label">${s.func?"Main program":"Your program"}</div><div class="prog" id="prog"></div>
     <div class="palette">${s.blocks.map(b=>`<button class="blk b-${b}" data-b="${b}"><span>${BLOCKS[b].icon}</span>${BLOCKS[b].label}</button>`).join("")}</div>
     <div id="fb"></div></div>
     <div id="bud">${buddy(s.say||"Tap the blocks to build a program, then press Go!","think")}</div>
@@ -921,6 +934,12 @@ function maze(s){
   const place=(x,y,d,bump)=>{const k=$("#mk");k.style.left=`calc(${x} * 100% / ${m.w})`;k.style.top=`calc(${y} * 100% / ${m.h})`;k.style.transform=bump?"translateX(4px)":"none";$("#arr").style.transform=`rotate(${ROT[d]}deg)`};
   const reset=()=>{place(m.start[0],m.start[1],s.dir);m.goals.forEach(([gx,gy])=>{const c=document.querySelector(`.mc[data-xy="${gx},${gy}"]`);if(c)c.textContent="🍌"})};
   const draw=()=>{
+    if(s.func){
+      $("#fprog").innerHTML=fn.length?fn.map((b,i)=>`<button class="chip" data-f="${i}" aria-label="Remove ${BLOCKS[b].label}">${BLOCKS[b].icon}</button>`).join(""):'<span class="empty">Tap ⭐ My move above, then add blocks here</span>';
+      $$("#fprog .chip").forEach(c=>c.onclick=()=>{if(running||won)return;fn.splice(+c.dataset.f,1);draw()});
+      $$(".lane").forEach(b=>b.setAttribute("aria-pressed",b.dataset.lane===lane));
+      $("#fprog").classList.toggle("active",lane==="fn");$("#prog").classList.toggle("active",lane==="main");
+    }
     const chip=(b,i,j)=>`<button class="chip" data-i="${i}" ${j!==undefined?`data-j="${j}"`:""} aria-label="Remove ${BLOCKS[b].label}">${BLOCKS[b].icon}</button>`;
     $("#prog").innerHTML=prog.length?prog.map((b,i)=>typeof b==="object"?
       `<span class="repblk ${b.until?"until":""} ${open===i?"open":""}">${b.until?`<span class="repn">🔁 until 🍌</span>`:`<button class="repn" data-r="${i}" aria-label="Change repeat count">🔁 ×${b.rep}</button>`}${b.body.map((t,j)=>chip(t,i,j)).join("")}${open===i?`<button class="repclose" data-c="${i}">done</button>`:""}</span>`:chip(b,i)).join(""):'<span class="empty">Tap blocks below to add them here</span>';
@@ -930,24 +949,26 @@ function maze(s){
   };
   $$(".blk").forEach(b=>b.onclick=()=>{
     if(running||won)return;const t=b.dataset.b;
+    if(s.func&&lane==="fn"){if(!FN_OK.includes(t))return toast(t==="call"?"My move can't use itself! Switch to Main program to use ⭐.":"Only simple moves go inside My move.");fn.push(t);return draw()}
     if(t==="rep"||t==="until"){if(open!==null)return toast("Finish the repeat you're building first (tap done).");prog.push(t==="rep"?{rep:2,body:[]}:{until:true,body:[]});open=prog.length-1}
     else if(open!==null)prog[open].body.push(t);else prog.push(t);
     draw();
   });
-  $("#undo").onclick=()=>{if(running||won)return;if(open!==null&&prog[open].body.length)prog[open].body.pop();else{prog.pop();open=null}draw()};
-  $("#clr").onclick=()=>{if(running||won)return;prog=[];open=null;draw();reset()};
-  $("#hint").onclick=()=>{prog=JSON.parse(JSON.stringify(s.solution));open=null;draw();reset();$("#bud").innerHTML=buddy("Here's one way. Press Go to watch it work!","happy")};
+  $$(".lane").forEach(b=>b.onclick=()=>{lane=b.dataset.lane;open=null;draw()});
+  $("#undo").onclick=()=>{if(running||won)return;if(s.func&&lane==="fn"){fn.pop();return draw()}if(open!==null&&prog[open].body.length)prog[open].body.pop();else{prog.pop();open=null}draw()};
+  $("#clr").onclick=()=>{if(running||won)return;prog=[];fn=[];open=null;draw();reset()};
+  $("#hint").onclick=()=>{if(s.func){prog=JSON.parse(JSON.stringify(s.solution.main));fn=JSON.parse(JSON.stringify(s.solution.fn))}else prog=JSON.parse(JSON.stringify(s.solution));open=null;draw();reset();$("#bud").innerHTML=buddy("Here's one way. Press Go to watch it work!","happy")};
   $("#run").onclick=()=>{
     if(running||won||!prog.length)return;running=true;open=null;draw();reset();
-    const {path,result}=simulate(s.grid,s.dir,prog);let k=1;
+    const {path,result}=simulate(s.grid,s.dir,prog,fn);let k=1;
     const tick=()=>{
       if(k<path.length){const [x,y,d,bump,ate]=path[k];place(x,y,d,bump);if(ate){const c=document.querySelector(`.mc[data-xy="${ate}"]`);if(c)setTimeout(()=>{c.textContent="✨"},250)}k++;return setTimeout(tick,path.length>40?220:380)}
       running=false;
-      const tooMany=s.max&&blockCount(prog)>s.max;
+      const tooMany=s.max&&total()>s.max;
       if(result==="win"&&!tooMany){won=true;award(15,3);bump("mazes");if(s.start)bump("bugsFixed");$("#mface").innerHTML=monkey("cheer");$("#fb").innerHTML=`<div class="feedback good">🍌 ${nB>1?"All bananas collected!":"Banana reached!"} ${esc(s.win||pick(WINS))}</div>`;
         $("#bud").innerHTML=buddy("YES! Your program worked!","cheer");["run","undo","clr","hint"].forEach(i=>$("#"+i).hidden=true);$("#go").hidden=false;return}
       fails++;$("#mface").innerHTML=monkey("oops");setTimeout(()=>{const f=$("#mface");if(f)f.innerHTML=monkey("happy")},900);
-      const msg=result==="win"?`You got there, but used ${blockCount(prog)} blocks. Can you do it with ${s.max} or fewer? Try a Repeat block!`:result==="wall"?"Bonk! TypeMonkey bumped into a tree. Find the step that went wrong and fix it.":result==="loop"?"TypeMonkey kept going around and around! Your repeat never got him to every banana.":result==="extra"?"Too many steps! TypeMonkey got the banana, then kept going. A program has to stop at exactly the right spot. Remove the extra blocks.":"So close! TypeMonkey stopped before reaching the banana. Add more steps.";
+      const msg=result==="win"?`You got there, but used ${total()} blocks. Can you do it with ${s.max} or fewer? Try a Repeat block!`:result==="wall"?"Bonk! TypeMonkey bumped into a tree. Find the step that went wrong and fix it.":result==="loop"?"TypeMonkey kept going around and around! Your repeat never got him to every banana.":result==="extra"?"Too many steps! TypeMonkey got the banana, then kept going. A program has to stop at exactly the right spot. Remove the extra blocks.":"So close! TypeMonkey stopped before reaching the banana. Add more steps.";
       $("#fb").innerHTML=`<div class="feedback bad">${msg}</div>`;
       $("#bud").innerHTML=buddy(fails>=3?"Want a peek? Tap “Show me”.":"Bugs are normal! Every coder fixes their programs.","oops");
       if(fails>=2&&s.solution)$("#hint").hidden=false;

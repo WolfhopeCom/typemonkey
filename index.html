@@ -214,6 +214,12 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 .blk.b-rep,.blk.b-until{background:var(--leaf);color:#fff;box-shadow:0 4px 0 color-mix(in srgb,var(--leaf) 60%,#000)}
 .blk.b-ifR,.blk.b-ifL{background:#7C5CFF;color:#fff;box-shadow:0 4px 0 #5A3FD0}
 .repblk.until{border-color:var(--leaf)}
+.blk.b-call{background:#FF6FAE;color:#fff;box-shadow:0 4px 0 #C93E80}
+.lanes{display:flex;gap:6px}
+.lane{flex:1;border:2px solid var(--line);background:var(--surface);color:var(--fg);border-radius:12px;padding:8px;font-weight:800}
+.lane[aria-pressed="true"]{border-color:#FF6FAE;background:color-mix(in srgb,#FF6FAE 14%,var(--surface))}
+.prog.fprog{background:#3A1730}
+.prog.active{outline:3px solid #FF6FAE;outline-offset:2px}
 span.repn{display:inline-block}
 .blk:active{transform:translateY(3px)}
 .due{display:inline-grid;place-items:center;min-width:24px;height:24px;padding:0 6px;border-radius:99px;background:var(--accent);color:var(--accent-ink);font-size:.85rem;font-family:var(--body);vertical-align:middle}
@@ -41683,7 +41689,7 @@ const COURSE_WEB={id:"web",name:"HTML & CSS",blurb:"Build real web pages and wat
 /* TypeMonkey Jr. · ages 7–12 · no typing. Maze steps: grid rows use # tree, . path, S start, B banana.
    dir is the starting direction (N/E/S/W). blocks are the buttons offered. start pre-fills a (buggy) program.
    solution must reach the banana within max blocks (checked by tests/verify_course.py). */
-const JF="fwd",JL="left",JRT="right",JIFR="ifR",JIFL="ifL",jrep=(n,...body)=>({rep:n,body}),juntil=(...body)=>({until:true,body});
+const JF="fwd",JL="left",JRT="right",JIFR="ifR",JIFL="ifL",JCALL="call",jrep=(n,...body)=>({rep:n,body}),juntil=(...body)=>({until:true,body});
 
 const JR_UNIT1={name:"Monkey moves",free:true,lessons:[
 {id:"jr1",title:"First steps",sub:"a program is a list of steps",steps:[
@@ -41813,7 +41819,69 @@ const JR_UNIT4={name:"Smart monkey",lessons:[
  {type:"done"}]}
 ]};
 
-const COURSE_JR={id:"jr",name:"TypeMonkey Jr.",blurb:"Puzzle adventures for ages 7–12. Snap blocks together to guide TypeMonkey to his bananas. No typing needed! Unit 1 is free.",units:[JR_UNIT1,JR_UNIT2,JR_UNIT3,JR_UNIT4]};
+const STAIRS5=["S####","..###","#..##","##..#","###.B"];
+const STAIRS6=["S#####","..####","#..###","##..##","###..#","####.B"];
+const HOPS3=["S.#####","#...###","###...#","#####.B"];
+const HOPS5=["S.#########","#...#######","###...#####","#####...###","#######...#","#########.B"];
+const JR_UNIT5={name:"My own blocks",lessons:[
+{id:"jr14",title:"Make a move",sub:"build your own block",steps:[
+ {type:"talk",title:"Your very own block!",mood:"cheer",
+  body:`<p>What if you could make a <b>brand-new block</b>? Tap <b>⭐ My move</b> and add blocks to it. Then in your main program, each <b>⭐</b> block does your whole move!</p><p>Real coders call this a <b>function</b>. Build it once, use it again and again.</p>`,
+  say:"It's like teaching me a dance move, then just shouting its name!"},
+ {type:"maze",title:"Stair dance",func:true,grid:STAIRS5,dir:"E",blocks:[JF,JL,JRT,JCALL],max:8,solution:{main:[JCALL,JCALL,JCALL,JCALL],fn:[JRT,JF,JL,JF]},
+  body:`<p>Every stair is the same: turn right, step, turn left, step. Put that in ⭐ My move, then use ⭐ four times.</p>`,say:"First tap ⭐ My move and build the stair move."},
+ {type:"quiz",q:"Why make your own block?",opts:["So you can reuse steps without building them again","To make the maze bigger","Because computers like stars"],a:0,why:"Functions save you from repeating yourself. Change the move once and every ⭐ changes too!"},
+ {type:"maze",title:"Hop, hop, hop",func:true,grid:HOPS3,dir:"E",blocks:[JF,JL,JRT,JCALL],max:8,solution:{main:[JCALL,JCALL,JCALL],fn:[JF,JRT,JF,JL,JF]},say:"Find the hop that repeats. How many blocks is one hop?"},
+ {type:"done"}]},
+{id:"jr15",title:"Moves and loops",sub:"put your block inside a repeat",steps:[
+ {type:"talk",title:"Super combo",mood:"think",
+  body:`<p>You can put ⭐ inside a <b>Repeat</b>! Then a tiny main program can make me do a huge amount of moves.</p>`,
+  say:"Repeat 5 times: ⭐. That's two blocks doing twenty moves!"},
+ {type:"maze",title:"Giant stairs again",func:true,grid:STAIRS6,dir:"E",blocks:[JF,JL,JRT,"rep",JCALL],max:6,solution:{main:[jrep(5,JCALL)],fn:[JRT,JF,JL,JF]}},
+ {type:"quiz",q:"⭐ My move has 4 blocks. You use ⭐ 3 times. How many steps and turns does TypeMonkey do?",opts:["12","7","4"],a:0,why:"3 times 4 blocks is 12."},
+ {type:"maze",title:"The long hop",func:true,grid:HOPS5,dir:"E",blocks:[JF,JL,JRT,"rep",JCALL],max:7,solution:{main:[jrep(5,JCALL)],fn:[JF,JRT,JF,JL,JF]},say:"Same hop as before, but five times. Use a Repeat!"},
+ {type:"done"}]},
+{id:"jr16",title:"Fix my move",sub:"debugging your own blocks",steps:[
+ {type:"talk",title:"One fix fixes everything",mood:"oops",
+  body:`<p>If ⭐ My move has a bug, every ⭐ has the same bug! The good news: fix it in one place and <b>every</b> ⭐ gets fixed.</p>`,
+  say:"Let's find the bug in my dance move."},
+ {type:"maze",title:"Wrong-way stairs",func:true,grid:STAIRS5,dir:"E",blocks:[JF,JL,JRT,JCALL],max:8,start:[JCALL,JCALL,JCALL,JCALL],startFn:[JRT,JF,JRT,JF],solution:{main:[JCALL,JCALL,JCALL,JCALL],fn:[JRT,JF,JL,JF]},say:"Press Go and watch. Then fix the move, not the main program!"},
+ {type:"maze",title:"Banana steps",func:true,grid:["S####","B.###","#.B##","##.B#","###.B"],dir:"E",blocks:[JF,JL,JRT,"rep",JCALL],max:6,solution:{main:[jrep(4,JCALL)],fn:[JRT,JF,JL,JF]},say:"Four bananas, one tiny move."},
+ {type:"done"}]},
+{id:"jr17",title:"Function master",sub:"smart blocks inside your own block",project:true,steps:[
+ {type:"talk",title:"The final combo",mood:"cheer",
+  body:`<p>Last challenge: put <b>smart blocks</b> inside ⭐ My move, and use <b>Repeat until 🍌</b> in the main program. That's exactly how real programs are built: small smart pieces, used over and over.</p>`,
+  say:"You're thinking like a real programmer now!"},
+ {type:"maze",title:"Hop until banana",func:true,grid:HOPS5,dir:"E",blocks:[JF,JL,JRT,"until",JCALL],max:7,solution:{main:[juntil(JCALL)],fn:[JF,JRT,JF,JL,JF]},say:"You don't even need to count the hops!"},
+ {type:"maze",title:"Smart spiral",func:true,grid:["S....","####.","B...."],dir:"E",blocks:[JF,JIFR,"until",JCALL],max:4,solution:{main:[juntil(JCALL)],fn:[JIFR,JF]}},
+ {type:"maze",title:"The grand tour",func:true,grid:["SB..B","####.","B..B."],dir:"E",blocks:[JF,JL,JRT,JIFR,"until",JCALL],max:4,solution:{main:[juntil(JCALL)],fn:[JIFR,JF]},win:"Function Master! You built a smart, reusable program! ⭐"},
+ {type:"done"}]}
+]};
+
+const JR_UNIT6={name:"Detective work",lessons:[
+{id:"jr18",title:"Pattern detective",sub:"what comes next?",steps:[
+ {type:"talk",title:"Patterns everywhere",mood:"think",
+  body:`<p>Coders spot patterns all day long. A pattern is something that repeats. Once you see it, you can use a loop!</p>`,
+  say:"Let's train your detective eyes. 🔍"},
+ {type:"quiz",q:"What comes next? 🍌 🥥 🍌 🥥 🍌 …",opts:["🥥","🍌","🍎"],a:0,why:"Banana, coconut, banana, coconut... the pattern repeats every 2."},
+ {type:"quiz",q:"What comes next? 2, 4, 6, 8, …",opts:["10","9","12"],a:0,why:"Each number is 2 more than the last one."},
+ {type:"quiz",q:"What comes next? 🔴 🔴 🔵 🔴 🔴 🔵 🔴 🔴 …",opts:["🔵","🔴","🟢"],a:0,why:"The pattern is red, red, blue. After two reds comes blue."},
+ {type:"quiz",q:"Which part repeats? Hop, clap, hop, clap, hop, clap",opts:["Hop, clap","Hop, hop","Clap, clap, clap"],a:0,why:"Hop, clap happens three times. So: Repeat 3 times: hop, clap."},
+ {type:"quiz",q:"What comes next? 1, 2, 4, 8, …",opts:["16","10","12"],a:0,why:"Each number doubles: 8 + 8 is 16."},
+ {type:"order",title:"Morning pattern",body:`<p>TypeMonkey's morning repeats every day. Put it in order.</p>`,lines:["Wake up","Eat a banana","Brush teeth","Go code!"],why:"Same steps, same order, every day. That's a routine, like a program."},
+ {type:"done"}]},
+{id:"jr19",title:"Debug detective",sub:"find the bug, fix the bug",steps:[
+ {type:"talk",title:"Case of the broken programs",mood:"oops",
+  body:`<p>Three programs are broken, and it's your job to crack the case! Press Go first to see what goes wrong. Watching closely is how real coders find bugs.</p>`,
+  say:"Grab your magnifying glass. 🔍"},
+ {type:"maze",title:"One step too far",grid:["S..B"],dir:"E",blocks:[JF],start:[JF,JF,JF,JF],solution:[JF,JF,JF],say:"Something is extra here..."},
+ {type:"maze",title:"Wrong turn",grid:["S...","###.","###B"],dir:"E",blocks:[JF,JL,JRT,"rep"],start:[jrep(3,JF),JL,jrep(2,JF)],solution:[jrep(3,JF),JRT,jrep(2,JF)],say:"The turn looks suspicious."},
+ {type:"maze",title:"The loop that forgot to look",grid:["S....","####.","B...."],dir:"E",blocks:[JF,JIFR,"until"],max:3,start:[juntil(JF)],solution:[juntil(JIFR,JF)],say:"My loop walks straight into trees. What block is missing?"},
+ {type:"quiz",q:"What's the FIRST thing a good detective does with a buggy program?",opts:["Run it and watch what happens","Delete everything","Guess a fix"],a:0,why:"Watching the program run shows you exactly where it goes wrong."},
+ {type:"done"}]}
+]};
+
+const COURSE_JR={id:"jr",name:"TypeMonkey Jr.",blurb:"Puzzle adventures for ages 7–12. Snap blocks together to guide TypeMonkey to his bananas. No typing needed! Unit 1 is free.",units:[JR_UNIT1,JR_UNIT2,JR_UNIT3,JR_UNIT4,JR_UNIT5,JR_UNIT6]};
 
 /* Hands-on code challenges for Python, SQL, C# and C++ (graded by actually running the learner's code).
    Each is inserted into its lesson just before the Output Rush game (or before the reward screen). */
@@ -44099,14 +44167,14 @@ function order(s){
 /* ---------- TypeMonkey Jr.: maze puzzles ---------- */
 const DIRS={N:[0,-1],E:[1,0],S:[0,1],W:[-1,0]},LEFT={N:"W",W:"S",S:"E",E:"N"},RIGHT={N:"E",E:"S",S:"W",W:"N"},ROT={E:0,S:90,W:180,N:270};
 const BLOCKS={fwd:{icon:"👣",label:"Forward"},left:{icon:"↺",label:"Turn left"},right:{icon:"↻",label:"Turn right"},rep:{icon:"🔁",label:"Repeat"},
-  until:{icon:"🔁🍌",label:"Repeat until 🍌"},ifR:{icon:"🌴↻",label:"Tree ahead? Turn right"},ifL:{icon:"🌴↺",label:"Tree ahead? Turn left"}};
+  until:{icon:"🔁🍌",label:"Repeat until 🍌"},call:{icon:"⭐",label:"My move"},ifR:{icon:"🌴↻",label:"Tree ahead? Turn right"},ifL:{icon:"🌴↺",label:"Tree ahead? Turn left"}};
 const isBox=b=>typeof b==="object";
 function mazeInfo(g){let start;const goals=[];g.forEach((row,y)=>[...row].forEach((ch,x)=>{if(ch==="S")start=[x,y];if(ch==="B")goals.push([x,y])}));return {start,goal:goals[0],goals,w:g[0].length,h:g.length}}
 const blockCount=prog=>prog.reduce((n,b)=>n+(isBox(b)?1+b.body.length:1),0);
 /* runs a program; path entries are [x, y, dir, bump?, eatenKey?]
    The program must end exactly when the last banana is eaten: any move or turn after that is "extra".
    (Repeat until 🍌 stops by itself the moment the last banana is eaten.) */
-function simulate(grid,dir,prog){
+function simulate(grid,dir,prog,fn){
   const m=mazeInfo(grid);let [x,y]=m.start,d=dir;const path=[[x,y,d]];const left=new Set(m.goals.map(g=>g.join(",")));let steps=0,won=false;
   const treeAhead=()=>{const [dx,dy]=DIRS[d];const ch=(grid[y+dy]||"")[x+dx];return ch===undefined||ch==="#"};
   const one=t=>{
@@ -44136,6 +44204,9 @@ function simulate(grid,dir,prog){
           else{if(!b.body.length)return "loop";let guard=0;
             while(!won){if(++guard>80)return "loop";r=runList(b.body,true);if(r==="won"){r=null;break}if(r)return r}}
         }else for(let k=0;k<b.rep;k++){r=runList(b.body,inUntil);if(r==="won"){if(inUntil)return "won";r=null;continue}if(r)return r}
+      }else if(b==="call"){
+        if(won){r="extra";path.push([x,y,d,"bump"])}
+        else{if(++steps>500)return "loop";r=runList(fn||[],inUntil);if(r==="won"){if(inUntil)return "won";r=null}}
       }else{r=one(b);if(r==="won"){if(inUntil)return "won";r=null}}
       if(r)return r;
     }
@@ -44146,10 +44217,14 @@ function simulate(grid,dir,prog){
 }
 function maze(s){
   const m=mazeInfo(s.grid);let prog=JSON.parse(JSON.stringify(s.start||[]));let open=null,running=false,fails=0,won=false;
+  let fn=JSON.parse(JSON.stringify(s.startFn||[])),lane="main";const FN_OK=["fwd","left","right","ifR","ifL"];
+  const total=()=>blockCount(prog)+(s.func?fn.length:0);
   const cell=ch=>ch==="#"?"🌴":ch==="B"?"🍌":"";const nB=m.goals.length;
   shell(`<div class="card"><div class="label">Monkey maze${nB>1?` · collect all ${nB} bananas`:""}${s.max?` · use ${s.max} blocks or fewer`:""} · +15 XP</div><h2>${s.title}</h2>${s.body||""}
     <div class="maze" style="--w:${m.w};--h:${m.h}" id="mz">${s.grid.map((row,y)=>[...row].map((ch,x)=>`<div class="mc ${ch==="#"?"tree":"path"}" data-xy="${x},${y}">${cell(ch)}</div>`).join("")).join("")}<div class="mk" id="mk"><div class="mface" id="mface">${monkey("happy")}</div><span class="arr" id="arr">➜</span></div></div>
-    <div class="label">Your program</div><div class="prog" id="prog"></div>
+    ${s.func?`<div class="lanes" role="tablist"><button class="lane" data-lane="main" aria-pressed="true">Main program</button><button class="lane" data-lane="fn" aria-pressed="false">⭐ My move</button></div>
+    <div class="label">⭐ My move <span style="text-transform:none;letter-spacing:0;font-weight:600">(build it once, use it with the ⭐ block)</span></div><div class="prog fprog" id="fprog"></div>`:""}
+    <div class="label">${s.func?"Main program":"Your program"}</div><div class="prog" id="prog"></div>
     <div class="palette">${s.blocks.map(b=>`<button class="blk b-${b}" data-b="${b}"><span>${BLOCKS[b].icon}</span>${BLOCKS[b].label}</button>`).join("")}</div>
     <div id="fb"></div></div>
     <div id="bud">${buddy(s.say||"Tap the blocks to build a program, then press Go!","think")}</div>
@@ -44157,6 +44232,12 @@ function maze(s){
   const place=(x,y,d,bump)=>{const k=$("#mk");k.style.left=`calc(${x} * 100% / ${m.w})`;k.style.top=`calc(${y} * 100% / ${m.h})`;k.style.transform=bump?"translateX(4px)":"none";$("#arr").style.transform=`rotate(${ROT[d]}deg)`};
   const reset=()=>{place(m.start[0],m.start[1],s.dir);m.goals.forEach(([gx,gy])=>{const c=document.querySelector(`.mc[data-xy="${gx},${gy}"]`);if(c)c.textContent="🍌"})};
   const draw=()=>{
+    if(s.func){
+      $("#fprog").innerHTML=fn.length?fn.map((b,i)=>`<button class="chip" data-f="${i}" aria-label="Remove ${BLOCKS[b].label}">${BLOCKS[b].icon}</button>`).join(""):'<span class="empty">Tap ⭐ My move above, then add blocks here</span>';
+      $$("#fprog .chip").forEach(c=>c.onclick=()=>{if(running||won)return;fn.splice(+c.dataset.f,1);draw()});
+      $$(".lane").forEach(b=>b.setAttribute("aria-pressed",b.dataset.lane===lane));
+      $("#fprog").classList.toggle("active",lane==="fn");$("#prog").classList.toggle("active",lane==="main");
+    }
     const chip=(b,i,j)=>`<button class="chip" data-i="${i}" ${j!==undefined?`data-j="${j}"`:""} aria-label="Remove ${BLOCKS[b].label}">${BLOCKS[b].icon}</button>`;
     $("#prog").innerHTML=prog.length?prog.map((b,i)=>typeof b==="object"?
       `<span class="repblk ${b.until?"until":""} ${open===i?"open":""}">${b.until?`<span class="repn">🔁 until 🍌</span>`:`<button class="repn" data-r="${i}" aria-label="Change repeat count">🔁 ×${b.rep}</button>`}${b.body.map((t,j)=>chip(t,i,j)).join("")}${open===i?`<button class="repclose" data-c="${i}">done</button>`:""}</span>`:chip(b,i)).join(""):'<span class="empty">Tap blocks below to add them here</span>';
@@ -44166,24 +44247,26 @@ function maze(s){
   };
   $$(".blk").forEach(b=>b.onclick=()=>{
     if(running||won)return;const t=b.dataset.b;
+    if(s.func&&lane==="fn"){if(!FN_OK.includes(t))return toast(t==="call"?"My move can't use itself! Switch to Main program to use ⭐.":"Only simple moves go inside My move.");fn.push(t);return draw()}
     if(t==="rep"||t==="until"){if(open!==null)return toast("Finish the repeat you're building first (tap done).");prog.push(t==="rep"?{rep:2,body:[]}:{until:true,body:[]});open=prog.length-1}
     else if(open!==null)prog[open].body.push(t);else prog.push(t);
     draw();
   });
-  $("#undo").onclick=()=>{if(running||won)return;if(open!==null&&prog[open].body.length)prog[open].body.pop();else{prog.pop();open=null}draw()};
-  $("#clr").onclick=()=>{if(running||won)return;prog=[];open=null;draw();reset()};
-  $("#hint").onclick=()=>{prog=JSON.parse(JSON.stringify(s.solution));open=null;draw();reset();$("#bud").innerHTML=buddy("Here's one way. Press Go to watch it work!","happy")};
+  $$(".lane").forEach(b=>b.onclick=()=>{lane=b.dataset.lane;open=null;draw()});
+  $("#undo").onclick=()=>{if(running||won)return;if(s.func&&lane==="fn"){fn.pop();return draw()}if(open!==null&&prog[open].body.length)prog[open].body.pop();else{prog.pop();open=null}draw()};
+  $("#clr").onclick=()=>{if(running||won)return;prog=[];fn=[];open=null;draw();reset()};
+  $("#hint").onclick=()=>{if(s.func){prog=JSON.parse(JSON.stringify(s.solution.main));fn=JSON.parse(JSON.stringify(s.solution.fn))}else prog=JSON.parse(JSON.stringify(s.solution));open=null;draw();reset();$("#bud").innerHTML=buddy("Here's one way. Press Go to watch it work!","happy")};
   $("#run").onclick=()=>{
     if(running||won||!prog.length)return;running=true;open=null;draw();reset();
-    const {path,result}=simulate(s.grid,s.dir,prog);let k=1;
+    const {path,result}=simulate(s.grid,s.dir,prog,fn);let k=1;
     const tick=()=>{
       if(k<path.length){const [x,y,d,bump,ate]=path[k];place(x,y,d,bump);if(ate){const c=document.querySelector(`.mc[data-xy="${ate}"]`);if(c)setTimeout(()=>{c.textContent="✨"},250)}k++;return setTimeout(tick,path.length>40?220:380)}
       running=false;
-      const tooMany=s.max&&blockCount(prog)>s.max;
+      const tooMany=s.max&&total()>s.max;
       if(result==="win"&&!tooMany){won=true;award(15,3);bump("mazes");if(s.start)bump("bugsFixed");$("#mface").innerHTML=monkey("cheer");$("#fb").innerHTML=`<div class="feedback good">🍌 ${nB>1?"All bananas collected!":"Banana reached!"} ${esc(s.win||pick(WINS))}</div>`;
         $("#bud").innerHTML=buddy("YES! Your program worked!","cheer");["run","undo","clr","hint"].forEach(i=>$("#"+i).hidden=true);$("#go").hidden=false;return}
       fails++;$("#mface").innerHTML=monkey("oops");setTimeout(()=>{const f=$("#mface");if(f)f.innerHTML=monkey("happy")},900);
-      const msg=result==="win"?`You got there, but used ${blockCount(prog)} blocks. Can you do it with ${s.max} or fewer? Try a Repeat block!`:result==="wall"?"Bonk! TypeMonkey bumped into a tree. Find the step that went wrong and fix it.":result==="loop"?"TypeMonkey kept going around and around! Your repeat never got him to every banana.":result==="extra"?"Too many steps! TypeMonkey got the banana, then kept going. A program has to stop at exactly the right spot. Remove the extra blocks.":"So close! TypeMonkey stopped before reaching the banana. Add more steps.";
+      const msg=result==="win"?`You got there, but used ${total()} blocks. Can you do it with ${s.max} or fewer? Try a Repeat block!`:result==="wall"?"Bonk! TypeMonkey bumped into a tree. Find the step that went wrong and fix it.":result==="loop"?"TypeMonkey kept going around and around! Your repeat never got him to every banana.":result==="extra"?"Too many steps! TypeMonkey got the banana, then kept going. A program has to stop at exactly the right spot. Remove the extra blocks.":"So close! TypeMonkey stopped before reaching the banana. Add more steps.";
       $("#fb").innerHTML=`<div class="feedback bad">${msg}</div>`;
       $("#bud").innerHTML=buddy(fails>=3?"Want a peek? Tap “Show me”.":"Bugs are normal! Every coder fixes their programs.","oops");
       if(fails>=2&&s.solution)$("#hint").hidden=false;
