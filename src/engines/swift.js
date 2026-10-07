@@ -25,6 +25,7 @@ const TMSwift=(()=>{
   class Obj{constructor(type){this.type=type;this.f=Object.create(null)}}
   class ECase{constructor(type,name,vals){this.type=type;this.name=name;this.vals=vals||null}}
   class Fn{constructor(o){Object.assign(this,o)}}
+  class SIdx{constructor(i){this.i=i}}                     // String.Index (counted in Characters)
   class Thrown{constructor(v){this.v=v}}
   class Ret{constructor(v){this.v=v}}
   const BRK={brk:1},CNT={cnt:1};
@@ -286,7 +287,7 @@ const TMSwift=(()=>{
         if(ok&&items.length>1&&(is(":")||is(",")||is("where")||is("=")||is("in")))return {k:"tuple",items};
         p=save}
       if(peek().k==="id"&&/^[A-Z]/.test(peek().v)&&is(".",1)&&peek(2).k==="id"&&is("(",3)){const tyName=peek().v;p++;const cp=casePattern();cp.tyName=tyName;return cp}
-      if(is(".")&&peek(1).k==="id"){p++;const name=ident();
+      if(is(".")&&(peek(1).k==="id"||is("some",1))){p++;const name=ident();
         if(is("(")){p++;const items=[];if(!is(")"))do{if(peek().k==="id"&&is(":",1))p+=2;items.push(casePattern())}while(accept(","));expect(")");return {k:"enum",name,items}}
         return {k:"enum",name,items:null}}
       if(is("is")){p++;return {k:"is",type:parseType()}}
@@ -421,7 +422,7 @@ const TMSwift=(()=>{
       // if and switch can give a value: let x = if a { 1 } else { 2 }
       if(t.k==="kw"&&t.v==="switch")return {k:"switchx",s:switchStmt(),line:t.line};
       if(t.k==="kw"&&t.v==="if")return {k:"ifx",s:ifStmt(),line:t.line};
-      if(t.k==="op"&&t.v==="."&&peek(1).k==="id"){p++;return {k:"implicit",name:ident(),line:t.line}}
+      if(t.k==="op"&&t.v==="."&&(peek(1).k==="id"||is("some",1))){p++;return {k:"implicit",name:ident(),line:t.line}}
       if(t.k==="id"){p++;
         if(is("<")&&!peek().space&&/^[A-Z]/.test(t.v)){const save=p;try{p++;const args=[];do args.push(parseType());while(accept(","));expect(">");if(is("(")){if(t.v==="Array"&&is(")",1)){p+=2;return {k:"emptyof",type:{k:"arr",el:args[0]}}}if(t.v==="Dictionary"&&is(")",1)){p+=2;return {k:"emptyof",type:{k:"dict",key:args[0],val:args[1]}}}if(t.v==="Set"&&is(")",1)){p+=2;return {k:"emptyof",type:{k:"set",el:args[0]}}}return {k:"name",v:t.v,line:t.line,targs:args}}if(is(".")&&!["Array","Dictionary","Set"].includes(t.v))return {k:"name",v:t.v,line:t.line}}catch(e){}p=save}
         return {k:"name",v:t.v,line:t.line};
@@ -820,6 +821,7 @@ const TMSwift=(()=>{
       if(a instanceof Some)return equal(a.v,b);if(b instanceof Some)return equal(a,b.v);
       if(isNumV(a)&&isNumV(b))return num(a)===num(b);
       if(a instanceof Chr&&b instanceof Chr)return a.s===b.s;
+      if(a instanceof SIdx&&b instanceof SIdx)return a.i===b.i;
       if(a instanceof Chr&&typeof b==="string")return a.s===b;if(b instanceof Chr&&typeof a==="string")return a===b.s;
       if(a instanceof Arr&&b instanceof Arr)return a.items.length===b.items.length&&a.items.every((x,i)=>equal(x,b.items[i]));
       if(a instanceof Dict&&b instanceof Dict)return a.m.size===b.m.size&&[...a.m].every(([k,[,v]])=>b.m.has(k)&&equal(v,b.m.get(k)[1]));
@@ -837,6 +839,7 @@ const TMSwift=(()=>{
       if(isNumV(a)&&isNumV(b))return num(a)<num(b)?-1:num(a)>num(b)?1:0;
       if(typeof a==="string"&&typeof b==="string")return a<b?-1:a>b?1:0;
       if(a instanceof Chr&&b instanceof Chr)return a.s<b.s?-1:a.s>b.s?1:0;
+      if(a instanceof SIdx&&b instanceof SIdx)return a.i-b.i;
       if(a instanceof Tup&&b instanceof Tup){for(let i=0;i<a.items.length;i++){const c=cmp(a.items[i],b.items[i],line);if(c)return c}return 0}
       if(a instanceof ECase&&b instanceof ECase&&a.type===b.type)return a.type.cases.findIndex(c=>c.name===a.name)-a.type.cases.findIndex(c=>c.name===b.name);
       if(a instanceof Obj&&b instanceof Obj){const m=findOp(a.type,"<");if(m)return truth(callFn({decl:m,selfType:a.type},[{v:a},{v:b}],line))?-1:truth(callFn({decl:m,selfType:a.type},[{v:b},{v:a}],line))?1:0}
@@ -950,6 +953,11 @@ const TMSwift=(()=>{
               set:v=>{checkMutable(base,e.line);const d=base.get();if(v===NIL&&!def){d.m.delete(hkey(k));return}if(v instanceof Some)v=v.v;d.m.set(hkey(k),[k,conform(copy(v),d.vt,e.line,false,"assign value")])},root:base.root,parent:base,dictDefault:!!def,optional:base.optional,
               ensure:def?()=>{checkMutable(base,e.line);const d=base.get();if(!d.m.has(hkey(k)))d.m.set(hkey(k),[k,copy(def.v)])}:null};
           }
+          if(typeof b==="string"&&(args[0].v instanceof SIdx||args[0].v instanceof Range&&(args[0].v.lo instanceof SIdx||args[0].v.hi instanceof SIdx))){const i=args[0].v;
+            return {get:()=>{const cs=chars(base.get());
+              if(i instanceof SIdx){if(i.i<0||i.i>=cs.length)fatal("String index is out of bounds");return new Chr(cs[i.i])}
+              const lo=i.lo?i.lo.i:0,hi=i.hi?(i.closed?i.hi.i+1:i.hi.i):cs.length;if(lo<0||hi>cs.length||lo>hi)fatal("String index range is out of bounds");return cs.slice(lo,hi).join("")},
+              set:()=>fail(`line ${e.line}: cannot assign through subscript: subscript is get-only`),root:base.root}}
           if(typeof b==="string")fail(`line ${e.line}: Swift strings can't be indexed with numbers like s[0]. Use Array(s)[0], s.first, or s.prefix(n)`);
           fail(`line ${e.line}: value of type '${typeOfV(b)}' has no subscripts`);
         }
@@ -1338,7 +1346,7 @@ const TMSwift=(()=>{
     function* iterate(v,line){
       if(v instanceof Range){if(v.hi===null)fail(`line ${line}: a loop over a range needs an end`);if(!isInt(v.lo))fail(`line ${line}: for-in over a range needs whole numbers (Int). For decimals use stride(from:to:by:)`);const end=v.closed?v.hi:v.hi-1;for(let i=v.lo;i<=end;i++)yield i;return}
       if(v instanceof Arr){const items=v.items.slice();for(const x of items)yield x;return}
-      if(typeof v==="string"){for(const c of v)yield new Chr(c);return}
+      if(typeof v==="string"){for(const c of chars(v))yield new Chr(c);return}
       if(v instanceof Dict){for(const [,[k,x]] of v.m)yield new Tup([k,x],["key","value"]);return}
       if(v instanceof SetV){for(const x of v.m.values())yield x;return}
       if(v&&v.seq){yield* v.seq;return}
@@ -1347,7 +1355,11 @@ const TMSwift=(()=>{
     function doSwitch(s,env){
       const v=ev(s.subject,env);
       if(!s.cases.some(c=>c.def)){
-        const exhaustive=v instanceof ECase?v.type.cases.every(cd=>s.cases.some(c=>!c.where&&c.pats.some(p2=>p2.k==="wild"||(p2.k==="enum"&&p2.name===cd.name&&(!p2.items||p2.items.every(x=>x.k==="wild"||x.k==="bind")))||(p2.k==="bind")))):
+        const plain=p2=>p2.k==="wild"||p2.k==="bind";
+        const exhaustive=(v instanceof Some||v===NIL)?s.cases.some(c=>!c.where&&c.pats.some(plain))||
+            s.cases.some(c=>!c.where&&c.pats.some(p2=>p2.k==="some"&&plain(p2.inner)||p2.k==="enum"&&p2.name==="some"&&(!p2.items||p2.items.every(plain))))&&
+            s.cases.some(c=>c.pats.some(p2=>p2.k==="enum"&&p2.name==="none"||p2.k==="expr"&&p2.e.k==="lit"&&p2.e.v===NIL)):
+          v instanceof ECase?v.type.cases.every(cd=>s.cases.some(c=>!c.where&&c.pats.some(p2=>p2.k==="wild"||(p2.k==="enum"&&p2.name===cd.name&&(!p2.items||p2.items.every(x=>x.k==="wild"||x.k==="bind")))||(p2.k==="bind")))):
           typeof v==="boolean"?[true,false].every(b=>s.cases.some(c=>!c.where&&c.pats.some(p2=>p2.k==="wild"||p2.k==="expr"&&p2.e.k==="lit"&&p2.e.v===b))):
           s.cases.some(c=>!c.where&&c.pats.some(p2=>p2.k==="wild"||p2.k==="bind"||(p2.k==="tuple"&&p2.items.every(x=>x.k==="wild"||x.k==="bind"))));
         if(!exhaustive)fail(`line ${s.line}: switch must be exhaustive. Add a default: case`);
@@ -1600,14 +1612,16 @@ const TMSwift=(()=>{
       if(b instanceof Tup&&n==="count")fail(`line ${line}: tuples don't have a count`);
       fail(`line ${line}: value of type '${typeOfV(b)}' has no member '${n}'`);
     }
-    const chars=s=>[...s];
+    // a Character is what a reader sees as one letter (an emoji with a skin tone is one Character)
+    const SEG=typeof Intl!=="undefined"&&Intl.Segmenter?new Intl.Segmenter("en",{granularity:"grapheme"}):null;
+    const chars=s=>SEG&&/[^\x00-\x7f]/.test(s)?Array.from(SEG.segment(s),x=>x.segment):[...s];
     function strMember(s,n,e,env,mut){
       const line=e.line;const M=fn=>new Fn({builtin:fn});const cs=chars(s);
       switch(n){
         case "count":return cs.length;case "isEmpty":return s.length===0;
         case "uppercased":return M(()=>s.toUpperCase());case "lowercased":return M(()=>s.toLowerCase());
         case "capitalized":needF(line,".capitalized");return s.toLowerCase().replace(/(^|[^\p{L}\p{N}'])(\p{L})/gu,(m,a,x)=>a+x.toUpperCase());
-        case "range":needF(line,".range(of:)");return M(([x])=>{const k=s.indexOf(x instanceof Chr?x.s:x);return k<0?NIL:new Some(new Range([...s.slice(0,k)].length,[...s.slice(0,k)].length+[...(x instanceof Chr?x.s:x)].length,false))});
+        case "range":needF(line,".range(of:)");return M(([x])=>{const k=s.indexOf(x instanceof Chr?x.s:x);if(k<0)return NIL;const a=chars(s.slice(0,k)).length;return new Some(new Range(new SIdx(a),new SIdx(a+chars(x instanceof Chr?x.s:x).length),false))});
         case "first":return cs.length?new Some(new Chr(cs[0])):NIL;case "last":return cs.length?new Some(new Chr(cs[cs.length-1])):NIL;
         case "hasPrefix":return M(([x])=>s.startsWith(x));case "hasSuffix":return M(([x])=>s.endsWith(x));
         case "contains":return M(([x],args)=>{if(args[0].label==="where"){const f=x;return cs.some(c=>truth(callFn(f,[{v:new Chr(c)}],line)))}return s.includes(x instanceof Chr?x.s:x)});
@@ -1635,13 +1649,22 @@ const TMSwift=(()=>{
         case "append":return M(([x])=>{const lv=mut();lv.set(lv.get()+(x instanceof Chr?x.s:x));return undefined});
         case "removeLast":return M(()=>{const lv=mut();const c=chars(lv.get());if(!c.length)fatal("Can't remove last element from an empty collection");const r=c.pop();lv.set(c.join(""));return new Chr(r)});
         case "removeFirst":return M(()=>{const lv=mut();const c=chars(lv.get());if(!c.length)fatal("Can't remove first element from an empty collection");const r=c.shift();lv.set(c.join(""));return new Chr(r)});
-        case "insert":return M(()=>fail("String.insert(_:at:) needs String indexes, which aren't supported yet","NotSupported"));
+        case "insert":return M((vals,args)=>{const at=args.find(a=>a.label==="at");if(!at||!(at.v instanceof SIdx))fail(`line ${line}: use insert(c, at: index) with a String index like s.startIndex`);
+          const lv=mut();const c=chars(lv.get());if(at.v.i<0||at.v.i>c.length)fatal("String index is out of bounds");const x=args[0].v;c.splice(at.v.i,0,x instanceof Chr?x.s:x);lv.set(c.join(""));return undefined});
+        case "startIndex":return new SIdx(0);case "endIndex":return new SIdx(cs.length);
+        case "indices":return new Arr(cs.map((c,i)=>new SIdx(i)),null);
+        case "index":return M((vals,args)=>{const a=args[0];const lim=args.find(x=>x.label==="limitedBy");
+          let r;if(a.label==="after")r=a.v.i+1;else if(a.label==="before")r=a.v.i-1;else{const by=args.find(x=>x.label==="offsetBy");r=a.v.i+by.v;if(lim){if(by.v>=0?r>lim.v.i:r<lim.v.i)return NIL;return new Some(new SIdx(r))}}
+          if(r<0||r>cs.length)fatal("String index is out of bounds");return new SIdx(r)});
+        case "distance":return M((vals,args)=>args[1].v.i-args[0].v.i);
+        case "firstIndex":case "lastIndex":return M((vals,args)=>{const r=callFn(arrMember(new Arr(cs.map(c=>new Chr(c)),null),n,e,env,mut),args,line);return r instanceof Some?new Some(new SIdx(r.v)):r});
+        case "remove":return M((vals,args)=>{const at=args.find(a=>a.label==="at");if(!at||!(at.v instanceof SIdx))fail(`line ${line}: use remove(at: index) with a String index`);const lv=mut();const c=chars(lv.get());if(at.v.i<0||at.v.i>=c.length)fatal("String index is out of bounds");const r=c.splice(at.v.i,1)[0];lv.set(c.join(""));return new Chr(r)});
         case "filter":return M((vals,args)=>{const f=args[0].v;return cs.filter(c=>truth(callFn(f,[{v:new Chr(c)}],line))).join("")});
         case "removeAll":return M((vals,args)=>{const lv=mut();if(!args.length){lv.set("");return undefined}const f=args[0].v;lv.set(chars(lv.get()).filter(c=>!truth(callFn(f,[{v:new Chr(c)}],line))).join(""));return undefined});
         case "map":case "forEach":case "sorted":case "allSatisfy":case "enumerated":case "reduce":case "compactMap":case "firstIndex":case "lastIndex":case "flatMap":case "min":case "max":case "shuffled":case "randomElement":case "starts":case "elementsEqual":return arrMember(new Arr(cs.map(c=>new Chr(c)),{k:"name",name:"Character"}),n,e,env,mut);
         case "description":return s;case "debugDescription":return JSON.stringify(s);
         case "lowercasedFirst":break;
-        case "index":case "startIndex":case "endIndex":fail(`line ${line}: String indexes aren't supported in TypeMonkey yet. Try Array(s) to get an array of characters`,"NotSupported");
+        case "isNumber":break;
         case "utf8":return new Arr([...new TextEncoder().encode(s)],{k:"name",name:"UInt8"});
         case "unicodeScalars":return new Arr(cs.map(x=>{const r=new Chr(x);r.scalar=true;return r}),{k:"name",name:"Unicode.Scalar"});
         case "isNumber":break;
