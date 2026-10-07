@@ -38,8 +38,11 @@ button{font:inherit;cursor:pointer}
 @media (max-width:400px){.brand .word{display:none}}
 
 .buddy{display:flex;gap:12px;align-items:flex-end}
-.buddy svg{width:88px;height:88px;flex:none}
-.buddy.bounce svg{animation:bob .6s ease}
+.buddy .tm{width:88px;height:88px;flex:none}
+.buddy.bounce .tm{animation:bob .6s ease}
+.mwrap{position:relative;display:inline-block;flex:none;line-height:0}
+.mwrap .pet{position:absolute;right:-14px;bottom:-4px;width:46%;height:46%;filter:drop-shadow(0 2px 2px #0003)}
+.buddy.bounce .pet{animation:bob .6s ease .15s}
 @keyframes bob{40%{transform:translateY(-10px) rotate(-4deg)}}
 .bubble{background:var(--surface);border:2px solid var(--fg);border-radius:18px 18px 18px 4px;padding:12px 14px;font-weight:700;min-width:0;flex:1}
 
@@ -62,7 +65,8 @@ button{font:inherit;cursor:pointer}
 .pill.ok{background:var(--leaf);color:#fff}
 
 .tools{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media (max-width:420px){.tools{grid-template-columns:1fr}}
+.tools .tool:last-child:nth-child(odd){grid-column:1/-1}
+@media (max-width:420px){.tool{padding:12px}.tool b{font-size:1.05rem}.tool span{font-size:.8rem}}
 .tool{background:var(--code-bg);color:var(--code-fg);border:0;border-radius:var(--r);padding:14px;text-align:left;display:flex;flex-direction:column;gap:4px}
 .tool b{font-family:var(--display);font-size:1.2rem}
 .tool span{color:var(--code-dim);font-size:.88rem}
@@ -207,17 +211,39 @@ span.repn{display:inline-block}
 .blk:active{transform:translateY(3px)}
 .due{display:inline-grid;place-items:center;min-width:24px;height:24px;padding:0 6px;border-radius:99px;background:var(--accent);color:var(--accent-ink);font-size:.85rem;font-family:var(--body);vertical-align:middle}
 .shopstage{display:flex;gap:16px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px}
-.stage-monkey svg{width:120px;height:136px}
+.stage-monkey .tm{width:120px;height:136px}
 .stage-info{min-width:0}.stage-info p{margin:4px 0 0;color:var(--muted)}
 .shopgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
 .shopitem{background:var(--surface);border:2px solid var(--line);border-radius:var(--r);padding:10px;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--fg);text-align:center}
 .shopitem.on{border-color:var(--leaf)}
 .shopitem .pill{align-self:center}
-.mini-monkey svg{width:72px;height:82px}
+.mini-monkey .tm{width:72px;height:82px}
+.shopitem{position:relative}
+.shopitem.away{opacity:.55}
+.season{position:absolute;top:6px;left:6px;font-size:.68rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
 .legal h3{font-size:1.1rem;margin-top:6px}
 .legal p{color:var(--fg);line-height:1.6}
 .gate{position:fixed;inset:0;z-index:20;background:color-mix(in srgb,#000 55%,transparent);display:grid;place-items:center;padding:16px}
 .gate .card{max-width:420px;width:100%}
+.daily{display:flex;align-items:center;gap:12px;background:linear-gradient(120deg,color-mix(in srgb,var(--banana) 35%,var(--surface)),var(--surface));border:2px solid var(--banana);border-radius:var(--r);padding:12px 14px;text-align:left;color:var(--fg)}
+.daily.done{border-color:var(--line);background:var(--surface)}
+.daily .dicon{font-size:1.8rem}
+.daily .dtext{flex:1;min-width:0;display:flex;flex-direction:column}
+.daily .dtext b{font-family:var(--display);font-size:1.15rem}
+.daily .dtext span{color:var(--muted);font-size:.88rem}
+.badgegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.badge{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;opacity:.7}
+.badge.on{opacity:1;border:2px solid var(--banana)}
+.badge .bicon{font-size:2.2rem;line-height:1.2}
+.badge span{font-size:.82rem;color:var(--muted)}
+.badge .pill{margin-top:4px}
+.celebrate{position:fixed;inset:0;z-index:30;background:color-mix(in srgb,#000 55%,transparent);display:grid;place-items:center;padding:16px}
+.celebrate .card{max-width:360px;width:100%;text-align:center;align-items:center;position:relative;overflow:hidden}
+.badge-big{font-size:4rem;line-height:1;animation:pop .6s ease}
+@keyframes pop{0%{transform:scale(.2) rotate(-20deg)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
+.confetti{position:absolute;inset:0;pointer-events:none}
+.confetti span{position:absolute;top:-10%;left:calc(var(--i) * 7%);font-size:1.2rem;animation:fall 1.6s ease-in forwards;animation-delay:calc(var(--i) * .07s)}
+@keyframes fall{to{transform:translateY(520px) rotate(360deg);opacity:0}}
 .gear{background:var(--surface);border:1px solid var(--line);color:var(--fg);border-radius:999px;width:36px;height:36px;display:grid;place-items:center;padding:0;flex:none}
 .setlist{gap:4px}
 .setlist h3{font-size:1.1rem;margin-bottom:4px}
@@ -266,7 +292,10 @@ const FURS={
   mint:{name:"Mint",price:100,main:"#2EC4A0",dark:"#1FA587",tuft:"#178A70",face:"#DCFFF5"},
   purple:{name:"Grape",price:100,main:"#9B6BFF",dark:"#7F4FE6",tuft:"#6538C4",face:"#EEE3FF"},
   cocoa:{name:"Cocoa",price:120,main:"#8A5A3C",dark:"#6E4429",tuft:"#583420",face:"#EBD3BF"},
-  galaxy:{name:"Galaxy",price:250,main:"#2D2F6B",dark:"#22245A",tuft:"#7C5CFF",face:"#C9C3FF",stars:true}
+  galaxy:{name:"Galaxy",price:250,main:"#2D2F6B",dark:"#22245A",tuft:"#7C5CFF",face:"#C9C3FF",stars:true},
+  pumpkin:{name:"Pumpkin spice",price:90,season:"oct",main:"#E8731A",dark:"#B9520C",tuft:"#3F7D2C",face:"#FFE0B8"},
+  snow:{name:"Snow monkey",price:90,season:"dec",main:"#F2F5F7",dark:"#CFD8DE",tuft:"#B6C3CC",face:"#FFE3E3"},
+  rainbow:{name:"Rainbow",price:300,main:"url(#rb)",dark:"#7C5CFF",tuft:"#FF6FAE",face:"#FFF6D8",rainbow:true}
 };
 const HATS={
   none:{name:"No hat",price:0,svg:""},
@@ -276,6 +305,11 @@ const HATS={
   crown:{name:"Royal crown",price:150,svg:'<path d="M36 22 L36 2 L46 12 L60 -6 L74 12 L84 2 L84 22 Z" fill="#FFC83D" stroke="#E0A400" stroke-width="2"/><circle cx="60" cy="10" r="3.5" fill="#E8554F"/><circle cx="46" cy="16" r="2.5" fill="#3D8BFF"/><circle cx="74" cy="16" r="2.5" fill="#3D8BFF"/>'},
   wizard:{name:"Wizard hat",price:120,svg:'<path d="M60 -14 L38 22 L82 22 Z" fill="#3B2D8C"/><path d="M26 24 Q60 14 94 24 Q60 30 26 24 Z" fill="#2A1F66"/><text x="54" y="8" font-size="9" fill="#FFD25C">★</text><text x="62" y="18" font-size="7" fill="#FFD25C">★</text>'},
   headphones:{name:"Headphones",price:90,svg:'<path d="M18 52 Q18 6 60 6 Q102 6 102 52" fill="none" stroke="#14201B" stroke-width="7"/><rect x="8" y="46" width="18" height="28" rx="8" fill="#FF7A1A" stroke="#14201B" stroke-width="3"/><rect x="94" y="46" width="18" height="28" rx="8" fill="#FF7A1A" stroke="#14201B" stroke-width="3"/>'},
+  pirate:{name:"Pirate hat",price:80,svg:'<path d="M20 24 Q60 -16 100 24 Q60 12 20 24 Z" fill="#14201B"/><circle cx="60" cy="10" r="5.5" fill="#fff"/><path d="M56 16 L64 16" stroke="#fff" stroke-width="2"/><circle cx="58" cy="9" r="1.2" fill="#14201B"/><circle cx="62" cy="9" r="1.2" fill="#14201B"/>'},
+  cowboy:{name:"Cowboy hat",price:80,svg:'<path d="M14 22 Q60 34 106 22 Q100 30 60 30 Q20 30 14 22 Z" fill="#8A5A3C"/><path d="M38 24 Q36 -2 50 0 Q60 6 70 0 Q84 -2 82 24 Z" fill="#A0693F"/><path d="M38 18 Q60 24 82 18 L82 23 Q60 29 38 23 Z" fill="#583420"/>'},
+  grad:{name:"Graduation cap",price:110,svg:'<path d="M60 -6 L104 8 L60 22 L16 8 Z" fill="#14201B"/><path d="M38 14 L38 24 Q60 32 82 24 L82 14 L60 21 Z" fill="#22302A"/><path d="M98 10 L98 28" stroke="#FFC83D" stroke-width="2.5"/><circle cx="98" cy="30" r="3.5" fill="#FFC83D"/>'},
+  witch:{name:"Witch hat",price:70,season:"oct",svg:'<path d="M66 -18 Q58 -6 52 0 L40 22 L80 22 Z" fill="#3B1F5C"/><path d="M18 24 Q60 12 102 24 Q60 32 18 24 Z" fill="#2A1544"/><rect x="42" y="16" width="36" height="5" fill="#E8731A"/>'},
+  santa:{name:"Santa hat",price:70,season:"dec",svg:'<path d="M28 24 Q34 -8 74 -6 Q96 -2 100 22 Z" fill="#D7263D"/><rect x="24" y="18" width="72" height="11" rx="5.5" fill="#fff"/><circle cx="100" cy="24" r="7" fill="#fff"/>'},
   flower:{name:"Flower",price:40,svg:'<g transform="translate(84 18)"><circle r="6" cx="0" cy="-7" fill="#FF6FAE"/><circle r="6" cx="7" cy="0" fill="#FF6FAE"/><circle r="6" cx="0" cy="7" fill="#FF6FAE"/><circle r="6" cx="-7" cy="0" fill="#FF6FAE"/><circle r="5" fill="#FFD25C"/></g>'}
 };
 const EYES={
@@ -285,16 +319,38 @@ const EYES={
   hearts:{name:"Heart glasses",price:70},
   stars:{name:"Star glasses",price:70},
   nerd:{name:"3D glasses",price:50},
-  monocle:{name:"Fancy monocle",price:90}
+  monocle:{name:"Fancy monocle",price:90},
+  pixel:{name:"Pixel shades",price:100},
+  mask:{name:"Spooky mask",price:60,season:"oct"}
 };
 const NECKS={
   none:{name:"Nothing",price:0,svg:""},
   bowtie:{name:"Bow tie",price:40,svg:'<path d="M60 98 L46 90 L46 106 Z M60 98 L74 90 L74 106 Z" fill="#E8554F"/><circle cx="60" cy="98" r="4" fill="#C93E3A"/>'},
   scarf:{name:"Striped scarf",price:60,svg:'<path d="M32 92 Q60 104 88 92 L88 102 Q60 114 32 102 Z" fill="#3D8BFF"/><path d="M40 96 L40 106 M52 99 L52 110 M64 99 L64 110 M76 96 L76 106" stroke="#fff" stroke-width="3"/><path d="M74 100 L80 118 L70 118 Z" fill="#3D8BFF"/>'},
   medal:{name:"Gold medal",price:100,svg:'<path d="M50 88 L56 104 M70 88 L64 104" stroke="#E8554F" stroke-width="4"/><circle cx="60" cy="108" r="9" fill="#FFC83D" stroke="#E0A400" stroke-width="2"/><text x="60" y="112" font-size="10" text-anchor="middle" fill="#8A5A00">★</text>'},
+  cape:{name:"Hero cape",price:120,svg:'<path d="M30 90 Q60 104 90 90 L102 120 L18 120 Z" fill="#E8554F" opacity=".95"/><path d="M38 92 Q60 102 82 92" fill="none" stroke="#FFC83D" stroke-width="3"/><circle cx="60" cy="99" r="4" fill="#FFC83D"/>'},
+  tie:{name:"Business tie",price:50,svg:'<path d="M56 92 L64 92 L62 98 L66 116 L60 122 L54 116 L58 98 Z" fill="#3D8BFF"/><path d="M56 92 L64 92 L62 98 L58 98 Z" fill="#2C6FD6"/>'},
+  candy:{name:"Candy corn chain",price:40,season:"oct",svg:'<path d="M34 92 Q60 108 86 92" fill="none" stroke="#3F7D2C" stroke-width="2"/><path d="M52 98 L58 112 L64 98 Z" fill="#FFC83D"/><path d="M53.5 101 L62.5 101 L61 105 L55 105 Z" fill="#E8731A"/><path d="M52 98 L64 98 L63 100 L53 100 Z" fill="#fff"/>'},
   banana:{name:"Banana necklace",price:50,svg:'<path d="M36 92 Q60 108 84 92" fill="none" stroke="#8A5A3C" stroke-width="2"/><path d="M54 100 Q60 112 68 100 Q62 106 54 100 Z" fill="#FFC83D" stroke="#E0A400" stroke-width="1.5"/>'}
 };
-const DEFAULT_LOOK={fur:"orange",hat:"none",eyes:"round",neck:"none"};
+const PETS={
+  none:{name:"No pet",price:0,svg:""},
+  parrot:{name:"Polly the parrot",price:120,svg:'<ellipse cx="30" cy="40" rx="13" ry="16" fill="#2EC4A0"/><ellipse cx="30" cy="44" rx="7" ry="10" fill="#FFE08A"/><path d="M18 40 Q8 52 14 58 L22 48 Z" fill="#1FA587"/><circle cx="30" cy="20" r="11" fill="#E8554F"/><path d="M38 20 L47 24 L38 27 Z" fill="#FFC83D"/><circle cx="33" cy="17" r="2.6" fill="#14201B"/><circle cx="34" cy="16" r=".9" fill="#fff"/>'},
+  kitten:{name:"Pixel the kitten",price:120,svg:'<path d="M12 22 L16 6 L26 16 Z M48 22 L44 6 L34 16 Z" fill="#9AA4AC"/><circle cx="30" cy="30" r="18" fill="#B6C0C8"/><ellipse cx="30" cy="54" rx="14" ry="6" fill="#B6C0C8"/><circle cx="23" cy="28" r="3" fill="#14201B"/><circle cx="37" cy="28" r="3" fill="#14201B"/><path d="M28 34 L32 34 L30 36.5 Z" fill="#FF8FB0"/><path d="M10 34 L20 35 M10 39 L20 37 M50 34 L40 35 M50 39 L40 37" stroke="#7D878F" stroke-width="1.3"/>'},
+  puppy:{name:"Byte the puppy",price:140,svg:'<circle cx="30" cy="30" r="18" fill="#C98A4B"/><ellipse cx="13" cy="30" rx="6" ry="13" fill="#8A5A3C"/><ellipse cx="47" cy="30" rx="6" ry="13" fill="#8A5A3C"/><ellipse cx="30" cy="37" rx="9" ry="7" fill="#F2D2AE"/><circle cx="23" cy="26" r="3" fill="#14201B"/><circle cx="37" cy="26" r="3" fill="#14201B"/><ellipse cx="30" cy="34" rx="3.5" ry="2.5" fill="#14201B"/><path d="M30 37 L30 40" stroke="#14201B" stroke-width="1.5"/>'},
+  robot:{name:"Beep the robot",price:180,svg:'<path d="M30 4 L30 12" stroke="#7D878F" stroke-width="2.5"/><circle cx="30" cy="4" r="3" fill="#E8554F"/><rect x="12" y="12" width="36" height="28" rx="7" fill="#AFC2CC"/><rect x="17" y="18" width="26" height="14" rx="4" fill="#14201B"/><circle cx="24" cy="25" r="3" fill="#3CC486"/><circle cx="36" cy="25" r="3" fill="#3CC486"/><rect x="18" y="42" width="24" height="14" rx="4" fill="#8FA4AF"/><rect x="26" y="46" width="8" height="3" fill="#FFC83D"/>'},
+  dragon:{name:"Sparky the dragon",price:220,svg:'<path d="M10 26 Q2 12 14 14 L22 24 Z M50 26 Q58 12 46 14 L38 24 Z" fill="#7C5CFF"/><circle cx="30" cy="30" r="16" fill="#3CC486"/><path d="M22 16 L20 6 L27 14 Z M38 16 L40 6 L33 14 Z" fill="#FFC83D"/><ellipse cx="30" cy="38" rx="9" ry="6" fill="#B8F5D3"/><circle cx="24" cy="27" r="3" fill="#14201B"/><circle cx="36" cy="27" r="3" fill="#14201B"/><circle cx="27" cy="38" r="1.3" fill="#1F9D63"/><circle cx="33" cy="38" r="1.3" fill="#1F9D63"/><ellipse cx="30" cy="54" rx="12" ry="5" fill="#3CC486"/>'},
+  panda:{name:"Bao the panda cub",price:160,svg:'<circle cx="15" cy="16" r="7" fill="#14201B"/><circle cx="45" cy="16" r="7" fill="#14201B"/><circle cx="30" cy="30" r="18" fill="#fff" stroke="#E3E3E3"/><ellipse cx="23" cy="28" rx="5" ry="6" fill="#14201B"/><ellipse cx="37" cy="28" rx="5" ry="6" fill="#14201B"/><circle cx="24" cy="28" r="1.8" fill="#fff"/><circle cx="36" cy="28" r="1.8" fill="#fff"/><ellipse cx="30" cy="37" rx="3" ry="2" fill="#14201B"/>'},
+  ghost:{name:"Boo the ghost",price:100,season:"oct",svg:'<path d="M12 56 L12 26 Q12 8 30 8 Q48 8 48 26 L48 56 L42 50 L36 56 L30 50 L24 56 L18 50 Z" fill="#F5F7FF" stroke="#C9CEE0" stroke-width="1.5"/><ellipse cx="23" cy="26" rx="3.5" ry="5" fill="#14201B"/><ellipse cx="37" cy="26" rx="3.5" ry="5" fill="#14201B"/><ellipse cx="30" cy="38" rx="4" ry="3" fill="#14201B"/>'},
+  bat:{name:"Flap the bat",price:100,season:"oct",svg:'<path d="M30 24 Q16 10 4 18 Q10 22 8 30 Q16 26 20 32 Q24 28 30 32 Q36 28 40 32 Q44 26 52 30 Q50 22 56 18 Q44 10 30 24 Z" fill="#5A3FD0"/><circle cx="30" cy="28" r="9" fill="#7C5CFF"/><path d="M24 20 L26 14 L28 20 Z M32 20 L34 14 L36 20 Z" fill="#7C5CFF"/><circle cx="27" cy="27" r="2" fill="#FFC83D"/><circle cx="33" cy="27" r="2" fill="#FFC83D"/>'},
+  penguin:{name:"Pip the penguin",price:120,season:"dec",svg:'<ellipse cx="30" cy="34" rx="16" ry="20" fill="#14201B"/><ellipse cx="30" cy="38" rx="10" ry="14" fill="#fff"/><circle cx="25" cy="24" r="2.5" fill="#fff"/><circle cx="35" cy="24" r="2.5" fill="#fff"/><circle cx="25" cy="24" r="1.2" fill="#14201B"/><circle cx="35" cy="24" r="1.2" fill="#14201B"/><path d="M27 29 L33 29 L30 33 Z" fill="#FFC83D"/><path d="M22 56 L28 56 M32 56 L38 56" stroke="#FFC83D" stroke-width="3" stroke-linecap="round"/>'}
+};
+const DEFAULT_LOOK={fur:"orange",hat:"none",eyes:"round",neck:"none",pet:"none"};
+const MONTHS={oct:9,dec:11};
+const inSeason=it=>!it.season||new Date().getMonth()===MONTHS[it.season];
+const seasonName=it=>({oct:"October",dec:"December"})[it.season];
+function petSvg(look){look=look||myLook();const p=PETS[look.pet];return p&&p.svg?`<svg class="pet" viewBox="0 0 60 60" aria-hidden="true">${p.svg}</svg>`:""}
+function withPet(mood,look){return `<span class="mwrap">${monkey(mood,look)}${petSvg(look)}</span>`}
 const myLook=()=>{try{return S.look||DEFAULT_LOOK}catch(e){return DEFAULT_LOOK}};
 function eyewear(kind,ey){
   const pair=(a,b)=>a+b;
@@ -304,6 +360,8 @@ function eyewear(kind,ey){
     case "hearts":return '<path d="M47 66 L35 53 A6.5 6.5 0 0 1 47 46 A6.5 6.5 0 0 1 59 53 Z" fill="#FF6FAE" opacity=".9"/><path d="M73 66 L61 53 A6.5 6.5 0 0 1 73 46 A6.5 6.5 0 0 1 85 53 Z" fill="#FF6FAE" opacity=".9"/><path d="M58 52 L62 52" stroke="#C93E80" stroke-width="2.5"/>';
     case "stars":return '<path d="M47 42 L50.5 50 L59 50.5 L52.5 56 L54.5 64.5 L47 60 L39.5 64.5 L41.5 56 L35 50.5 L43.5 50 Z" fill="#FFC83D" stroke="#E0A400" stroke-width="1.5"/><path d="M73 42 L76.5 50 L85 50.5 L78.5 56 L80.5 64.5 L73 60 L65.5 64.5 L67.5 56 L61 50.5 L69.5 50 Z" fill="#FFC83D" stroke="#E0A400" stroke-width="1.5"/>';
     case "nerd":return '<rect x="34" y="45" width="25" height="17" rx="3" fill="#E8554F" opacity=".75" stroke="#fff" stroke-width="2.5"/><rect x="61" y="45" width="25" height="17" rx="3" fill="#3D8BFF" opacity=".75" stroke="#fff" stroke-width="2.5"/>';
+    case "pixel":return '<path d="M32 47 H88 V52 H84 V58 H78 V62 H66 V58 H62 V52 H58 V58 H54 V62 H42 V58 H36 V52 H32 Z" fill="#14201B"/><rect x="40" y="51" width="4" height="4" fill="#fff"/><rect x="66" y="51" width="4" height="4" fill="#fff"/>';
+    case "mask":return '<path d="M30 50 Q47 40 60 50 Q73 40 90 50 Q88 64 74 62 Q66 60 60 56 Q54 60 46 62 Q32 64 30 50 Z" fill="#3B1F5C"/><ellipse cx="46" cy="53" rx="6" ry="4" fill="#FFC83D"/><ellipse cx="74" cy="53" rx="6" ry="4" fill="#FFC83D"/><circle cx="46" cy="53" r="2" fill="#14201B"/><circle cx="74" cy="53" r="2" fill="#14201B"/>';
     case "monocle":return `<circle cx="73" cy="54" r="11" fill="#ffffff22" stroke="#C99A2E" stroke-width="2.8"/><path d="M83 60 Q88 78 80 92" fill="none" stroke="#C99A2E" stroke-width="1.6"/>`;
     default:return '<circle cx="47" cy="54" r="10.5" fill="none" stroke="#1B2B25" stroke-width="2.6"/><circle cx="73" cy="54" r="10.5" fill="none" stroke="#1B2B25" stroke-width="2.6"/><path d="M57.5 54 Q60 51.5 62.5 54" stroke="#1B2B25" stroke-width="2.6" fill="none"/>';
   }
@@ -318,8 +376,8 @@ function monkey(mood="happy",look){
     oops:'<ellipse cx="60" cy="80" rx="5" ry="6" fill="#3A1A05"/>'
   }[mood]||'';
   const ey=mood==="think"?-2:0;
-  const hideEyes=look.eyes==="sun";
-  return `<svg viewBox="0 -16 120 136" aria-hidden="true">
+  const hideEyes=look.eyes==="sun"||look.eyes==="pixel"||look.eyes==="mask";
+  return `<svg class="tm" viewBox="0 -16 120 136" aria-hidden="true">${F.rainbow?'<defs><linearGradient id="rb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF6FAE"/><stop offset=".35" stop-color="#FFC83D"/><stop offset=".65" stop-color="#2EC4A0"/><stop offset="1" stop-color="#7C5CFF"/></linearGradient></defs>':""}
   <circle cx="20" cy="60" r="15" fill="${F.dark}"/><circle cx="20" cy="60" r="8.5" fill="${F.face}"/>
   <circle cx="100" cy="60" r="15" fill="${F.dark}"/><circle cx="100" cy="60" r="8.5" fill="${F.face}"/>
   <circle cx="60" cy="58" r="40" fill="${F.main}"/>
@@ -349,7 +407,7 @@ const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
-function buddy(text,mood="happy"){return `<div class="buddy bounce">${monkey(mood)}<div class="bubble">${text}</div></div>`}
+function buddy(text,mood="happy"){return `<div class="buddy bounce">${withPet(mood)}<div class="bubble">${text}</div></div>`}
 function toast(msg){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(t._h);t._h=setTimeout(()=>t.hidden=true,2800)}
 const Q=t=>`“${t}${/[?!.]$/.test(t)?"":"."}”`;
 const pick=a=>a[Math.floor(Math.random()*a.length)];
@@ -357,15 +415,17 @@ const WINS=["Nailed it!","Clean code. Love it.","Ook ook! That's right!","You're
 
 /* ---------- State ---------- */
 const KEY="typemonkey-v1";
-const freshState=()=>({xp:0,bananas:0,streak:0,lastDay:null,done:[],progress:{},pro:false,look:{...DEFAULT_LOOK},owned:{fur:["orange"],hat:["none"],eyes:["round","none"],neck:["none"]},review:{},settings:{theme:"system",text:"normal",calm:false}});
+const freshState=()=>({xp:0,bananas:0,streak:0,lastDay:null,done:[],progress:{},pro:false,look:{...DEFAULT_LOOK},owned:{fur:["orange"],hat:["none"],eyes:["round","none"],neck:["none"],pet:["none"]},review:{},settings:{theme:"system",text:"normal",calm:false},stats:{},badges:{}});
 let S=freshState();
 try{const raw=localStorage.getItem(KEY);if(raw)S={...S,...JSON.parse(raw)}}catch(e){}
 if(S.inProgress){S.progress=S.progress||{};if(S.inProgress.id)S.progress[S.inProgress.id]={step:S.inProgress.step,earned:S.inProgress.earned,drafts:{}};delete S.inProgress}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}renderStats()}
-S.look={...DEFAULT_LOOK,...(S.look||{})};S.owned=S.owned||{};for(const k of ["fur","hat","eyes","neck"])S.owned[k]=S.owned[k]||[];
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}renderStats();if(typeof checkAchievements==="function")setTimeout(checkAchievements,0)}
+S.look={...DEFAULT_LOOK,...(S.look||{})};S.owned=S.owned||{};for(const k of ["fur","hat","eyes","neck","pet"])S.owned[k]=S.owned[k]||[];
+if(!S.owned.pet.includes("none"))S.owned.pet.push("none");
 ["orange"].forEach(x=>S.owned.fur.includes(x)||S.owned.fur.push(x));["none"].forEach(x=>S.owned.hat.includes(x)||S.owned.hat.push(x));
 ["round","none"].forEach(x=>S.owned.eyes.includes(x)||S.owned.eyes.push(x));["none"].forEach(x=>S.owned.neck.includes(x)||S.owned.neck.push(x));S.review=S.review||{};
 S.settings={theme:"system",text:"normal",calm:false,...(S.settings||{})};delete S.tester;
+S.stats=S.stats||{};S.badges=S.badges||{};
 function applySettings(){
   const r=document.documentElement;const st=S.settings;
   if(st.theme==="system")r.removeAttribute("data-theme");else r.setAttribute("data-theme",st.theme);
@@ -611,11 +671,13 @@ function home(){
     <section class="hero"><h1>Learn to code, one banana at a time.</h1><p>Bite-size lessons, real code you run yourself, quizzes and mini-games. Built for all ages and experience levels.</p></section>
     ${buddy(greet,resume?"cheer":"happy")}
     ${nu?`<div class="row"><button class="btn" id="cont">${resume?"Pick up where you left off":S.done.length?"Continue learning":"Start lesson 1"}</button></div>`:nextPro?`<div class="row"><button class="btn banana" id="unl">See the full course</button></div>`:""}
+    <button class="daily ${dailyDoneToday()?"done":""}" id="daily"><span class="dicon">📅</span><span class="dtext"><b>${dailyDoneToday()?"Daily challenge done!":"Daily challenge"}</b><span>${dailyDoneToday()?`Come back tomorrow for a new one · 🔥 ${(S.daily||{}).streak||1}-day daily streak`:`3 quick questions · bonus bananas${(S.daily||{}).streak?` · keep your ${(S.daily||{}).streak}-day streak going`:""}`}</span></span><span class="pill ${dailyDoneToday()?"ok":"kid"}">${dailyDoneToday()?"✓":"+10 🍌"}</span></button>
     <div class="tools">
       <button class="tool" id="review"><b>🧠 Review${dueCount()?` <span class="due">${dueCount()}</span>`:""}</b><span>${dueCount()?"Questions you missed are ready to try again":reviewSize()?"All caught up! Missed questions come back here":"Questions you miss come back here later"}</span></button>
       <button class="tool" id="practice"><b>⚡ Practice rush</b><span>60-second review of everything you've learned</span></button>
       <button class="tool" id="shop"><b>🛍️ Shop</b><span>Spend bananas on outfits for TypeMonkey</span></button>
       <button class="tool" id="play"><b>›_ Playground</b><span>Write any code you want and run it</span></button>
+      <button class="tool" id="badges"><b>🏆 Badges <span class="due">${Object.keys(S.badges).length}/${badgeList().length}</span></b><span>Earn badges and bonus bananas</span></button>
     </div>
     <div class="label">Courses</div>
     <div class="courses">${COURSES.map(c=>{
@@ -629,7 +691,7 @@ function home(){
   if($("#cont"))$("#cont").onclick=()=>startLesson(nu.l.id);
   if($("#unl"))$("#unl").onclick=()=>coursePage("js");
   if($("#homebuy"))$("#homebuy").onclick=()=>unlockFull(home);
-  $("#practice").onclick=practice;$("#play").onclick=()=>playground();$("#shop").onclick=()=>shop();$("#review").onclick=startReview;
+  $("#practice").onclick=practice;$("#play").onclick=()=>playground();$("#shop").onclick=()=>shop();$("#review").onclick=startReview;$("#badges").onclick=badgesPage;$("#daily").onclick=startDaily;
   $$(".course").forEach(b=>b.onclick=()=>{const c=courseById(b.dataset.c);
     if(c.soon)toast(c.kids?"TypeMonkey Jr. is on the roadmap!":c.name+" is coming soon.");else coursePage(c.id)});
   foot();window.scrollTo(0,0);
@@ -670,6 +732,7 @@ function coursePage(cid){
 /* ---------- Lesson runner ---------- */
 let cur=null;
 function startLesson(id){
+  {const f0=findLesson(id);if(f0){S.stats.started=S.stats.started||[];if(!S.stats.started.includes(f0.c.id)){S.stats.started.push(f0.c.id)}}}
   const f=findLesson(id);const p=S.progress[id];
   cur={c:f.c,l:f.l,item:f,step:0,earned:{xp:0,ban:0,right:0,total:0}};
   if(p&&p.step>0&&p.step<f.l.steps.length-1){cur.step=p.step;cur.earned={...cur.earned,...p.earned}}
@@ -685,7 +748,7 @@ function shell(inner){
   $("#screen").innerHTML=`<div class="stack">
     <div class="lessonbar"><button class="x" id="quit" aria-label="Leave lesson">×</button><div class="progress"><span style="width:${pct}%"></span></div></div>
     ${inner}${cur.c.tables?`<details class="drawer"><summary>📋 Show the zoo tables</summary>${Object.keys(cur.c.tables).map(t=>tableHTML(cur.c,t)).join("")}</details>`:""}</div>`;
-  $("#quit").onclick=()=>cur.review?home():coursePage(cur.c.id);
+  $("#quit").onclick=()=>cur.review||cur.daily?home():coursePage(cur.c.id);
   $("#foot").innerHTML="";window.scrollTo(0,0);
 }
 function next(){cur.step++;renderStep()}
@@ -700,14 +763,14 @@ function wireEditor(id,after,kind){
   const out=$("#out-"+id),web=out.classList.contains("webview");
   if(web)renderWeb(out,ta.value);
   $("#run-"+id).onclick=async()=>{if(web){renderWeb(out,ta.value);after&&after(ta.value);return}
-    const k=kind||(cur?kindOf(cur.c):"js");const res=await RUNNERS[k](ta.value);paintConsole(out,res,PRINT_HINT[k]);after&&after(ta.value,res)};
+    const k=kind||(cur?kindOf(cur.c):"js");ranLang(k);const res=await RUNNERS[k](ta.value);paintConsole(out,res,PRINT_HINT[k]);after&&after(ta.value,res)};
 }
 const award=(xp,ban=0)=>{cur.earned.xp+=xp;cur.earned.ban+=ban};
 
 function renderStep(){
   const s=cur.l.steps[cur.step];const R=cur.c.runnable;
   if(s._course)cur.c=s._course;
-  if(s.type!=="done"&&!cur.review)saveSpot();
+  if(s.type!=="done"&&!cur.review&&!cur.daily)saveSpot();
   const T={talk,code:codeStep,quiz,fill,order,maze,game:gameIntro,done:finish}[s.type];T(s,R);
 }
 function talk(s,R){
@@ -724,7 +787,7 @@ function codeStep(s){
     tries++;const [ok,msg,detail]=cur.c.runnable==="web"?gradeWebNow(s,code):await grade(s,code,kindOf(cur.c));
     $("#fb").innerHTML=`<div class="feedback ${ok?"good":"bad"}">${ok?"✓ ":""}${esc(msg)}${detail?`<pre>${esc(detail)}</pre>`:""}</div>`;
     $("#bud").innerHTML=buddy(ok?"Look at you go! 🍌 +5":tries>2?"Stuck? Tap “Show me how”. Peeking is part of learning.":"Not quite yet. You've got this.",ok?"cheer":"oops");
-    if(ok&&!solved){solved=true;$("#go").disabled=false;award(30,5)}
+    if(ok&&!solved){solved=true;$("#go").disabled=false;award(30,5);bump("challenges");if(tries===1)bump("firstTry")}
   });
   $("#code-c").addEventListener("input",()=>draft(k,$("#code-c").value));
   $("#hint").onclick=()=>{$("#code-c").value=s.hint;draft(k,s.hint);$("#bud").innerHTML=buddy("Here's one way to write it. Read it line by line, then press ▶ Run.","happy")};
@@ -732,7 +795,7 @@ function codeStep(s){
 }
 function quiz(s){
   const order=shuffle(s.opts.map((o,i)=>i));
-  shell(`<div class="card"><div class="label">${s._from?`Review · from ${esc(s._from)}`:"Quick quiz · +10 XP"}</div><h2 style="font-size:1.35rem">${s.q}</h2>${s.code?`<div class="editor"><pre>${esc(s.code)}</pre></div>`:""}
+  shell(`<div class="card"><div class="label">${s._from?`${cur.daily?`Daily challenge · ${cur.step+1} of ${cur.l.steps.length-1}`:"Review"} · from ${esc(s._from)}`:"Quick quiz · +10 XP"}</div><h2 style="font-size:1.35rem">${s.q}</h2>${s.code?`<div class="editor"><pre>${esc(s.code)}</pre></div>`:""}
     <div class="opts">${order.map(i=>`<button class="opt ${s.mono?"mono":""}" data-i="${i}">${esc(s.opts[i])}</button>`).join("")}</div><div id="fb"></div></div>
     <div id="bud">${buddy("Take your best guess!","think")}</div><div class="row"><button class="btn" id="go" hidden>Continue</button></div>`);
   $$(".opt").forEach(b=>b.onclick=()=>{
@@ -881,7 +944,7 @@ function maze(s){
       if(k<path.length){const [x,y,d,bump,ate]=path[k];place(x,y,d,bump);if(ate){const c=document.querySelector(`.mc[data-xy="${ate}"]`);if(c)setTimeout(()=>{c.textContent="✨"},250)}k++;return setTimeout(tick,path.length>40?220:380)}
       running=false;
       const tooMany=s.max&&blockCount(prog)>s.max;
-      if(result==="win"&&!tooMany){won=true;award(15,3);$("#mface").innerHTML=monkey("cheer");$("#fb").innerHTML=`<div class="feedback good">🍌 ${nB>1?"All bananas collected!":"Banana reached!"} ${esc(s.win||pick(WINS))}</div>`;
+      if(result==="win"&&!tooMany){won=true;award(15,3);bump("mazes");if(s.start)bump("bugsFixed");$("#mface").innerHTML=monkey("cheer");$("#fb").innerHTML=`<div class="feedback good">🍌 ${nB>1?"All bananas collected!":"Banana reached!"} ${esc(s.win||pick(WINS))}</div>`;
         $("#bud").innerHTML=buddy("YES! Your program worked!","cheer");["run","undo","clr","hint"].forEach(i=>$("#"+i).hidden=true);$("#go").hidden=false;return}
       fails++;$("#mface").innerHTML=monkey("oops");setTimeout(()=>{const f=$("#mface");if(f)f.innerHTML=monkey("happy")},900);
       const msg=result==="win"?`You got there, but used ${blockCount(prog)} blocks. Can you do it with ${s.max} or fewer? Try a Repeat block!`:result==="wall"?"Bonk! TypeMonkey bumped into a tree. Find the step that went wrong and fix it.":result==="loop"?"TypeMonkey kept going around and around! Your repeat never got him to every banana.":result==="extra"?"Too many steps! TypeMonkey got the banana, then kept going. A program has to stop at exactly the right spot. Remove the extra blocks.":"So close! TypeMonkey stopped before reaching the banana. Add more steps.";
@@ -906,6 +969,7 @@ function rush(poolIn,secs,onEnd,onQuit){
   const pool=shuffle(poolIn);let i=0,score=0,left=secs,ended=false;
   const timer=setInterval(()=>{left--;const t=$("#tleft");if(t){t.textContent=left;$("#tbar").style.width=(left/secs*100)+"%"}if(left<=0)end()},1000);
   function end(){if(ended)return;ended=true;clearInterval(timer);
+    bump("rushes");if(score===pool.length&&pool.length>=5)bump("rushPerfect");S.stats.rushBest=Math.max(S.stats.rushBest||0,score);
     $("#screen").innerHTML=`<div class="stack"><div class="card" style="align-items:center;text-align:center"><div class="label">Time!</div><div class="big">${score}/${pool.length}</div><p>+${score*2} bananas · +${score*3} XP</p></div>
       ${buddy(score>=Math.ceil(pool.length*.8)?"Unreal speed. Are you secretly a monkey?":score>=pool.length/2?"Solid run! Practice makes it automatic.":"Good warm-up. These get easy fast.",score>=pool.length/2?"cheer":"happy")}
       <div class="row"><button class="btn" id="fin">Continue</button></div></div>`;
@@ -941,9 +1005,13 @@ function practice(){
 /* ---------- Finish ---------- */
 function finish(){
   if(cur.review)return reviewDone();
+  if(cur.daily)return dailyDone();
   const id=cur.l.id;const first=!S.done.includes(id);
   const bonus=first?20:0;cur.earned.xp+=bonus;
-  S.xp+=cur.earned.xp;S.bananas+=cur.earned.ban;bumpStreak();if(first)S.done.push(id);delete S.progress[id];save();
+  S.xp+=cur.earned.xp;S.bananas+=cur.earned.ban;bumpStreak();if(first)S.done.push(id);delete S.progress[id];
+  bump("lessons");if(cur.earned.total>=2&&cur.earned.right===cur.earned.total)bump("perfectQuiz");
+  const hr=new Date().getHours();if(hr>=22||hr<4)bump("night");if(hr>=4&&hr<8)bump("early");
+  save();
   const L=flat(cur.c);const nx=L[cur.item.idx+1];const nst=nx&&status(cur.c,nx);
   const [d,n,all]=countLessons(cur.c);const courseDone=first&&d===n&&n===all;
   shell(`<div class="card" style="text-align:center;align-items:center"><div class="label">${cur.l.project?"Project complete":"Lesson complete"}</div><h2>${esc(cur.l.title)} ✓</h2>
@@ -955,6 +1023,73 @@ function finish(){
     <div class="row">${nx&&(nst==="open"||nst==="done")?`<button class="btn" id="nxt">Next lesson</button>`:""}${nx&&nst==="pro"?`<button class="btn banana" id="nxt">Unlock the next unit</button>`:""}<button class="btn ghost" id="back">Back to course</button></div>`);
   $("#back").onclick=()=>coursePage(cur.c.id);
   if($("#nxt"))$("#nxt").onclick=()=>nst==="pro"?coursePage(cur.c.id):startLesson(nx.l.id);
+}
+
+/* ---------- Achievements ---------- */
+function bump(k,n=1){S.stats[k]=(S.stats[k]||0)+n}
+function ranLang(k){S.stats.langs=S.stats.langs||[];if(!S.stats.langs.includes(k)){S.stats.langs.push(k);save()}}
+const st=k=>S.stats[k]||0;
+function ownedCount(){return Object.entries(S.owned||{}).reduce((n,[slot,ids])=>n+ids.filter(id=>{const t={fur:FURS,hat:HATS,eyes:EYES,neck:NECKS,pet:typeof PETS!=="undefined"?PETS:{}}[slot];return t&&t[id]&&t[id].price>0}).length,0)}
+function courseDone(id){const c=courseById(id);if(!c||!c.units)return false;const [d,n,all]=countLessons(c);return n>0&&d===n&&n===all}
+function badgeList(){
+  const B=[
+    ["first_lesson","🎉","First steps","Finish your first lesson",()=>st("lessons")>=1,10],
+    ["first_code","⌨️","Hello, world","Solve your first code challenge",()=>st("challenges")>=1,10],
+    ["sharp","🎯","Sharpshooter","Solve 10 code challenges on the first try",()=>st("firstTry")>=10,40],
+    ["challenger","💪","Challenge accepted","Solve 50 code challenges",()=>st("challenges")>=50,100],
+    ["lessons10","📚","Bookworm","Finish 10 lessons",()=>S.done.length>=10,30],
+    ["lessons50","🦉","Wise owl","Finish 50 lessons",()=>S.done.length>=50,100],
+    ["lessons100","🏛️","Professor Monkey","Finish 100 lessons",()=>S.done.length>=100,250],
+    ["streak3","🔥","On fire","Keep a 3-day streak",()=>S.streak>=3,20],
+    ["streak7","🌋","Unstoppable","Keep a 7-day streak",()=>S.streak>=7,50],
+    ["streak30","☄️","Legend","Keep a 30-day streak",()=>S.streak>=30,300],
+    ["quiz_perfect","💯","Perfect score","Get every quiz right in a lesson",()=>st("perfectQuiz")>=1,15],
+    ["rush_perfect","⚡","Lightning brain","Get every answer right in an Output Rush",()=>st("rushPerfect")>=1,25],
+    ["rush10","🏎️","Speed demon","Get 10 right in one Practice rush",()=>st("rushBest")>=10,40],
+    ["polyglot","🌍","Polyglot","Run code in 4 different languages",()=>(S.stats.langs||[]).length>=4,40],
+    ["explorer","🧭","Explorer","Start a lesson in 5 different courses",()=>(S.stats.started||[]).length>=5,30],
+    ["tinkerer","🔧","Tinkerer","Run 20 programs in the Playground",()=>st("playRuns")>=20,25],
+    ["memory","🧠","Elephant memory","Remember 10 questions in Review",()=>st("remembered")>=10,30],
+    ["learned","🎓","It stuck!","Fully learn 5 review questions",()=>st("learned")>=5,40],
+    ["maze10","🗺️","Pathfinder","Solve 10 mazes",()=>st("mazes")>=10,25],
+    ["bug5","🐛","Bug squasher","Fix 5 buggy programs in TypeMonkey Jr.",()=>st("bugsFixed")>=5,30],
+    ["shopper","🛍️","Fashion monkey","Buy your first item in the shop",()=>st("purchases")>=1,10],
+    ["collector","👑","Collector","Own 10 shop items",()=>ownedCount()>=10,75],
+    ["rich","🍌","Banana hoard","Have 500 bananas at once",()=>S.bananas>=500,50],
+    ["night","🌙","Night owl","Finish a lesson after 10 pm",()=>st("night")>=1,10],
+    ["early","🌅","Early bird","Finish a lesson before 8 am",()=>st("early")>=1,10],
+    ["daily1","📅","Daily habit","Complete a daily challenge",()=>st("dailies")>=1,10],
+    ["daily7","🗓️","Every single day","Complete daily challenges 7 days in a row",()=>((S.daily||{}).streak||0)>=7,60],
+  ];
+  for(const c of COURSES)if(c.units)B.push(["course_"+c.id,c.kids?"🏆":"🏅",c.kids?"Maze Master":`${c.name} graduate`,`Finish every lesson in ${c.name}`,()=>courseDone(c.id),150]);
+  B.push(["all_courses","🌟","TypeMonkey legend","Finish every course",()=>COURSES.filter(c=>c.units).every(c=>courseDone(c.id)),1000]);
+  return B.map(([id,icon,name,desc,test,reward])=>({id,icon,name,desc,test,reward}));
+}
+let badgeQueue=[],checking=false;
+function checkAchievements(){
+  if(checking||typeof COURSES==="undefined")return;checking=true;
+  try{for(const b of badgeList()){if(S.badges[b.id])continue;let ok=false;try{ok=b.test()}catch(e){}if(ok){S.badges[b.id]=Date.now();S.bananas+=b.reward;badgeQueue.push(b)}}
+    if(badgeQueue.length){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}renderStats();showBadge()}}
+  finally{checking=false}
+}
+function showBadge(){
+  if($(".celebrate")||!badgeQueue.length)return;
+  const b=badgeQueue.shift();
+  const g=document.createElement("div");g.className="celebrate";g.setAttribute("role","dialog");g.setAttribute("aria-label","Badge earned");
+  g.innerHTML=`<div class="card"><div class="confetti" aria-hidden="true">${"🎉🍌⭐✨🎊".repeat(3).split("").filter(x=>x.trim()).map((c,i)=>`<span style="--i:${i}">${c}</span>`).join("")}</div>
+    <div class="label">Badge unlocked!</div><div class="badge-big">${b.icon}</div><h2>${b.name}</h2><p>${b.desc}</p><div class="pill kid" style="align-self:center">+${b.reward} bananas</div>
+    <button class="btn" id="cel-ok">Awesome!</button></div>`;
+  document.body.appendChild(g);
+  g.querySelector("#cel-ok").onclick=()=>{g.remove();showBadge()};
+}
+function badgesPage(){
+  const back=rerender===badgesPage?home:rerender;rerender=badgesPage;
+  const list=badgeList();const got=list.filter(b=>S.badges[b.id]).length;
+  $("#screen").innerHTML=`<div class="stack"><div class="row"><button class="btn ghost sm" id="back">← Back</button></div>
+    <section class="hero"><div class="label">Badges</div><h1>${got} of ${list.length} earned</h1><p>Every badge comes with bonus bananas. Some are easy, some are legendary.</p></section>
+    <div class="progress"><span style="width:${got/list.length*100}%"></span></div>
+    <div class="badgegrid">${list.map(b=>{const on=S.badges[b.id];return `<div class="badge ${on?"on":""}"><div class="bicon">${on?b.icon:"🔒"}</div><b>${b.name}</b><span>${b.desc}</span><span class="pill ${on?"ok":"kid"}">${on?new Date(on).toLocaleDateString():`+${b.reward} 🍌`}</span></div>`}).join("")}</div></div>`;
+  $("#back").onclick=()=>back();foot();window.scrollTo(0,0);
 }
 
 /* ---------- Smarter review: missed questions come back on a spaced schedule ---------- */
@@ -971,7 +1106,8 @@ function answered(ok){
       else{r.box=0;r.due=Date.now()+10*60e3;r.misses++}save()}
     return;
   }
-  if(!ok&&cur.l.id&&!cur.practice)missed(cur.l.id+"#"+cur.step,{kind:"step",lid:cur.l.id,i:cur.step});
+  if(!ok&&st._src)missed(st._src.key,st._src.item);
+  else if(!ok&&cur.l.id&&!cur.practice)missed(cur.l.id+"#"+cur.step,{kind:"step",lid:cur.l.id,i:cur.step});
 }
 const reviewSize=()=>Object.keys(S.review||{}).length;
 const dueCount=()=>Object.values(S.review||{}).filter(r=>r.due<=Date.now()).length;
@@ -1003,7 +1139,7 @@ function startReview(){
 function whenText(t){const d=t-Date.now();if(d<=0)return "now";if(d<36e5)return "in "+Math.max(1,Math.round(d/6e4))+" minutes";if(d<DAY*1.5)return "tomorrow";return "in "+Math.round(d/DAY)+" days"}
 function reviewDone(){
   const n=cur.earned.reviewed||0,ok=cur.earned.remembered||0,learned=cur.earned.learned||0;
-  S.xp+=ok*5;S.bananas+=ok*2;if(n)bumpStreak();save();
+  S.xp+=ok*5;S.bananas+=ok*2;if(n)bumpStreak();S.stats.remembered=(S.stats.remembered||0)+ok;S.stats.learned=(S.stats.learned||0)+learned;save();
   shell(`<div class="card" style="text-align:center;align-items:center"><div class="label">Review complete</div><h2>${ok}/${n} remembered</h2>
     <div class="reward"><div><b>+${ok*5}</b><span>XP</span></div><div><b>+${ok*2}</b><span>Bananas</span></div><div><b>${learned}</b><span>Learned for good</span></div></div>
     <p>${n-ok?`${n-ok} question${n-ok===1?"":"s"} will come back soon for another try.`:"Every one right! They'll come back in a few days to make sure they stick."}</p></div>
@@ -1012,20 +1148,59 @@ function reviewDone(){
   $("#back").onclick=home;
 }
 
+/* ---------- Daily challenge: 3 questions, the same for everyone on a given day ---------- */
+function seeded(seed){let h=2166136261>>>0;for(const ch of seed){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)>>>0}
+  return ()=>{h^=h<<13;h>>>=0;h^=h>>>17;h^=h<<5;h>>>=0;return h/4294967296}}
+const dailyDoneToday=()=>(S.daily||{}).last===dayStr(new Date());
+function dailySteps(){
+  const rnd=seeded("typemonkey-"+dayStr(new Date()));
+  const started=(S.stats.started||[]).filter(id=>{const c=courseById(id);return c&&c.units&&!c.kids});
+  const cids=started.length?started:((S.stats.started||[]).includes("jr")?["jr"]:["js"]);
+  const cands=[];
+  for(const cid of cids){const c=courseById(cid);for(const x of flat(c)){
+    if(!x.l.steps||!(S.done.includes(x.l.id)||x.idx<2))continue;
+    (x.l.pool||[]).forEach((p,j)=>cands.push({kind:"pool",c,l:x.l,j}));
+    x.l.steps.forEach((q,i)=>{if(q.type==="quiz")cands.push({kind:"step",c,l:x.l,i})});
+  }}
+  const picks=[];while(picks.length<3&&cands.length){picks.push(cands.splice(Math.floor(rnd()*cands.length),1)[0])}
+  return picks.map(pk=>{
+    if(pk.kind==="pool"){const p=pk.l.pool[pk.j];return {type:"quiz",q:"What does this print?",code:p[0],opts:[...p[1]],a:0,mono:true,why:`It prints ${p[1][0].includes("\n")?"those lines":p[1][0]}.`,_course:pk.c,_from:pk.l.title,_src:{key:pk.l.id+"#p"+pk.j,item:{kind:"pool",lid:pk.l.id,j:pk.j}}}}
+    return {...pk.l.steps[pk.i],_course:pk.c,_from:pk.l.title,_src:{key:pk.l.id+"#"+pk.i,item:{kind:"step",lid:pk.l.id,i:pk.i}}};
+  });
+}
+function startDaily(){
+  if(dailyDoneToday()){toast("You already did today's challenge. A new one unlocks tomorrow!");return}
+  const steps=dailySteps();if(!steps.length)return toast("Play a lesson first, then the daily challenge unlocks!");
+  cur={c:steps[0]._course,l:{id:null,title:"Daily challenge",steps:[...steps,{type:"done"}]},item:null,step:0,earned:{xp:0,ban:0,right:0,total:0},daily:true};
+  rerender=renderStep;renderStep();
+}
+function dailyDone(){
+  const ok=cur.earned.right,n=cur.earned.total;
+  const t=dayStr(new Date()),y=dayStr(new Date(Date.now()-864e5));const d=S.daily||{};
+  const streak=d.last===y?(d.streak||0)+1:1;S.daily={last:t,streak,best:Math.max(d.best||0,streak)};
+  const ban=10+ok*3+(streak>=3?5:0),xp=ok*10;S.bananas+=ban;S.xp+=xp;bumpStreak();bump("dailies");save();
+  shell(`<div class="card" style="text-align:center;align-items:center"><div class="label">Daily challenge complete</div><h2>${ok}/${n} right</h2>
+    <div class="reward"><div><b>+${xp}</b><span>XP</span></div><div><b>+${ban}</b><span>Bananas</span></div><div><b>${streak}</b><span>Daily streak</span></div></div>
+    <p>${streak>=3?"Streak bonus +5 bananas! ":""}A new challenge unlocks tomorrow.</p></div>
+    ${buddy(ok===n?"Perfect daily! See you tomorrow!":"Nice work! Anything you missed is waiting in Review.",ok===n?"cheer":"happy")}
+    <div class="row"><button class="btn" id="back">Back home</button></div>`);
+  $("#back").onclick=home;
+}
+
 /* ---------- TypeMonkey shop ---------- */
-const SHOP=[["fur","Fur",FURS],["hat","Hats",HATS],["eyes","Glasses",EYES],["neck","Neckwear",NECKS]];
+const SHOP=[["fur","Fur",FURS],["hat","Hats",HATS],["eyes","Glasses",EYES],["neck","Neckwear",NECKS],["pet","Pets",PETS]];
 function shop(tab="hat",preview){
   rerender=()=>shop(tab);
   const look=preview||S.look;const [slot,label,items]=SHOP.find(x=>x[0]===tab);
   $("#screen").innerHTML=`<div class="stack">
     <div class="row"><button class="btn ghost sm" id="back">← Home</button></div>
     <section class="hero"><div class="label">Shop</div><h1>Dress up TypeMonkey</h1><p>Earn bananas in lessons, games and reviews, then spend them here. Your look shows up everywhere TypeMonkey does.</p></section>
-    <div class="shopstage"><div class="stage-monkey">${monkey("cheer",look)}</div><div class="stage-info"><div class="label">Your bananas</div><div class="big">🍌 ${S.bananas}</div>${preview?`<p>Previewing. Tap Buy to keep it!</p>`:`<p>Tap an item to try it on.</p>`}</div></div>
+    <div class="shopstage"><div class="stage-monkey">${withPet("cheer",look)}</div><div class="stage-info"><div class="label">Your bananas</div><div class="big">🍌 ${S.bananas}</div>${preview?`<p>Previewing. Tap Buy to keep it!</p>`:`<p>Tap an item to try it on.</p>`}</div></div>
     <div class="langs" role="tablist">${SHOP.map(([k,l])=>`<button class="lang" data-tab="${k}" aria-pressed="${k===tab}">${l}</button>`).join("")}</div>
     <div class="shopgrid">${Object.entries(items).map(([id,it])=>{
-      const owned=S.owned[slot].includes(id),on=S.look[slot]===id,tryLook={...S.look,[slot]:id};
-      return `<button class="shopitem ${on?"on":""}" data-id="${id}"><div class="mini-monkey">${monkey("happy",tryLook)}</div><b>${it.name}</b>
-        <span class="pill ${on?"ok":owned?"":"kid"}">${on?"Wearing":owned?"Owned":`🍌 ${it.price}`}</span></button>`}).join("")}</div>
+      const owned=S.owned[slot].includes(id),on=S.look[slot]===id,tryLook={...S.look,[slot]:id},away=!owned&&!inSeason(it);
+      return `<button class="shopitem ${on?"on":""} ${away?"away":""}" data-id="${id}" ${away?"disabled":""}>${it.season?`<span class="season">${it.season==="oct"?"🎃":"❄️"} Seasonal</span>`:""}<div class="mini-monkey">${withPet("happy",tryLook)}</div><b>${it.name}</b>
+        <span class="pill ${on?"ok":owned?"":"kid"}">${on?(slot==="pet"?"With you":"Wearing"):owned?"Owned":away?`Back in ${seasonName(it)}`:`🍌 ${it.price}`}</span></button>`}).join("")}</div>
     <div id="buybar"></div>
   </div>`;
   $("#back").onclick=home;
@@ -1038,7 +1213,7 @@ function shop(tab="hat",preview){
       <button class="btn banana" id="buy" ${S.bananas>=it.price?"":"disabled"}>Buy · 🍌 ${it.price}</button><button class="btn ghost" id="nobuy">Cancel</button></div>`;
     $("#buybar").scrollIntoView({block:"nearest"});
     $("#nobuy").onclick=()=>shop(tab);
-    $("#buy").onclick=()=>{if(S.bananas<it.price)return;S.bananas-=it.price;S.owned[slot].push(id);S.look[slot]=id;save();toast(`You bought ${it.name}! 🎉`);shop(tab)};
+    $("#buy").onclick=()=>{if(S.bananas<it.price)return;S.bananas-=it.price;S.owned[slot].push(id);S.look[slot]=id;bump("purchases");save();toast(`You bought ${it.name}! 🎉`);shop(tab)};
   });
   foot();window.scrollTo(0,0);
 }
@@ -1141,7 +1316,7 @@ function playground(lang="js"){
   ta.addEventListener("input",()=>{S.play=S.play||{};S.play[lang]=ta.value;save()});
   ta.addEventListener("keydown",e=>{if(e.key==="Tab"){e.preventDefault();const s=ta.selectionStart;ta.value=ta.value.slice(0,s)+"  "+ta.value.slice(ta.selectionEnd);ta.selectionStart=ta.selectionEnd=s+2}});
   $("#clear").onclick=()=>{ta.value=P.start;S.play=S.play||{};delete S.play[lang];save()};
-  if(P.run)$("#run-p").onclick=async()=>paintConsole($("#out-p"),await RUNNERS[P.run](ta.value),PRINT_HINT[P.run]);
+  if(P.run)$("#run-p").onclick=async()=>{ranLang(P.run);bump("playRuns");paintConsole($("#out-p"),await RUNNERS[P.run](ta.value),PRINT_HINT[P.run])};
   if(P.web){renderWeb($("#out-p"),ta.value);$("#run-p").onclick=()=>renderWeb($("#out-p"),ta.value)}
   foot();window.scrollTo(0,0);
 }
