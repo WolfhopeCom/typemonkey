@@ -357,7 +357,7 @@ const WINS=["Nailed it!","Clean code. Love it.","Ook ook! That's right!","You're
 
 /* ---------- State ---------- */
 const KEY="typemonkey-v1";
-const freshState=()=>({xp:0,bananas:0,streak:0,lastDay:null,done:[],progress:{},pro:false,tester:false,look:{...DEFAULT_LOOK},owned:{fur:["orange"],hat:["none"],eyes:["round","none"],neck:["none"]},review:{},settings:{theme:"system",text:"normal",calm:false}});
+const freshState=()=>({xp:0,bananas:0,streak:0,lastDay:null,done:[],progress:{},pro:false,look:{...DEFAULT_LOOK},owned:{fur:["orange"],hat:["none"],eyes:["round","none"],neck:["none"]},review:{},settings:{theme:"system",text:"normal",calm:false}});
 let S=freshState();
 try{const raw=localStorage.getItem(KEY);if(raw)S={...S,...JSON.parse(raw)}}catch(e){}
 if(S.inProgress){S.progress=S.progress||{};if(S.inProgress.id)S.progress[S.inProgress.id]={step:S.inProgress.step,earned:S.inProgress.earned,drafts:{}};delete S.inProgress}
@@ -365,7 +365,7 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}render
 S.look={...DEFAULT_LOOK,...(S.look||{})};S.owned=S.owned||{};for(const k of ["fur","hat","eyes","neck"])S.owned[k]=S.owned[k]||[];
 ["orange"].forEach(x=>S.owned.fur.includes(x)||S.owned.fur.push(x));["none"].forEach(x=>S.owned.hat.includes(x)||S.owned.hat.push(x));
 ["round","none"].forEach(x=>S.owned.eyes.includes(x)||S.owned.eyes.push(x));["none"].forEach(x=>S.owned.neck.includes(x)||S.owned.neck.push(x));S.review=S.review||{};
-S.settings={theme:"system",text:"normal",calm:false,...(S.settings||{})};
+S.settings={theme:"system",text:"normal",calm:false,...(S.settings||{})};delete S.tester;
 function applySettings(){
   const r=document.documentElement;const st=S.settings;
   if(st.theme==="system")r.removeAttribute("data-theme");else r.setAttribute("data-theme",st.theme);
@@ -592,7 +592,7 @@ function status(c,item){
   if(!l.steps)return "soon";
   if(S.done.includes(l.id))return "done";
   if(!u.free&&!S.pro)return "pro";
-  if(S.tester||idx===0)return "open";
+  if(idx===0)return "open";
   const L=flat(c);const prev=L[idx-1];
   return (!prev.l.steps||S.done.includes(prev.l.id))?"open":"locked";
 }
@@ -1067,7 +1067,6 @@ function settingsPage(){
     <div class="card setlist">
       <h3>Progress</h3>
       <div class="setrow"><div><b>Your stats</b><span>${S.done.length} lessons done · ${S.xp} XP · ${S.bananas} bananas · ${reviewSize()} in review</span></div></div>
-      <div class="setrow"><div><b>Tester mode</b><span>Open every lesson without playing in order</span></div>${seg("tester",S.tester?"on":"off",[["off","Off"],["on","On"]])}</div>
       <div class="setrow"><div><b>Reset progress</b><span>Erase lessons, XP, bananas, outfits and review</span></div><button class="btn ghost sm" id="reset">Reset…</button></div>
       <div id="confirm"></div>
     </div>
@@ -1082,7 +1081,6 @@ function settingsPage(){
   $("#back").onclick=()=>back();
   const bindSeg=(id,fn)=>$$(`#${id} button`).forEach(b=>b.onclick=()=>{fn(b.dataset.v);save();applySettings();settingsPage()});
   bindSeg("theme",v=>st.theme=v);bindSeg("text",v=>st.text=v);bindSeg("calm",v=>st.calm=v==="on");
-  bindSeg("tester",v=>{S.tester=v==="on";toast(S.tester?"Tester mode on: every lesson is open.":"Tester mode off.")});
   if($("#sbuy"))$("#sbuy").onclick=()=>unlockFull(settingsPage);
   $("#restore").onclick=()=>toast(S.pro?"Your purchase is already active.":"In the real app this checks the App Store / Google Play for your purchase. Nothing to restore in the demo.");
   $("#sterms").onclick=()=>legalPage("terms");$("#sprivacy").onclick=()=>legalPage("privacy");

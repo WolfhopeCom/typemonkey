@@ -28,7 +28,6 @@ Also included:
 - **Practice rush:** a 60-second review game drawing from every lesson you've finished.
 - **Progress:** XP, bananas, daily streak, and resume-where-you-left-off, saved on the device.
 - **Business model:** Unit 1 of each course is free; a one-time $4.99 unlock opens everything (currently a demo button).
-- **Tester mode** (footer) opens every lesson for testing.
 
 Everything runs on the device. There are no servers, accounts, API keys or outside services.
 
