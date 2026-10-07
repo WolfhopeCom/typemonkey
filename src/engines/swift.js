@@ -63,7 +63,7 @@ const TMSwift=(()=>{
       if(/[0-9]/.test(c)){
         let j=i;while(/[0-9_]/.test(src[j]))j++;let dbl=false;
         if(src[j]==="."&&/[0-9]/.test(src[j+1])){dbl=true;j++;while(/[0-9_]/.test(src[j]))j++}
-        if(/[eE]/.test(src[j])&&/[-+0-9]/.test(src[j+1])){dbl=true;j++;if(/[-+]/.test(src[j]))j++;while(/[0-9]/.test(src[j]))j++}
+        if(/[eE]/.test(src[j]||"")&&/[-+0-9]/.test(src[j+1]||"")){dbl=true;j++;if(/[-+]/.test(src[j]))j++;while(/[0-9]/.test(src[j]))j++}
         const s=src.slice(i,j).replace(/_/g,"");push("num",dbl?new D(parseFloat(s)):parseInt(s,10));i=j;continue;
       }
       if(/[A-Za-z_$]/.test(c)){let j=i+1;while(j<src.length&&/[A-Za-z0-9_]/.test(src[j]))j++;const w=src.slice(i,j);i=j;push(KW.has(w)?"kw":"id",w);continue}
@@ -411,8 +411,8 @@ const TMSwift=(()=>{
   }
 
   /* ---------- runtime ---------- */
-  function run(code){
-    let out="",steps=0,depth=0;
+  function run(code,input){
+    let out="",steps=0,depth=0;const IN=input==null?"":String(input).replace(/\r/g,"");let inPos=0;
     const W=s=>{out+=s;if(out.length>200000)fail("Your program printed too much, so I stopped it.","Timeout")};
     const tick=()=>{if(++steps>400000)fail("Your program ran too long, so I stopped it. Check for a loop that never ends.","Timeout")};
     const types=Object.create(null);     // user types
@@ -487,6 +487,7 @@ const TMSwift=(()=>{
     }
     function desc(v,inner){
       if(v===undefined||v===null)return "()";
+      if(v&&v.isTypeName&&!v.ns)return v.isTypeName;if(v&&v.isType)return v.ty.name;
       if(typeof v==="string")return inner?JSON.stringify(v):v;
       if(typeof v==="number")return String(v);
       if(v instanceof D)return dbl(v.v);
@@ -796,7 +797,8 @@ const TMSwift=(()=>{
           }
           if(b instanceof Dict){const k=args[0].v;const def=args.find(a=>a.label==="default");
             return {get:()=>{const d=base.get();const hit=d.m.get(hkey(k));if(def)return hit?hit[1]:def.v;return hit?new Some(hit[1]):NIL},
-              set:v=>{checkMutable(base,e.line);const d=base.get();if(v===NIL&&!def){d.m.delete(hkey(k));return}if(v instanceof Some)v=v.v;d.m.set(hkey(k),[k,conform(copy(v),d.vt,e.line,false,"assign value")])},root:base.root,parent:base,dictDefault:!!def};
+              set:v=>{checkMutable(base,e.line);const d=base.get();if(v===NIL&&!def){d.m.delete(hkey(k));return}if(v instanceof Some)v=v.v;d.m.set(hkey(k),[k,conform(copy(v),d.vt,e.line,false,"assign value")])},root:base.root,parent:base,dictDefault:!!def,
+              ensure:def?()=>{checkMutable(base,e.line);const d=base.get();if(!d.m.has(hkey(k)))d.m.set(hkey(k),[k,copy(def.v)])}:null};
           }
           if(typeof b==="string")fail(`line ${e.line}: Swift strings can't be indexed with numbers like s[0]. Use Array(s)[0], s.first, or s.prefix(n)`);
           fail(`line ${e.line}: value of type '${typeOfV(b)}' has no subscripts`);
@@ -1206,7 +1208,7 @@ const TMSwift=(()=>{
         return {seq,stride:true}}),
       zip:B(([a,b],args,line)=>{const x=[...iterate(a,line)],y=[...iterate(b,line)];return new Arr(x.slice(0,Math.min(x.length,y.length)).map((v,i)=>new Tup([v,y[i]])),null)}),
       type:B(([v])=>({isTypeName:typeOfV(v)})),
-      readLine:B(()=>fail("readLine() (reading what someone types) isn't available in TypeMonkey yet. Set the value in your code instead, like: let input = \"7\"","NotSupported")),
+      readLine:B(()=>{if(inPos>=IN.length)return NIL;const e2=IN.indexOf("\n",inPos);const end=e2<0?IN.length:e2;const line=IN.slice(inPos,end);inPos=end+1;W(line+"\n");return new Some(line)}),
       fatalError:B(([m])=>fatal(m===undefined?"":desc(m))),
       precondition:B(([c,m])=>{if(!c)fatal(m===undefined?"Precondition failed":"Precondition failed: "+desc(m));return undefined}),
       assert:B(([c,m])=>{if(!c)fatal(m===undefined?"Assertion failed":"Assertion failed: "+desc(m));return undefined}),
@@ -1220,7 +1222,7 @@ const TMSwift=(()=>{
     function builtinMember(b,n,e,env){
       const line=e.line;
       const M=fn=>new Fn({builtin:fn});
-      const mut=()=>{const lv=lval(e.e,env);checkMutable(lv,line);return lv};
+      const mut=()=>{const lv=lval(e.e,env);if(lv.ensure)lv.ensure();checkMutable(lv,line);return lv};
       if(b&&b.ns){const v=b.ns[n];if(v!==undefined)return v;fail(`line ${line}: type '${b.isTypeName}' has no member '${n}'`)}
       if(b&&b.isTypeName&&n==="self")return b;
       if(isNumV(b)){

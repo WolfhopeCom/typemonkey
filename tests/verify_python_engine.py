@@ -10,6 +10,9 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tests"))
 from verify_compiled import load_courses, run_py, norm  # noqa: E402
 
+# CPython doesn't echo typed input when it comes from a pipe; TypeMonkey shows it like a terminal does.
+ECHO = "import builtins as _b\n_real_input = _b.input\ndef input(p=''):\n    v = _real_input(p)\n    print(v)\n    return v\n"
+
 EXTRA = [
     'print(f"{3.14159:.2f} {1/3} {10/5} {2**10} {7//2} {-7//2} {7 % -3}")',
     'print([1, 2] + [3], (1, 2), {"a": [1, {"b": None}]}, {1, 2} if False else "set")',
@@ -32,7 +35,7 @@ ERRORS = [  # (code, expected start of the error shown to the learner)
     ('n = int("abc")', "ValueError"),
     ('print(1 / 0)', "ZeroDivisionError"),
     ('while True:\n    pass', "RuntimeError: Your loop ran 100,000 times"),
-    ('name = input("Name? ")', "RuntimeError: input() can't read typing"),
+    ('name = input("Name? ")', "EOFError: there's no more input"),
     ('if True:\nprint("x")', "IndentationError"),
 ]
 
@@ -41,23 +44,23 @@ def snippets(course):
     for unit in course["units"]:
         for l in unit["lessons"]:
             for code, opts in l.get("pool", []):
-                yield l["id"], "game", code
+                yield l["id"], "game", code, None
             for i, s in enumerate(l.get("steps", [])):
                 if s["type"] == "talk" and s.get("demo"):
-                    yield l["id"], f"step {i} demo", s["demo"]
+                    yield l["id"], f"step {i} demo", s["demo"], s.get("input")
                 if s["type"] == "quiz" and s.get("code"):
-                    yield l["id"], f"step {i} quiz", s["code"]
+                    yield l["id"], f"step {i} quiz", s["code"], None
                 if s["type"] == "fill":
-                    yield l["id"], f"step {i} fill", re.sub(r"\[(\d)\]", lambda m: s["blanks"][int(m.group(1))], s["code"])
+                    yield l["id"], f"step {i} fill", re.sub(r"\[(\d)\]", lambda m: s["blanks"][int(m.group(1))], s["code"]), None
                 if s["type"] == "order":
-                    yield l["id"], f"step {i} order", "\n".join(s["lines"])
+                    yield l["id"], f"step {i} order", "\n".join(s["lines"]), None
                 if s["type"] == "code":
-                    yield l["id"], f"step {i} hint", s["hint"]
+                    yield l["id"], f"step {i} hint", s["hint"], None
 
 
 def main():
     py = load_courses()["py"]
-    items = list(snippets(py)) + [("extra", f"extra {i}", c) for i, c in enumerate(EXTRA)]
+    items = list(snippets(py)) + [("extra", f"extra {i}", c, None) for i, c in enumerate(EXTRA)]
     problems = []
     with sync_playwright() as p:
         b = p.chromium.launch()
@@ -65,7 +68,7 @@ def main():
         errs = []
         pg.on("pageerror", lambda e: errs.append(str(e)))
         pg.goto((ROOT / "index.html").as_uri())
-        ours = pg.evaluate("async (codes) => { const r = []; for (const c of codes) r.push(await runPython(c)); return r }", [c for _, _, c in items])
+        ours = pg.evaluate("async (codes) => { const r = []; for (const c of codes) r.push(await runPython(c[0], c[1])); return r }", [[c, inp] for _, _, c, inp in items])
         bad = pg.evaluate("async (cases) => { const r = []; for (const c of cases) r.push(await runPython(c)); return r }", [c for c, _ in ERRORS])
         graded = pg.evaluate("""async () => { const R = []; const c = COURSES.find(c => c.id === "py");
             for (const x of flat(c)) for (const [i, s] of (x.l.steps || []).entries()) if (s.type === "code") {
@@ -73,10 +76,10 @@ def main():
               const g2 = await grade(s, s.start, "py"); if (g2[0]) R.push(`${x.l.id} step ${i}: starter already passes`);
             } return R }""")
         b.close()
-    for (lid, what, code), mine in zip(items, ours):
+    for (lid, what, code, inp), mine in zip(items, ours):
         out = "\n".join(v for k, v in mine if k == "log")
         err = next((v for k, v in mine if k == "err"), None)
-        ok, real = run_py(code)
+        ok, real = run_py(ECHO + code, inp) if inp else run_py(code)
         if not ok:
             if not err:
                 problems.append(f"{lid} {what}: python3 raises {real} but the app ran it without an error")

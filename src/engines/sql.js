@@ -405,8 +405,30 @@ const TMSQL=(()=>{
     if(st.type==="delete"){t.rows=t.rows.filter(r=>{if(!st.where)return false;const v=evalE(st.where,ctxFor(r),db);return !(v!==null&&truthy(v))});return null}
   }
 
+  // WITH name AS (SELECT ...) main query  ->  main query with FROM (SELECT ...) AS name
+  const KEYW=/^(WHERE|JOIN|LEFT|RIGHT|INNER|OUTER|CROSS|ON|GROUP|ORDER|LIMIT|HAVING|UNION|OFFSET)$/i;
+  function expandWith(sql){
+    const m=sql.match(/^\s*WITH\s+/i);if(!m)return sql;
+    let i=m[0].length;const ctes=[];
+    for(;;){
+      const nm=sql.slice(i).match(/^([A-Za-z_]\w*)\s+AS\s*\(/i);if(!nm)throw new SqlError('near "WITH": write it like WITH name AS (SELECT ...) SELECT ...');
+      i+=nm[0].length;let d=1,j=i,q=null;
+      for(;j<sql.length&&d;j++){const c=sql[j];if(q){if(c===q)q=null;continue}if(c==="'"||c==='"'){q=c;continue}if(c==="(")d++;else if(c===")")d--}
+      if(d)throw new SqlError("a WITH query is missing its closing )");
+      let body=sql.slice(i,j-1);for(const c of ctes)body=subst(body,c);
+      ctes.push({name:nm[1],body});i=j;
+      const rest=sql.slice(i).match(/^\s*,\s*/);if(rest){i+=rest[0].length;continue}break;
+    }
+    let main=sql.slice(i);for(const c of ctes)main=subst(main,c);return main;
+  }
+  function subst(text,c){
+    return text.replace(new RegExp("\\b(FROM|JOIN)\\s+"+c.name+"\\b(\\s+(?:AS\\s+)?([A-Za-z_]\\w*))?","gi"),(all,kw,aliasPart,alias)=>{
+      if(alias&&!KEYW.test(alias))return `${kw} (${c.body}) AS ${alias}`;
+      return `${kw} (${c.body}) AS ${c.name}${aliasPart||""}`});
+  }
   function run(sql,tables){
     try{
+      sql=expandWith(sql);
       const db=makeDB(tables);
       const sts=parser(lex(sql)).all();
       if(!sts.length)return {ok:true,columns:[],rows:[],empty:true};

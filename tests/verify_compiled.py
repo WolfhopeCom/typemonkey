@@ -56,8 +56,8 @@ def run_cpp(code):
 
 
 # ---------- Python ----------
-def run_py(code):
-    r = subprocess.run([sys.executable, "-I", "-c", code], capture_output=True, text=True, timeout=5, input="")
+def run_py(code, stdin=""):
+    r = subprocess.run([sys.executable, "-I", "-c", code], capture_output=True, text=True, timeout=5, input=stdin or "")
     if r.returncode:
         err = r.stderr.strip().splitlines()
         return False, err[-1] if err else "error"
@@ -118,7 +118,7 @@ def check_course(course, runner, setups=None):
             for i, s in enumerate(l["steps"]):
                 t = s["type"]
                 if t == "talk" and s.get("demo") and not s.get("noRun"):
-                    ok, out = run(s["demo"], l)
+                    ok, out = run(s["demo"], l) if not s.get("input") else (run_py(s["demo"], s["input"]) if runner is run_py else run(s["demo"], l))
                     if not ok:
                         problems.append(f"{l['id']} step {i} demo fails: {out}")
                     elif VERBOSE:

@@ -31,6 +31,7 @@ EXTRA_CPP = [
 ]
 
 EXTRA_CS = [  # (code, expected output)
+    ('int n = 7;\nConsole.WriteLine($"{10/3} {n/2} {n * 1.5}");', '3 3 10.5'),
     ('Console.WriteLine(7 / 2);\nConsole.WriteLine(7.0 / 2);\nConsole.WriteLine(1.0 / 3);', '3\n3.5\n0.3333333333333333'),
     ('int x = 5;\nConsole.WriteLine($"x is {x}, doubled {x * 2}, price {2.5:F2}");', 'x is 5, doubled 10, price 2.50'),
     ('var names = new List<string> { "Ava", "Leo" };\nnames.Add("Kai");\nConsole.WriteLine(string.Join(", ", names));\nConsole.WriteLine(names.Count);', 'Ava, Leo, Kai\n3'),
@@ -50,17 +51,20 @@ EXTRA_CS = [  # (code, expected output)
 def run_tmc(items):
     script = (ROOT / "src" / "engines" / "clike.js").read_text() + """
 const I=JSON.parse(require('fs').readFileSync(0,'utf8'));
-console.log(JSON.stringify(I.map(([c,l])=>TMC.run(c,l))));"""
+console.log(JSON.stringify(I.map(([c,l,i])=>TMC.run(c,l,i))));"""
     tmp = ROOT / "tests" / ".clike.js"
     tmp.write_text(script)
     try:
-        r = subprocess.run(["node", str(tmp)], input=json.dumps(items), capture_output=True, text=True)
+        r = subprocess.run(["node", str(tmp)], input=json.dumps([list(x) + [INPUTS.get(x[0])] for x in items]), capture_output=True, text=True)
         if r.returncode:
             print(r.stderr[-2000:])
             sys.exit(1)
         return json.loads(r.stdout)
     finally:
         tmp.unlink()
+
+
+INPUTS = {}  # demo code -> what the learner types in the Input box
 
 
 def snippets(course):
@@ -70,6 +74,8 @@ def snippets(course):
                 yield l["id"], "game", code, opts[0]
             for i, s in enumerate(l.get("steps", [])):
                 if s["type"] == "talk" and s.get("demo"):
+                    if s.get("input"):
+                        INPUTS[s["demo"]] = s["input"]
                     yield l["id"], f"step {i} demo", s["demo"], None
                 if s["type"] == "quiz" and s.get("code"):
                     yield l["id"], f"step {i} quiz", s["code"], s["opts"][s["a"]] if "print" in s["q"] else None

@@ -11,22 +11,22 @@
 <style>
 /* Layout: phone-first single column app shell; sticky stat bar, screens swap in the middle, TypeMonkey talks from a speech bubble */
 :root{
-  --bg:#EEF4F1; --surface:#FFFFFF; --surface2:#E3ECE7; --fg:#15211C; --muted:#5B6D65;
-  --line:#CFDDD5; --accent:#FF7A1A; --accent-ink:#2A1300; --banana:#FFC83D; --leaf:#1F9D63;
-  --bad:#D9443A; --code-bg:#14201B; --code-fg:#E6F2EC; --code-dim:#7FA394;
+  --bg:#F2F5F1; --surface:#FFFEFB; --surface2:#E7EEE9; --fg:#1B2621; --muted:#5D6E66;
+  --line:#D7E2DB; --accent:#FA7A20; --accent-ink:#2A1300; --banana:#FFC845; --leaf:#22986A;
+  --bad:#D24A40; --code-bg:#17231E; --code-fg:#E3EEE8; --code-dim:#80A295; --console:#0F1814;
   --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
   --body:"Nunito",system-ui,-apple-system,sans-serif;
   --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
   --r:16px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0E1714; --surface:#16231E; --surface2:#1E2E28; --fg:#E9F3EE; --muted:#9AB2A7;
-  --line:#2A3D35; --accent:#FF8A33; --accent-ink:#2A1300; --banana:#FFD25C; --leaf:#3CC486;
-  --bad:#FF6B5E; --code-bg:#0A120F; --code-fg:#E6F2EC; --code-dim:#6E9283; color-scheme:dark}}
+  --bg:#111B17; --surface:#182520; --surface2:#20302A; --fg:#E3EDE8; --muted:#9BB1A7;
+  --line:#2B3C35; --accent:#FA8836; --accent-ink:#2A1300; --banana:#FCD064; --leaf:#41BE87;
+  --bad:#F26D62; --code-bg:#0D1511; --code-fg:#E0ECE6; --code-dim:#6F9283; --console:#0A110E; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0E1714; --surface:#16231E; --surface2:#1E2E28; --fg:#E9F3EE; --muted:#9AB2A7;
-  --line:#2A3D35; --accent:#FF8A33; --accent-ink:#2A1300; --banana:#FFD25C; --leaf:#3CC486;
-  --bad:#FF6B5E; --code-bg:#0A120F; --code-fg:#E6F2EC; --code-dim:#6E9283; color-scheme:dark}
+  --bg:#111B17; --surface:#182520; --surface2:#20302A; --fg:#E3EDE8; --muted:#9BB1A7;
+  --line:#2B3C35; --accent:#FA8836; --accent-ink:#2A1300; --banana:#FCD064; --leaf:#41BE87;
+  --bad:#F26D62; --code-bg:#0D1511; --code-fg:#E0ECE6; --code-dim:#6F9283; --console:#0A110E; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55;margin:0}
 .app{max-width:720px;margin:0 auto;padding:12px 16px 40px;display:flex;flex-direction:column;gap:18px}
@@ -51,7 +51,7 @@ button{font:inherit;cursor:pointer}
 .mwrap .pet{position:absolute;right:-14px;bottom:-4px;width:46%;height:46%;filter:drop-shadow(0 2px 2px #0003)}
 .buddy.bounce .pet{animation:bob .6s ease .15s}
 @keyframes bob{40%{transform:translateY(-10px) rotate(-4deg)}}
-.bubble{background:var(--surface);border:2px solid var(--fg);border-radius:18px 18px 18px 4px;padding:12px 14px;font-weight:700;min-width:0;flex:1}
+.bubble{background:var(--surface);border:2px solid color-mix(in srgb,var(--fg) 72%,var(--surface));border-radius:18px 18px 18px 4px;padding:12px 14px;font-weight:700;min-width:0;flex:1}
 
 .hero h1{font-size:clamp(2rem,7vw,2.8rem)}
 .hero p{margin:6px 0 0;color:var(--muted);max-width:60ch}
@@ -124,9 +124,18 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 .editor pre{margin:0;padding:12px 14px;color:var(--code-fg);font-family:var(--mono);font-size:.92rem;line-height:1.6;overflow-x:auto}
 .run{background:var(--leaf);color:#fff;border:0;border-radius:8px;padding:5px 12px;font-weight:800;font-family:var(--body)}
 .run[disabled]{opacity:.4;cursor:not-allowed}
-.console{background:#000;color:#B8F5D3;font-family:var(--mono);font-size:.88rem;padding:10px 14px;min-height:44px;white-space:pre-wrap;word-break:break-word;border-top:1px solid #ffffff14}
+.console{background:var(--console);color:#B8F5D3;font-family:var(--mono);font-size:.88rem;padding:10px 14px;min-height:44px;white-space:pre-wrap;word-break:break-word;border-top:1px solid #ffffff14}
 .console .err{color:#FF9C92}
 #fcode{white-space:pre-wrap;word-break:break-word}
+.stdin{background:#0B1310;border-top:1px solid #ffffff14;color:var(--code-dim);font-size:.82rem}
+.stdin summary{cursor:pointer;padding:6px 14px;list-style:none;font-weight:700;color:#BFE3D2}
+.stdin summary::-webkit-details-marker{display:none}
+.stdin summary span{font-weight:400;color:var(--code-dim)}
+.editor .stdin textarea{min-height:0;height:auto;line-height:1.5;white-space:pre-wrap;color:#FFE9A8;background:#0F1A16}
+.stdin textarea{display:block;width:100%;border:0;background:#0F1A16;color:#FFE9A8;font-family:var(--mono);font-size:.85rem;padding:8px 14px;resize:vertical;outline-offset:-3px}
+.burst{position:fixed;left:50%;top:55%;pointer-events:none;z-index:60}
+.burst span{position:absolute;font-size:1.6rem;animation:burst 1.3s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes burst{0%{transform:translate(0,0) rotate(0) scale(.4);opacity:1}70%{opacity:1}100%{transform:translate(var(--x),calc(var(--y) + 260px)) rotate(var(--r)) scale(1);opacity:0}}
 .peek{margin-top:12px;background:var(--surface2);border:1px dashed var(--line);border-radius:12px;padding:10px 14px}
 .peek ul{margin:6px 0 0;padding-left:20px}.peek li.ok{color:var(--leaf)}
 .peek pre{margin:6px 0 0;font-family:var(--mono);font-size:.85rem;white-space:pre-wrap;overflow-x:auto}
@@ -220,8 +229,11 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 /* Jr. mazes */
 .maze{position:relative;display:grid;grid-template-columns:repeat(var(--w),1fr);width:min(100%,calc(var(--w) * 64px));aspect-ratio:var(--w) / var(--h);max-width:100%;align-self:center;border-radius:14px;overflow:hidden;background:#7FC77A}
 .mc{display:grid;place-items:center;font-size:clamp(1.1rem,5vw,1.9rem)}
-.mc.path{background:#F3DFA8;box-shadow:inset 0 0 0 1px #E5CC88}
-.mc.tree{background:#5FAE5A}
+.mc.path{background:var(--path,#F3DFA8);box-shadow:inset 0 0 0 1px var(--pathline,#E5CC88)}
+.mc.tree{background:var(--tree,#5FAE5A)}
+.stars{font-size:1.6rem;letter-spacing:2px;margin-bottom:2px;animation:pop .5s ease}
+.jrfinish{display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:6px}.jrfinish span{color:var(--muted);font-size:.9rem}.jrfinish .stars{font-size:1.4rem;word-break:break-all;text-align:center}
+.jrstars{display:inline-flex;align-items:center;gap:6px;background:var(--banana);color:#2A1300;font-weight:800;border-radius:999px;padding:4px 12px;font-size:.95rem}
 .mk{position:absolute;width:calc(100% / var(--w));height:calc(100% / var(--h));display:grid;place-items:center;transition:left .32s ease,top .32s ease,transform .25s ease;pointer-events:none}
 .mface{width:82%;height:82%;display:grid;place-items:center}.mface svg{width:100%;height:100%;filter:drop-shadow(0 2px 2px #0004)}
 .arr{position:absolute;right:-2px;bottom:-2px;width:46%;height:46%;display:grid;place-items:center;background:#14201B;color:#FFD25C;border-radius:50%;font-size:clamp(.7rem,3vw,1rem);font-weight:900;transition:transform .25s ease}
@@ -257,6 +269,7 @@ span.repn{display:inline-block}
 .mini-monkey .tm{width:72px;height:82px}
 .shopitem{position:relative}
 .shopitem.away{opacity:.55}
+.shopitem:has(.season){padding-top:26px}
 .season{position:absolute;top:6px;left:6px;font-size:.68rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
 .legal h3{font-size:1.1rem;margin-top:6px}
 .legal p{color:var(--fg);line-height:1.6}
@@ -40289,8 +40302,8 @@ const CS_UNIT2={name:"Loops & methods",lessons:[
   lines:["int guess = 0;","while (guess != secret) {","  guess = int.Parse(Console.ReadLine());","  if (guess < secret) Console.WriteLine(\"Higher!\");","  else if (guess > secret) Console.WriteLine(\"Lower!\");","}","Console.WriteLine(\"You got it!\");"],why:"Keep asking until the guess matches, giving a clue each time."},
  {type:"quiz",q:"The secret is 7. The player types 4, then 9, then 7. What prints?",opts:["Higher! Lower! You got it!","Lower! Higher! You got it!","You got it!"],a:0,why:"4 is too low (Higher!), 9 is too high (Lower!), then 7 wins."},
  {type:"talk",title:"The finished game",mood:"cheer",
-  body:`<p>Here's the whole thing, with a guess counter added. In the full app you can run it in the Playground and play it.</p>`,
-  demo:`Random rng = new Random();\nint secret = rng.Next(1, 11);\nint guess = 0;\nint tries = 0;\n\nConsole.WriteLine("I'm thinking of 1 to 10...");\nwhile (guess != secret) {\n  guess = int.Parse(Console.ReadLine());\n  tries++;\n  if (guess < secret) Console.WriteLine("Higher!");\n  else if (guess > secret) Console.WriteLine("Lower!");\n}\nConsole.WriteLine($"You got it in {tries} tries!");`,
+  body:`<p>Here's the whole thing, with a guess counter added. Press ▶ Run: the numbers in the ⌨️ Input box (5, 9, 7) are what the player types. Change them and play again!</p>`,
+  input:"5\n9\n7",demo:`Random rng = new Random();\nint secret = 7;   // a real game would use rng.Next(1, 11)\nint guess = 0;\nint tries = 0;\n\nConsole.WriteLine("I'm thinking of 1 to 10...");\nwhile (guess != secret) {\n  guess = int.Parse(Console.ReadLine());\n  tries++;\n  if (guess < secret) Console.WriteLine("Higher!");\n  else if (guess > secret) Console.WriteLine("Lower!");\n}\nConsole.WriteLine($"You got it in {tries} tries!");`,
   say:"You just built a real console game. Nice work!"},
  {type:"done"}]}
 ]};
@@ -42669,6 +42682,10 @@ const PY_UNIT1={name:"Python basics",free:true,lessons:[
   body:`<p>Put ${C("f")} before a string and drop variables inside ${C("{ }")}. It's the cleanest way to build text in Python.</p>`,
   demo:`name = "Mo"\nage = 4\nprint(f"{name} is {age} years old")\nprint(f"Next year: {age + 1}")`,
   say:"Output:\nMo is 4 years old\nNext year: 5"},
+ {type:"talk",title:"Asking questions with input()",mood:"cheer",
+  body:`<p>${C("input()")} shows a question and waits for the answer. In TypeMonkey, type the answers in the <b>⌨️ Input</b> box under the code, one per line. ${C("input()")} always gives back text, so use ${C("int()")} to turn it into a number.</p>`,
+  input:"Mo\n12",demo:`name = input("What's your name? ")\nage = input("How old are you? ")\nprint(f"Hi {name}! Next year you'll be {int(age) + 1}.")`,
+  say:"Change the answers in the Input box and run it again!"},
  {type:"talk",title:"String tools",
   body:`<p>${C("len()")} counts characters. Methods like ${C(".upper()")}, ${C(".lower()")} and ${C(".replace()")} make new strings. ${C("in")} checks if text is inside.</p>`,
   demo:`word = "banana"\nprint(len(word))\nprint(word.upper())\nprint(word.replace("a", "o"))\nprint("nan" in word)`,
@@ -42860,6 +42877,11 @@ const PY_UNIT4={name:"Functions",lessons:[
   say:"Output: Earth Luna, then Earth. Printing moon outside would be a NameError."},
  {type:"quiz",q:"What does this print?",code:`def power(base, exp=2):\n    return base ** exp\n\nprint(power(3))`,opts:["9","3","27"],a:0,mono:true,why:"exp defaults to 2, so 3 ** 2 = 9."},
  {type:"fill",title:"Add a default",body:`<p>Make times default to 1.</p>`,code:`def cheer(times[0]1):\n    print("Ook! " * times)\n\ncheer()`,blanks:["="],tokens:["=","==",":","->"],why:"times=1 sets the default value.",out:"Ook!"},
+ {type:"talk",title:"Borrowing code with import",mood:"cheer",
+  body:`<p>Python comes with ready-made <b>modules</b> full of functions. ${C("import math")} gives you ${C("math.sqrt")}, ${C("math.pi")} and friends. ${C("import random")} picks random numbers: perfect for games!</p>`,
+  demo:`import math\nimport random\n\nprint(math.sqrt(81))\nprint(round(math.pi, 2))\nroll = random.randint(1, 6)\nprint(1 <= roll <= 6)\npets = ["owl", "cat", "dog"]\nprint(random.choice(pets) in pets)`,
+  say:"9.0, 3.14, then True twice. Try print(roll) and run it a few times: it changes!"},
+ {type:"quiz",q:"What does this print?",code:`import math\nprint(math.floor(4.7))`,opts:["4","5","4.7"],a:0,mono:true,why:"floor rounds down to the whole number below."},
  {type:"quiz",q:"What does this print?",code:`x = 1\n\ndef f():\n    x = 5\n\nf()\nprint(x)`,opts:["1","5","None"],a:0,mono:true,why:"The x inside f is a brand-new local variable. The outside x is untouched."},
  {type:"game"},{type:"done"}],
  pool:[
@@ -44760,8 +44782,30 @@ const TMSQL=(()=>{
     if(st.type==="delete"){t.rows=t.rows.filter(r=>{if(!st.where)return false;const v=evalE(st.where,ctxFor(r),db);return !(v!==null&&truthy(v))});return null}
   }
 
+  // WITH name AS (SELECT ...) main query  ->  main query with FROM (SELECT ...) AS name
+  const KEYW=/^(WHERE|JOIN|LEFT|RIGHT|INNER|OUTER|CROSS|ON|GROUP|ORDER|LIMIT|HAVING|UNION|OFFSET)$/i;
+  function expandWith(sql){
+    const m=sql.match(/^\s*WITH\s+/i);if(!m)return sql;
+    let i=m[0].length;const ctes=[];
+    for(;;){
+      const nm=sql.slice(i).match(/^([A-Za-z_]\w*)\s+AS\s*\(/i);if(!nm)throw new SqlError('near "WITH": write it like WITH name AS (SELECT ...) SELECT ...');
+      i+=nm[0].length;let d=1,j=i,q=null;
+      for(;j<sql.length&&d;j++){const c=sql[j];if(q){if(c===q)q=null;continue}if(c==="'"||c==='"'){q=c;continue}if(c==="(")d++;else if(c===")")d--}
+      if(d)throw new SqlError("a WITH query is missing its closing )");
+      let body=sql.slice(i,j-1);for(const c of ctes)body=subst(body,c);
+      ctes.push({name:nm[1],body});i=j;
+      const rest=sql.slice(i).match(/^\s*,\s*/);if(rest){i+=rest[0].length;continue}break;
+    }
+    let main=sql.slice(i);for(const c of ctes)main=subst(main,c);return main;
+  }
+  function subst(text,c){
+    return text.replace(new RegExp("\\b(FROM|JOIN)\\s+"+c.name+"\\b(\\s+(?:AS\\s+)?([A-Za-z_]\\w*))?","gi"),(all,kw,aliasPart,alias)=>{
+      if(alias&&!KEYW.test(alias))return `${kw} (${c.body}) AS ${alias}`;
+      return `${kw} (${c.body}) AS ${c.name}${aliasPart||""}`});
+  }
   function run(sql,tables){
     try{
+      sql=expandWith(sql);
       const db=makeDB(tables);
       const sts=parser(lex(sql)).all();
       if(!sts.length)return {ok:true,columns:[],rows:[],empty:true};
@@ -44850,9 +44894,9 @@ const TMC=(()=>{
       if(/[0-9]/.test(c)||(c==="."&&/[0-9]/.test(src[i+1]))){
         let j=i;while(/[0-9_]/.test(src[j]))j++;let isD=false;
         if(src[j]==="."&&/[0-9]/.test(src[j+1])){isD=true;j++;while(/[0-9]/.test(src[j]))j++}
-        if(/[eE]/.test(src[j])&&/[-+0-9]/.test(src[j+1])){isD=true;j++;if(/[-+]/.test(src[j]))j++;while(/[0-9]/.test(src[j]))j++}
+        if(/[eE]/.test(src[j]||"")&&/[-+0-9]/.test(src[j+1]||"")){isD=true;j++;if(/[-+]/.test(src[j]))j++;while(/[0-9]/.test(src[j]))j++}
         const s=src.slice(i,j).replace(/_/g,"");
-        let isL=false;if(/[fFdDmM]/.test(src[j])){isD=true;j++}else while(/[lLuU]/.test(src[j])){if(/[lL]/.test(src[j]))isL=true;j++}
+        let isL=false;if(/[fFdDmM]/.test(src[j]||"")){isD=true;j++}else while(/[lLuU]/.test(src[j]||"")){if(/[lL]/.test(src[j]))isL=true;j++}
         push("num",isD?new D(parseFloat(s)):isL&&lang==="java"?new Lg(parseInt(s,10)):parseInt(s,10));i=j;continue;
       }
       if(/[A-Za-z_]/.test(c)){
@@ -45240,8 +45284,15 @@ const TMC=(()=>{
   }
 
   /* ---------- runtime ---------- */
-  function run(code,lang){
+  function run(code,lang,input){
     let out="";let steps=0;
+    /* typed input from TypeMonkey's ⌨️ Input box: read by lines or by words, echoed like a terminal would show it */
+    const IN=input==null?"":String(input).replace(/\r/g,"");let inPos=0,echoed=0;const hasIn=input!=null&&IN.length>0;
+    const echoFrom=at=>{if(at>=echoed){const e=IN.indexOf("\n",at);const end=e<0?IN.length:e;W(IN.slice(at,end)+"\n");echoed=end+1}};
+    const readLineIn=()=>{if(inPos>=IN.length)return null;echoFrom(inPos);const e=IN.indexOf("\n",inPos);const end=e<0?IN.length:e;const line=IN.slice(inPos,end);inPos=end+1;return line};
+    const readTok=()=>{while(inPos<IN.length&&/\s/.test(IN[inPos]))inPos++;if(inPos>=IN.length)return null;echoFrom(inPos);let j=inPos;while(j<IN.length&&!/\s/.test(IN[j]))j++;const t=IN.slice(inPos,j);inPos=j;return t};
+    const peekTok=()=>{let k=inPos;while(k<IN.length&&/\s/.test(IN[k]))k++;if(k>=IN.length)return null;let j=k;while(j<IN.length&&!/\s/.test(IN[j]))j++;return IN.slice(k,j)};
+    const noInput=what=>`${what}: there's no more input. Type your answers in the ⌨️ Input box under the code, one per line.`;
     const tick=()=>{if(++steps>300000)fail("Your program ran too long, so I stopped it. Check for a loop that never ends.","Timeout")};
     const classNames=new Set([...code.matchAll(lang==="java"?/\b(?:class|interface|enum)\s+([A-Za-z_]\w*)/g:/\b(?:class|struct)\s+([A-Za-z_]\w*)/g)].map(m=>m[1]));
     const classes=Object.create(null);
@@ -45536,7 +45587,7 @@ const TMC=(()=>{
       return (typeof k)+":"+(k instanceof D?k.v:k instanceof Ch?k.c:k)}
     function dictMissing(k,line){fail(`line ${line}: The given key '${str(k)}' was not present in the dictionary. Check with ContainsKey first.`,"KeyNotFoundException")}
     function derefVal(v,line){if(v instanceof Ptr){if(!v.ref)fail(`line ${line}: crash! You used -> on a null pointer.`,"RuntimeError");return v.ref.get()}return v}
-    const truth=v=>{if(typeof v==="boolean")return v;if(lang==="java")fail(`incompatible types: ${jtype(v)} cannot be converted to boolean (a condition must be true or false)`,"CompileError");if(v===null)return false;if(v instanceof Ptr)return !!v.ref;if(lang==="cs")fail("a condition must be true or false (a bool) in C#","CompileError");return !!nv(v)};
+    const truth=v=>{if(typeof v==="boolean")return v;if(v&&v.cin)return !v.fail;if(lang==="java")fail(`incompatible types: ${jtype(v)} cannot be converted to boolean (a condition must be true or false)`,"CompileError");if(v===null)return false;if(v instanceof Ptr)return !!v.ref;if(lang==="cs")fail("a condition must be true or false (a bool) in C#","CompileError");return !!nv(v)};
 
     /* expressions */
     function jarith(op,a,b,line){
@@ -45615,7 +45666,15 @@ const TMC=(()=>{
           if(e.op==="??"){const l=ev(e.l,env);return l===null?ev(e.r,env):l}
           const l=ev(e.l,env);
           if(e.op==="<<"&&l===STREAM){const r=ev(e.r,env);if(r instanceof Func&&r.endl){W("\n")}else if(r&&r.manip){manip[r.manip]=true}else W(cppOut(r));return STREAM}
-          if(e.op===">>"&&l&&l.cin)fail(`line ${e.line}: std::cin (reading typed input) isn't available in TypeMonkey yet`,"NotSupported");
+          if(e.op===">>"&&l&&l.cin){
+            const lv=lval(e.r,env);if(!lv)fail(`line ${e.line}: cin >> needs a variable on the right`,"CompileError");
+            if(l.fail)return l;const cur0=lv.get();
+            if(cur0 instanceof Ch){while(inPos<IN.length&&/\s/.test(IN[inPos]))inPos++;if(inPos>=IN.length){l.fail=true;return l}echoFrom(inPos);lv.set(new Ch(IN.charCodeAt(inPos)));inPos++;return l}
+            const tok=readTok();if(tok===null){l.fail=true;return l}
+            if(typeof cur0==="string")lv.set(tok);
+            else if(cur0 instanceof D){const v=parseFloat(tok);if(isNaN(v)){l.fail=true;lv.set(new D(0))}else lv.set(new D(v))}
+            else{const m=tok.match(/^[-+]?\d+/);if(!m){l.fail=true;lv.set(0)}else lv.set(parseInt(m[0],10))}
+            return l}
           const r=ev(e.r,env);
           if(e.op==="=="||e.op==="!="){
             if(lang==="java"&&l!==null&&r!==null&&(isNum(l)!==isNum(r)||(typeof l==="boolean")!==(typeof r==="boolean")||(typeof l==="string")!==(typeof r==="string")))fail(`line ${e.line}: incomparable types: ${jtype(l)} and ${jtype(r)}`,"CompileError");
@@ -45689,7 +45748,7 @@ const TMC=(()=>{
         if(av.length&&!isNum(av[0])){const items=[...iterate(av[0],e.line)];d.cap0=tableSizeFor(Math.max(Math.floor(items.length/0.75)+1,16));for(const x of items)jput(d,x,true)}return d}
       if(t.name==="StringBuilder")return {sb:true,s:av.length&&!isNum(av[0])?str(av[0]):""};
       if(t.name==="Random")return {random:true};
-      if(t.name==="Scanner")fail(`line ${e.line}: Scanner (reading what someone types) isn't available in TypeMonkey yet. Set the value in your code instead, like: String input = "7";`,"NotSupported");
+      if(t.name==="Scanner")return {scanner:true};
       if(t.name==="string")return av.length?(av[0] instanceof Arr?av[0].items.map(str).join(""):str(av[0])):"";
       if(t.name==="object")return new Obj({name:"Object",methods:Object.create(null),fields:[]});
       if(JEXC(t.name)){const o=new Obj({name:t.name,methods:Object.create(null),fields:[],excChain:true});o.msg=av.length?(av[0]===null?null:str(av[0])):null;return o}
@@ -45772,6 +45831,7 @@ const TMC=(()=>{
 
     /* calls */
     function call(e,env){
+      if(lang==="cpp"&&e.f.k==="name"&&e.f.v==="getline"&&e.args.length>=2){const c=ev(e.args[0],env);const lv=lval(e.args[1],env);if(c.fail)return c;const line=readLineIn();if(line===null){c.fail=true;return c}lv.set(line);return c}
       const f=e.f;
       // argument references (for C++ & params and std::swap)
       const argExprs=e.args;
@@ -45904,7 +45964,7 @@ const TMC=(()=>{
       Console:{ns:{
         WriteLine:B((...a)=>{W((a.length>1&&typeof a[0]==="string"?formatString(a[0],a.slice(1)):a.length?str(a[0]):"")+"\n");return null}),
         Write:B((...a)=>{W(a.length>1&&typeof a[0]==="string"?formatString(a[0],a.slice(1)):str(a[0]));return null}),
-        ReadLine:B(()=>fail("Console.ReadLine() can't read typing in TypeMonkey yet. Set the value in your code instead, like: string input = \"7\";","NotSupported")),
+        ReadLine:B(()=>readLineIn()),
         ReadKey:B(()=>null),Clear:B(()=>null)}},
       Math:{ns:{Max:B((x,y)=>compare(">",x,y)?x:y),Min:B((x,y)=>compare("<",x,y)?x:y),Abs:B(x=>x instanceof D?new D(Math.abs(x.v)):Math.abs(x)),
         Sqrt:B(x=>new D(Math.sqrt(nv(x)))),Pow:B((x,y)=>new D(nv(x)**nv(y))),Round:B((x,d)=>{const f=10**(d?nv(d):0);const v=nv(x)*f;const r=Math.abs(v%1)===0.5?2*Math.round(v/2):Math.round(v);return new D(r/f)}),
@@ -45917,7 +45977,8 @@ const TMC=(()=>{
       cout:STREAM,cerr:STREAM,endl:new Func({builtin:()=>null,endl:true}),
       boolalpha:{manip:"boolalpha"},fixed:{manip:"fixed"},
       setprecision:B(n=>{manip.prec=nv(n);return {manip:"prec_set"}}),
-      cin:{cin:true},
+      cin:{cin:true,fail:false},
+      getline:B(()=>fail("getline needs a variable: getline(std::cin, line)","CompileError")),
       to_string:B(v=>v instanceof D?v.v.toFixed(6):str(v)),
       stoi:B(s=>{const n=parseInt(str(s));if(isNaN(n))fail(`std::invalid_argument: stoi("${str(s)}")`,"RuntimeError");return n}),
       stod:B(s=>new D(parseFloat(str(s)))),
@@ -46086,6 +46147,19 @@ const TMC=(()=>{
         if(n==="andThen"||n==="compose"){const f=base,g=A0;return new Func({builtin:(...x)=>n==="andThen"?invoke(g,[invoke(f,x,line)],line):invoke(f,[invoke(g,x,line)],line)})}
         if(n==="negate")return new Func({builtin:(...x)=>!truth(invoke(base,x,line))});
         if(n==="reversed")return new Func({builtin:(x,y)=>-nv(invoke(base,[x,y],line))});}
+      if(base&&base.scanner){
+        const need=(v,what)=>{if(v===null)fail(hasIn?"":noInput(what),"NoSuchElementException");return v};
+        switch(n){
+          case "nextLine":return need(readLineIn(),"nextLine()");
+          case "next":return need(readTok(),"next()");
+          case "nextInt":case "nextLong":{const p=peekTok();if(p===null)need(null,n+"()");if(!/^[-+]?\d+$/.test(p))fail(`For input string: "${p}"`,"InputMismatchException");const v=parseInt(readTok(),10);return n==="nextLong"?new Lg(v):v}
+          case "nextDouble":{const p=peekTok();if(p===null)need(null,"nextDouble()");if(isNaN(parseFloat(p)))fail(`For input string: "${p}"`,"InputMismatchException");return new D(parseFloat(readTok()))}
+          case "nextBoolean":{const p=peekTok();if(p===null)need(null,"nextBoolean()");if(!/^(true|false)$/i.test(p))fail(`For input string: "${p}"`,"InputMismatchException");return readTok().toLowerCase()==="true"}
+          case "hasNext":return peekTok()!==null;case "hasNextLine":return inPos<IN.length;
+          case "hasNextInt":{const p=peekTok();return p!==null&&/^[-+]?\d+$/.test(p)}
+          case "close":return null;
+        }
+      }
       if(base&&base.random){
         if(n==="nextInt"){if(!a.length)return (Math.random()*4294967296|0);const lo=a.length>1?nv(A0):0,hi=a.length>1?nv(a[1]):nv(A0);if(hi<=lo)fail(`line ${line}: bound must be positive`,"IllegalArgumentException");return lo+Math.floor(Math.random()*(hi-lo))}
         if(n==="nextDouble")return new D(Math.random());if(n==="nextBoolean")return Math.random()<0.5;
@@ -46386,7 +46460,7 @@ const TMSwift=(()=>{
       if(/[0-9]/.test(c)){
         let j=i;while(/[0-9_]/.test(src[j]))j++;let dbl=false;
         if(src[j]==="."&&/[0-9]/.test(src[j+1])){dbl=true;j++;while(/[0-9_]/.test(src[j]))j++}
-        if(/[eE]/.test(src[j])&&/[-+0-9]/.test(src[j+1])){dbl=true;j++;if(/[-+]/.test(src[j]))j++;while(/[0-9]/.test(src[j]))j++}
+        if(/[eE]/.test(src[j]||"")&&/[-+0-9]/.test(src[j+1]||"")){dbl=true;j++;if(/[-+]/.test(src[j]))j++;while(/[0-9]/.test(src[j]))j++}
         const s=src.slice(i,j).replace(/_/g,"");push("num",dbl?new D(parseFloat(s)):parseInt(s,10));i=j;continue;
       }
       if(/[A-Za-z_$]/.test(c)){let j=i+1;while(j<src.length&&/[A-Za-z0-9_]/.test(src[j]))j++;const w=src.slice(i,j);i=j;push(KW.has(w)?"kw":"id",w);continue}
@@ -46734,8 +46808,8 @@ const TMSwift=(()=>{
   }
 
   /* ---------- runtime ---------- */
-  function run(code){
-    let out="",steps=0,depth=0;
+  function run(code,input){
+    let out="",steps=0,depth=0;const IN=input==null?"":String(input).replace(/\r/g,"");let inPos=0;
     const W=s=>{out+=s;if(out.length>200000)fail("Your program printed too much, so I stopped it.","Timeout")};
     const tick=()=>{if(++steps>400000)fail("Your program ran too long, so I stopped it. Check for a loop that never ends.","Timeout")};
     const types=Object.create(null);     // user types
@@ -46810,6 +46884,7 @@ const TMSwift=(()=>{
     }
     function desc(v,inner){
       if(v===undefined||v===null)return "()";
+      if(v&&v.isTypeName&&!v.ns)return v.isTypeName;if(v&&v.isType)return v.ty.name;
       if(typeof v==="string")return inner?JSON.stringify(v):v;
       if(typeof v==="number")return String(v);
       if(v instanceof D)return dbl(v.v);
@@ -47119,7 +47194,8 @@ const TMSwift=(()=>{
           }
           if(b instanceof Dict){const k=args[0].v;const def=args.find(a=>a.label==="default");
             return {get:()=>{const d=base.get();const hit=d.m.get(hkey(k));if(def)return hit?hit[1]:def.v;return hit?new Some(hit[1]):NIL},
-              set:v=>{checkMutable(base,e.line);const d=base.get();if(v===NIL&&!def){d.m.delete(hkey(k));return}if(v instanceof Some)v=v.v;d.m.set(hkey(k),[k,conform(copy(v),d.vt,e.line,false,"assign value")])},root:base.root,parent:base,dictDefault:!!def};
+              set:v=>{checkMutable(base,e.line);const d=base.get();if(v===NIL&&!def){d.m.delete(hkey(k));return}if(v instanceof Some)v=v.v;d.m.set(hkey(k),[k,conform(copy(v),d.vt,e.line,false,"assign value")])},root:base.root,parent:base,dictDefault:!!def,
+              ensure:def?()=>{checkMutable(base,e.line);const d=base.get();if(!d.m.has(hkey(k)))d.m.set(hkey(k),[k,copy(def.v)])}:null};
           }
           if(typeof b==="string")fail(`line ${e.line}: Swift strings can't be indexed with numbers like s[0]. Use Array(s)[0], s.first, or s.prefix(n)`);
           fail(`line ${e.line}: value of type '${typeOfV(b)}' has no subscripts`);
@@ -47529,7 +47605,7 @@ const TMSwift=(()=>{
         return {seq,stride:true}}),
       zip:B(([a,b],args,line)=>{const x=[...iterate(a,line)],y=[...iterate(b,line)];return new Arr(x.slice(0,Math.min(x.length,y.length)).map((v,i)=>new Tup([v,y[i]])),null)}),
       type:B(([v])=>({isTypeName:typeOfV(v)})),
-      readLine:B(()=>fail("readLine() (reading what someone types) isn't available in TypeMonkey yet. Set the value in your code instead, like: let input = \"7\"","NotSupported")),
+      readLine:B(()=>{if(inPos>=IN.length)return NIL;const e2=IN.indexOf("\n",inPos);const end=e2<0?IN.length:e2;const line=IN.slice(inPos,end);inPos=end+1;W(line+"\n");return new Some(line)}),
       fatalError:B(([m])=>fatal(m===undefined?"":desc(m))),
       precondition:B(([c,m])=>{if(!c)fatal(m===undefined?"Precondition failed":"Precondition failed: "+desc(m));return undefined}),
       assert:B(([c,m])=>{if(!c)fatal(m===undefined?"Assertion failed":"Assertion failed: "+desc(m));return undefined}),
@@ -47543,7 +47619,7 @@ const TMSwift=(()=>{
     function builtinMember(b,n,e,env){
       const line=e.line;
       const M=fn=>new Fn({builtin:fn});
-      const mut=()=>{const lv=lval(e.e,env);checkMutable(lv,line);return lv};
+      const mut=()=>{const lv=lval(e.e,env);if(lv.ensure)lv.ensure();checkMutable(lv,line);return lv};
       if(b&&b.ns){const v=b.ns[n];if(v!==undefined)return v;fail(`line ${line}: type '${b.isTypeName}' has no member '${n}'`)}
       if(b&&b.isTypeName&&n==="self")return b;
       if(isNumV(b)){
@@ -47731,6 +47807,595 @@ const TMSwift=(()=>{
   return {run};
 })();
 if(typeof module!=="undefined")module.exports=TMSwift;
+
+/* TypeMonkey's small Python standard library for the in-browser Python (Brython).
+   Brython's full stdlib is several megabytes, so these are compact in-house versions of the modules
+   beginners reach for first. They follow CPython's behavior for normal use; random numbers come from
+   TypeMonkey's own generator, so seeded sequences differ from CPython's. */
+const PYLIB={
+math:`import javascript as _js
+pi = 3.141592653589793
+e = 2.718281828459045
+tau = 6.283185307179586
+inf = float("inf")
+nan = float("nan")
+def _num(x):
+    if not isinstance(x, (int, float)):
+        raise TypeError("must be real number, not " + type(x).__name__)
+    return x
+def floor(x):
+    _num(x)
+    return int(x // 1)
+def ceil(x):
+    _num(x)
+    return -int((-x) // 1)
+def trunc(x):
+    return int(x)
+def sqrt(x):
+    _num(x)
+    if x < 0:
+        raise ValueError("math domain error")
+    return float(x) ** 0.5
+def isqrt(n):
+    if n < 0:
+        raise ValueError("isqrt() argument must be nonnegative")
+    r = int(n ** 0.5)
+    while r * r > n:
+        r -= 1
+    while (r + 1) * (r + 1) <= n:
+        r += 1
+    return r
+def pow(x, y):
+    return float(x) ** y
+def fabs(x):
+    return float(abs(x))
+def exp(x):
+    return float(_js.Math.exp(x))
+def log(x, base=None):
+    _num(x)
+    if x <= 0:
+        raise ValueError("math domain error")
+    r = float(_js.Math.log(x))
+    if base is not None:
+        r = r / float(_js.Math.log(base))
+    return r
+def log2(x):
+    return log(x, 2)
+def log10(x):
+    if x <= 0:
+        raise ValueError("math domain error")
+    return float(_js.Math.log10(x))
+def sin(x): return float(_js.Math.sin(x))
+def cos(x): return float(_js.Math.cos(x))
+def tan(x): return float(_js.Math.tan(x))
+def asin(x): return float(_js.Math.asin(x))
+def acos(x): return float(_js.Math.acos(x))
+def atan(x): return float(_js.Math.atan(x))
+def atan2(y, x): return float(_js.Math.atan2(y, x))
+def hypot(*xs): return sqrt(sum(v * v for v in xs))
+def degrees(x): return x * 180.0 / pi
+def radians(x): return x * pi / 180.0
+def factorial(n):
+    if not isinstance(n, int) or n < 0:
+        raise ValueError("factorial() not defined for negative values")
+    r = 1
+    for i in range(2, n + 1):
+        r *= i
+    return r
+def gcd(*ns):
+    g = 0
+    for n in ns:
+        a, b = abs(g), abs(n)
+        while b:
+            a, b = b, a % b
+        g = a
+    return g
+def lcm(*ns):
+    r = 1
+    for n in ns:
+        if n == 0:
+            return 0
+        r = abs(r * n) // gcd(r, n)
+    return r
+def comb(n, k):
+    if k < 0 or k > n:
+        return 0
+    return factorial(n) // (factorial(k) * factorial(n - k))
+def perm(n, k=None):
+    if k is None:
+        k = n
+    if k < 0 or k > n:
+        return 0
+    return factorial(n) // factorial(n - k)
+def prod(xs, start=1):
+    r = start
+    for v in xs:
+        r *= v
+    return r
+def fsum(xs):
+    return float(sum(xs))
+def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
+    return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+def isnan(x): return x != x
+def isinf(x): return x == inf or x == -inf
+def isfinite(x): return not (isnan(x) or isinf(x))
+def copysign(x, y): return abs(float(x)) if y >= 0 else -abs(float(x))
+`,
+random:`import javascript as _js
+_state = [int(_js.Date.now()) % 2147483647 or 1]
+def seed(a=None):
+    if a is None:
+        a = int(_js.Date.now())
+    if isinstance(a, str):
+        h = 0
+        for ch in a:
+            h = (h * 31 + ord(ch)) % 2147483647
+        a = h
+    _state[0] = (int(a) % 2147483646) + 1
+def random():
+    _state[0] = (_state[0] * 48271) % 2147483647
+    return (_state[0] - 1) / 2147483646
+def randint(a, b):
+    if a > b:
+        raise ValueError("empty range in randint(" + str(a) + ", " + str(b) + ")")
+    return a + int(random() * (b - a + 1))
+def randrange(start, stop=None, step=1):
+    if stop is None:
+        start, stop = 0, start
+    n = (stop - start + step - (1 if step > 0 else -1)) // step
+    if n <= 0:
+        raise ValueError("empty range for randrange()")
+    return start + step * int(random() * n)
+def choice(seq):
+    if len(seq) == 0:
+        raise IndexError("Cannot choose from an empty sequence")
+    return seq[int(random() * len(seq))]
+def choices(population, weights=None, k=1):
+    if weights is None:
+        return [choice(population) for _ in range(k)]
+    total = sum(weights)
+    out = []
+    for _ in range(k):
+        r = random() * total
+        acc = 0
+        for item, w in zip(population, weights):
+            acc += w
+            if r < acc:
+                out.append(item)
+                break
+        else:
+            out.append(population[-1])
+    return out
+def shuffle(x):
+    for i in range(len(x) - 1, 0, -1):
+        j = int(random() * (i + 1))
+        x[i], x[j] = x[j], x[i]
+def sample(population, k):
+    pool = list(population)
+    if k > len(pool):
+        raise ValueError("Sample larger than population or is negative")
+    shuffle(pool)
+    return pool[:k]
+def uniform(a, b):
+    return a + (b - a) * random()
+`,
+time:`import javascript as _js
+def time():
+    return _js.Date.now() / 1000
+def perf_counter():
+    return _js.Date.now() / 1000
+def monotonic():
+    return perf_counter()
+def sleep(seconds):
+    # TypeMonkey runs your program all at once, so sleep doesn't actually wait.
+    if seconds < 0:
+        raise ValueError("sleep length must be non-negative")
+`,
+string:`ascii_lowercase = "abcdefghijklmnopqrstuvwxyz"
+ascii_uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+ascii_letters = ascii_lowercase + ascii_uppercase
+digits = "0123456789"
+hexdigits = "0123456789abcdefABCDEF"
+octdigits = "01234567"
+punctuation = "!\\"#$%&'()*+,-./:;<=>?@[\\\\]^_\`{|}~"
+whitespace = " \\t\\n\\r\\x0b\\x0c"
+printable = digits + ascii_letters + punctuation + whitespace
+def capwords(s, sep=None):
+    return (sep or " ").join(w.capitalize() for w in s.split(sep))
+`,
+collections:`class Counter(dict):
+    def __init__(self, iterable=None, **kw):
+        dict.__init__(self)
+        self.update(iterable, **kw)
+    def __missing__(self, key):
+        return 0
+    def update(self, iterable=None, **kw):
+        if iterable is not None:
+            if isinstance(iterable, dict):
+                for k, v in iterable.items():
+                    self[k] = self.get(k, 0) + v
+            else:
+                for k in iterable:
+                    self[k] = self.get(k, 0) + 1
+        for k, v in kw.items():
+            self[k] = self.get(k, 0) + v
+    def most_common(self, n=None):
+        items = sorted(self.items(), key=lambda kv: -kv[1])
+        return items if n is None else items[:n]
+    def total(self):
+        return sum(self.values())
+    def elements(self):
+        for k, v in self.items():
+            for _ in range(v):
+                yield k
+    def __repr__(self):
+        if not self:
+            return "Counter()"
+        return "Counter({" + ", ".join(repr(k) + ": " + repr(v) for k, v in self.most_common()) + "})"
+class defaultdict(dict):
+    def __init__(self, default_factory=None, *args):
+        dict.__init__(self, *args)
+        self.default_factory = default_factory
+    def __missing__(self, key):
+        if self.default_factory is None:
+            raise KeyError(key)
+        v = self.default_factory()
+        self[key] = v
+        return v
+    def __getitem__(self, key):
+        if key in self:
+            return dict.__getitem__(self, key)
+        return self.__missing__(key)
+    def __repr__(self):
+        name = getattr(self.default_factory, "__name__", repr(self.default_factory))
+        return "defaultdict(<class '" + name + "'>, " + dict.__repr__(self) + ")"
+class deque:
+    def __init__(self, iterable=(), maxlen=None):
+        self._d = []
+        self.maxlen = maxlen
+        for x in iterable:
+            self.append(x)
+    def append(self, x):
+        self._d.append(x)
+        if self.maxlen is not None and len(self._d) > self.maxlen:
+            self._d.pop(0)
+    def appendleft(self, x):
+        self._d.insert(0, x)
+        if self.maxlen is not None and len(self._d) > self.maxlen:
+            self._d.pop()
+    def pop(self):
+        if not self._d:
+            raise IndexError("pop from an empty deque")
+        return self._d.pop()
+    def popleft(self):
+        if not self._d:
+            raise IndexError("pop from an empty deque")
+        return self._d.pop(0)
+    def extend(self, xs):
+        for x in xs:
+            self.append(x)
+    def extendleft(self, xs):
+        for x in xs:
+            self.appendleft(x)
+    def rotate(self, n=1):
+        if self._d:
+            n = n % len(self._d)
+            self._d = self._d[-n:] + self._d[:-n]
+    def clear(self):
+        self._d = []
+    def __len__(self): return len(self._d)
+    def __iter__(self): return iter(self._d)
+    def __getitem__(self, i): return self._d[i]
+    def __setitem__(self, i, v): self._d[i] = v
+    def __bool__(self): return len(self._d) > 0
+    def __eq__(self, other): return isinstance(other, deque) and self._d == other._d
+    def __repr__(self):
+        return "deque(" + repr(self._d) + ("" if self.maxlen is None else ", maxlen=" + str(self.maxlen)) + ")"
+def namedtuple(typename, field_names):
+    if isinstance(field_names, str):
+        field_names = field_names.replace(",", " ").split()
+    fields = list(field_names)
+    def __init__(self, *args, **kw):
+        vals = list(args)
+        for f in fields[len(vals):]:
+            if f not in kw:
+                raise TypeError(typename + "() missing argument: '" + f + "'")
+            vals.append(kw[f])
+        for f, v in zip(fields, vals):
+            object.__setattr__(self, f, v)
+        object.__setattr__(self, "_vals", tuple(vals))
+    def __repr__(self):
+        return typename + "(" + ", ".join(f + "=" + repr(getattr(self, f)) for f in fields) + ")"
+    def __iter__(self): return iter(self._vals)
+    def __getitem__(self, i): return self._vals[i]
+    def __len__(self): return len(fields)
+    def __eq__(self, other): return tuple(self) == tuple(other)
+    def __hash__(self): return hash(self._vals)
+    def _asdict(self): return {f: getattr(self, f) for f in fields}
+    def _replace(self, **kw):
+        d = self._asdict()
+        d.update(kw)
+        return cls(**d)
+    cls = type(typename, (), {"__init__": __init__, "__repr__": __repr__, "__iter__": __iter__, "__getitem__": __getitem__,
+                              "__len__": __len__, "__eq__": __eq__, "__hash__": __hash__, "_asdict": _asdict, "_replace": _replace, "_fields": tuple(fields)})
+    return cls
+OrderedDict = dict
+`,
+itertools:`def count(start=0, step=1):
+    n = start
+    while True:
+        yield n
+        n += step
+def cycle(iterable):
+    saved = list(iterable)
+    while saved:
+        for x in saved:
+            yield x
+def repeat(obj, times=None):
+    if times is None:
+        while True:
+            yield obj
+    else:
+        for _ in range(times):
+            yield obj
+def chain(*its):
+    for it in its:
+        for x in it:
+            yield x
+def islice(iterable, *args):
+    s = slice(*args)
+    start, stop, step = s.start or 0, s.stop, s.step or 1
+    i = 0
+    nxt = start
+    for x in iterable:
+        if stop is not None and i >= stop:
+            return
+        if i == nxt:
+            yield x
+            nxt += step
+        i += 1
+def accumulate(iterable, func=None, initial=None):
+    it = iter(iterable)
+    total = initial
+    if total is None:
+        try:
+            total = next(it)
+        except StopIteration:
+            return
+    yield total
+    for x in it:
+        total = total + x if func is None else func(total, x)
+        yield total
+def product(*its, repeat=1):
+    pools = [list(p) for p in its] * repeat
+    result = [[]]
+    for pool in pools:
+        result = [r + [y] for r in result for y in pool]
+    for r in result:
+        yield tuple(r)
+def permutations(iterable, r=None):
+    pool = list(iterable)
+    n = len(pool)
+    r = n if r is None else r
+    def rec(prefix, used):
+        if len(prefix) == r:
+            yield tuple(prefix)
+            return
+        for i in range(n):
+            if not used[i]:
+                used[i] = True
+                yield from rec(prefix + [pool[i]], used)
+                used[i] = False
+    if r <= n:
+        yield from rec([], [False] * n)
+def combinations(iterable, r):
+    pool = list(iterable)
+    n = len(pool)
+    def rec(start, prefix):
+        if len(prefix) == r:
+            yield tuple(prefix)
+            return
+        for i in range(start, n):
+            yield from rec(i + 1, prefix + [pool[i]])
+    yield from rec(0, [])
+def zip_longest(*its, fillvalue=None):
+    lists = [list(i) for i in its]
+    n = max((len(l) for l in lists), default=0)
+    for i in range(n):
+        yield tuple(l[i] if i < len(l) else fillvalue for l in lists)
+def groupby(iterable, key=None):
+    key = key or (lambda x: x)
+    group, cur = [], object()
+    first = True
+    for x in iterable:
+        k = key(x)
+        if first or k != cur:
+            if not first:
+                yield cur, iter(group)
+            group, cur, first = [x], k, False
+        else:
+            group.append(x)
+    if not first:
+        yield cur, iter(group)
+`,
+functools:`def reduce(func, iterable, *initial):
+    it = iter(iterable)
+    if initial:
+        acc = initial[0]
+    else:
+        try:
+            acc = next(it)
+        except StopIteration:
+            raise TypeError("reduce() of empty iterable with no initial value")
+    for x in it:
+        acc = func(acc, x)
+    return acc
+def lru_cache(maxsize=128):
+    def deco(f):
+        memo = {}
+        def wrapper(*args):
+            if args in memo:
+                return memo[args]
+            r = f(*args)
+            memo[args] = r
+            return r
+        wrapper.__name__ = getattr(f, "__name__", "wrapper")
+        wrapper.cache_clear = memo.clear
+        return wrapper
+    if callable(maxsize):
+        return deco(maxsize)
+    return deco
+cache = lru_cache
+def partial(func, *pargs, **pkw):
+    def wrapper(*args, **kw):
+        d = dict(pkw)
+        d.update(kw)
+        return func(*(pargs + args), **d)
+    return wrapper
+def wraps(wrapped):
+    def deco(f):
+        try:
+            f.__name__ = wrapped.__name__
+        except Exception:
+            pass
+        return f
+    return deco
+def cmp_to_key(cmp):
+    class K:
+        def __init__(self, obj): self.obj = obj
+        def __lt__(self, other): return cmp(self.obj, other.obj) < 0
+        def __gt__(self, other): return cmp(self.obj, other.obj) > 0
+        def __eq__(self, other): return cmp(self.obj, other.obj) == 0
+    return K
+`,
+json:`def _esc(s):
+    out = '"'
+    for ch in s:
+        if ch == '"': out += '\\\\"'
+        elif ch == '\\\\': out += '\\\\\\\\'
+        elif ch == '\\n': out += '\\\\n'
+        elif ch == '\\t': out += '\\\\t'
+        else: out += ch
+    return out + '"'
+def dumps(obj, indent=None, sort_keys=False):
+    def enc(o, lvl):
+        pad = "" if indent is None else "\\n" + " " * (indent * (lvl + 1))
+        end = "" if indent is None else "\\n" + " " * (indent * lvl)
+        sep = ", " if indent is None else ","
+        if o is None: return "null"
+        if o is True: return "true"
+        if o is False: return "false"
+        if isinstance(o, (int, float)): return repr(o)
+        if isinstance(o, str): return _esc(o)
+        if isinstance(o, (list, tuple)):
+            if not o: return "[]"
+            return "[" + sep.join(pad + enc(x, lvl + 1) for x in o) + end + "]"
+        if isinstance(o, dict):
+            if not o: return "{}"
+            keys = sorted(o.keys()) if sort_keys else list(o.keys())
+            return "{" + sep.join(pad + _esc(str(k)) + ": " + enc(o[k], lvl + 1) for k in keys) + end + "}"
+        raise TypeError("Object of type " + type(o).__name__ + " is not JSON serializable")
+    return enc(obj, 0)
+def loads(s):
+    i = [0]
+    def ws():
+        while i[0] < len(s) and s[i[0]] in " \\t\\n\\r": i[0] += 1
+    def val():
+        ws()
+        c = s[i[0]] if i[0] < len(s) else ""
+        if c == "{":
+            i[0] += 1; d = {}; ws()
+            if s[i[0]] == "}": i[0] += 1; return d
+            while True:
+                ws(); k = string(); ws(); i[0] += 1; d[k] = val(); ws()
+                if s[i[0]] == ",": i[0] += 1; continue
+                i[0] += 1; return d
+        if c == "[":
+            i[0] += 1; a = []; ws()
+            if s[i[0]] == "]": i[0] += 1; return a
+            while True:
+                a.append(val()); ws()
+                if s[i[0]] == ",": i[0] += 1; continue
+                i[0] += 1; return a
+        if c == '"': return string()
+        for word, v in (("true", True), ("false", False), ("null", None)):
+            if s.startswith(word, i[0]): i[0] += len(word); return v
+        j = i[0]
+        while j < len(s) and s[j] in "-+.0123456789eE": j += 1
+        if j == i[0]: raise ValueError("Expecting value: char " + str(i[0]))
+        t = s[i[0]:j]; i[0] = j
+        return float(t) if any(ch in t for ch in ".eE") else int(t)
+    def string():
+        i[0] += 1; out = ""
+        while s[i[0]] != '"':
+            if s[i[0]] == "\\\\":
+                i[0] += 1; out += {"n": "\\n", "t": "\\t", '"': '"', "\\\\": "\\\\", "/": "/"}.get(s[i[0]], s[i[0]])
+            else:
+                out += s[i[0]]
+            i[0] += 1
+        i[0] += 1
+        return out
+    r = val(); ws()
+    if i[0] != len(s): raise ValueError("Extra data: char " + str(i[0]))
+    return r
+`,
+dataclasses:`_MISSING = object()
+class _Field:
+    def __init__(self, default=_MISSING, default_factory=None):
+        self.default = default
+        self.default_factory = default_factory
+def field(default=_MISSING, default_factory=None):
+    return _Field(default, default_factory)
+def dataclass(cls=None, frozen=False, order=False):
+    def wrap(cls):
+        ann = getattr(cls, "__annotations__", None) or cls.__dict__.get("__annotations__", {})
+        names = list(ann.keys())
+        defaults = {}
+        for n in names:
+            if n in cls.__dict__:
+                defaults[n] = cls.__dict__[n]
+        def __init__(self, *args, **kw):
+            if len(args) > len(names):
+                raise TypeError(cls.__name__ + "() takes " + str(len(names)) + " arguments")
+            for i, n in enumerate(names):
+                if i < len(args):
+                    v = args[i]
+                elif n in kw:
+                    v = kw[n]
+                elif n in defaults:
+                    d = defaults[n]
+                    if isinstance(d, _Field):
+                        v = d.default_factory() if d.default_factory else d.default
+                    else:
+                        v = d
+                else:
+                    raise TypeError(cls.__name__ + "() missing 1 required argument: '" + n + "'")
+                object.__setattr__(self, n, v)
+            if hasattr(self, "__post_init__"):
+                self.__post_init__()
+        def __repr__(self):
+            return cls.__name__ + "(" + ", ".join(n + "=" + repr(getattr(self, n)) for n in names) + ")"
+        def __eq__(self, other):
+            return type(other) is type(self) and all(getattr(self, n) == getattr(other, n) for n in names)
+        cls.__init__ = __init__
+        if "__repr__" not in cls.__dict__:
+            cls.__repr__ = __repr__
+        cls.__eq__ = __eq__
+        if order:
+            cls.__lt__ = lambda a, b: tuple(getattr(a, n) for n in names) < tuple(getattr(b, n) for n in names)
+        if frozen:
+            def __setattr__(self, n, v):
+                raise AttributeError("cannot assign to field '" + n + "'")
+            cls.__setattr__ = __setattr__
+            cls.__hash__ = lambda self: hash(tuple(getattr(self, n) for n in names))
+        return cls
+    if cls is None:
+        return wrap
+    return wrap(cls)
+def asdict(obj):
+    return {n: getattr(obj, n) for n in (getattr(obj.__class__, "__annotations__", None) or {})}
+`,
+};
 
 </script>
 <script>
@@ -47923,9 +48588,15 @@ function makeConsole(out){
   return {log:lg,info:lg,warn:lg,error:(...a)=>out.push(["err",a.map(fmt).join(" ")])};
 }
 let evalBlocked=false;
-function runCode(code){
+function inputFeeder(input){
+  const lines=input==null||input===""?[]:String(input).replace(/\r/g,"").split("\n");if(lines.length&&lines[lines.length-1]==="")lines.pop();let i=0;
+  return ()=>i<lines.length?lines[i++]:null;
+}
+function runCode(code,input){
   const out=[];const con=makeConsole(out);
-  const body="let __tmN=0;const __tmG=()=>{if(++__tmN>100000)throw new Error('Your loop ran 100,000 times, so I stopped it. Check that it can end.');return true};\n"+guardLoops(code);
+  const nextIn=inputFeeder(input);
+  window.__tmPrompt=(msg="")=>{const v=nextIn();con.log(String(msg)+(v===null?"":" "+v));return v};
+  const body="const prompt=window.__tmPrompt;let __tmN=0;const __tmG=()=>{if(++__tmN>100000)throw new Error('Your loop ran 100,000 times, so I stopped it. Check that it can end.');return true};\n"+guardLoops(code);
   if(!evalBlocked){
     let fn=null;
     try{fn=new Function("console",body)}catch(err){
@@ -47966,10 +48637,29 @@ def round(x, n=None):
         return float(__tm_round(x / q) * q)
     return __tm_round(x, n)
 def input(prompt=""):
-    raise RuntimeError("input() can't read typing in TypeMonkey yet. Set the value in your code instead, like: name = 'Sam'")
+    __tm_v = __tm_in.pop(0) if __tm_in else None
+    if __tm_v is None:
+        raise EOFError("there's no more input. Type your answers in the ⌨️ Input box under the code, one per line.")
+    print(str(prompt) + __tm_v)
+    return __tm_v
 `;
+function splitOneLineLoop(line){
+  // "while x: body" -> header and body, so the loop guard can go inside
+  const m=line.match(/^(\s*)(while|for)\b/);if(!m)return null;
+  let depth=0,q=null;
+  for(let i=m[0].length;i<line.length;i++){const c=line[i];
+    if(q){if(c==="\\")i++;else if(c===q)q=null;continue}
+    if(c==='"'||c==="'"){q=c;continue}
+    if("([{".includes(c))depth++;else if(")]}".includes(c))depth--;
+    else if(c===":"&&depth===0){const rest=line.slice(i+1).trim();if(!rest||rest.startsWith("#"))return null;return [m[1],line.slice(0,i+1),rest]}
+    else if(c==="#")return null;
+  }
+  return null;
+}
 function guardPy(code){
-  const lines=code.split("\n");const out=[];
+  const lines0=code.split("\n");const lines=[];
+  for(const l of lines0){const sp=splitOneLineLoop(l);if(sp){lines.push(sp[1]);lines.push(sp[0]+"    "+sp[2])}else lines.push(l)}
+  const out=[];
   for(let i=0;i<lines.length;i++){
     out.push(lines[i]);
     if(/^\s*(while|for)\b.*:\s*(#.*)?$/.test(lines[i])){
@@ -47979,20 +48669,23 @@ function guardPy(code){
   }
   return out.join("\n");
 }
-function runPython(code){
+function runPython(code,input){
   const B=globalThis.__BRYTHON__;
+  const inLines=input==null||input===""?[]:String(input).replace(/\r/g,"").split("\n");if(inLines.length&&inLines[inLines.length-1]==="")inLines.pop();
   if(!B||!B.runPythonSource)return Promise.resolve([["err","The Python engine didn't load. Try reopening the app."]]);
-  if(!pyReady){try{brython({debug:0,ids:[]})}catch(e){}pyReady=true}
+  if(!pyReady){try{if(typeof PYLIB!=="undefined"&&B.loadBrythonPackage)B.loadBrythonPackage(Object.fromEntries(Object.entries(PYLIB).map(([k,v])=>[k,[".py",v,[]]])))}catch(e){}
+    try{brython({debug:0,ids:[],cache:false})}catch(e){}pyReady=true}
   let buf="";const ol=console.log,oe=console.error,ow=console.warn;
   console.log=(...a)=>{if(a.length===1&&typeof a[0]==="string")buf+=a[0]};console.error=()=>{};console.warn=()=>{};
   let err=null;
-  try{B.runPythonSource(PY_PRELUDE+guardPy(code),{})}
+  try{B.runPythonSource("__tm_in = "+JSON.stringify(inLines)+"\n"+PY_PRELUDE+guardPy(code),{})}
   catch(e){
     let name="Error",msg="";
     try{name=B.class_name?B.class_name(e):(e.__class__&&e.__class__.__name__)||"Error"}catch(_){}
     try{msg=B.builtins.str.$factory(e)}catch(_){msg=e&&e.args?String(e.args[0]):String(e)}
     if(name==="SyntaxError"||name==="IndentationError")msg=msg.replace(/\s*\(.*line \d+\)$/,"");
     err=`${name}: ${msg}`.replace(/: $/,"");
+    if(name==="ModuleNotFoundError"){const mod=(msg.match(/'([^']+)'/)||[])[1]||"that module";err=`ModuleNotFoundError: TypeMonkey's Python doesn't have '${mod}' yet. It has math, random, string, time, collections, itertools, functools, json and dataclasses.`}
     if(name==="RecursionError"||/Maximum call stack/.test(msg))err="RecursionError: a function kept calling itself. Check your stopping case.";
   }finally{console.log=ol;console.error=oe;console.warn=ow}
   const lines=buf.split("\n");if(lines[lines.length-1]==="")lines.pop();
@@ -48002,12 +48695,12 @@ function runPython(code){
 /* ---------- run any language ---------- */
 function linesOf(r){const lines=r.out.split("\n");if(lines[lines.length-1]==="")lines.pop();const o=lines.map(l=>["log",l]);if(r.error)o.push(["err",r.error]);return o}
 const RUNNERS={
-  js:c=>runCode(c),
-  py:c=>runPython(c),
-  cs:c=>Promise.resolve(linesOf(TMC.run(c,"cs"))),
-  cpp:c=>Promise.resolve(linesOf(TMC.run(c,"cpp"))),
-  java:c=>Promise.resolve(linesOf(TMC.run(c,"java"))),
-  swift:c=>Promise.resolve(linesOf(TMSwift.run(c))),
+  js:(c,inp)=>runCode(c,inp),
+  py:(c,inp)=>runPython(c,inp),
+  cs:(c,inp)=>Promise.resolve(linesOf(TMC.run(c,"cs",inp))),
+  cpp:(c,inp)=>Promise.resolve(linesOf(TMC.run(c,"cpp",inp))),
+  java:(c,inp)=>Promise.resolve(linesOf(TMC.run(c,"java",inp))),
+  swift:(c,inp)=>Promise.resolve(linesOf(TMSwift.run(c,inp))),
   sql:c=>{const r=TMSQL.run(c,ZOO_TABLES);if(!r.ok)return Promise.resolve([["err",r.error]]);const o=TMSQL.text(r).split("\n").map(l=>["log",l]);o.table=r;return Promise.resolve(o)}
 };
 const kindOf=c=>c.runnable===true?"js":c.runnable;
@@ -48145,7 +48838,7 @@ function home(){
     <section class="hero"><h1>Learn to code, one banana at a time.</h1><p>Bite-size lessons, real code you run yourself, quizzes and mini-games. Built for all ages and experience levels.</p></section>
     ${buddy(greet,resume?"cheer":"happy")}
     ${nu?`<div class="row"><button class="btn" id="cont">${resume?"Pick up where you left off":S.done.length?"Continue learning":"Start lesson 1"}</button></div>`:nextPro?`<div class="row"><button class="btn banana" id="unl">See the full course</button></div>`:""}
-    <button class="daily ${dailyDoneToday()?"done":""}" id="daily"><span class="dicon">📅</span><span class="dtext"><b>${dailyDoneToday()?"Daily challenge done!":"Daily challenge"}</b><span>${dailyDoneToday()?`Come back tomorrow for a new one · 🔥 ${(S.daily||{}).streak||1}-day daily streak`:`3 quick questions · bonus bananas${(S.daily||{}).streak?` · keep your ${(S.daily||{}).streak}-day streak going`:""}`}</span></span><span class="pill ${dailyDoneToday()?"ok":"kid"}">${dailyDoneToday()?"✓":"+10 🍌"}</span></button>
+    <button class="daily ${dailyDoneToday()?"done":""}" id="daily"><span class="dicon">🎯</span><span class="dtext"><b>${dailyDoneToday()?"Daily challenge done!":"Daily challenge"}</b><span>${dailyDoneToday()?`Come back tomorrow for a new one · 🔥 ${(S.daily||{}).streak||1}-day daily streak`:`3 quick questions · bonus bananas${(S.daily||{}).streak?` · keep your ${(S.daily||{}).streak}-day streak going`:""}`}</span></span><span class="pill ${dailyDoneToday()?"ok":"kid"}">${dailyDoneToday()?"✓":"+10 🍌"}</span></button>
     <div class="tools">
       <button class="tool" id="review"><b>🧠 Review${dueCount()?` <span class="due">${dueCount()}</span>`:""}</b><span>${dueCount()?"Questions you missed are ready to try again":reviewSize()?"All caught up! Missed questions come back here":"Questions you miss come back here later"}</span></button>
       <button class="tool" id="play"><b>›_ Playground</b><span>Write any code you want and run it</span></button>
@@ -48187,9 +48880,9 @@ function coursePage(cid){
   const c=courseById(cid);setMode(c.kids);const L=flat(c);const [d,n]=countLessons(c);
   $("#screen").innerHTML=`<div class="stack">
     <div class="row"><button class="btn ghost sm" id="back">← Courses</button></div>
-    <section class="hero"><div class="label">Course</div><h1>${c.name}</h1><p>${c.blurb||""}</p></section>
+    <section class="hero"><div class="label">Course</div><h1>${c.name}</h1><p>${c.blurb||""}</p>${c.kids?(()=>{const [g,t]=jrStars(c);return `<span class="jrstars">⭐ ${g} of ${t} stars</span>`})():""}</section>
     <div class="row"><div class="progress"><span style="width:${n?d/n*100:0}%"></span></div><b style="font-variant-numeric:tabular-nums">${d}/${n}</b></div>
-    ${c.units.map((u,ui)=>`<div class="unit"><div class="unit-head"><h3>Unit ${ui+1} · ${u.name}</h3><span class="label">${u.free?"Free":S.pro?"Unlocked":"Pro"}</span></div><div class="lessons">${
+    ${c.units.map((u,ui)=>`<div class="unit"><div class="unit-head"><h3>${c.kids?WORLDS[ui%WORLDS.length].emoji+" ":""}Unit ${ui+1} · ${u.name}</h3><span class="label">${u.free?"Free":S.pro?"Unlocked":"Pro"}</span></div><div class="lessons">${
       L.filter(x=>x.ui===ui).map(x=>{const st=status(c,x);const res=S.progress[x.l.id]&&st!=="pro"&&st!=="soon";
         const cls=st==="done"&&!res?"done":(st==="open"||res||st==="done")?"open":"";
         return `<button class="lesson ${cls} ${x.l.project?"proj":""}" data-l="${x.l.id}" ${st==="open"||st==="done"||res?"":"disabled"}>
@@ -48230,9 +48923,12 @@ function shell(inner){
   $("#foot").innerHTML="";window.scrollTo(0,0);
 }
 function next(){cur.step++;renderStep()}
-function editorBlock(id,code,runnable,file){
+const inputBox=(id,val)=>`<details class="stdin" ${val?"open":""}><summary>⌨️ Input <span>(answers for input(), ReadLine, Scanner…)</span></summary><textarea id="in-${id}" rows="2" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="Type what the user would type, one answer per line" aria-label="Program input">${esc(val||"")}</textarea></details>`;
+function editorBlock(id,code,runnable,file,input){
+  const wantsIn=runnable&&runnable!=="web"&&runnable!=="sql"&&(input||/\b(input|ReadLine|Scanner|readLine|prompt|cin)\b/.test(code));
   return `<div class="editor"><div class="head"><span>${file}</span>${runnable?`<button class="run" id="run-${id}">${runnable==="web"?"▶ Show page":"▶ Run"}</button>`:""}</div>
     ${runnable?`<textarea id="code-${id}" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="Code editor" rows="${Math.min(14,Math.max(5,code.split("\n").length+1))}">${esc(code)}</textarea>
+    ${wantsIn?inputBox(id,input):""}
     ${runnable==="web"?`<div class="webview" id="out-${id}" aria-label="Page preview"></div>`:(cur&&cur.c&&cur.c.id==="game"?`<div class="console arcade" id="out-${id}"><div class="arcade-top"><span>🎮 GAME SCREEN</span></div><span class="dim">Press ▶ Run to play</span></div>`:`<div class="console" id="out-${id}"><span class="dim">Console output appears here</span></div>`)}`:`<pre>${esc(code)}</pre>`}</div>`;
 }
 function wireEditor(id,after,kind){
@@ -48241,7 +48937,7 @@ function wireEditor(id,after,kind){
   const out=$("#out-"+id),web=out.classList.contains("webview");
   if(web)renderWeb(out,ta.value);
   $("#run-"+id).onclick=async()=>{if(web){renderWeb(out,ta.value);after&&after(ta.value);return}
-    const k=kind||(cur?kindOf(cur.c):"js");ranLang(k);const res=await RUNNERS[k](ta.value);paintConsole(out,res,PRINT_HINT[k]);after&&after(ta.value,res)};
+    const k=kind||(cur?kindOf(cur.c):"js");ranLang(k);const inEl=$("#in-"+id);const res=await RUNNERS[k](ta.value,inEl?inEl.value:undefined);paintConsole(out,res,PRINT_HINT[k]);after&&after(ta.value,res)};
 }
 const award=(xp,ban=0)=>{cur.earned.xp+=xp;cur.earned.ban+=ban};
 
@@ -48251,10 +48947,17 @@ function renderStep(){
   if(s.type!=="done"&&!cur.review&&!cur.daily)saveSpot();
   const T={talk,code:codeStep,quiz,fill,order,maze,game:gameIntro,done:finish}[s.type];T(s,R);
 }
+/* For TypeMonkey Jr.: read the card out loud for kids who are still learning to read */
+const canSpeak=typeof window!=="undefined"&&"speechSynthesis" in window&&typeof SpeechSynthesisUtterance!=="undefined";
+function readAloudBtn(){return cur&&cur.c&&cur.c.kids&&canSpeak?`<button class="btn ghost sm readaloud" id="say" type="button">🔊 Read to me</button>`:""}
+function wireReadAloud(){const b=$("#say");if(!b)return;b.onclick=()=>{try{speechSynthesis.cancel();const card=document.querySelector(".card");const t=[...card.querySelectorAll("h2,p")].map(x=>x.textContent).join(". ");const bub=document.querySelector("#bud .bubble,.bubble");const u=new SpeechSynthesisUtterance(t+(bub?". "+bub.textContent:""));u.rate=.92;u.pitch=1.15;speechSynthesis.speak(u)}catch(e){toast("Reading out loud isn't available on this device")}}}
+function bananaBurst(){if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;const box=document.createElement("div");box.className="burst";box.setAttribute("aria-hidden","true");
+  for(let i=0;i<18;i++){const sp=document.createElement("span");sp.textContent=i%3?"🍌":"⭐";sp.style.setProperty("--x",(Math.random()*2-1)*160+"px");sp.style.setProperty("--y",-(80+Math.random()*180)+"px");sp.style.setProperty("--r",(Math.random()*720-360)+"deg");sp.style.animationDelay=(Math.random()*.15)+"s";box.appendChild(sp)}
+  document.body.appendChild(box);setTimeout(()=>box.remove(),1600)}
 function talk(s,R){
-  shell(`<div class="card"><h2>${s.title}</h2>${s.body}${(s.show||[]).map(t=>tableHTML(cur.c,t)).join("")}${s.demo?editorBlock("d",s.demo,R,cur.c.lang):""}</div>
-    ${buddy(s.say||"",s.mood||"happy")}<div class="row"><button class="btn" id="go">Continue</button></div>`);
-  if(s.demo&&R)wireEditor("d");$("#go").onclick=next;
+  shell(`<div class="card"><h2>${s.title}</h2>${s.body}${(s.show||[]).map(t=>tableHTML(cur.c,t)).join("")}${s.demo?editorBlock("d",s.demo,R,cur.c.lang,s.input):""}</div>
+    ${buddy(s.say||"",s.mood||"happy")}<div class="row"><button class="btn" id="go">Continue</button>${readAloudBtn()}</div>`);
+  if(s.demo&&R)wireEditor("d");$("#go").onclick=next;wireReadAloud();
 }
 /* ---------- TypeMonkey's help: a plan, then the answer one line at a time ---------- */
 function newLines(s){const have=new Set((s.start||"").split("\n").map(l=>l.trim()).filter(Boolean));return (s.hint||"").split("\n").filter(l=>l.trim()&&!have.has(l.trim()))}
@@ -48446,20 +49149,35 @@ function simulate(grid,dir,prog,fn){
   const r=runList(prog,false);
   return {path,result:r||(won?"win":"short")};
 }
+/* TypeMonkey Jr.: every unit is a new world, and mazes give up to 3 stars */
+const WORLDS=[
+  {name:"Jungle",emoji:"🌴",wall:"🌴",path:"#F3DFA8",line:"#E5CC88",tree:"#5FAE5A"},
+  {name:"Beach",emoji:"🏝️",wall:"🌊",path:"#FFE9B8",line:"#F2D592",tree:"#4FB6E8"},
+  {name:"Snowy peaks",emoji:"❄️",wall:"☃️",path:"#EEF6FF",line:"#D3E3F5",tree:"#9CC3E6"},
+  {name:"Desert",emoji:"🏜️",wall:"🌵",path:"#F7D9A6",line:"#E9C17F",tree:"#D99A55"},
+  {name:"Outer space",emoji:"🚀",wall:"🪐",path:"#3B3970",line:"#4D4A8C",tree:"#1D1B45"},
+  {name:"Candy land",emoji:"🍭",wall:"🍭",path:"#FFE0F0",line:"#F7C3DE",tree:"#F48FC0"}];
+const worldFor=()=>WORLDS[((cur&&cur.item&&cur.item.ui)||0)%WORLDS.length];
+const KID_WINS=["Ooh ooh! Banana time!","You're a coding superstar!","Monkey dance time! 💃","Wow, that program was perfect!","High five! ✋","Yum yum, thank you!","You did it! I'm so proud!"];
+function mazeBest(s){return s.func?blockCount(s.solution.main)+s.solution.fn.length:blockCount(s.solution)}
+function starsFor(s,used,peeked){if(peeked)return 1;const best=mazeBest(s);return used<=best?3:used<=best+2?2:1}
+const starStr=n=>"⭐".repeat(n)+"☆".repeat(3-n);
+function jrStars(c){let got=0,total=0;for(const x of flat(c))(x.l.steps||[]).forEach((st,i)=>{if(st.type==="maze"){total+=3;got+=((S.stars||{})[x.l.id+"#"+i]||0)}});return [got,total]}
 function maze(s){
   const m=mazeInfo(s.grid);let prog=JSON.parse(JSON.stringify(s.start||[]));let open=null,running=false,fails=0,won=false;
   let fn=JSON.parse(JSON.stringify(s.startFn||[])),lane="main";const FN_OK=["fwd","left","right","ifR","ifL"];
   const total=()=>blockCount(prog)+(s.func?fn.length:0);
-  const cell=ch=>ch==="#"?"🌴":ch==="B"?"🍌":"";const nB=m.goals.length;
-  shell(`<div class="card"><div class="label">Monkey maze${nB>1?` · collect all ${nB} bananas`:""}${s.max?` · use ${s.max} blocks or fewer`:""} · +15 XP</div><h2>${s.title}</h2>${s.body||""}
-    <div class="maze" style="--w:${m.w};--h:${m.h}" id="mz">${s.grid.map((row,y)=>[...row].map((ch,x)=>`<div class="mc ${ch==="#"?"tree":"path"}" data-xy="${x},${y}">${cell(ch)}</div>`).join("")).join("")}<div class="mk" id="mk"><div class="mface" id="mface">${monkey("happy")}</div><span class="arr" id="arr">➜</span></div></div>
+  const Wd=worldFor();let peeked=false;
+  const cell=ch=>ch==="#"?Wd.wall:ch==="B"?"🍌":"";const nB=m.goals.length;
+  shell(`<div class="card"><div class="label">${Wd.emoji} ${Wd.name} maze${nB>1?` · collect all ${nB} bananas`:""}${s.max?` · use ${s.max} blocks or fewer`:""} · +15 XP</div><h2>${s.title}</h2>${s.body||""}
+    <div class="maze" style="--w:${m.w};--h:${m.h};--path:${Wd.path};--pathline:${Wd.line};--tree:${Wd.tree}" id="mz">${s.grid.map((row,y)=>[...row].map((ch,x)=>`<div class="mc ${ch==="#"?"tree":"path"}" data-xy="${x},${y}">${cell(ch)}</div>`).join("")).join("")}<div class="mk" id="mk"><div class="mface" id="mface">${monkey("happy")}</div><span class="arr" id="arr">➜</span></div></div>
     ${s.func?`<div class="lanes" role="tablist"><button class="lane" data-lane="main" aria-pressed="true">Main program</button><button class="lane" data-lane="fn" aria-pressed="false">⭐ My move</button></div>
     <div class="label">⭐ My move <span style="text-transform:none;letter-spacing:0;font-weight:600">(build it once, use it with the ⭐ block)</span></div><div class="prog fprog" id="fprog"></div>`:""}
     <div class="label">${s.func?"Main program":"Your program"}</div><div class="prog" id="prog"></div>
     <div class="palette">${s.blocks.map(b=>`<button class="blk b-${b}" data-b="${b}"><span>${BLOCKS[b].icon}</span>${BLOCKS[b].label}</button>`).join("")}</div>
     <div id="fb"></div></div>
     <div id="bud">${buddy(s.say||"Tap the blocks to build a program, then press Go!","think")}</div>
-    <div class="row"><button class="btn banana" id="run">▶ Go!</button><button class="btn ghost" id="undo">Undo</button><button class="btn ghost" id="clr">Clear</button><button class="btn ghost" id="hint" hidden>Show me</button><button class="btn" id="go" hidden>Continue</button></div>`);
+    <div class="row"><button class="btn banana" id="run">▶ Go!</button><button class="btn ghost" id="undo">Undo</button><button class="btn ghost" id="clr">Clear</button><button class="btn ghost" id="hint" hidden>Show me</button><button class="btn ghost" id="again" hidden>🔁 Go for ⭐⭐⭐</button>${readAloudBtn()}<button class="btn" id="go" hidden>Continue</button></div>`);
   const place=(x,y,d,bump)=>{const k=$("#mk");k.style.left=`calc(${x} * 100% / ${m.w})`;k.style.top=`calc(${y} * 100% / ${m.h})`;k.style.transform=bump?"translateX(4px)":"none";$("#arr").style.transform=`rotate(${ROT[d]}deg)`};
   const reset=()=>{place(m.start[0],m.start[1],s.dir);m.goals.forEach(([gx,gy])=>{const c=document.querySelector(`.mc[data-xy="${gx},${gy}"]`);if(c)c.textContent="🍌"})};
   const draw=()=>{
@@ -48486,7 +49204,7 @@ function maze(s){
   $$(".lane").forEach(b=>b.onclick=()=>{lane=b.dataset.lane;open=null;draw()});
   $("#undo").onclick=()=>{if(running||won)return;if(s.func&&lane==="fn"){fn.pop();return draw()}if(open!==null&&prog[open].body.length)prog[open].body.pop();else{prog.pop();open=null}draw()};
   $("#clr").onclick=()=>{if(running||won)return;prog=[];fn=[];open=null;draw();reset()};
-  $("#hint").onclick=()=>{if(s.func){prog=JSON.parse(JSON.stringify(s.solution.main));fn=JSON.parse(JSON.stringify(s.solution.fn))}else prog=JSON.parse(JSON.stringify(s.solution));open=null;draw();reset();$("#bud").innerHTML=buddy("Here's one way. Press Go to watch it work!","happy")};
+  $("#hint").onclick=()=>{peeked=true;if(s.func){prog=JSON.parse(JSON.stringify(s.solution.main));fn=JSON.parse(JSON.stringify(s.solution.fn))}else prog=JSON.parse(JSON.stringify(s.solution));open=null;draw();reset();$("#bud").innerHTML=buddy("Here's one way. Press Go to watch it work!","happy")};
   $("#run").onclick=()=>{
     if(running||won||!prog.length)return;running=true;open=null;draw();reset();
     const {path,result}=simulate(s.grid,s.dir,prog,fn);let k=1;
@@ -48494,8 +49212,12 @@ function maze(s){
       if(k<path.length){const [x,y,d,bump,ate]=path[k];place(x,y,d,bump);if(ate){const c=document.querySelector(`.mc[data-xy="${ate}"]`);if(c)setTimeout(()=>{c.textContent="✨"},250)}k++;return setTimeout(tick,path.length>40?220:380)}
       running=false;
       const tooMany=s.max&&total()>s.max;
-      if(result==="win"&&!tooMany){won=true;award(15,3);bump("mazes");if(s.start)bump("bugsFixed");$("#mface").innerHTML=monkey("cheer");$("#fb").innerHTML=`<div class="feedback good">🍌 ${nB>1?"All bananas collected!":"Banana reached!"} ${esc(s.win||pick(WINS))}</div>`;
-        $("#bud").innerHTML=buddy("YES! Your program worked!","cheer");["run","undo","clr","hint"].forEach(i=>$("#"+i).hidden=true);$("#go").hidden=false;return}
+      if(result==="win"&&!tooMany){const first=!won;won=true;if(first){award(15,3);bump("mazes");if(s.start)bump("bugsFixed")}$("#mface").innerHTML=monkey("cheer");
+        const st=starsFor(s,total(),peeked);const key=cur.l.id+"#"+cur.step;
+        if(!cur.review&&!cur.daily){S.stars=S.stars||{};if(st>(S.stars[key]||0)){S.stars[key]=st;save()}}
+        const best=mazeBest(s);
+        $("#fb").innerHTML=`<div class="feedback good"><div class="stars" aria-label="${st} of 3 stars">${starStr(st)}</div>🍌 ${nB>1?"All bananas collected!":"Banana reached!"} ${esc(s.win||pick(WINS))}${st<3&&!peeked?`<br><small>Can you do it with ${best} block${best===1?"":"s"}? That's 3 stars!</small>`:""}</div>`;
+        $("#bud").innerHTML=buddy(st===3?pick(KID_WINS):"YES! Your program worked!","cheer");if(cur.c.kids)bananaBurst();["run","undo","clr","hint"].forEach(i=>$("#"+i).hidden=true);$("#go").hidden=false;$("#again").hidden=st===3||peeked;return}
       fails++;$("#mface").innerHTML=monkey("oops");setTimeout(()=>{const f=$("#mface");if(f)f.innerHTML=monkey("happy")},900);
       const msg=result==="win"?`You got there, but used ${total()} blocks. Can you do it with ${s.max} or fewer? Try a Repeat block!`:result==="wall"?"Bonk! TypeMonkey bumped into a tree. Find the step that went wrong and fix it.":result==="loop"?"TypeMonkey kept going around and around! Your repeat never got him to every banana.":result==="extra"?"Too many steps! TypeMonkey got the banana, then kept going. A program has to stop at exactly the right spot. Remove the extra blocks.":"So close! TypeMonkey stopped before reaching the banana. Add more steps.";
       $("#fb").innerHTML=`<div class="feedback bad">${msg}</div>`;
@@ -48504,7 +49226,8 @@ function maze(s){
     };
     setTimeout(tick,200);
   };
-  draw();reset();$("#go").onclick=next;
+  $("#again").onclick=()=>{won=false;["run","undo","clr"].forEach(i=>$("#"+i).hidden=false);$("#again").hidden=true;$("#fb").innerHTML="";reset();$("#bud").innerHTML=buddy("Try a shorter program! Repeat blocks can save lots of steps.","think")};
+  draw();reset();$("#go").onclick=next;wireReadAloud();
 }
 
 /* ---------- Mini-game: Output Rush ---------- */
@@ -48529,7 +49252,7 @@ function rush(poolIn,secs,onEnd,onQuit){
     const [code,opts,file="script.js",hint]=pool[i];const ord=shuffle(opts.map((o,k)=>k));
     $("#screen").innerHTML=`<div class="stack"><div class="game-hud"><button class="x" id="quitg" aria-label="Quit game">×</button><span>⏱ <span id="tleft">${left}</span>s</span><div class="timer"><span id="tbar" style="width:${left/secs*100}%"></span></div><span>🍌 ${score*2}</span></div>
       <div class="card"><div class="label">What prints? · ${i+1} of ${pool.length}</div><div class="editor"><div class="head"><span>${file}</span></div><pre>${esc(code)}</pre></div>
-      <p style="color:var(--muted);font-size:.85rem">${hint||"Several lines of output are shown with spaces between them."}</p>
+      ${hint||((code.match(/console\.log|print\(|println|WriteLine|cout|printf|Console\.Write/g)||[]).length>1||/\b(for|while|foreach|repeat)\b/.test(code))?`<p style="color:var(--muted);font-size:.85rem">${hint||"If it prints more than one line, the lines are shown with spaces between them."}</p>`:""}
       <div class="opts">${ord.map(k=>`<button class="opt mono" data-k="${k}">${esc(opts[k])}</button>`).join("")}</div></div></div>`;
     $("#quitg").onclick=()=>{clearInterval(timer);ended=true;onQuit()};
     $$(".opt").forEach(b=>b.onclick=()=>{
@@ -48573,6 +49296,13 @@ function finish(){
     <div class="row">${nx&&(nst==="open"||nst==="done")?`<button class="btn" id="nxt">Next lesson</button>`:""}${nx&&nst==="pro"?`<button class="btn banana" id="nxt">Unlock the next unit</button>`:""}<button class="btn ghost" id="back">Back to course</button></div>`);
   $("#back").onclick=()=>coursePage(cur.c.id);
   if($("#nxt"))$("#nxt").onclick=()=>nst==="pro"?coursePage(cur.c.id):startLesson(nx.l.id);
+  if(cur.c.kids){
+    const keys=cur.l.steps.map((st,i)=>st.type==="maze"?cur.l.id+"#"+i:null).filter(Boolean);
+    if(keys.length){const got=keys.reduce((n,k)=>n+((S.stars||{})[k]||0),0);const box=document.createElement("div");box.className="jrfinish";
+      box.innerHTML=`<div class="stars">${"⭐".repeat(got)}${"☆".repeat(keys.length*3-got)}</div><b>${got} of ${keys.length*3} stars</b>${got<keys.length*3?"<span>Play again with fewer blocks to get them all!</span>":"<span>Every star! You're a maze master! 🏆</span>"}`;
+      const card=document.querySelector(".card");if(card)card.appendChild(box)}
+    setTimeout(bananaBurst,150);
+  }
 }
 
 /* ---------- Achievements ---------- */
@@ -48857,6 +49587,7 @@ function playground(lang="js"){
     ${P.run||P.web?"":`<div class="note">${P.name} needs its compiler, which ships inside the full TypeMonkey app. In this preview only JavaScript runs, so you can write ${P.name} here but not run it yet.</div>`}
     <div class="editor"><div class="head"><span>${P.file}</span><button class="linkbtn" id="clear" style="color:var(--code-dim)">Reset</button><button class="run" id="run-p" ${P.run||P.web?"":"disabled"}>${P.web?"▶ Show page":"▶ Run"}</button></div>
       <textarea id="code-p" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="Playground editor" rows="14">${esc(saved||P.start)}</textarea>
+      ${P.run&&P.run!=="sql"?inputBox("p",(S.playIn||{})[lang]||""):""}
       ${P.web?`<div class="webview" id="out-p"></div>`:`<div class="console" id="out-p"><span class="dim">${P.run?"Output appears here":"Running "+P.name+" is coming in the full app"}</span></div>`}</div>
     ${buddy(P.web?"Build any web page you like. The preview updates every time you tap Show page.":P.run==="sql"?"Ask the zoo database anything! Tap 📋 below to see its tables.":"Print anything you're curious about. That's how pros explore code too.","happy")}
     ${P.run==="sql"?`<details class="drawer"><summary>📋 Show the zoo tables</summary>${Object.keys(ZOO_TABLES).map(t=>tableHTML({tables:ZOO_TABLES},t)).join("")}</details>`:""}
@@ -48867,7 +49598,8 @@ function playground(lang="js"){
   ta.addEventListener("input",()=>{S.play=S.play||{};S.play[lang]=ta.value;save()});
   ta.addEventListener("keydown",e=>{if(e.key==="Tab"){e.preventDefault();const s=ta.selectionStart;ta.value=ta.value.slice(0,s)+"  "+ta.value.slice(ta.selectionEnd);ta.selectionStart=ta.selectionEnd=s+2}});
   $("#clear").onclick=()=>{ta.value=P.start;S.play=S.play||{};delete S.play[lang];save()};
-  if(P.run)$("#run-p").onclick=async()=>{ranLang(P.run);bump("playRuns");paintConsole($("#out-p"),await RUNNERS[P.run](ta.value),PRINT_HINT[P.run])};
+  if($("#in-p"))$("#in-p").addEventListener("input",()=>{S.playIn=S.playIn||{};S.playIn[lang]=$("#in-p").value;save()});
+  if(P.run)$("#run-p").onclick=async()=>{ranLang(P.run);bump("playRuns");paintConsole($("#out-p"),await RUNNERS[P.run](ta.value,$("#in-p")?$("#in-p").value:undefined),PRINT_HINT[P.run])};
   if(P.web){renderWeb($("#out-p"),ta.value);$("#run-p").onclick=()=>renderWeb($("#out-p"),ta.value)}
   foot();window.scrollTo(0,0);
 }

@@ -12,6 +12,9 @@ sys.path.insert(0, str(ROOT / "tests"))
 from verify_compiled import load_courses, sql_setup, run_sql  # noqa: E402
 
 EXTRA = [
+    "WITH old AS (SELECT * FROM animals WHERE age > 5) SELECT COUNT(*) FROM old;",
+    "WITH old AS (SELECT * FROM animals WHERE age > 5), named AS (SELECT name, age FROM old) SELECT name FROM named n WHERE n.age < 12 ORDER BY name;",
+    "WITH k AS (SELECT id, name FROM keepers) SELECT a.name, k.name FROM animals a JOIN k ON a.keeper_id = k.id ORDER BY a.name;",
     "SELECT 7 / 2, 7.0 / 2, 7 % 3, -7 / 2",
     "SELECT name FROM animals WHERE name LIKE '%o%' ORDER BY name",
     "SELECT species, AVG(age), MIN(name) FROM animals GROUP BY species ORDER BY 2 DESC, 1",

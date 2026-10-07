@@ -69,9 +69,9 @@ const TMC=(()=>{
       if(/[0-9]/.test(c)||(c==="."&&/[0-9]/.test(src[i+1]))){
         let j=i;while(/[0-9_]/.test(src[j]))j++;let isD=false;
         if(src[j]==="."&&/[0-9]/.test(src[j+1])){isD=true;j++;while(/[0-9]/.test(src[j]))j++}
-        if(/[eE]/.test(src[j])&&/[-+0-9]/.test(src[j+1])){isD=true;j++;if(/[-+]/.test(src[j]))j++;while(/[0-9]/.test(src[j]))j++}
+        if(/[eE]/.test(src[j]||"")&&/[-+0-9]/.test(src[j+1]||"")){isD=true;j++;if(/[-+]/.test(src[j]))j++;while(/[0-9]/.test(src[j]))j++}
         const s=src.slice(i,j).replace(/_/g,"");
-        let isL=false;if(/[fFdDmM]/.test(src[j])){isD=true;j++}else while(/[lLuU]/.test(src[j])){if(/[lL]/.test(src[j]))isL=true;j++}
+        let isL=false;if(/[fFdDmM]/.test(src[j]||"")){isD=true;j++}else while(/[lLuU]/.test(src[j]||"")){if(/[lL]/.test(src[j]))isL=true;j++}
         push("num",isD?new D(parseFloat(s)):isL&&lang==="java"?new Lg(parseInt(s,10)):parseInt(s,10));i=j;continue;
       }
       if(/[A-Za-z_]/.test(c)){
@@ -459,8 +459,15 @@ const TMC=(()=>{
   }
 
   /* ---------- runtime ---------- */
-  function run(code,lang){
+  function run(code,lang,input){
     let out="";let steps=0;
+    /* typed input from TypeMonkey's ⌨️ Input box: read by lines or by words, echoed like a terminal would show it */
+    const IN=input==null?"":String(input).replace(/\r/g,"");let inPos=0,echoed=0;const hasIn=input!=null&&IN.length>0;
+    const echoFrom=at=>{if(at>=echoed){const e=IN.indexOf("\n",at);const end=e<0?IN.length:e;W(IN.slice(at,end)+"\n");echoed=end+1}};
+    const readLineIn=()=>{if(inPos>=IN.length)return null;echoFrom(inPos);const e=IN.indexOf("\n",inPos);const end=e<0?IN.length:e;const line=IN.slice(inPos,end);inPos=end+1;return line};
+    const readTok=()=>{while(inPos<IN.length&&/\s/.test(IN[inPos]))inPos++;if(inPos>=IN.length)return null;echoFrom(inPos);let j=inPos;while(j<IN.length&&!/\s/.test(IN[j]))j++;const t=IN.slice(inPos,j);inPos=j;return t};
+    const peekTok=()=>{let k=inPos;while(k<IN.length&&/\s/.test(IN[k]))k++;if(k>=IN.length)return null;let j=k;while(j<IN.length&&!/\s/.test(IN[j]))j++;return IN.slice(k,j)};
+    const noInput=what=>`${what}: there's no more input. Type your answers in the ⌨️ Input box under the code, one per line.`;
     const tick=()=>{if(++steps>300000)fail("Your program ran too long, so I stopped it. Check for a loop that never ends.","Timeout")};
     const classNames=new Set([...code.matchAll(lang==="java"?/\b(?:class|interface|enum)\s+([A-Za-z_]\w*)/g:/\b(?:class|struct)\s+([A-Za-z_]\w*)/g)].map(m=>m[1]));
     const classes=Object.create(null);
@@ -755,7 +762,7 @@ const TMC=(()=>{
       return (typeof k)+":"+(k instanceof D?k.v:k instanceof Ch?k.c:k)}
     function dictMissing(k,line){fail(`line ${line}: The given key '${str(k)}' was not present in the dictionary. Check with ContainsKey first.`,"KeyNotFoundException")}
     function derefVal(v,line){if(v instanceof Ptr){if(!v.ref)fail(`line ${line}: crash! You used -> on a null pointer.`,"RuntimeError");return v.ref.get()}return v}
-    const truth=v=>{if(typeof v==="boolean")return v;if(lang==="java")fail(`incompatible types: ${jtype(v)} cannot be converted to boolean (a condition must be true or false)`,"CompileError");if(v===null)return false;if(v instanceof Ptr)return !!v.ref;if(lang==="cs")fail("a condition must be true or false (a bool) in C#","CompileError");return !!nv(v)};
+    const truth=v=>{if(typeof v==="boolean")return v;if(v&&v.cin)return !v.fail;if(lang==="java")fail(`incompatible types: ${jtype(v)} cannot be converted to boolean (a condition must be true or false)`,"CompileError");if(v===null)return false;if(v instanceof Ptr)return !!v.ref;if(lang==="cs")fail("a condition must be true or false (a bool) in C#","CompileError");return !!nv(v)};
 
     /* expressions */
     function jarith(op,a,b,line){
@@ -834,7 +841,15 @@ const TMC=(()=>{
           if(e.op==="??"){const l=ev(e.l,env);return l===null?ev(e.r,env):l}
           const l=ev(e.l,env);
           if(e.op==="<<"&&l===STREAM){const r=ev(e.r,env);if(r instanceof Func&&r.endl){W("\n")}else if(r&&r.manip){manip[r.manip]=true}else W(cppOut(r));return STREAM}
-          if(e.op===">>"&&l&&l.cin)fail(`line ${e.line}: std::cin (reading typed input) isn't available in TypeMonkey yet`,"NotSupported");
+          if(e.op===">>"&&l&&l.cin){
+            const lv=lval(e.r,env);if(!lv)fail(`line ${e.line}: cin >> needs a variable on the right`,"CompileError");
+            if(l.fail)return l;const cur0=lv.get();
+            if(cur0 instanceof Ch){while(inPos<IN.length&&/\s/.test(IN[inPos]))inPos++;if(inPos>=IN.length){l.fail=true;return l}echoFrom(inPos);lv.set(new Ch(IN.charCodeAt(inPos)));inPos++;return l}
+            const tok=readTok();if(tok===null){l.fail=true;return l}
+            if(typeof cur0==="string")lv.set(tok);
+            else if(cur0 instanceof D){const v=parseFloat(tok);if(isNaN(v)){l.fail=true;lv.set(new D(0))}else lv.set(new D(v))}
+            else{const m=tok.match(/^[-+]?\d+/);if(!m){l.fail=true;lv.set(0)}else lv.set(parseInt(m[0],10))}
+            return l}
           const r=ev(e.r,env);
           if(e.op==="=="||e.op==="!="){
             if(lang==="java"&&l!==null&&r!==null&&(isNum(l)!==isNum(r)||(typeof l==="boolean")!==(typeof r==="boolean")||(typeof l==="string")!==(typeof r==="string")))fail(`line ${e.line}: incomparable types: ${jtype(l)} and ${jtype(r)}`,"CompileError");
@@ -908,7 +923,7 @@ const TMC=(()=>{
         if(av.length&&!isNum(av[0])){const items=[...iterate(av[0],e.line)];d.cap0=tableSizeFor(Math.max(Math.floor(items.length/0.75)+1,16));for(const x of items)jput(d,x,true)}return d}
       if(t.name==="StringBuilder")return {sb:true,s:av.length&&!isNum(av[0])?str(av[0]):""};
       if(t.name==="Random")return {random:true};
-      if(t.name==="Scanner")fail(`line ${e.line}: Scanner (reading what someone types) isn't available in TypeMonkey yet. Set the value in your code instead, like: String input = "7";`,"NotSupported");
+      if(t.name==="Scanner")return {scanner:true};
       if(t.name==="string")return av.length?(av[0] instanceof Arr?av[0].items.map(str).join(""):str(av[0])):"";
       if(t.name==="object")return new Obj({name:"Object",methods:Object.create(null),fields:[]});
       if(JEXC(t.name)){const o=new Obj({name:t.name,methods:Object.create(null),fields:[],excChain:true});o.msg=av.length?(av[0]===null?null:str(av[0])):null;return o}
@@ -991,6 +1006,7 @@ const TMC=(()=>{
 
     /* calls */
     function call(e,env){
+      if(lang==="cpp"&&e.f.k==="name"&&e.f.v==="getline"&&e.args.length>=2){const c=ev(e.args[0],env);const lv=lval(e.args[1],env);if(c.fail)return c;const line=readLineIn();if(line===null){c.fail=true;return c}lv.set(line);return c}
       const f=e.f;
       // argument references (for C++ & params and std::swap)
       const argExprs=e.args;
@@ -1123,7 +1139,7 @@ const TMC=(()=>{
       Console:{ns:{
         WriteLine:B((...a)=>{W((a.length>1&&typeof a[0]==="string"?formatString(a[0],a.slice(1)):a.length?str(a[0]):"")+"\n");return null}),
         Write:B((...a)=>{W(a.length>1&&typeof a[0]==="string"?formatString(a[0],a.slice(1)):str(a[0]));return null}),
-        ReadLine:B(()=>fail("Console.ReadLine() can't read typing in TypeMonkey yet. Set the value in your code instead, like: string input = \"7\";","NotSupported")),
+        ReadLine:B(()=>readLineIn()),
         ReadKey:B(()=>null),Clear:B(()=>null)}},
       Math:{ns:{Max:B((x,y)=>compare(">",x,y)?x:y),Min:B((x,y)=>compare("<",x,y)?x:y),Abs:B(x=>x instanceof D?new D(Math.abs(x.v)):Math.abs(x)),
         Sqrt:B(x=>new D(Math.sqrt(nv(x)))),Pow:B((x,y)=>new D(nv(x)**nv(y))),Round:B((x,d)=>{const f=10**(d?nv(d):0);const v=nv(x)*f;const r=Math.abs(v%1)===0.5?2*Math.round(v/2):Math.round(v);return new D(r/f)}),
@@ -1136,7 +1152,8 @@ const TMC=(()=>{
       cout:STREAM,cerr:STREAM,endl:new Func({builtin:()=>null,endl:true}),
       boolalpha:{manip:"boolalpha"},fixed:{manip:"fixed"},
       setprecision:B(n=>{manip.prec=nv(n);return {manip:"prec_set"}}),
-      cin:{cin:true},
+      cin:{cin:true,fail:false},
+      getline:B(()=>fail("getline needs a variable: getline(std::cin, line)","CompileError")),
       to_string:B(v=>v instanceof D?v.v.toFixed(6):str(v)),
       stoi:B(s=>{const n=parseInt(str(s));if(isNaN(n))fail(`std::invalid_argument: stoi("${str(s)}")`,"RuntimeError");return n}),
       stod:B(s=>new D(parseFloat(str(s)))),
@@ -1305,6 +1322,19 @@ const TMC=(()=>{
         if(n==="andThen"||n==="compose"){const f=base,g=A0;return new Func({builtin:(...x)=>n==="andThen"?invoke(g,[invoke(f,x,line)],line):invoke(f,[invoke(g,x,line)],line)})}
         if(n==="negate")return new Func({builtin:(...x)=>!truth(invoke(base,x,line))});
         if(n==="reversed")return new Func({builtin:(x,y)=>-nv(invoke(base,[x,y],line))});}
+      if(base&&base.scanner){
+        const need=(v,what)=>{if(v===null)fail(hasIn?"":noInput(what),"NoSuchElementException");return v};
+        switch(n){
+          case "nextLine":return need(readLineIn(),"nextLine()");
+          case "next":return need(readTok(),"next()");
+          case "nextInt":case "nextLong":{const p=peekTok();if(p===null)need(null,n+"()");if(!/^[-+]?\d+$/.test(p))fail(`For input string: "${p}"`,"InputMismatchException");const v=parseInt(readTok(),10);return n==="nextLong"?new Lg(v):v}
+          case "nextDouble":{const p=peekTok();if(p===null)need(null,"nextDouble()");if(isNaN(parseFloat(p)))fail(`For input string: "${p}"`,"InputMismatchException");return new D(parseFloat(readTok()))}
+          case "nextBoolean":{const p=peekTok();if(p===null)need(null,"nextBoolean()");if(!/^(true|false)$/i.test(p))fail(`For input string: "${p}"`,"InputMismatchException");return readTok().toLowerCase()==="true"}
+          case "hasNext":return peekTok()!==null;case "hasNextLine":return inPos<IN.length;
+          case "hasNextInt":{const p=peekTok();return p!==null&&/^[-+]?\d+$/.test(p)}
+          case "close":return null;
+        }
+      }
       if(base&&base.random){
         if(n==="nextInt"){if(!a.length)return (Math.random()*4294967296|0);const lo=a.length>1?nv(A0):0,hi=a.length>1?nv(a[1]):nv(A0);if(hi<=lo)fail(`line ${line}: bound must be positive`,"IllegalArgumentException");return lo+Math.floor(Math.random()*(hi-lo))}
         if(n==="nextDouble")return new D(Math.random());if(n==="nextBoolean")return Math.random()<0.5;

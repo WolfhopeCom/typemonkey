@@ -4,22 +4,22 @@
 <style>
 /* Layout: phone-first single column app shell; sticky stat bar, screens swap in the middle, TypeMonkey talks from a speech bubble */
 :root{
-  --bg:#EEF4F1; --surface:#FFFFFF; --surface2:#E3ECE7; --fg:#15211C; --muted:#5B6D65;
-  --line:#CFDDD5; --accent:#FF7A1A; --accent-ink:#2A1300; --banana:#FFC83D; --leaf:#1F9D63;
-  --bad:#D9443A; --code-bg:#14201B; --code-fg:#E6F2EC; --code-dim:#7FA394;
+  --bg:#F2F5F1; --surface:#FFFEFB; --surface2:#E7EEE9; --fg:#1B2621; --muted:#5D6E66;
+  --line:#D7E2DB; --accent:#FA7A20; --accent-ink:#2A1300; --banana:#FFC845; --leaf:#22986A;
+  --bad:#D24A40; --code-bg:#17231E; --code-fg:#E3EEE8; --code-dim:#80A295; --console:#0F1814;
   --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
   --body:"Nunito",system-ui,-apple-system,sans-serif;
   --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
   --r:16px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0E1714; --surface:#16231E; --surface2:#1E2E28; --fg:#E9F3EE; --muted:#9AB2A7;
-  --line:#2A3D35; --accent:#FF8A33; --accent-ink:#2A1300; --banana:#FFD25C; --leaf:#3CC486;
-  --bad:#FF6B5E; --code-bg:#0A120F; --code-fg:#E6F2EC; --code-dim:#6E9283; color-scheme:dark}}
+  --bg:#111B17; --surface:#182520; --surface2:#20302A; --fg:#E3EDE8; --muted:#9BB1A7;
+  --line:#2B3C35; --accent:#FA8836; --accent-ink:#2A1300; --banana:#FCD064; --leaf:#41BE87;
+  --bad:#F26D62; --code-bg:#0D1511; --code-fg:#E0ECE6; --code-dim:#6F9283; --console:#0A110E; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0E1714; --surface:#16231E; --surface2:#1E2E28; --fg:#E9F3EE; --muted:#9AB2A7;
-  --line:#2A3D35; --accent:#FF8A33; --accent-ink:#2A1300; --banana:#FFD25C; --leaf:#3CC486;
-  --bad:#FF6B5E; --code-bg:#0A120F; --code-fg:#E6F2EC; --code-dim:#6E9283; color-scheme:dark}
+  --bg:#111B17; --surface:#182520; --surface2:#20302A; --fg:#E3EDE8; --muted:#9BB1A7;
+  --line:#2B3C35; --accent:#FA8836; --accent-ink:#2A1300; --banana:#FCD064; --leaf:#41BE87;
+  --bad:#F26D62; --code-bg:#0D1511; --code-fg:#E0ECE6; --code-dim:#6F9283; --console:#0A110E; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55;margin:0}
 .app{max-width:720px;margin:0 auto;padding:12px 16px 40px;display:flex;flex-direction:column;gap:18px}
@@ -44,7 +44,7 @@ button{font:inherit;cursor:pointer}
 .mwrap .pet{position:absolute;right:-14px;bottom:-4px;width:46%;height:46%;filter:drop-shadow(0 2px 2px #0003)}
 .buddy.bounce .pet{animation:bob .6s ease .15s}
 @keyframes bob{40%{transform:translateY(-10px) rotate(-4deg)}}
-.bubble{background:var(--surface);border:2px solid var(--fg);border-radius:18px 18px 18px 4px;padding:12px 14px;font-weight:700;min-width:0;flex:1}
+.bubble{background:var(--surface);border:2px solid color-mix(in srgb,var(--fg) 72%,var(--surface));border-radius:18px 18px 18px 4px;padding:12px 14px;font-weight:700;min-width:0;flex:1}
 
 .hero h1{font-size:clamp(2rem,7vw,2.8rem)}
 .hero p{margin:6px 0 0;color:var(--muted);max-width:60ch}
@@ -117,9 +117,18 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 .editor pre{margin:0;padding:12px 14px;color:var(--code-fg);font-family:var(--mono);font-size:.92rem;line-height:1.6;overflow-x:auto}
 .run{background:var(--leaf);color:#fff;border:0;border-radius:8px;padding:5px 12px;font-weight:800;font-family:var(--body)}
 .run[disabled]{opacity:.4;cursor:not-allowed}
-.console{background:#000;color:#B8F5D3;font-family:var(--mono);font-size:.88rem;padding:10px 14px;min-height:44px;white-space:pre-wrap;word-break:break-word;border-top:1px solid #ffffff14}
+.console{background:var(--console);color:#B8F5D3;font-family:var(--mono);font-size:.88rem;padding:10px 14px;min-height:44px;white-space:pre-wrap;word-break:break-word;border-top:1px solid #ffffff14}
 .console .err{color:#FF9C92}
 #fcode{white-space:pre-wrap;word-break:break-word}
+.stdin{background:#0B1310;border-top:1px solid #ffffff14;color:var(--code-dim);font-size:.82rem}
+.stdin summary{cursor:pointer;padding:6px 14px;list-style:none;font-weight:700;color:#BFE3D2}
+.stdin summary::-webkit-details-marker{display:none}
+.stdin summary span{font-weight:400;color:var(--code-dim)}
+.editor .stdin textarea{min-height:0;height:auto;line-height:1.5;white-space:pre-wrap;color:#FFE9A8;background:#0F1A16}
+.stdin textarea{display:block;width:100%;border:0;background:#0F1A16;color:#FFE9A8;font-family:var(--mono);font-size:.85rem;padding:8px 14px;resize:vertical;outline-offset:-3px}
+.burst{position:fixed;left:50%;top:55%;pointer-events:none;z-index:60}
+.burst span{position:absolute;font-size:1.6rem;animation:burst 1.3s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes burst{0%{transform:translate(0,0) rotate(0) scale(.4);opacity:1}70%{opacity:1}100%{transform:translate(var(--x),calc(var(--y) + 260px)) rotate(var(--r)) scale(1);opacity:0}}
 .peek{margin-top:12px;background:var(--surface2);border:1px dashed var(--line);border-radius:12px;padding:10px 14px}
 .peek ul{margin:6px 0 0;padding-left:20px}.peek li.ok{color:var(--leaf)}
 .peek pre{margin:6px 0 0;font-family:var(--mono);font-size:.85rem;white-space:pre-wrap;overflow-x:auto}
@@ -213,8 +222,11 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 /* Jr. mazes */
 .maze{position:relative;display:grid;grid-template-columns:repeat(var(--w),1fr);width:min(100%,calc(var(--w) * 64px));aspect-ratio:var(--w) / var(--h);max-width:100%;align-self:center;border-radius:14px;overflow:hidden;background:#7FC77A}
 .mc{display:grid;place-items:center;font-size:clamp(1.1rem,5vw,1.9rem)}
-.mc.path{background:#F3DFA8;box-shadow:inset 0 0 0 1px #E5CC88}
-.mc.tree{background:#5FAE5A}
+.mc.path{background:var(--path,#F3DFA8);box-shadow:inset 0 0 0 1px var(--pathline,#E5CC88)}
+.mc.tree{background:var(--tree,#5FAE5A)}
+.stars{font-size:1.6rem;letter-spacing:2px;margin-bottom:2px;animation:pop .5s ease}
+.jrfinish{display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:6px}.jrfinish span{color:var(--muted);font-size:.9rem}.jrfinish .stars{font-size:1.4rem;word-break:break-all;text-align:center}
+.jrstars{display:inline-flex;align-items:center;gap:6px;background:var(--banana);color:#2A1300;font-weight:800;border-radius:999px;padding:4px 12px;font-size:.95rem}
 .mk{position:absolute;width:calc(100% / var(--w));height:calc(100% / var(--h));display:grid;place-items:center;transition:left .32s ease,top .32s ease,transform .25s ease;pointer-events:none}
 .mface{width:82%;height:82%;display:grid;place-items:center}.mface svg{width:100%;height:100%;filter:drop-shadow(0 2px 2px #0004)}
 .arr{position:absolute;right:-2px;bottom:-2px;width:46%;height:46%;display:grid;place-items:center;background:#14201B;color:#FFD25C;border-radius:50%;font-size:clamp(.7rem,3vw,1rem);font-weight:900;transition:transform .25s ease}
@@ -250,6 +262,7 @@ span.repn{display:inline-block}
 .mini-monkey .tm{width:72px;height:82px}
 .shopitem{position:relative}
 .shopitem.away{opacity:.55}
+.shopitem:has(.season){padding-top:26px}
 .season{position:absolute;top:6px;left:6px;font-size:.68rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
 .legal h3{font-size:1.1rem;margin-top:6px}
 .legal p{color:var(--fg);line-height:1.6}
@@ -501,9 +514,15 @@ function makeConsole(out){
   return {log:lg,info:lg,warn:lg,error:(...a)=>out.push(["err",a.map(fmt).join(" ")])};
 }
 let evalBlocked=false;
-function runCode(code){
+function inputFeeder(input){
+  const lines=input==null||input===""?[]:String(input).replace(/\r/g,"").split("\n");if(lines.length&&lines[lines.length-1]==="")lines.pop();let i=0;
+  return ()=>i<lines.length?lines[i++]:null;
+}
+function runCode(code,input){
   const out=[];const con=makeConsole(out);
-  const body="let __tmN=0;const __tmG=()=>{if(++__tmN>100000)throw new Error('Your loop ran 100,000 times, so I stopped it. Check that it can end.');return true};\n"+guardLoops(code);
+  const nextIn=inputFeeder(input);
+  window.__tmPrompt=(msg="")=>{const v=nextIn();con.log(String(msg)+(v===null?"":" "+v));return v};
+  const body="const prompt=window.__tmPrompt;let __tmN=0;const __tmG=()=>{if(++__tmN>100000)throw new Error('Your loop ran 100,000 times, so I stopped it. Check that it can end.');return true};\n"+guardLoops(code);
   if(!evalBlocked){
     let fn=null;
     try{fn=new Function("console",body)}catch(err){
@@ -544,10 +563,29 @@ def round(x, n=None):
         return float(__tm_round(x / q) * q)
     return __tm_round(x, n)
 def input(prompt=""):
-    raise RuntimeError("input() can't read typing in TypeMonkey yet. Set the value in your code instead, like: name = 'Sam'")
+    __tm_v = __tm_in.pop(0) if __tm_in else None
+    if __tm_v is None:
+        raise EOFError("there's no more input. Type your answers in the ⌨️ Input box under the code, one per line.")
+    print(str(prompt) + __tm_v)
+    return __tm_v
 `;
+function splitOneLineLoop(line){
+  // "while x: body" -> header and body, so the loop guard can go inside
+  const m=line.match(/^(\s*)(while|for)\b/);if(!m)return null;
+  let depth=0,q=null;
+  for(let i=m[0].length;i<line.length;i++){const c=line[i];
+    if(q){if(c==="\\")i++;else if(c===q)q=null;continue}
+    if(c==='"'||c==="'"){q=c;continue}
+    if("([{".includes(c))depth++;else if(")]}".includes(c))depth--;
+    else if(c===":"&&depth===0){const rest=line.slice(i+1).trim();if(!rest||rest.startsWith("#"))return null;return [m[1],line.slice(0,i+1),rest]}
+    else if(c==="#")return null;
+  }
+  return null;
+}
 function guardPy(code){
-  const lines=code.split("\n");const out=[];
+  const lines0=code.split("\n");const lines=[];
+  for(const l of lines0){const sp=splitOneLineLoop(l);if(sp){lines.push(sp[1]);lines.push(sp[0]+"    "+sp[2])}else lines.push(l)}
+  const out=[];
   for(let i=0;i<lines.length;i++){
     out.push(lines[i]);
     if(/^\s*(while|for)\b.*:\s*(#.*)?$/.test(lines[i])){
@@ -557,20 +595,23 @@ function guardPy(code){
   }
   return out.join("\n");
 }
-function runPython(code){
+function runPython(code,input){
   const B=globalThis.__BRYTHON__;
+  const inLines=input==null||input===""?[]:String(input).replace(/\r/g,"").split("\n");if(inLines.length&&inLines[inLines.length-1]==="")inLines.pop();
   if(!B||!B.runPythonSource)return Promise.resolve([["err","The Python engine didn't load. Try reopening the app."]]);
-  if(!pyReady){try{brython({debug:0,ids:[]})}catch(e){}pyReady=true}
+  if(!pyReady){try{if(typeof PYLIB!=="undefined"&&B.loadBrythonPackage)B.loadBrythonPackage(Object.fromEntries(Object.entries(PYLIB).map(([k,v])=>[k,[".py",v,[]]])))}catch(e){}
+    try{brython({debug:0,ids:[],cache:false})}catch(e){}pyReady=true}
   let buf="";const ol=console.log,oe=console.error,ow=console.warn;
   console.log=(...a)=>{if(a.length===1&&typeof a[0]==="string")buf+=a[0]};console.error=()=>{};console.warn=()=>{};
   let err=null;
-  try{B.runPythonSource(PY_PRELUDE+guardPy(code),{})}
+  try{B.runPythonSource("__tm_in = "+JSON.stringify(inLines)+"\n"+PY_PRELUDE+guardPy(code),{})}
   catch(e){
     let name="Error",msg="";
     try{name=B.class_name?B.class_name(e):(e.__class__&&e.__class__.__name__)||"Error"}catch(_){}
     try{msg=B.builtins.str.$factory(e)}catch(_){msg=e&&e.args?String(e.args[0]):String(e)}
     if(name==="SyntaxError"||name==="IndentationError")msg=msg.replace(/\s*\(.*line \d+\)$/,"");
     err=`${name}: ${msg}`.replace(/: $/,"");
+    if(name==="ModuleNotFoundError"){const mod=(msg.match(/'([^']+)'/)||[])[1]||"that module";err=`ModuleNotFoundError: TypeMonkey's Python doesn't have '${mod}' yet. It has math, random, string, time, collections, itertools, functools, json and dataclasses.`}
     if(name==="RecursionError"||/Maximum call stack/.test(msg))err="RecursionError: a function kept calling itself. Check your stopping case.";
   }finally{console.log=ol;console.error=oe;console.warn=ow}
   const lines=buf.split("\n");if(lines[lines.length-1]==="")lines.pop();
@@ -580,12 +621,12 @@ function runPython(code){
 /* ---------- run any language ---------- */
 function linesOf(r){const lines=r.out.split("\n");if(lines[lines.length-1]==="")lines.pop();const o=lines.map(l=>["log",l]);if(r.error)o.push(["err",r.error]);return o}
 const RUNNERS={
-  js:c=>runCode(c),
-  py:c=>runPython(c),
-  cs:c=>Promise.resolve(linesOf(TMC.run(c,"cs"))),
-  cpp:c=>Promise.resolve(linesOf(TMC.run(c,"cpp"))),
-  java:c=>Promise.resolve(linesOf(TMC.run(c,"java"))),
-  swift:c=>Promise.resolve(linesOf(TMSwift.run(c))),
+  js:(c,inp)=>runCode(c,inp),
+  py:(c,inp)=>runPython(c,inp),
+  cs:(c,inp)=>Promise.resolve(linesOf(TMC.run(c,"cs",inp))),
+  cpp:(c,inp)=>Promise.resolve(linesOf(TMC.run(c,"cpp",inp))),
+  java:(c,inp)=>Promise.resolve(linesOf(TMC.run(c,"java",inp))),
+  swift:(c,inp)=>Promise.resolve(linesOf(TMSwift.run(c,inp))),
   sql:c=>{const r=TMSQL.run(c,ZOO_TABLES);if(!r.ok)return Promise.resolve([["err",r.error]]);const o=TMSQL.text(r).split("\n").map(l=>["log",l]);o.table=r;return Promise.resolve(o)}
 };
 const kindOf=c=>c.runnable===true?"js":c.runnable;
@@ -723,7 +764,7 @@ function home(){
     <section class="hero"><h1>Learn to code, one banana at a time.</h1><p>Bite-size lessons, real code you run yourself, quizzes and mini-games. Built for all ages and experience levels.</p></section>
     ${buddy(greet,resume?"cheer":"happy")}
     ${nu?`<div class="row"><button class="btn" id="cont">${resume?"Pick up where you left off":S.done.length?"Continue learning":"Start lesson 1"}</button></div>`:nextPro?`<div class="row"><button class="btn banana" id="unl">See the full course</button></div>`:""}
-    <button class="daily ${dailyDoneToday()?"done":""}" id="daily"><span class="dicon">📅</span><span class="dtext"><b>${dailyDoneToday()?"Daily challenge done!":"Daily challenge"}</b><span>${dailyDoneToday()?`Come back tomorrow for a new one · 🔥 ${(S.daily||{}).streak||1}-day daily streak`:`3 quick questions · bonus bananas${(S.daily||{}).streak?` · keep your ${(S.daily||{}).streak}-day streak going`:""}`}</span></span><span class="pill ${dailyDoneToday()?"ok":"kid"}">${dailyDoneToday()?"✓":"+10 🍌"}</span></button>
+    <button class="daily ${dailyDoneToday()?"done":""}" id="daily"><span class="dicon">🎯</span><span class="dtext"><b>${dailyDoneToday()?"Daily challenge done!":"Daily challenge"}</b><span>${dailyDoneToday()?`Come back tomorrow for a new one · 🔥 ${(S.daily||{}).streak||1}-day daily streak`:`3 quick questions · bonus bananas${(S.daily||{}).streak?` · keep your ${(S.daily||{}).streak}-day streak going`:""}`}</span></span><span class="pill ${dailyDoneToday()?"ok":"kid"}">${dailyDoneToday()?"✓":"+10 🍌"}</span></button>
     <div class="tools">
       <button class="tool" id="review"><b>🧠 Review${dueCount()?` <span class="due">${dueCount()}</span>`:""}</b><span>${dueCount()?"Questions you missed are ready to try again":reviewSize()?"All caught up! Missed questions come back here":"Questions you miss come back here later"}</span></button>
       <button class="tool" id="play"><b>›_ Playground</b><span>Write any code you want and run it</span></button>
@@ -765,9 +806,9 @@ function coursePage(cid){
   const c=courseById(cid);setMode(c.kids);const L=flat(c);const [d,n]=countLessons(c);
   $("#screen").innerHTML=`<div class="stack">
     <div class="row"><button class="btn ghost sm" id="back">← Courses</button></div>
-    <section class="hero"><div class="label">Course</div><h1>${c.name}</h1><p>${c.blurb||""}</p></section>
+    <section class="hero"><div class="label">Course</div><h1>${c.name}</h1><p>${c.blurb||""}</p>${c.kids?(()=>{const [g,t]=jrStars(c);return `<span class="jrstars">⭐ ${g} of ${t} stars</span>`})():""}</section>
     <div class="row"><div class="progress"><span style="width:${n?d/n*100:0}%"></span></div><b style="font-variant-numeric:tabular-nums">${d}/${n}</b></div>
-    ${c.units.map((u,ui)=>`<div class="unit"><div class="unit-head"><h3>Unit ${ui+1} · ${u.name}</h3><span class="label">${u.free?"Free":S.pro?"Unlocked":"Pro"}</span></div><div class="lessons">${
+    ${c.units.map((u,ui)=>`<div class="unit"><div class="unit-head"><h3>${c.kids?WORLDS[ui%WORLDS.length].emoji+" ":""}Unit ${ui+1} · ${u.name}</h3><span class="label">${u.free?"Free":S.pro?"Unlocked":"Pro"}</span></div><div class="lessons">${
       L.filter(x=>x.ui===ui).map(x=>{const st=status(c,x);const res=S.progress[x.l.id]&&st!=="pro"&&st!=="soon";
         const cls=st==="done"&&!res?"done":(st==="open"||res||st==="done")?"open":"";
         return `<button class="lesson ${cls} ${x.l.project?"proj":""}" data-l="${x.l.id}" ${st==="open"||st==="done"||res?"":"disabled"}>
@@ -808,9 +849,12 @@ function shell(inner){
   $("#foot").innerHTML="";window.scrollTo(0,0);
 }
 function next(){cur.step++;renderStep()}
-function editorBlock(id,code,runnable,file){
+const inputBox=(id,val)=>`<details class="stdin" ${val?"open":""}><summary>⌨️ Input <span>(answers for input(), ReadLine, Scanner…)</span></summary><textarea id="in-${id}" rows="2" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="Type what the user would type, one answer per line" aria-label="Program input">${esc(val||"")}</textarea></details>`;
+function editorBlock(id,code,runnable,file,input){
+  const wantsIn=runnable&&runnable!=="web"&&runnable!=="sql"&&(input||/\b(input|ReadLine|Scanner|readLine|prompt|cin)\b/.test(code));
   return `<div class="editor"><div class="head"><span>${file}</span>${runnable?`<button class="run" id="run-${id}">${runnable==="web"?"▶ Show page":"▶ Run"}</button>`:""}</div>
     ${runnable?`<textarea id="code-${id}" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="Code editor" rows="${Math.min(14,Math.max(5,code.split("\n").length+1))}">${esc(code)}</textarea>
+    ${wantsIn?inputBox(id,input):""}
     ${runnable==="web"?`<div class="webview" id="out-${id}" aria-label="Page preview"></div>`:(cur&&cur.c&&cur.c.id==="game"?`<div class="console arcade" id="out-${id}"><div class="arcade-top"><span>🎮 GAME SCREEN</span></div><span class="dim">Press ▶ Run to play</span></div>`:`<div class="console" id="out-${id}"><span class="dim">Console output appears here</span></div>`)}`:`<pre>${esc(code)}</pre>`}</div>`;
 }
 function wireEditor(id,after,kind){
@@ -819,7 +863,7 @@ function wireEditor(id,after,kind){
   const out=$("#out-"+id),web=out.classList.contains("webview");
   if(web)renderWeb(out,ta.value);
   $("#run-"+id).onclick=async()=>{if(web){renderWeb(out,ta.value);after&&after(ta.value);return}
-    const k=kind||(cur?kindOf(cur.c):"js");ranLang(k);const res=await RUNNERS[k](ta.value);paintConsole(out,res,PRINT_HINT[k]);after&&after(ta.value,res)};
+    const k=kind||(cur?kindOf(cur.c):"js");ranLang(k);const inEl=$("#in-"+id);const res=await RUNNERS[k](ta.value,inEl?inEl.value:undefined);paintConsole(out,res,PRINT_HINT[k]);after&&after(ta.value,res)};
 }
 const award=(xp,ban=0)=>{cur.earned.xp+=xp;cur.earned.ban+=ban};
 
@@ -829,10 +873,17 @@ function renderStep(){
   if(s.type!=="done"&&!cur.review&&!cur.daily)saveSpot();
   const T={talk,code:codeStep,quiz,fill,order,maze,game:gameIntro,done:finish}[s.type];T(s,R);
 }
+/* For TypeMonkey Jr.: read the card out loud for kids who are still learning to read */
+const canSpeak=typeof window!=="undefined"&&"speechSynthesis" in window&&typeof SpeechSynthesisUtterance!=="undefined";
+function readAloudBtn(){return cur&&cur.c&&cur.c.kids&&canSpeak?`<button class="btn ghost sm readaloud" id="say" type="button">🔊 Read to me</button>`:""}
+function wireReadAloud(){const b=$("#say");if(!b)return;b.onclick=()=>{try{speechSynthesis.cancel();const card=document.querySelector(".card");const t=[...card.querySelectorAll("h2,p")].map(x=>x.textContent).join(". ");const bub=document.querySelector("#bud .bubble,.bubble");const u=new SpeechSynthesisUtterance(t+(bub?". "+bub.textContent:""));u.rate=.92;u.pitch=1.15;speechSynthesis.speak(u)}catch(e){toast("Reading out loud isn't available on this device")}}}
+function bananaBurst(){if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;const box=document.createElement("div");box.className="burst";box.setAttribute("aria-hidden","true");
+  for(let i=0;i<18;i++){const sp=document.createElement("span");sp.textContent=i%3?"🍌":"⭐";sp.style.setProperty("--x",(Math.random()*2-1)*160+"px");sp.style.setProperty("--y",-(80+Math.random()*180)+"px");sp.style.setProperty("--r",(Math.random()*720-360)+"deg");sp.style.animationDelay=(Math.random()*.15)+"s";box.appendChild(sp)}
+  document.body.appendChild(box);setTimeout(()=>box.remove(),1600)}
 function talk(s,R){
-  shell(`<div class="card"><h2>${s.title}</h2>${s.body}${(s.show||[]).map(t=>tableHTML(cur.c,t)).join("")}${s.demo?editorBlock("d",s.demo,R,cur.c.lang):""}</div>
-    ${buddy(s.say||"",s.mood||"happy")}<div class="row"><button class="btn" id="go">Continue</button></div>`);
-  if(s.demo&&R)wireEditor("d");$("#go").onclick=next;
+  shell(`<div class="card"><h2>${s.title}</h2>${s.body}${(s.show||[]).map(t=>tableHTML(cur.c,t)).join("")}${s.demo?editorBlock("d",s.demo,R,cur.c.lang,s.input):""}</div>
+    ${buddy(s.say||"",s.mood||"happy")}<div class="row"><button class="btn" id="go">Continue</button>${readAloudBtn()}</div>`);
+  if(s.demo&&R)wireEditor("d");$("#go").onclick=next;wireReadAloud();
 }
 /* ---------- TypeMonkey's help: a plan, then the answer one line at a time ---------- */
 function newLines(s){const have=new Set((s.start||"").split("\n").map(l=>l.trim()).filter(Boolean));return (s.hint||"").split("\n").filter(l=>l.trim()&&!have.has(l.trim()))}
@@ -1024,20 +1075,35 @@ function simulate(grid,dir,prog,fn){
   const r=runList(prog,false);
   return {path,result:r||(won?"win":"short")};
 }
+/* TypeMonkey Jr.: every unit is a new world, and mazes give up to 3 stars */
+const WORLDS=[
+  {name:"Jungle",emoji:"🌴",wall:"🌴",path:"#F3DFA8",line:"#E5CC88",tree:"#5FAE5A"},
+  {name:"Beach",emoji:"🏝️",wall:"🌊",path:"#FFE9B8",line:"#F2D592",tree:"#4FB6E8"},
+  {name:"Snowy peaks",emoji:"❄️",wall:"☃️",path:"#EEF6FF",line:"#D3E3F5",tree:"#9CC3E6"},
+  {name:"Desert",emoji:"🏜️",wall:"🌵",path:"#F7D9A6",line:"#E9C17F",tree:"#D99A55"},
+  {name:"Outer space",emoji:"🚀",wall:"🪐",path:"#3B3970",line:"#4D4A8C",tree:"#1D1B45"},
+  {name:"Candy land",emoji:"🍭",wall:"🍭",path:"#FFE0F0",line:"#F7C3DE",tree:"#F48FC0"}];
+const worldFor=()=>WORLDS[((cur&&cur.item&&cur.item.ui)||0)%WORLDS.length];
+const KID_WINS=["Ooh ooh! Banana time!","You're a coding superstar!","Monkey dance time! 💃","Wow, that program was perfect!","High five! ✋","Yum yum, thank you!","You did it! I'm so proud!"];
+function mazeBest(s){return s.func?blockCount(s.solution.main)+s.solution.fn.length:blockCount(s.solution)}
+function starsFor(s,used,peeked){if(peeked)return 1;const best=mazeBest(s);return used<=best?3:used<=best+2?2:1}
+const starStr=n=>"⭐".repeat(n)+"☆".repeat(3-n);
+function jrStars(c){let got=0,total=0;for(const x of flat(c))(x.l.steps||[]).forEach((st,i)=>{if(st.type==="maze"){total+=3;got+=((S.stars||{})[x.l.id+"#"+i]||0)}});return [got,total]}
 function maze(s){
   const m=mazeInfo(s.grid);let prog=JSON.parse(JSON.stringify(s.start||[]));let open=null,running=false,fails=0,won=false;
   let fn=JSON.parse(JSON.stringify(s.startFn||[])),lane="main";const FN_OK=["fwd","left","right","ifR","ifL"];
   const total=()=>blockCount(prog)+(s.func?fn.length:0);
-  const cell=ch=>ch==="#"?"🌴":ch==="B"?"🍌":"";const nB=m.goals.length;
-  shell(`<div class="card"><div class="label">Monkey maze${nB>1?` · collect all ${nB} bananas`:""}${s.max?` · use ${s.max} blocks or fewer`:""} · +15 XP</div><h2>${s.title}</h2>${s.body||""}
-    <div class="maze" style="--w:${m.w};--h:${m.h}" id="mz">${s.grid.map((row,y)=>[...row].map((ch,x)=>`<div class="mc ${ch==="#"?"tree":"path"}" data-xy="${x},${y}">${cell(ch)}</div>`).join("")).join("")}<div class="mk" id="mk"><div class="mface" id="mface">${monkey("happy")}</div><span class="arr" id="arr">➜</span></div></div>
+  const Wd=worldFor();let peeked=false;
+  const cell=ch=>ch==="#"?Wd.wall:ch==="B"?"🍌":"";const nB=m.goals.length;
+  shell(`<div class="card"><div class="label">${Wd.emoji} ${Wd.name} maze${nB>1?` · collect all ${nB} bananas`:""}${s.max?` · use ${s.max} blocks or fewer`:""} · +15 XP</div><h2>${s.title}</h2>${s.body||""}
+    <div class="maze" style="--w:${m.w};--h:${m.h};--path:${Wd.path};--pathline:${Wd.line};--tree:${Wd.tree}" id="mz">${s.grid.map((row,y)=>[...row].map((ch,x)=>`<div class="mc ${ch==="#"?"tree":"path"}" data-xy="${x},${y}">${cell(ch)}</div>`).join("")).join("")}<div class="mk" id="mk"><div class="mface" id="mface">${monkey("happy")}</div><span class="arr" id="arr">➜</span></div></div>
     ${s.func?`<div class="lanes" role="tablist"><button class="lane" data-lane="main" aria-pressed="true">Main program</button><button class="lane" data-lane="fn" aria-pressed="false">⭐ My move</button></div>
     <div class="label">⭐ My move <span style="text-transform:none;letter-spacing:0;font-weight:600">(build it once, use it with the ⭐ block)</span></div><div class="prog fprog" id="fprog"></div>`:""}
     <div class="label">${s.func?"Main program":"Your program"}</div><div class="prog" id="prog"></div>
     <div class="palette">${s.blocks.map(b=>`<button class="blk b-${b}" data-b="${b}"><span>${BLOCKS[b].icon}</span>${BLOCKS[b].label}</button>`).join("")}</div>
     <div id="fb"></div></div>
     <div id="bud">${buddy(s.say||"Tap the blocks to build a program, then press Go!","think")}</div>
-    <div class="row"><button class="btn banana" id="run">▶ Go!</button><button class="btn ghost" id="undo">Undo</button><button class="btn ghost" id="clr">Clear</button><button class="btn ghost" id="hint" hidden>Show me</button><button class="btn" id="go" hidden>Continue</button></div>`);
+    <div class="row"><button class="btn banana" id="run">▶ Go!</button><button class="btn ghost" id="undo">Undo</button><button class="btn ghost" id="clr">Clear</button><button class="btn ghost" id="hint" hidden>Show me</button><button class="btn ghost" id="again" hidden>🔁 Go for ⭐⭐⭐</button>${readAloudBtn()}<button class="btn" id="go" hidden>Continue</button></div>`);
   const place=(x,y,d,bump)=>{const k=$("#mk");k.style.left=`calc(${x} * 100% / ${m.w})`;k.style.top=`calc(${y} * 100% / ${m.h})`;k.style.transform=bump?"translateX(4px)":"none";$("#arr").style.transform=`rotate(${ROT[d]}deg)`};
   const reset=()=>{place(m.start[0],m.start[1],s.dir);m.goals.forEach(([gx,gy])=>{const c=document.querySelector(`.mc[data-xy="${gx},${gy}"]`);if(c)c.textContent="🍌"})};
   const draw=()=>{
@@ -1064,7 +1130,7 @@ function maze(s){
   $$(".lane").forEach(b=>b.onclick=()=>{lane=b.dataset.lane;open=null;draw()});
   $("#undo").onclick=()=>{if(running||won)return;if(s.func&&lane==="fn"){fn.pop();return draw()}if(open!==null&&prog[open].body.length)prog[open].body.pop();else{prog.pop();open=null}draw()};
   $("#clr").onclick=()=>{if(running||won)return;prog=[];fn=[];open=null;draw();reset()};
-  $("#hint").onclick=()=>{if(s.func){prog=JSON.parse(JSON.stringify(s.solution.main));fn=JSON.parse(JSON.stringify(s.solution.fn))}else prog=JSON.parse(JSON.stringify(s.solution));open=null;draw();reset();$("#bud").innerHTML=buddy("Here's one way. Press Go to watch it work!","happy")};
+  $("#hint").onclick=()=>{peeked=true;if(s.func){prog=JSON.parse(JSON.stringify(s.solution.main));fn=JSON.parse(JSON.stringify(s.solution.fn))}else prog=JSON.parse(JSON.stringify(s.solution));open=null;draw();reset();$("#bud").innerHTML=buddy("Here's one way. Press Go to watch it work!","happy")};
   $("#run").onclick=()=>{
     if(running||won||!prog.length)return;running=true;open=null;draw();reset();
     const {path,result}=simulate(s.grid,s.dir,prog,fn);let k=1;
@@ -1072,8 +1138,12 @@ function maze(s){
       if(k<path.length){const [x,y,d,bump,ate]=path[k];place(x,y,d,bump);if(ate){const c=document.querySelector(`.mc[data-xy="${ate}"]`);if(c)setTimeout(()=>{c.textContent="✨"},250)}k++;return setTimeout(tick,path.length>40?220:380)}
       running=false;
       const tooMany=s.max&&total()>s.max;
-      if(result==="win"&&!tooMany){won=true;award(15,3);bump("mazes");if(s.start)bump("bugsFixed");$("#mface").innerHTML=monkey("cheer");$("#fb").innerHTML=`<div class="feedback good">🍌 ${nB>1?"All bananas collected!":"Banana reached!"} ${esc(s.win||pick(WINS))}</div>`;
-        $("#bud").innerHTML=buddy("YES! Your program worked!","cheer");["run","undo","clr","hint"].forEach(i=>$("#"+i).hidden=true);$("#go").hidden=false;return}
+      if(result==="win"&&!tooMany){const first=!won;won=true;if(first){award(15,3);bump("mazes");if(s.start)bump("bugsFixed")}$("#mface").innerHTML=monkey("cheer");
+        const st=starsFor(s,total(),peeked);const key=cur.l.id+"#"+cur.step;
+        if(!cur.review&&!cur.daily){S.stars=S.stars||{};if(st>(S.stars[key]||0)){S.stars[key]=st;save()}}
+        const best=mazeBest(s);
+        $("#fb").innerHTML=`<div class="feedback good"><div class="stars" aria-label="${st} of 3 stars">${starStr(st)}</div>🍌 ${nB>1?"All bananas collected!":"Banana reached!"} ${esc(s.win||pick(WINS))}${st<3&&!peeked?`<br><small>Can you do it with ${best} block${best===1?"":"s"}? That's 3 stars!</small>`:""}</div>`;
+        $("#bud").innerHTML=buddy(st===3?pick(KID_WINS):"YES! Your program worked!","cheer");if(cur.c.kids)bananaBurst();["run","undo","clr","hint"].forEach(i=>$("#"+i).hidden=true);$("#go").hidden=false;$("#again").hidden=st===3||peeked;return}
       fails++;$("#mface").innerHTML=monkey("oops");setTimeout(()=>{const f=$("#mface");if(f)f.innerHTML=monkey("happy")},900);
       const msg=result==="win"?`You got there, but used ${total()} blocks. Can you do it with ${s.max} or fewer? Try a Repeat block!`:result==="wall"?"Bonk! TypeMonkey bumped into a tree. Find the step that went wrong and fix it.":result==="loop"?"TypeMonkey kept going around and around! Your repeat never got him to every banana.":result==="extra"?"Too many steps! TypeMonkey got the banana, then kept going. A program has to stop at exactly the right spot. Remove the extra blocks.":"So close! TypeMonkey stopped before reaching the banana. Add more steps.";
       $("#fb").innerHTML=`<div class="feedback bad">${msg}</div>`;
@@ -1082,7 +1152,8 @@ function maze(s){
     };
     setTimeout(tick,200);
   };
-  draw();reset();$("#go").onclick=next;
+  $("#again").onclick=()=>{won=false;["run","undo","clr"].forEach(i=>$("#"+i).hidden=false);$("#again").hidden=true;$("#fb").innerHTML="";reset();$("#bud").innerHTML=buddy("Try a shorter program! Repeat blocks can save lots of steps.","think")};
+  draw();reset();$("#go").onclick=next;wireReadAloud();
 }
 
 /* ---------- Mini-game: Output Rush ---------- */
@@ -1107,7 +1178,7 @@ function rush(poolIn,secs,onEnd,onQuit){
     const [code,opts,file="script.js",hint]=pool[i];const ord=shuffle(opts.map((o,k)=>k));
     $("#screen").innerHTML=`<div class="stack"><div class="game-hud"><button class="x" id="quitg" aria-label="Quit game">×</button><span>⏱ <span id="tleft">${left}</span>s</span><div class="timer"><span id="tbar" style="width:${left/secs*100}%"></span></div><span>🍌 ${score*2}</span></div>
       <div class="card"><div class="label">What prints? · ${i+1} of ${pool.length}</div><div class="editor"><div class="head"><span>${file}</span></div><pre>${esc(code)}</pre></div>
-      <p style="color:var(--muted);font-size:.85rem">${hint||"Several lines of output are shown with spaces between them."}</p>
+      ${hint||((code.match(/console\.log|print\(|println|WriteLine|cout|printf|Console\.Write/g)||[]).length>1||/\b(for|while|foreach|repeat)\b/.test(code))?`<p style="color:var(--muted);font-size:.85rem">${hint||"If it prints more than one line, the lines are shown with spaces between them."}</p>`:""}
       <div class="opts">${ord.map(k=>`<button class="opt mono" data-k="${k}">${esc(opts[k])}</button>`).join("")}</div></div></div>`;
     $("#quitg").onclick=()=>{clearInterval(timer);ended=true;onQuit()};
     $$(".opt").forEach(b=>b.onclick=()=>{
@@ -1151,6 +1222,13 @@ function finish(){
     <div class="row">${nx&&(nst==="open"||nst==="done")?`<button class="btn" id="nxt">Next lesson</button>`:""}${nx&&nst==="pro"?`<button class="btn banana" id="nxt">Unlock the next unit</button>`:""}<button class="btn ghost" id="back">Back to course</button></div>`);
   $("#back").onclick=()=>coursePage(cur.c.id);
   if($("#nxt"))$("#nxt").onclick=()=>nst==="pro"?coursePage(cur.c.id):startLesson(nx.l.id);
+  if(cur.c.kids){
+    const keys=cur.l.steps.map((st,i)=>st.type==="maze"?cur.l.id+"#"+i:null).filter(Boolean);
+    if(keys.length){const got=keys.reduce((n,k)=>n+((S.stars||{})[k]||0),0);const box=document.createElement("div");box.className="jrfinish";
+      box.innerHTML=`<div class="stars">${"⭐".repeat(got)}${"☆".repeat(keys.length*3-got)}</div><b>${got} of ${keys.length*3} stars</b>${got<keys.length*3?"<span>Play again with fewer blocks to get them all!</span>":"<span>Every star! You're a maze master! 🏆</span>"}`;
+      const card=document.querySelector(".card");if(card)card.appendChild(box)}
+    setTimeout(bananaBurst,150);
+  }
 }
 
 /* ---------- Achievements ---------- */
@@ -1435,6 +1513,7 @@ function playground(lang="js"){
     ${P.run||P.web?"":`<div class="note">${P.name} needs its compiler, which ships inside the full TypeMonkey app. In this preview only JavaScript runs, so you can write ${P.name} here but not run it yet.</div>`}
     <div class="editor"><div class="head"><span>${P.file}</span><button class="linkbtn" id="clear" style="color:var(--code-dim)">Reset</button><button class="run" id="run-p" ${P.run||P.web?"":"disabled"}>${P.web?"▶ Show page":"▶ Run"}</button></div>
       <textarea id="code-p" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="Playground editor" rows="14">${esc(saved||P.start)}</textarea>
+      ${P.run&&P.run!=="sql"?inputBox("p",(S.playIn||{})[lang]||""):""}
       ${P.web?`<div class="webview" id="out-p"></div>`:`<div class="console" id="out-p"><span class="dim">${P.run?"Output appears here":"Running "+P.name+" is coming in the full app"}</span></div>`}</div>
     ${buddy(P.web?"Build any web page you like. The preview updates every time you tap Show page.":P.run==="sql"?"Ask the zoo database anything! Tap 📋 below to see its tables.":"Print anything you're curious about. That's how pros explore code too.","happy")}
     ${P.run==="sql"?`<details class="drawer"><summary>📋 Show the zoo tables</summary>${Object.keys(ZOO_TABLES).map(t=>tableHTML({tables:ZOO_TABLES},t)).join("")}</details>`:""}
@@ -1445,7 +1524,8 @@ function playground(lang="js"){
   ta.addEventListener("input",()=>{S.play=S.play||{};S.play[lang]=ta.value;save()});
   ta.addEventListener("keydown",e=>{if(e.key==="Tab"){e.preventDefault();const s=ta.selectionStart;ta.value=ta.value.slice(0,s)+"  "+ta.value.slice(ta.selectionEnd);ta.selectionStart=ta.selectionEnd=s+2}});
   $("#clear").onclick=()=>{ta.value=P.start;S.play=S.play||{};delete S.play[lang];save()};
-  if(P.run)$("#run-p").onclick=async()=>{ranLang(P.run);bump("playRuns");paintConsole($("#out-p"),await RUNNERS[P.run](ta.value),PRINT_HINT[P.run])};
+  if($("#in-p"))$("#in-p").addEventListener("input",()=>{S.playIn=S.playIn||{};S.playIn[lang]=$("#in-p").value;save()});
+  if(P.run)$("#run-p").onclick=async()=>{ranLang(P.run);bump("playRuns");paintConsole($("#out-p"),await RUNNERS[P.run](ta.value,$("#in-p")?$("#in-p").value:undefined),PRINT_HINT[P.run])};
   if(P.web){renderWeb($("#out-p"),ta.value);$("#run-p").onclick=()=>renderWeb($("#out-p"),ta.value)}
   foot();window.scrollTo(0,0);
 }

@@ -31,6 +31,11 @@ const PY_UNIT4={name:"Functions",lessons:[
   say:"Output: Earth Luna, then Earth. Printing moon outside would be a NameError."},
  {type:"quiz",q:"What does this print?",code:`def power(base, exp=2):\n    return base ** exp\n\nprint(power(3))`,opts:["9","3","27"],a:0,mono:true,why:"exp defaults to 2, so 3 ** 2 = 9."},
  {type:"fill",title:"Add a default",body:`<p>Make times default to 1.</p>`,code:`def cheer(times[0]1):\n    print("Ook! " * times)\n\ncheer()`,blanks:["="],tokens:["=","==",":","->"],why:"times=1 sets the default value.",out:"Ook!"},
+ {type:"talk",title:"Borrowing code with import",mood:"cheer",
+  body:`<p>Python comes with ready-made <b>modules</b> full of functions. ${C("import math")} gives you ${C("math.sqrt")}, ${C("math.pi")} and friends. ${C("import random")} picks random numbers: perfect for games!</p>`,
+  demo:`import math\nimport random\n\nprint(math.sqrt(81))\nprint(round(math.pi, 2))\nroll = random.randint(1, 6)\nprint(1 <= roll <= 6)\npets = ["owl", "cat", "dog"]\nprint(random.choice(pets) in pets)`,
+  say:"9.0, 3.14, then True twice. Try print(roll) and run it a few times: it changes!"},
+ {type:"quiz",q:"What does this print?",code:`import math\nprint(math.floor(4.7))`,opts:["4","5","4.7"],a:0,mono:true,why:"floor rounds down to the whole number below."},
  {type:"quiz",q:"What does this print?",code:`x = 1\n\ndef f():\n    x = 5\n\nf()\nprint(x)`,opts:["1","5","None"],a:0,mono:true,why:"The x inside f is a brand-new local variable. The outside x is untouched."},
  {type:"game"},{type:"done"}],
  pool:[

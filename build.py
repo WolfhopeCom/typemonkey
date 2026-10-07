@@ -28,7 +28,7 @@ COURSE_FILES = [  # order matters: later files can reference earlier ones
     "more-web-sql-cs-cpp.js",  # HTML & CSS, SQL, C#, C++ Unit 5
 ]
 
-ENGINE_FILES = ["sql.js", "clike.js", "swift.js"]  # in-house SQL engine and C#/C++ runner; Python is Brython (src/vendor)
+ENGINE_FILES = ["sql.js", "clike.js", "swift.js", "pylib.js"]  # in-house SQL engine and C#/C++ runner; Python is Brython (src/vendor)
 
 HEAD = """<!doctype html>
 <html lang="en">

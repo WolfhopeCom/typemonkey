@@ -18,6 +18,7 @@ VERBOSE = "-v" in sys.argv
 INTENTIONAL_CRASH = {"sw9", "sw13"}  # demos that show "Index out of range" / a nil unwrap on purpose
 
 EXTRA = [
+    ('var d: [String: [Int]] = [:]\nd["a", default: []].append(1)\nd["a", default: []].append(2)\nprint(d)\nprint(type(of: 5), type(of: "x"))\nvar c: [String: Int] = [:]\nprint(c["z", default: 0], c.count)', '["a": [1, 2]]\nInt String\n0 0'),
     ('print("Hello, world!")\nlet name = "Mo"\nvar age = 4\nage += 1\nprint("\\(name) is \\(age)")\nprint(7 / 2, 7 % 2, 7.0 / 2)\nprint(3.14159)\nprint(10.0 / 4)', "Hello, world!\nMo is 5\n3 1 3.5\n3.14159\n2.5"),
     ('print(0.1 + 0.2)\nprint(10.0 / 3)\nprint(1.0)\nprint(100.0 * 3)\nprint(-7 / 2, -7 % 2)\nprint(Double(7) / 2)', "0.30000000000000004\n3.3333333333333335\n1.0\n300.0\n-3 -1\n3.5"),
     ('var nums = [3, 1, 2]\nnums.append(5)\nprint(nums)\nprint(nums.count, nums.sorted(), nums.first!)\nprint(nums.map { $0 * 2 })\nprint(nums.filter { $0 > 2 }.reduce(0, +))', "[3, 1, 2, 5]\n4 [1, 2, 3, 5] 3\n[6, 2, 4, 10]\n8"),

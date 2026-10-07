@@ -65,8 +65,8 @@ const CS_UNIT2={name:"Loops & methods",lessons:[
   lines:["int guess = 0;","while (guess != secret) {","  guess = int.Parse(Console.ReadLine());","  if (guess < secret) Console.WriteLine(\"Higher!\");","  else if (guess > secret) Console.WriteLine(\"Lower!\");","}","Console.WriteLine(\"You got it!\");"],why:"Keep asking until the guess matches, giving a clue each time."},
  {type:"quiz",q:"The secret is 7. The player types 4, then 9, then 7. What prints?",opts:["Higher! Lower! You got it!","Lower! Higher! You got it!","You got it!"],a:0,why:"4 is too low (Higher!), 9 is too high (Lower!), then 7 wins."},
  {type:"talk",title:"The finished game",mood:"cheer",
-  body:`<p>Here's the whole thing, with a guess counter added. In the full app you can run it in the Playground and play it.</p>`,
-  demo:`Random rng = new Random();\nint secret = rng.Next(1, 11);\nint guess = 0;\nint tries = 0;\n\nConsole.WriteLine("I'm thinking of 1 to 10...");\nwhile (guess != secret) {\n  guess = int.Parse(Console.ReadLine());\n  tries++;\n  if (guess < secret) Console.WriteLine("Higher!");\n  else if (guess > secret) Console.WriteLine("Lower!");\n}\nConsole.WriteLine($"You got it in {tries} tries!");`,
+  body:`<p>Here's the whole thing, with a guess counter added. Press ▶ Run: the numbers in the ⌨️ Input box (5, 9, 7) are what the player types. Change them and play again!</p>`,
+  input:"5\n9\n7",demo:`Random rng = new Random();\nint secret = 7;   // a real game would use rng.Next(1, 11)\nint guess = 0;\nint tries = 0;\n\nConsole.WriteLine("I'm thinking of 1 to 10...");\nwhile (guess != secret) {\n  guess = int.Parse(Console.ReadLine());\n  tries++;\n  if (guess < secret) Console.WriteLine("Higher!");\n  else if (guess > secret) Console.WriteLine("Lower!");\n}\nConsole.WriteLine($"You got it in {tries} tries!");`,
   say:"You just built a real console game. Nice work!"},
  {type:"done"}]}
 ]};
