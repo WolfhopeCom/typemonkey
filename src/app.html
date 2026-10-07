@@ -197,6 +197,10 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 .blk.b-fwd{background:var(--accent);box-shadow:0 4px 0 color-mix(in srgb,var(--accent) 60%,#000)}
 .blk.b-rep{background:var(--leaf);color:#fff;box-shadow:0 4px 0 color-mix(in srgb,var(--leaf) 60%,#000)}
 .blk:active{transform:translateY(3px)}
+.legal h3{font-size:1.1rem;margin-top:6px}
+.legal p{color:var(--fg);line-height:1.6}
+.gate{position:fixed;inset:0;z-index:20;background:color-mix(in srgb,#000 55%,transparent);display:grid;place-items:center;padding:16px}
+.gate .card{max-width:420px;width:100%}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 
@@ -360,6 +364,9 @@ const WEB_BASE='<style>:host{all:initial;display:block;background:#fff;color:#11
 function renderWeb(host,code){
   const root=host.shadowRoot||host.attachShadow({mode:"open"});
   root.innerHTML=WEB_BASE+code.replace(/<script[\s\S]*?<\/script>/gi,"");
+  if(!root.__guard){root.__guard=true;
+    root.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest("a[href]");if(a){e.preventDefault();toast("Links don't open in the preview, but in a real website this would go to "+a.getAttribute("href"))}});
+    root.addEventListener("submit",e=>{e.preventDefault();toast("Form submitted! (In a real site, this would send the data.)")});}
   return root;
 }
 let webScratch=null;
@@ -451,7 +458,9 @@ function home(){
 }
 function foot(){
   $("#foot").innerHTML=`<span>Prototype · progress saves on this device only</span>
+   <div class="row"><button class="linkbtn" id="terms">Terms of Service</button><button class="linkbtn" id="privacy">Privacy Policy</button></div>
    <div class="row"><button class="linkbtn" id="tester">${S.tester?"Tester mode: ON (all lessons open)":"Tester mode: off"}</button><button class="linkbtn" id="reset">Reset progress</button></div><div id="confirm"></div>`;
+  $("#terms").onclick=()=>legalPage("terms");$("#privacy").onclick=()=>legalPage("privacy");
   $("#tester").onclick=()=>{S.tester=!S.tester;save();toast(S.tester?"Tester mode on: every lesson is open.":"Tester mode off.");rerender()};
   $("#reset").onclick=()=>{$("#confirm").innerHTML=`<div class="row"><span>Erase all XP, bananas and lessons?</span><button class="btn sm" id="yes">Erase</button><button class="btn ghost sm" id="no">Keep</button></div>`;
     $("#yes").onclick=()=>{S={xp:0,bananas:0,streak:0,lastDay:null,done:[],progress:{},pro:false,tester:false};save();toast("Progress erased.");home()};
@@ -478,7 +487,7 @@ function coursePage(cid){
     ${S.pro?"":`<div class="paywall"><div><h3>Unlock all of TypeMonkey</h3><p>Every unit in every language, plus future courses and bonus games. One-time purchase.</p></div><button class="btn banana" id="buy">Unlock · $4.99</button></div>`}
   </div>`;
   $("#back").onclick=home;
-  if($("#buy"))$("#buy").onclick=()=>{S.pro=true;save();toast("Demo unlock: everything is open. In the real app this is the App Store / Google Play purchase.");coursePage(cid)};
+  if($("#buy"))$("#buy").onclick=()=>grownUpGate(()=>{S.pro=true;save();toast("Demo unlock: everything is open. In the real app this is the App Store / Google Play purchase.");coursePage(cid)});
   $$(".lesson:not([disabled])").forEach(b=>b.onclick=()=>startLesson(b.dataset.l));
   $$("[data-restart]").forEach(b=>b.onclick=()=>{delete S.progress[b.dataset.restart];save();startLesson(b.dataset.restart)});
   foot();window.scrollTo(0,0);
@@ -738,6 +747,27 @@ function finish(){
     <div class="row">${nx&&(nst==="open"||nst==="done")?`<button class="btn" id="nxt">Next lesson</button>`:""}${nx&&nst==="pro"?`<button class="btn banana" id="nxt">Unlock the next unit</button>`:""}<button class="btn ghost" id="back">Back to course</button></div>`);
   $("#back").onclick=()=>coursePage(cur.c.id);
   if($("#nxt"))$("#nxt").onclick=()=>nst==="pro"?coursePage(cur.c.id):startLesson(nx.l.id);
+}
+
+/* ---------- Legal screens ---------- */
+function legalPage(kind){
+  const back=rerender;const L=LEGAL[kind];
+  $("#screen").innerHTML=`<div class="stack"><div class="row"><button class="btn ghost sm" id="back">← Back</button></div>
+    <section class="hero"><div class="label">TypeMonkey</div><h1>${L.title}</h1><p>Last updated ${LEGAL_INFO.updated}</p></section>
+    <div class="card legal">${L.sections.map(([h,b])=>`<h3>${h}</h3>${b}`).join("")}</div></div>`;
+  $("#back").onclick=()=>back();$("#foot").innerHTML="";window.scrollTo(0,0);
+}
+/* ---------- Grown-up check (required by app stores for purchases in apps for kids) ---------- */
+function grownUpGate(onPass){
+  const a=6+Math.floor(Math.random()*4),b=6+Math.floor(Math.random()*4),ans=a*b;
+  const opts=shuffle([ans,ans+a,ans-b]);
+  const g=document.createElement("div");g.className="gate";g.setAttribute("role","dialog");g.setAttribute("aria-label","Grown-up check");
+  g.innerHTML=`<div class="card"><div class="label">Grown-ups only</div><h2>Ask a parent or guardian</h2><p>To continue, answer: what is <b>${a} × ${b}</b>?</p>
+    <div class="opts">${opts.map(o=>`<button class="opt" data-v="${o}">${o}</button>`).join("")}</div><button class="btn ghost sm" id="gx">Cancel</button></div>`;
+  document.body.appendChild(g);
+  const close=()=>g.remove();
+  g.querySelector("#gx").onclick=close;
+  g.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{close();if(+b.dataset.v===ans)onPass();else toast("That's not quite right. Ask a grown-up for help!")});
 }
 
 /* ---------- Playground ---------- */

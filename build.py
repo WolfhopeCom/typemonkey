@@ -36,7 +36,7 @@ HEAD = """<!doctype html>
 
 def build(artifact: bool) -> pathlib.Path:
     app = (ROOT / "src" / "app.html").read_text()
-    data = "\n".join((ROOT / "src" / "courses" / f).read_text() for f in COURSE_FILES)
+    data = "\n".join((ROOT / "src" / "courses" / f).read_text() for f in COURSE_FILES) + "\n" + (ROOT / "src" / "legal.js").read_text()
     assert "/*COURSE_DATA*/" in app, "placeholder missing from src/app.html"
     page = app.replace("/*COURSE_DATA*/", data)
     if artifact:
