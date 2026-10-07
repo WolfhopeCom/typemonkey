@@ -91,6 +91,7 @@ const TMSwift=(()=>{
     return parts;
   }
 
+  const OPFNS=["+","-","*","/","%","<",">","<=",">=","==","!=","&&","||"];
   /* ---------- parser ---------- */
   function parse(tokens){
     let p=0;
@@ -101,7 +102,7 @@ const TMSwift=(()=>{
     const expect=v=>{if(!is(v))fail(`line ${peek().line}: expected "${v}" near ${near()}`);p++};
     const ident=()=>{const t=peek();if(t.k!=="id"&&!(t.k==="kw"&&["get","set","some","any","didSet","willSet"].includes(t.v)))fail(`line ${t.line}: expected a name near ${near()}`);p++;return t.v};
     const skipSemis=()=>{while(accept(";"));};
-    let noTrailing=0;
+    let noTrailing=0;const aliases=Object.create(null);
 
     function program(){const body=[];while(peek().k!=="eof"){skipSemis();if(peek().k==="eof")break;body.push(statement())}return body}
     function block(){expect("{");const body=[];noTrailing++;const save=noTrailing;noTrailing=0;while(!is("}")){skipSemis();if(is("}"))break;if(peek().k==="eof")fail("a { block is missing its closing }");body.push(statement())}noTrailing=save-1;expect("}");return body}
@@ -133,7 +134,7 @@ const TMSwift=(()=>{
         case "throw":{p++;const e=expr();endStmt();return {k:"throw",e,line}}
         case "do":{p++;const body=block();const catches=[];while(accept("catch")){let pat=null,where=null;if(!is("{")){noTrailing++;pat=catchPattern();if(accept("where"))where=expr();noTrailing--}catches.push({pat,where,body:block()})}return {k:"do",body,catches,line}}
         case "defer":{p++;return {k:"defer",body:block()}}
-        case "typealias":fail(`line ${line}: typealias isn't supported in TypeMonkey's runner yet`,"NotSupported");
+        case "typealias":{p++;const n=ident();skipGenerics();expect("=");aliases[n]=parseType();endStmt();return {k:"empty"}}
       }
       const e=expr();
       const op=peek();
@@ -141,8 +142,8 @@ const TMSwift=(()=>{
       endStmt();return {k:"expr",e,line};
     }
     function catchPattern(){
-      if(is("let")){p++;return {k:"bind",name:ident()}}
-      const e=postfixOnly();if(is("as")){p++;parseType();}return {k:"expr",e};
+      if(is("let")||is("var")){p++;const name=ident();let type=null;if(accept("as"))type=parseType();return {k:"bind",name,type}}
+      return casePattern();
     }
     function postfixOnly(){return postfix(primary())}
     function varDecl(mods){
@@ -151,7 +152,7 @@ const TMSwift=(()=>{
       do{
         const pat=pattern(true);let type=null,init=null,getter=null,observers=null;
         if(accept(":"))type=parseType();
-        if(accept("="))init=expr();
+        if(accept("=")){init=expr();if(is("{")&&(is("didSet",1)||is("willSet",1)))observers=observerBlock()}
         else if(is("{")&&!isLet){ // computed property or observers
           const save=p;p++;
           if(is("get")||is("set")){p=save;getter=accessorBlock()}
@@ -175,14 +176,17 @@ const TMSwift=(()=>{
       const line=peek().line;let name;
       if(accept("init")){name="init";if(accept("?"))fail(`line ${line}: failable initializers (init?) aren't supported in TypeMonkey's runner yet`,"NotSupported")}
       else{p++;name=peek().k==="op"?peek().v:ident();if(peek(-1).k==="op")p++;}
-      if(is("<"))fail(`line ${line}: generic functions (<T>) aren't supported in TypeMonkey's runner yet`,"NotSupported");
+      skipGenerics();
       const params=paramList();
       let throws=false;if(accept("throws")||accept("rethrows"))throws=true;
       let ret=null;if(accept("->"))ret=parseType();
-      if(is("where"))fail(`line ${line}: where clauses on functions aren't supported yet`,"NotSupported");
+      skipWhere();
       let body=null;if(is("{"))body=block();
       return {k:"func",name,params,ret,body,throws,mods,line};
     }
+    // generics are checked by the Swift compiler, not by TypeMonkey: <T: Comparable> and where clauses are skipped
+    function skipGenerics(){if(!is("<"))return;let d=0;do{if(is("<"))d++;else if(is(">"))d--;else if(is(">>"))d-=2;else if(peek().k==="eof")fail("a < is missing its closing >");p++}while(d>0)}
+    function skipWhere(){if(!accept("where"))return;while(!is("{")&&peek().k!=="eof")p++}
     function paramList(){
       expect("(");const ps=[];
       if(!is(")"))do{
@@ -204,6 +208,7 @@ const TMSwift=(()=>{
         let name=ident();while(is(".")&&peek(1).k==="id"){p++;name+="."+ident()}
         const args=[];if(is("<")&&!peek().space){p++;do args.push(parseType());while(accept(","));if(is(">>")){tokens[p]={...tokens[p],v:">"};tokens.splice(p,0,{...tokens[p]})}expect(">")}
         t={k:"name",name,args};
+        if(aliases[name])t=aliases[name];
         if(name==="Array"&&args.length)t={k:"arr",el:args[0]};
         if(name==="Dictionary"&&args.length===2)t={k:"dict",key:args[0],val:args[1]};
         if(name==="Optional"&&args.length)t={k:"opt",of:args[0]};
@@ -213,9 +218,9 @@ const TMSwift=(()=>{
     }
     function typeDecl(){
       const kind=peek().v;const line=peek().line;p++;const name=ident();
-      if(is("<"))fail(`line ${line}: generic types (<T>) aren't supported in TypeMonkey's runner yet`,"NotSupported");
-      const inherits=[];if(accept(":"))do{let n=ident();while(accept("."))n+="."+ident();inherits.push(n)}while(accept(","));
-      if(is("where"))fail(`line ${line}: where clauses aren't supported yet`,"NotSupported");
+      skipGenerics();
+      const inherits=[];if(accept(":"))do{let n=ident();while(accept("."))n+="."+ident();skipGenerics();inherits.push(n)}while(accept(","));
+      skipWhere();
       expect("{");
       const d={k:"type",kind,name,inherits,members:[],cases:[],line};
       while(!is("}")){
@@ -272,6 +277,7 @@ const TMSwift=(()=>{
         try{if(!is(")"))do items.push(casePattern());while(accept(","));expect(")")}catch(e){ok=false}
         if(ok&&items.length>1&&(is(":")||is(",")||is("where")))return {k:"tuple",items};
         p=save}
+      if(peek().k==="id"&&/^[A-Z]/.test(peek().v)&&is(".",1)&&peek(2).k==="id"&&is("(",3)){const tyName=peek().v;p++;const cp=casePattern();cp.tyName=tyName;return cp}
       if(is(".")&&peek(1).k==="id"){p++;const name=ident();
         if(is("(")){p++;const items=[];if(!is(")"))do{if(peek().k==="id"&&is(":",1))p+=2;items.push(casePattern())}while(accept(","));expect(")");return {k:"enum",name,items}}
         return {k:"enum",name,items:null}}
@@ -328,7 +334,7 @@ const TMSwift=(()=>{
           if(peek().k==="num"){const n=peek().v;p++;if(n instanceof D){const [a,b]=String(n.v).split(".");e={k:"member",e:{k:"member",e,name:a,line:t.line},name:b,line:t.line}}else e={k:"member",e,name:String(n),line:t.line};continue}
           const name=peek().v;p++;e={k:"member",e,name,line:t.line};continue}
         if(t.k==="op"&&t.v==="!"&&!t.space){p++;e={k:"force",e,line:t.line};continue}
-        if(t.k==="op"&&t.v==="?"&&!t.space&&(is(".",1)||is("[",1))){p++;e={k:"optchain",e,line:t.line};continue}
+        if(t.k==="op"&&t.v==="?"&&!t.space&&(is(".",1)||is("[",1)||is("(",1)&&!peek(1).space||peek(1).k==="op"&&["=","+=","-=","*=","/=","%="].includes(peek(1).v))){p++;e={k:"optchain",e,line:t.line};continue}
         if(t.k==="op"&&t.v==="{"&&!noTrailing&&!t.nl&&(e.k==="name"||e.k==="member")){e={k:"call",f:e,args:[{label:null,e:closure()}],line:t.line};continue}
         return e;
       }
@@ -338,7 +344,7 @@ const TMSwift=(()=>{
       if(!is(close))do{
         let label=null;if((peek().k==="id"||peek().k==="kw")&&is(":",1)&&!is("::",1)){label=peek().v;p+=2}
         const t=peek();
-        if(t.k==="op"&&["+","-","*","/","<",">","<=",">=","==","!=","&&","||"].includes(t.v)&&(is(",",1)||is(close,1))){p++;a.push({label,e:{k:"opfn",op:t.v}});continue}
+        if(t.k==="op"&&OPFNS.includes(t.v)&&(is(",",1)||is(close,1))){p++;a.push({label,e:{k:"opfn",op:t.v}});continue}
         a.push({label,e:expr()});
       }while(accept(","));
       noTrailing=save-1;expect(close);return a;
@@ -355,10 +361,12 @@ const TMSwift=(()=>{
         if(accept("->"))parseType();
         if(accept("in"))params=ps;else p=save;
       }catch(e){p=save}
-      const body=[];const sv=noTrailing;noTrailing=0;
+      const body=[];const sv=noTrailing;noTrailing=0;const from=p;
       while(!is("}")){skipSemis();if(is("}"))break;if(peek().k==="eof")fail(`line ${line}: a closure { is missing its closing }`);body.push(statement())}
+      // the highest $n the closure uses, so { "\($0):\($1)" } can take a tuple apart
+      let dollars=0;for(let q=from;q<p;q++){const tk=tokens[q];if(tk.k==="id"&&/^\$\d+$/.test(tk.v))dollars=Math.max(dollars,+tk.v.slice(1)+1);if(tk.k==="str")for(const x of tk.v)if(typeof x!=="string")for(const m of x.src.matchAll(/\$(\d+)/g))dollars=Math.max(dollars,+m[1]+1)}
       noTrailing=sv;expect("}");
-      return {k:"closure",params,body,line};
+      return {k:"closure",params,body,line,dollars};
     }
     function primary(){
       const t=peek();
@@ -371,6 +379,7 @@ const TMSwift=(()=>{
         if(t.v==="super"){p++;return {k:"super",line:t.line}}
         if(t.v==="init"){p++;return {k:"name",v:"init",line:t.line}}
       }
+      if(t.k==="op"&&t.v==="("&&peek(1).k==="op"&&OPFNS.includes(peek(1).v)&&is(")",2)){p+=3;return {k:"opfn",op:peek(-2).v}}
       if(t.k==="op"&&t.v==="("){p++;
         if(accept(")"))return {k:"tuple",items:[],labels:[]};
         const items=[],labels=[];
@@ -399,7 +408,7 @@ const TMSwift=(()=>{
       if(t.k==="op"&&t.v==="{")return closure();
       if(t.k==="op"&&t.v==="."&&peek(1).k==="id"){p++;return {k:"implicit",name:ident(),line:t.line}}
       if(t.k==="id"){p++;
-        if(is("<")&&!peek().space&&/^[A-Z]/.test(t.v)){const save=p;try{p++;const args=[];do args.push(parseType());while(accept(","));expect(">");if(is("(")){if(t.v==="Array"&&is(")",1)){p+=2;return {k:"emptyof",type:{k:"arr",el:args[0]}}}if(t.v==="Dictionary"&&is(")",1)){p+=2;return {k:"emptyof",type:{k:"dict",key:args[0],val:args[1]}}}if(t.v==="Set"&&is(")",1)){p+=2;return {k:"emptyof",type:{k:"set",el:args[0]}}}}}catch(e){}p=save}
+        if(is("<")&&!peek().space&&/^[A-Z]/.test(t.v)){const save=p;try{p++;const args=[];do args.push(parseType());while(accept(","));expect(">");if(is("(")){if(t.v==="Array"&&is(")",1)){p+=2;return {k:"emptyof",type:{k:"arr",el:args[0]}}}if(t.v==="Dictionary"&&is(")",1)){p+=2;return {k:"emptyof",type:{k:"dict",key:args[0],val:args[1]}}}if(t.v==="Set"&&is(")",1)){p+=2;return {k:"emptyof",type:{k:"set",el:args[0]}}}return {k:"name",v:t.v,line:t.line}}if(is(".")&&!["Array","Dictionary","Set"].includes(t.v))return {k:"name",v:t.v,line:t.line}}catch(e){}p=save}
         return {k:"name",v:t.v,line:t.line};
       }
       if(t.k==="op"&&t.v==="#")fail(`line ${t.line}: # directives aren't supported in TypeMonkey's runner yet`,"NotSupported");
@@ -419,7 +428,7 @@ const TMSwift=(()=>{
     const protoDefaults=Object.create(null);
     const globals=new Env(null);
 
-    function Env(parent){this.vars=new Map();this.parent=parent;this.self=parent?parent.self:null;this.selfType=parent?parent.selfType:null;this.mutSelf=parent?parent.mutSelf:false;this.inInit=parent?parent.inInit:false}
+    function Env(parent){this.vars=new Map();this.parent=parent;this.self=parent?parent.self:null;this.selfType=parent?parent.selfType:null;this.mutSelf=parent?parent.mutSelf:false;this.inInit=parent?parent.inInit:false;this.selfRef=parent?parent.selfRef:null}
     Env.prototype.find=function(n){let e=this;while(e){if(e.vars.has(n))return e.vars.get(n);e=e.parent}return null};
     Env.prototype.def=function(n,cell,line){if(this.vars.has(n)&&!(this.vars.get(n).fn))fail(`line ${line}: invalid redeclaration of '${n}'`);this.vars.set(n,cell)};
     const cell=(v,type,isLet)=>({v,type,isLet,set:false});
@@ -654,29 +663,42 @@ const TMSwift=(()=>{
       }
       if(i<args.length)fail(`line ${line}: extra argument${args[i].label?` '${args[i].label}'`:""} in call`);
     }
-    function callFn(f,args,line,self,selfType,mutSelf){
+    function callFn(f,args,line,self,selfType){
       tick();
       if(f.builtin)return f.builtin(args.map(a=>a.v),args,line);
-      if(f.closure){
-        const e=new Env(f.env);
-        if(f.params){if(f.params.length!==args.length&&!(f.params.length===1&&args.length>1))fail(`line ${line}: this closure takes ${f.params.length} argument(s) but got ${args.length}`);
-          if(f.params.length===1&&args.length>1)e.vars.set(f.params[0],cell(new Tup(args.map(a=>a.v)),null,true));
-          else f.params.forEach((n,i)=>{if(n!=="_")e.vars.set(n,cell(args[i].v,null,true))})}
-        else args.forEach((a,i)=>e.vars.set("$"+i,cell(a.v,null,true)));
-        depth++;if(depth>3000){depth=0;fatal("stack overflow (a function keeps calling itself). Check your stopping case.")}
-        try{return runBody(f.body,e,true)}finally{depth--}
+      if(f.closure)return callClosure(f,args,line);
+      return callDecl(f,args,line,self,selfType);
+    }
+    const MAXDEPTH=20000;
+    function tooDeep(){depth=0;fatal("stack overflow (a function keeps calling itself). Check your stopping case.")}
+    function callClosure(f,args,line){
+      const e=new Env(f.env);
+      if(f.params){
+        // { (a, b) in ... } called with one tuple (like a dictionary entry) takes the tuple apart
+        if(f.params.length>1&&args.length===1&&args[0].v instanceof Tup&&args[0].v.items.length===f.params.length)args=args[0].v.items.map(v=>({v}));
+        if(f.params.length!==args.length&&!(f.params.length===1&&args.length>1))fail(`line ${line}: this closure takes ${f.params.length} argument(s) but got ${args.length}`);
+        if(f.params.length===1&&args.length>1)e.vars.set(f.params[0],cell(new Tup(args.map(a=>a.v)),null,true));
+        else f.params.forEach((n,i)=>{if(n!=="_")e.vars.set(n,cell(args[i].v,null,true))})}
+      else{
+        if(f.dollars>1&&args.length===1&&args[0].v instanceof Tup)args=args[0].v.items.map(v=>({v}));
+        for(let i=0;i<args.length;i++)e.vars.set("$"+i,cell(args[i].v,null,true));
       }
+      if(++depth>MAXDEPTH)tooDeep();
+      try{return runBody(f.body,e,true)}finally{depth--}
+    }
+    function callDecl(f,args,line,self,selfType){
       const fn=f.decl;const sf=f.self!==undefined?f.self:self;
       const e=new Env(f.env||globals);e.self=sf;e.selfType=f.selfType||selfType||null;e.mutSelf=!!(fn.mutating&&f.mutable)||(sf instanceof Obj&&sf.type.kind==="class");
-      if(f.selfType&&f.selfType.kind==="struct"&&!fn.mutating)e.mutSelf=false;
+      if(f.selfRef)e.selfRef=f.selfRef;
+      if(f.selfType&&(f.selfType.kind==="struct"||f.selfType.kind==="builtin")&&!fn.mutating)e.mutSelf=false;
       bindArgs(fn,args,e,line);
-      depth++;if(depth>3000){depth=0;fatal("stack overflow (a function keeps calling itself). Check your stopping case.")}
-      try{
-        let r=runBody(fn.body,e,true,fn.ret===null);
-        if(fn.ret){if(r===undefined)fail(`line ${fn.line}: missing return in a function expected to return '${tname(fn.ret)}'`);r=conform(r,fn.ret,fn.line,false,"convert return expression")}
-        else if(r!==undefined&&r!==null&&!(r instanceof Tup&&!r.items.length)&&fn.body.length>0&&!fn.implicitVoid)fail(`line ${fn.line}: unexpected non-void return value in void function`);
-        return r===undefined?undefined:r;
-      }finally{depth--}
+      if(++depth>MAXDEPTH)tooDeep();
+      try{return finishCall(fn,runBody(fn.body,e,true,fn.ret===null))}finally{depth--}
+    }
+    function finishCall(fn,r){
+      if(fn.ret){if(r===undefined)fail(`line ${fn.line}: missing return in a function expected to return '${tname(fn.ret)}'`);return conform(r,fn.ret,fn.line,false,"convert return expression")}
+      if(r!==undefined&&r!==null&&!(r instanceof Tup&&!r.items.length)&&fn.body.length>0&&!fn.implicitVoid)fail(`line ${fn.line}: unexpected non-void return value in void function`);
+      return r;
     }
     function runBody(body,env,implicit,voidFn){
       // a single expression is returned automatically (closures, functions, getters)
@@ -821,7 +843,15 @@ const TMSwift=(()=>{
     function rangeBounds(r,len){const lo=r.lo===null?0:r.lo;const hi=r.hi===null?len:r.closed?r.hi+1:r.hi;return [lo,hi]}
 
     /* ----- expressions ----- */
+    // ev stays tiny for the common cases: deep recursion in a learner's program uses less of JavaScript's stack
     function ev(e,env){
+      switch(e.k){
+        case "lit":return e.v;case "name":return nameVal(e,env);case "bin":return binop(e,env);case "call":return call(e,env);
+        case "paren":return ev(e.e,env);case "cond":return truth(ev(e.c,env))?ev(e.a,env):ev(e.b,env);case "member":return memberGet(e,env);
+      }
+      return evMore(e,env);
+    }
+    function evMore(e,env){
       switch(e.k){
         case "lit":return e.v;
         case "str":return e.parts.map(pt=>typeof pt==="string"?pt:desc(ev(pt.e,env))).join("");
@@ -971,6 +1001,14 @@ const TMSwift=(()=>{
       });
     }
     function call(e,env){
+      // fast path: calling a function or closure stored under a name
+      const f=e.f;
+      if(f.k==="name"){const c=env.find(f.v);const fv=c&&(c.fn||!c.computed&&c.v);
+        if(fv instanceof Fn&&fv.decl&&!fv.decl.overloads&&!fv.superInit){tick();return callDecl(fv,argList(e,env),e.line)}
+        if(fv instanceof Fn&&fv.closure){tick();return callClosure(fv,argList(e,env),e.line)}}
+      return callMore(e,env);
+    }
+    function callMore(e,env){
       const f=e.f;
       // super.init(...)
       if(f.k==="member"&&f.e.k==="super"&&f.name==="init"){
@@ -1002,28 +1040,44 @@ const TMSwift=(()=>{
 
     /* ----- statements ----- */
     function execList(list,env){
+      if(list.plain===undefined)list.plain=!list.some(s=>s.k==="func"||s.k==="defer");
+      if(list.plain){for(let i=0;i<list.length;i++)exec(list[i],env);return}
+      execListFull(list,env);
+    }
+    function execListFull(list,env){
       // functions declared in a block can be called before their line (like Swift's top level)
       for(const s of list)if(s.k==="func")env.vars.set(s.name,{fn:new Fn({decl:s,env,self:env.self,selfType:env.selfType})});
       const defers=[];
       try{for(const s of list){if(s.k==="defer"){defers.unshift(s.body);continue}exec(s,env)}}
       finally{for(const d of defers)execList(d,new Env(env))}
     }
+    // exec only dispatches (a small JavaScript frame), so deep recursion in a learner's program fits on the stack
     function exec(s,env){
       tick();
       switch(s.k){
-        case "empty":case "func":case "type":return;
-        case "expr":{const e=s.e;const v=ev(e,env);
-          if(e.k!=="call"&&e.k!=="try"&&!(e.k==="optchain")&&!(e.k==="member"&&v instanceof Fn)&&v!==undefined&&!(e.k==="lit"&&v===undefined)&&!(e.k==="member"&&e.e.k==="optchain")){
-            if(e.k==="closure")fail(`line ${s.line}: closure expression is unused`);
-            if(e.k==="name"||e.k==="bin"||e.k==="lit"||e.k==="str"||e.k==="member"||e.k==="index")fail(`line ${s.line}: expression of type '${typeOfV(v)}' is unused. Did you mean to print it or store it?`);
-          }
-          if(v instanceof Fn&&e.k!=="call")fail(`line ${s.line}: function is unused. Did you forget the () to call it?`);
-          return}
+        case "empty":case "func":case "type":case "defer":return;
+        case "expr":return execExpr(s,env);
         case "var":return declVar(s,env);
         case "assign":return assign(s,env);
-        case "if":{const e2=new Env(env);if(conds(s.conds,e2,s.line))return execList(s.body,e2);if(s.els)execList(s.els,new Env(env));return}
+        case "if":return execIf(s,env);
+        case "return":throw new Ret(s.e?ev(s.e,env):undefined);
+        case "switch":return doSwitch(s,env);
+      }
+      return execMore(s,env);
+    }
+    function execExpr(s,env){
+      const e=s.e;const v=ev(e,env);
+      if(e.k!=="call"&&e.k!=="try"&&!(e.k==="optchain")&&!(e.k==="member"&&v instanceof Fn)&&v!==undefined&&!(e.k==="lit"&&v===undefined)&&!(e.k==="member"&&e.e.k==="optchain")){
+        if(e.k==="closure")fail(`line ${s.line}: closure expression is unused`);
+        if(e.k==="name"||e.k==="bin"||e.k==="lit"||e.k==="str"||e.k==="member"||e.k==="index")fail(`line ${s.line}: expression of type '${typeOfV(v)}' is unused. Did you mean to print it or store it?`);
+      }
+      if(v instanceof Fn&&e.k!=="call")fail(`line ${s.line}: function is unused. Did you forget the () to call it?`);
+    }
+    function execIf(s,env){const e2=new Env(env);if(conds(s.conds,e2,s.line))return execList(s.body,e2);if(s.els)execList(s.els,new Env(env))}
+    function execMore(s,env){
+      switch(s.k){
         case "guard":{const e2=new Env(env);if(conds(s.conds,env,s.line,true))return;
-          try{execList(s.body,e2)}catch(x){throw x}
+          execList(s.body,e2);
           fail(`line ${s.line}: 'guard' body must not fall through; it needs return, break, continue or throw`)}
         case "while":{for(;;){tick();const e2=new Env(env);if(!conds(s.conds,e2,s.line))break;try{execList(s.body,e2)}catch(x){if(isBreak(x,s))break;if(isCont(x,s))continue;throw x}}return}
         case "repeat":{for(;;){tick();try{execList(s.body,new Env(env))}catch(x){if(isBreak(x,s))break;if(!isCont(x,s))throw x}const c=ev(s.c,env);if(typeof c!=="boolean")fail(`line ${s.line}: the repeat-while condition must be true or false`);if(!c)break}return}
@@ -1033,8 +1087,6 @@ const TMSwift=(()=>{
             if(s.where&&!truth(ev(s.where,e2)))continue;
             try{execList(s.body,e2)}catch(x){if(isBreak(x,s))break;if(isCont(x,s))continue;throw x}}
           return}
-        case "switch":return doSwitch(s,env);
-        case "return":throw new Ret(s.e?ev(s.e,env):undefined);
         case "break":throw s.label?new Brk(s.label):BRK;
         case "continue":throw s.label?{cont:s.label}:CNT;
         case "fallthrough":throw {fallthrough:true};
@@ -1044,17 +1096,17 @@ const TMSwift=(()=>{
           catch(x){
             if(!(x instanceof Thrown))throw x;
             for(const c of s.catches){
-              const ce=new Env(env);
-              if(!c.pat){ce.vars.set("error",cell(x.v,null,true))}
-              else if(c.pat.k==="bind"){ce.vars.set(c.pat.name,cell(x.v,null,true))}
-              else{const pv=ev(c.pat.e,ce);if(pv&&pv.isType){if(!isType(x.v,{k:"name",name:pv.ty.name}))continue;ce.vars.set("error",cell(x.v,null,true))}else if(!equal(pv,x.v))continue}
+              const ce=new Env(env);const p=c.pat;
+              if(!p)ce.vars.set("error",cell(x.v,null,true));
+              else if(p.k==="bind"){if(p.type&&!isType(x.v,p.type))continue;ce.vars.set(p.name,cell(x.v,null,true))}
+              else if(p.k==="expr"){const pv=ev(p.e,ce);if(pv&&pv.isType){if(!isType(x.v,{k:"name",name:pv.ty.name}))continue}else if(!equal(pv,x.v))continue}
+              else if(!match(p,x.v,ce))continue;
               if(c.where&&!truth(ev(c.where,ce)))continue;
               execList(c.body,ce);return;
             }
             throw x;
           }
           return}
-        case "defer":return;
       }
       fail(`unsupported statement (${s.k})`,"NotSupported");
     }
@@ -1125,7 +1177,7 @@ const TMSwift=(()=>{
     }
     function declVar(s,env){
       for(const d of s.decls){
-        if(d.getter){if(d.pat.k!=="name")fail(`line ${s.line}: computed variables need a single name`);const g=d.getter;env.def(d.pat.name,{get v(){return runBody(g.get,new Env(env),true)},set v(x){fail(`line ${s.line}: cannot assign to value: '${d.pat.name}' is a get-only property`)},isLet:true},s.line);continue}
+        if(d.getter){if(d.pat.k!=="name")fail(`line ${s.line}: computed variables need a single name`);const g=d.getter;env.def(d.pat.name,{get v(){return runBody(g.get,new Env(env),true)},set v(x){fail(`line ${s.line}: cannot assign to value: '${d.pat.name}' is a get-only property`)},isLet:true,computed:true},s.line);continue}
         if(!d.init){
           if(!d.type)fail(`line ${s.line}: type annotation missing in pattern. Write a type like var x: Int, or give it a value`);
           const c=cell(d.type.k==="opt"&&!s.isLet?NIL:undefined,d.type,s.isLet);if(!(d.type.k==="opt"&&!s.isLet))c.unset=true;

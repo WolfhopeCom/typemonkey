@@ -94,7 +94,8 @@ def js_re(src):
     return re.compile(src.replace("\\/", "/"))
 
 
-def main():
+def collect():
+    """Every Swift program the course and EXTRA contain, as (where, code, check)."""
     course = load()
     jobs = []  # (where, code, check)
     for unit in course["units"]:
@@ -123,6 +124,11 @@ def main():
                         jobs.append((f"{w} variant {j}", code, ("lines", outs)))
     for i, (code, exp) in enumerate(EXTRA):
         jobs.append((f"extra {i}", code, ("error",) if exp == "ERROR" else ("crash",) if exp == "CRASH" else ("lines", exp.split("\n"))))
+    return jobs
+
+
+def main():
+    jobs = collect()
     results = run_all([c for _, c, _ in jobs])
     problems = []
     for (w, code, chk), r in zip(jobs, results):
