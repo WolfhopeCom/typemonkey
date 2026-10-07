@@ -54,6 +54,12 @@ CHECK = r"""async () => {
       }
     }
   }
+  // Python, SQL, C#, C++: every challenge's solution passes and its starter code doesn't
+  for (const c of COURSES.filter(c => ["py", "sql", "cs", "cpp"].includes(c.runnable)))
+    for (const x of flat(c)) for (const [i, s] of (x.l.steps || []).entries()) if (s.type === "code") {
+      const g = await grade(s, s.hint, c.runnable); if (!g[0]) R.push(`${x.l.id} step ${i}: hint fails: ${g[1]} ${g[2] || ""}`);
+      const g2 = await grade(s, s.start, c.runnable); if (g2[0]) R.push(`${x.l.id} step ${i}: starter already passes`);
+    }
   // HTML & CSS: every challenge's hint must pass, and the starter must not
   const web = COURSES.find(c => c.id === "web");
   for (const x of flat(web)) for (const [i, s] of (x.l.steps || []).entries()) if (s.type === "code") {
