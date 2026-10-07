@@ -1,0 +1,1546 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FF7A1A">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>TypeMonkey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: phone-first single column app shell; sticky stat bar, screens swap in the middle, TypeMonkey talks from a speech bubble */
+:root{
+  --bg:#EEF4F1; --surface:#FFFFFF; --surface2:#E3ECE7; --fg:#15211C; --muted:#5B6D65;
+  --line:#CFDDD5; --accent:#FF7A1A; --accent-ink:#2A1300; --banana:#FFC83D; --leaf:#1F9D63;
+  --bad:#D9443A; --code-bg:#14201B; --code-fg:#E6F2EC; --code-dim:#7FA394;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:16px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1714; --surface:#16231E; --surface2:#1E2E28; --fg:#E9F3EE; --muted:#9AB2A7;
+  --line:#2A3D35; --accent:#FF8A33; --accent-ink:#2A1300; --banana:#FFD25C; --leaf:#3CC486;
+  --bad:#FF6B5E; --code-bg:#0A120F; --code-fg:#E6F2EC; --code-dim:#6E9283; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1714; --surface:#16231E; --surface2:#1E2E28; --fg:#E9F3EE; --muted:#9AB2A7;
+  --line:#2A3D35; --accent:#FF8A33; --accent-ink:#2A1300; --banana:#FFD25C; --leaf:#3CC486;
+  --bad:#FF6B5E; --code-bg:#0A120F; --code-fg:#E6F2EC; --code-dim:#6E9283; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55;margin:0}
+.app{max-width:720px;margin:0 auto;padding:12px 16px 40px;display:flex;flex-direction:column;gap:18px}
+.stack{display:flex;flex-direction:column;gap:16px}
+h1,h2,h3{font-family:var(--display);line-height:1.1;margin:0;text-wrap:balance}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;align-items:center;gap:10px;padding-block:8px}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:800;font-size:1.35rem;background:none;border:0;color:var(--fg);padding:0}
+.brand svg{width:38px;height:38px}
+.brand b{color:var(--accent)}
+.stats{margin-left:auto;display:flex;gap:6px}
+.stat{display:flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-weight:800;font-size:.9rem;font-variant-numeric:tabular-nums}
+.stat i{font-style:normal;font-size:.75rem;color:var(--muted);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+@media (max-width:400px){.brand .word{display:none}}
+
+.buddy{display:flex;gap:12px;align-items:flex-end}
+.buddy svg{width:88px;height:88px;flex:none}
+.buddy.bounce svg{animation:bob .6s ease}
+@keyframes bob{40%{transform:translateY(-10px) rotate(-4deg)}}
+.bubble{background:var(--surface);border:2px solid var(--fg);border-radius:18px 18px 18px 4px;padding:12px 14px;font-weight:700;min-width:0;flex:1}
+
+.hero h1{font-size:clamp(2rem,7vw,2.8rem)}
+.hero p{margin:6px 0 0;color:var(--muted);max-width:60ch}
+.label{font-size:.75rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+.courses{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.course{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:6px;text-align:left;color:var(--fg)}
+.course .tag{font-family:var(--mono);font-size:.8rem;color:var(--muted)}
+.course h3{font-size:1.3rem}
+.course .meta{font-size:.85rem;color:var(--muted)}
+.course.live{border:2px solid var(--accent)}
+.course.locked{opacity:.7}
+.mini{height:6px;background:var(--surface2);border-radius:999px;overflow:hidden;margin-top:4px}
+.mini span{display:block;height:100%;background:var(--leaf)}
+.pill{align-self:flex-start;font-size:.72rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;border-radius:999px;padding:2px 9px;background:var(--surface2);color:var(--muted);white-space:nowrap}
+.pill.go{background:var(--accent);color:var(--accent-ink)}
+.pill.kid{background:var(--banana);color:var(--accent-ink)}
+.pill.ok{background:var(--leaf);color:#fff}
+
+.tools{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:420px){.tools{grid-template-columns:1fr}}
+.tool{background:var(--code-bg);color:var(--code-fg);border:0;border-radius:var(--r);padding:14px;text-align:left;display:flex;flex-direction:column;gap:4px}
+.tool b{font-family:var(--display);font-size:1.2rem}
+.tool span{color:var(--code-dim);font-size:.88rem}
+
+.unit{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
+.unit-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.unit-head h3{font-size:1.15rem}
+.unit-head .label{margin-left:auto}
+.lessons{display:flex;flex-direction:column;gap:8px}
+.lesson{display:flex;align-items:center;gap:12px;background:var(--surface2);border:0;border-radius:12px;padding:10px 12px;color:var(--fg);text-align:left;width:100%}
+.lesson .dot{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;flex:none;background:var(--line);color:var(--muted);font-variant-numeric:tabular-nums}
+.lesson.open .dot{background:var(--accent);color:var(--accent-ink)}
+.lesson.done .dot{background:var(--leaf);color:#fff}
+.lesson.proj .dot{border-radius:10px}
+.lesson .t{flex:1;min-width:0}
+.lesson .t b{display:block}
+.lesson .t span{font-size:.85rem;color:var(--muted)}
+.lesson[disabled]{cursor:not-allowed;opacity:.62}
+.linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:.85rem;padding:0;align-self:flex-start}
+
+.paywall{background:var(--code-bg);color:var(--code-fg);border-radius:var(--r);padding:16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.paywall div{flex:1;min-width:200px}
+.paywall h3{font-size:1.25rem;color:var(--code-fg)}
+.paywall p{margin:4px 0 0;color:var(--code-dim);font-size:.9rem}
+
+.btn{border:0;border-radius:12px;padding:11px 18px;font-weight:800;background:var(--accent);color:var(--accent-ink);box-shadow:0 4px 0 color-mix(in srgb,var(--accent) 60%,#000);transition:transform .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 color-mix(in srgb,var(--accent) 60%,#000)}
+.btn.ghost{background:var(--surface2);color:var(--fg);box-shadow:0 4px 0 var(--line)}
+.btn.banana{background:var(--banana);box-shadow:0 4px 0 color-mix(in srgb,var(--banana) 55%,#000)}
+.btn.sm{padding:7px 12px;font-size:.88rem}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+.progress{height:12px;background:var(--surface2);border-radius:999px;overflow:hidden;flex:1}
+.progress span{display:block;height:100%;background:var(--leaf);border-radius:999px;transition:width .4s}
+.lessonbar{display:flex;align-items:center;gap:12px}
+.x{background:none;border:0;color:var(--muted);font-size:1.6rem;line-height:1;padding:0 4px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card h2{font-size:1.55rem}
+.card p{margin:0;max-width:62ch}
+code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);padding:1px 6px;border-radius:6px;white-space:nowrap}
+
+.editor{background:var(--code-bg);border-radius:12px;overflow:hidden;min-width:0}
+.editor .head{display:flex;align-items:center;gap:8px;padding:8px 12px;color:var(--code-dim);font-family:var(--mono);font-size:.8rem;border-bottom:1px solid #ffffff14}
+.editor .head span{margin-right:auto}
+.editor textarea{display:block;width:100%;min-height:150px;resize:vertical;background:transparent;color:var(--code-fg);border:0;outline:0;padding:12px 14px;font-family:var(--mono);font-size:.92rem;line-height:1.6;tab-size:2;white-space:pre;overflow-x:auto}
+.editor pre{margin:0;padding:12px 14px;color:var(--code-fg);font-family:var(--mono);font-size:.92rem;line-height:1.6;overflow-x:auto}
+.run{background:var(--leaf);color:#fff;border:0;border-radius:8px;padding:5px 12px;font-weight:800;font-family:var(--body)}
+.run[disabled]{opacity:.4;cursor:not-allowed}
+.console{background:#000;color:#B8F5D3;font-family:var(--mono);font-size:.88rem;padding:10px 14px;min-height:44px;white-space:pre-wrap;word-break:break-word;border-top:1px solid #ffffff14}
+.console .err{color:#FF9C92}
+.console .dim{color:#5E7E70}
+
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{text-align:left;background:var(--surface2);border:2px solid transparent;border-radius:12px;padding:12px 14px;color:var(--fg);font-weight:700}
+.opt.mono{font-family:var(--mono);font-weight:600;white-space:pre-wrap}
+.opt:hover:not([disabled]){border-color:var(--line)}
+.opt.right{border-color:var(--leaf);background:color-mix(in srgb,var(--leaf) 16%,var(--surface))}
+.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--surface))}
+.feedback{font-weight:700;border-radius:12px;padding:10px 14px}
+.feedback pre{font-family:var(--mono);font-weight:600;font-size:.85rem;margin:6px 0 0;white-space:pre-wrap}
+.feedback.good{background:color-mix(in srgb,var(--leaf) 16%,var(--surface))}
+.feedback.bad{background:color-mix(in srgb,var(--bad) 14%,var(--surface))}
+
+/* fill-in-the-blank + ordering */
+.slot{font-family:var(--mono);font-size:.92rem;min-width:3.2em;padding:0 8px;margin:0 2px;border-radius:6px;border:2px dashed var(--code-dim);background:transparent;color:var(--banana);font-weight:600;line-height:1.5}
+.slot.filled{border-style:solid;border-color:var(--banana)}
+.slot.right{border-color:var(--leaf);color:#B8F5D3}
+.slot.wrong{border-color:var(--bad);color:#FF9C92}
+.tokens{display:flex;flex-wrap:wrap;gap:8px}
+.token{font-family:var(--mono);font-weight:600;background:var(--surface2);border:2px solid var(--line);border-radius:10px;padding:8px 14px;color:var(--fg);box-shadow:0 3px 0 var(--line)}
+.token[disabled]{opacity:.25}
+.lines{display:flex;flex-direction:column;gap:6px;min-height:52px;background:var(--code-bg);border-radius:12px;padding:10px}
+.lines.pick{background:transparent;padding:0}
+.ln{font-family:var(--mono);font-size:.88rem;text-align:left;white-space:pre;overflow-x:auto;background:var(--surface2);border:2px solid var(--line);border-radius:10px;padding:8px 12px;color:var(--fg)}
+.lines:not(.pick) .ln{background:#ffffff0d;color:var(--code-fg);border-color:#ffffff1f}
+.lines .ln.right{border-color:var(--leaf)}
+.lines .ln.wrong{border-color:var(--bad)}
+.empty{color:var(--code-dim);font-size:.85rem;font-family:var(--body);padding:6px}
+
+.game-hud{display:flex;gap:10px;align-items:center;font-weight:800;font-variant-numeric:tabular-nums}
+.timer{height:10px;flex:1;background:var(--surface2);border-radius:999px;overflow:hidden}
+.timer span{display:block;height:100%;background:var(--banana);transition:width 1s linear}
+.big{font-family:var(--display);font-size:3rem;font-weight:800;color:var(--accent);line-height:1}
+.reward{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%}
+.reward div{background:var(--surface2);border-radius:12px;padding:12px;text-align:center}
+.reward b{display:block;font-family:var(--display);font-size:1.7rem;font-variant-numeric:tabular-nums}
+.reward span{font-size:.8rem;color:var(--muted);font-weight:700}
+.cert{border:3px solid var(--banana);border-radius:var(--r);padding:16px;text-align:center;background:color-mix(in srgb,var(--banana) 12%,var(--surface))}
+.cert h3{font-size:1.5rem}
+
+.langs{display:flex;gap:6px;flex-wrap:wrap}
+.lang{border:2px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:5px 12px;font-weight:800;font-size:.88rem}
+.lang[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.note{background:color-mix(in srgb,var(--banana) 18%,var(--surface));border-radius:12px;padding:10px 14px;font-weight:600;font-size:.92rem}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;max-width:calc(100% - 32px);z-index:9}
+.foot{color:var(--muted);font-size:.8rem;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.foot .row{justify-content:center}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+
+<div class="app">
+  <header class="topbar">
+    <button class="brand" id="homeBtn" aria-label="TypeMonkey home"><span id="brandMonkey"></span><span class="word">Type<b>Monkey</b></span></button>
+    <div class="stats">
+      <div class="stat" title="Day streak">🔥 <span id="sStreak">0</span></div>
+      <div class="stat" title="Bananas">🍌 <span id="sBan">0</span></div>
+      <div class="stat"><i>XP</i> <span id="sXp">0</span></div>
+    </div>
+  </header>
+  <main id="screen"></main>
+  <footer class="foot" id="foot"></footer>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* TypeMonkey · JavaScript course · Units 1–2
+   Step types: talk, code, quiz, fill, order, game(uses lesson.pool), done
+   code steps: use=[[regex,msg]], out=[exact lines], outRe=[regex], variants=[[find,replace,[lines]]], hint */
+const C=s=>`<code class="i">${s}</code>`;
+
+const JS_UNIT1={name:"Talking to the computer",free:true,lessons:[
+{id:"js1",title:"Hello, console",sub:"console.log, strings, variables",steps:[
+ {type:"talk",title:"Hey, I'm TypeMonkey.",mood:"cheer",
+  body:`<p>We're going to learn JavaScript, the language that runs inside every web browser. Websites, games, apps, even some robots use it.</p><p>Today you'll make the computer talk back to you.</p>`,
+  say:"I'll be right here the whole way. Tap Continue!"},
+ {type:"talk",title:"Make the computer talk",
+  body:`<p>${C("console.log()")} prints whatever you put inside the parentheses. Text goes inside quotes, and text in quotes is called a <b>string</b>.</p>`,
+  demo:`console.log("Hello, world!");\nconsole.log("I'm learning JavaScript");`,
+  say:"Press ▶ Run and watch the console. Change the text and run it again!"},
+ {type:"talk",title:"Boxes with names",mood:"think",
+  body:`<p>A <b>variable</b> is a labeled box that holds a value. Use ${C("const")} for a box you won't change, and ${C("let")} for one you will.</p>`,
+  demo:`const snack = "banana";\nlet count = 3;\nconsole.log(snack);\nconsole.log(count);`,
+  say:"Notice: no quotes around snack when we print it. We want what's IN the box."},
+ {type:"fill",title:"Fill in the blanks",body:`<p>Make a box called ${C("city")} and print what's inside it.</p>`,
+  code:`[0] city = "Paris";\nconsole.log([1]);`,blanks:["const","city"],tokens:["const","city","\"city\"","print"],
+  why:"const makes the box, and city (no quotes) reads what's inside."},
+ {type:"code",title:"Your turn: introduce yourself",
+  body:`<p>Make a ${C("const")} called ${C("name")} with your name in it. Then print ${C("Hi, I'm")} followed by your name. You can glue strings together with ${C("+")}.</p>`,
+  start:`// Your code here\nconst name = \n`,
+  use:[[/\bconst\s+name\s*=/,"Create the box with: const name = \"...\""]],
+  outRe:[[/^Hi, I'm \S+/,"Print it exactly like: Hi, I'm Sam   (hint: \"Hi, I'm \" + name)"]],
+  hint:`const name = "Sam";\nconsole.log("Hi, I'm " + name);`},
+ {type:"quiz",q:"Which keyword makes a variable you can't reassign?",opts:["const","let","var","fixed"],a:0,why:"const locks the box. let lets you put a new value in later."},
+ {type:"quiz",q:"What does this print?",code:`console.log("2" + 2);`,opts:["22","4","\"2\" + 2","An error"],a:0,mono:true,why:"\"2\" is a string, so + glues instead of adds. Sneaky, right?"},
+ {type:"quiz",q:"Which one is a valid string?",opts:["'hello'","hello","<hello>","(hello)"],a:0,mono:true,why:"Strings need quotes. Single ' or double \" both work."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`console.log("Hi" + "!");`,["Hi!","Hi +!","Hi !"]],
+  [`const a = "Ty";\nconsole.log(a + "pe");`,["Type","a + pe","Ty pe"]],
+  [`const x = "box";\nconsole.log(x);`,["box","x","\"box\""]],
+  [`console.log("3" + 4);`,["34","7","NaN"]],
+  [`console.log(3 + 4);`,["7","34","3 + 4"]],
+  [`let pet = "cat";\nconsole.log("my " + pet);`,["my cat","my pet","mycat"]],
+  [`const n = "5";\nconsole.log(n + n);`,["55","10","n + n"]]
+ ]},
+
+{id:"js2",title:"Numbers & math",sub:"+ − * /, order of operations, %",steps:[
+ {type:"talk",title:"JavaScript is a calculator",
+  body:`<p>Numbers don't need quotes. You can add ${C("+")}, subtract ${C("-")}, multiply ${C("*")} and divide ${C("/")}.</p>`,
+  demo:`console.log(7 + 3);\nconsole.log(7 - 3);\nconsole.log(7 * 3);\nconsole.log(7 / 2);`,
+  say:"Run it. Yep, 7 / 2 gives 3.5. Decimals just work."},
+ {type:"talk",title:"Order matters",mood:"think",
+  body:`<p>Just like math class, ${C("*")} and ${C("/")} happen before ${C("+")} and ${C("-")}. Parentheses go first of all.</p><p>Two bonus operators: ${C("%")} gives the <b>remainder</b> after dividing, and ${C("**")} is "to the power of".</p>`,
+  demo:`console.log(2 + 3 * 4);\nconsole.log((2 + 3) * 4);\nconsole.log(10 % 3);\nconsole.log(2 ** 3);`,
+  say:"10 % 3 is 1, because 3 fits into 10 three times with 1 left over."},
+ {type:"quiz",q:"What does this print?",code:`console.log(10 % 4);`,opts:["2","2.5","0","4"],a:0,mono:true,why:"4 fits into 10 twice (8), leaving 2."},
+ {type:"fill",title:"Price check",body:`<p>Print the total cost of 3 items that cost 4 each.</p>`,
+  code:`const price = 4;\nconst qty = 3;\nconsole.log(price [0] qty);`,blanks:["*"],tokens:["*","+","%","/"],
+  why:"4 * 3 = 12. Multiply price by quantity."},
+ {type:"code",title:"Banana budget",
+  body:`<p>You have 20 dollars and bananas cost 3 each. Print how much money is <b>left over</b> after buying as many as you can.</p>`,
+  start:`const money = 20;\nconst cost = 3;\n// print the leftover money\n`,
+  use:[[/%/,"The remainder operator % is perfect for 'left over'."]],out:["2"],
+  hint:`const money = 20;\nconst cost = 3;\nconsole.log(money % cost);`},
+ {type:"quiz",q:"What does this print?",code:`console.log(2 + 3 * 4);`,opts:["14","20","9"],a:0,mono:true,why:"Multiply first: 3 * 4 = 12, then 2 + 12 = 14."},
+ {type:"quiz",q:"What does this print?",code:`console.log(5 + "5");`,opts:["55","10","Error"],a:0,mono:true,why:"Mixing a number with a string turns + into gluing."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`console.log(8 - 3 * 2);`,["2","10","13"]],
+  [`console.log((8 - 3) * 2);`,["10","2","13"]],
+  [`console.log(9 % 2);`,["1","4.5","0"]],
+  [`console.log(12 / 4);`,["3","48","8"]],
+  [`console.log(2 ** 4);`,["16","8","6"]],
+  [`console.log(7 % 7);`,["0","1","7"]],
+  [`console.log(1 + 2 + "3");`,["33","6","123"]],
+  [`console.log(10 - 2 - 3);`,["5","11","9"]]
+ ]},
+
+{id:"js3",title:"Strings that do stuff",sub:"joining, length, template literals, methods",steps:[
+ {type:"talk",title:"Gluing strings",
+  body:`<p>${C("+")} joins strings. Every string also knows its own length with ${C(".length")}.</p>`,
+  demo:`const first = "Type";\nconst last = "Monkey";\nconsole.log(first + last);\nconsole.log(first + " " + last);\nconsole.log(last.length);`,
+  say:"Spaces count as characters too. \" \" is a string with one space in it."},
+ {type:"talk",title:"Template literals",mood:"cheer",
+  body:`<p>Backticks ${C("`")} let you drop variables right into a string with ${C("${ }")}. Way cleaner than lots of ${C("+")}.</p>`,
+  demo:"const name = \"Mo\";\nconst age = 4;\nconsole.log(`${name} is ${age} years old`);\nconsole.log(`Next year: ${age + 1}`);",
+  say:"You can even do math inside ${ }. Try it!"},
+ {type:"talk",title:"String superpowers",
+  body:`<p>Strings come with built-in <b>methods</b>: ${C(".toUpperCase()")}, ${C(".toLowerCase()")} and ${C(".includes()")}. You can grab one letter with square brackets. Counting starts at <b>0</b>.</p>`,
+  demo:`const word = "banana";\nconsole.log(word.toUpperCase());\nconsole.log(word.includes("nan"));\nconsole.log(word[0]);\nconsole.log(word[1]);`,
+  say:"word[0] is the FIRST letter. Programmers count from zero."},
+ {type:"quiz",q:"What does this print?",code:`console.log("abc".length);`,opts:["3","2","abc"],a:0,mono:true,why:"a, b, c: three characters."},
+ {type:"fill",title:"Backtick time",body:`<p>Finish the template literal.</p>`,
+  code:"const pet = \"cat\";\nconsole.log([0]My pet is a ${pet}[1]);",blanks:["`","`"],tokens:["`","`","\"","'"],
+  why:"Only backticks understand ${ }. Regular quotes would print it literally."},
+ {type:"code",title:"Name badge",
+  body:`<p>Use a template literal to print ${C("Sam lives in Ohio")} using the two variables.</p>`,
+  start:`const name = "Sam";\nconst city = "Ohio";\n// print: Sam lives in Ohio\n`,
+  use:[[/`/,"Use a template literal with backticks: `...`"],[/\$\{\s*name\s*\}/,"Put ${name} inside the backticks."]],
+  out:["Sam lives in Ohio"],variants:[[/"Sam"/,"\"Ana\"",["Ana lives in Ohio"]]],
+  hint:"const name = \"Sam\";\nconst city = \"Ohio\";\nconsole.log(`${name} lives in ${city}`);"},
+ {type:"quiz",q:"What does this print?",code:`const word = "code";\nconsole.log(word[1]);`,opts:["o","c","d"],a:0,mono:true,why:"Index 0 is c, index 1 is o."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`console.log("hi".toUpperCase());`,["HI","hi","Hi"]],
+  [`console.log("TypeMonkey".length);`,["10","9","2"]],
+  ["const x = 3;\nconsole.log(`x is ${x}`);",["x is 3","x is ${x}","x is x"]],
+  [`console.log("jump"[0]);`,["j","p","u"]],
+  [`console.log("Ape".toLowerCase());`,["ape","APE","Ape"]],
+  [`console.log("ha" + "ha");`,["haha","ha ha","ha+ha"]],
+  [`console.log("banana".includes("ban"));`,["true","false","ban"]],
+  [`console.log("code"[3]);`,["e","d","undefined"]]
+ ]},
+
+{id:"js4",title:"Changing variables",sub:"let, +=, ++, and why const says no",steps:[
+ {type:"talk",title:"Boxes you can change",
+  body:`<p>A ${C("let")} variable can get a new value. Shortcuts: ${C("+=")} adds to it, ${C("-=")} subtracts, and ${C("++")} adds exactly 1.</p>`,
+  demo:`let score = 0;\nscore = score + 10;\nconsole.log(score);\nscore += 5;\nconsole.log(score);\nscore++;\nconsole.log(score);`,
+  say:"Games use this all the time: scores, lives, coins."},
+ {type:"talk",title:"const means const",mood:"oops",
+  body:`<p>Try to change a ${C("const")} and JavaScript stops with an error. That's a feature: it protects values that should never change.</p>`,
+  demo:`const lives = 3;\nlives = 2;\nconsole.log(lives);`,
+  say:"Run it. The red error is on purpose! Reading errors is a real coding skill."},
+ {type:"quiz",q:"What does this print?",code:`let x = 10;\nx -= 3;\nconsole.log(x);`,opts:["7","13","10"],a:0,mono:true,why:"x -= 3 means x = x - 3."},
+ {type:"order",title:"Put it in order",body:`<p>Arrange the lines so the program prints ${C("15")}.</p>`,
+  lines:["let coins = 10;","coins += 5;","console.log(coins);"],why:"Create the box, change it, then print it."},
+ {type:"code",title:"Level up",
+  body:`<p>Add 1 to ${C("level")} <b>twice</b>, then print it. Use ${C("++")} or ${C("+=")}.</p>`,
+  start:`let level = 1;\n// level up twice, then print level\n`,
+  use:[[/level\s*(\+\+|\+=|=\s*level\s*\+)/,"Change level using ++, += or level = level + 1"]],out:["3"],
+  hint:`let level = 1;\nlevel++;\nlevel++;\nconsole.log(level);`},
+ {type:"quiz",q:"Which one causes an error?",opts:["const a = 1; a = 2;","let a = 1; a = 2;","let a = 1; a++;"],a:0,mono:true,why:"You can't reassign a const."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`let a = 2;\na *= 3;\nconsole.log(a);`,["6","5","23"]],
+  [`let b = 5;\nb--;\nconsole.log(b);`,["4","5","6"]],
+  [`let c = 1;\nc += c;\nconsole.log(c);`,["2","1","11"]],
+  [`let s = "a";\ns += "b";\nconsole.log(s);`,["ab","a","b"]],
+  [`let n = 10;\nn = n / 2;\nconsole.log(n);`,["5","10","20"]],
+  [`let t = 3;\nt++;\nt++;\nconsole.log(t);`,["5","4","3"]],
+  [`let x = 4;\nlet y = x;\nx = 9;\nconsole.log(y);`,["4","9","undefined"]]
+ ]}
+]};
+
+const JS_UNIT2={name:"Making decisions",lessons:[
+{id:"js5",title:"True or false?",sub:"booleans and comparisons",steps:[
+ {type:"talk",title:"Yes or no values",
+  body:`<p>A <b>boolean</b> is either ${C("true")} or ${C("false")}. Comparisons give you booleans: ${C("&gt;")} ${C("&lt;")} ${C("&gt;=")} ${C("&lt;=")}, ${C("===")} (equal) and ${C("!==")} (not equal).</p>`,
+  demo:`console.log(5 > 3);\nconsole.log(5 < 3);\nconsole.log(4 >= 4);\nconsole.log(7 === 7);\nconsole.log(7 !== 7);`,
+  say:"Computers make every decision from true and false."},
+ {type:"talk",title:"Triple equals",mood:"think",
+  body:`<p>${C("===")} checks the value <b>and</b> the type. ${C("==")} tries to convert types first, which causes weird bugs. Pros use ${C("===")}.</p>`,
+  demo:`console.log(5 === "5");\nconsole.log(5 == "5");\nconsole.log("hi" === "Hi");`,
+  say:"Also: one = puts a value IN a box. Three === compares."},
+ {type:"quiz",q:"What does this print?",code:`console.log(10 <= 9);`,opts:["false","true","9"],a:0,mono:true,why:"10 is not less than or equal to 9."},
+ {type:"fill",title:"Old enough?",body:`<p>Print ${C("true")} if age is 13 or more.</p>`,
+  code:`const age = 16;\nconsole.log(age [0] 13);`,blanks:[">="],tokens:[">=","=","<","=>"],why:">= means 'greater than or equal to'."},
+ {type:"code",title:"Can I ride?",
+  body:`<p>The coaster needs riders to be at least 120 cm. Print whether ${C("height")} is tall enough (it should print ${C("true")} or ${C("false")}).</p>`,
+  start:`const height = 130;\n// print true if height is at least 120\n`,
+  use:[[/height\s*>=?\s*\d+/,"Compare height with >= 120"]],out:["true"],variants:[[/= 130/,"= 110",["false"]],[/= 130/,"= 120",["true"]]],
+  hint:`const height = 130;\nconsole.log(height >= 120);`},
+ {type:"quiz",q:"What does this print?",code:`console.log("hi" === "Hi");`,opts:["false","true","hi"],a:0,mono:true,why:"Capital letters matter. h and H are different."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`console.log(3 === 3);`,["true","false","3"]],
+  [`console.log("3" === 3);`,["false","true","3"]],
+  [`console.log(2 > 5);`,["false","true","2"]],
+  [`console.log(6 !== 4);`,["true","false","2"]],
+  [`console.log(5 >= 5);`,["true","false","5"]],
+  [`console.log(10 / 2 === 5);`,["true","false","5"]],
+  [`console.log("b" === "a");`,["false","true","b"]]
+ ]},
+
+{id:"js6",title:"if / else",sub:"making your code choose",steps:[
+ {type:"talk",title:"If this, do that",
+  body:`<p>${C("if")} runs a block of code only when its condition is ${C("true")}. The block lives inside curly braces ${C("{ }")}.</p>`,
+  demo:`const hunger = 8;\nif (hunger > 5) {\n  console.log("Banana time!");\n}\nconsole.log("Done checking");`,
+  say:"Change hunger to 2 and run it again. The banana line disappears."},
+ {type:"talk",title:"Otherwise…",
+  body:`<p>${C("else")} runs when the condition is ${C("false")}. Exactly one of the two blocks will run.</p>`,
+  demo:`const temp = 12;\nif (temp > 20) {\n  console.log("Wear shorts");\n} else {\n  console.log("Grab a jacket");\n}`,
+  say:"Indenting the inside lines makes code way easier to read."},
+ {type:"order",title:"Build the if",body:`<p>Arrange the lines into a working program.</p>`,
+  lines:["const score = 90;","if (score > 50) {","  console.log(\"You pass!\");","}"],why:"Set the value, open the if, do the thing, close the brace."},
+ {type:"quiz",q:"What does this print?",code:`const x = 3;\nif (x > 5) {\n  console.log("big");\n} else {\n  console.log("small");\n}`,opts:["small","big","big small"],a:0,mono:true,why:"3 > 5 is false, so the else block runs."},
+ {type:"fill",title:"Game over check",body:`<p>Print "Game over" when lives reaches 0.</p>`,
+  code:`const lives = 0;\nif (lives [0] 0) {\n  console.log("Game over");\n}`,blanks:["==="],tokens:["===","=","+","!=="],why:"=== compares. A single = would try to change lives."},
+ {type:"code",title:"Even or odd",
+  body:`<p>If ${C("num")} is even, print ${C("even")}. Otherwise print ${C("odd")}. Tip: a number is even when ${C("num % 2 === 0")}.</p>`,
+  start:`const num = 7;\n// your if / else here\n`,
+  use:[[/\bif\s*\(/,"Use an if statement."],[/\belse\b/,"Add an else for the odd case."]],out:["odd"],variants:[[/= 7/,"= 10",["even"]]],
+  hint:`const num = 7;\nif (num % 2 === 0) {\n  console.log("even");\n} else {\n  console.log("odd");\n}`},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`const a = 10;\nif (a > 5) {\n  console.log("yes");\n} else {\n  console.log("no");\n}`,["yes","no","yes no"]],
+  [`const b = 2;\nif (b === 3) {\n  console.log("three");\n}\nconsole.log("end");`,["end","three end","three"]],
+  [`const c = "cat";\nif (c === "dog") {\n  console.log("woof");\n} else {\n  console.log("meow");\n}`,["meow","woof","cat"]],
+  [`const n = 4;\nif (n % 2 === 0) {\n  console.log("even");\n} else {\n  console.log("odd");\n}`,["even","odd","4"]],
+  [`const s = 5;\nif (s < 5) {\n  console.log("low");\n} else {\n  console.log("ok");\n}`,["ok","low","5"]],
+  [`const t = 1;\nif (t > 0) {\n  console.log("up");\n}\nif (t > 5) {\n  console.log("way up");\n}`,["up","up way up","way up"]]
+ ]},
+
+{id:"js7",title:"else if & logic",sub:"many choices, &&, ||, !",steps:[
+ {type:"talk",title:"More than two choices",
+  body:`<p>Chain checks with ${C("else if")}. JavaScript tests them top to bottom and runs the <b>first</b> one that's true.</p>`,
+  demo:`const score = 84;\nif (score >= 90) {\n  console.log("A");\n} else if (score >= 80) {\n  console.log("B");\n} else if (score >= 70) {\n  console.log("C");\n} else {\n  console.log("Keep practicing");\n}`,
+  say:"84 isn't >= 90, but it is >= 80, so it stops at B."},
+ {type:"talk",title:"And, or, not",mood:"think",
+  body:`<p>${C("&amp;&amp;")} means AND: both sides must be true. ${C("||")} means OR: at least one side is true. ${C("!")} flips true to false.</p>`,
+  demo:`const hasTicket = true;\nconst age = 15;\nconsole.log(hasTicket && age >= 13);\nconsole.log(age < 12 || age > 65);\nconsole.log(!hasTicket);`,
+  say:"&& is picky. || is chill."},
+ {type:"quiz",q:"What does this print?",code:`console.log(true && false);`,opts:["false","true","truefalse"],a:0,mono:true,why:"AND needs both to be true."},
+ {type:"quiz",q:"What does this print?",code:`console.log(false || true);`,opts:["true","false","error"],a:0,mono:true,why:"OR only needs one side to be true."},
+ {type:"fill",title:"Snack logic",body:`<p>TypeMonkey eats only if he's hungry AND has a banana.</p>`,
+  code:`const hungry = true;\nconst hasBanana = true;\nif (hungry [0] hasBanana) {\n  console.log("Nom!");\n}`,blanks:["&&"],tokens:["&&","||","!","=="],why:"Both have to be true, so use &&."},
+ {type:"code",title:"Ticket prices",
+  body:`<p>Print the right ticket:</p><p>Under 12 → ${C("Kid: $5")}<br>65 or older → ${C("Senior: $6")}<br>Everyone else → ${C("Adult: $10")}</p><p>I'll test your code with a few different ages.</p>`,
+  start:`const age = 70;\n// if / else if / else\n`,
+  use:[[/else\s+if/,"Use else if for one of the middle cases."]],out:["Senior: $6"],
+  variants:[[/= 70/,"= 8",["Kid: $5"]],[/= 70/,"= 30",["Adult: $10"]],[/= 70/,"= 65",["Senior: $6"]]],
+  hint:`const age = 70;\nif (age < 12) {\n  console.log("Kid: $5");\n} else if (age >= 65) {\n  console.log("Senior: $6");\n} else {\n  console.log("Adult: $10");\n}`},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`console.log(true && true);`,["true","false","truetrue"]],
+  [`console.log(true || false);`,["true","false","error"]],
+  [`console.log(!false);`,["true","false","!false"]],
+  [`console.log(5 > 3 && 2 > 4);`,["false","true","2"]],
+  [`const x = 15;\nif (x > 20) {\n  console.log("A");\n} else if (x > 10) {\n  console.log("B");\n} else {\n  console.log("C");\n}`,["B","A","C"]],
+  [`console.log(1 === 1 || 2 === 3);`,["true","false","1"]],
+  [`const x = 5;\nif (x > 1) {\n  console.log("one");\n} else if (x > 3) {\n  console.log("three");\n}`,["one","three","one three"]]
+ ]},
+
+{id:"js8",title:"Project: Banana Shop",sub:"put math and decisions together",project:true,steps:[
+ {type:"talk",title:"Project time!",mood:"cheer",
+  body:`<p>Projects combine everything you've learned into one small program. Today: the checkout for TypeMonkey's Banana Shop.</p>`,
+  say:"No new rules, just building. Let's go!"},
+ {type:"code",title:"Step 1: the total",
+  body:`<p>Make a ${C("const")} called ${C("total")} that equals bananas times price, then print it.</p>`,
+  start:`const bananas = 6;\nconst price = 2;\n// make total and print it\n`,
+  use:[[/const\s+total\s*=/,"Make a const called total."]],out:["12"],variants:[[/= 6;/,"= 4;",["8"]]],
+  hint:`const bananas = 6;\nconst price = 2;\nconst total = bananas * price;\nconsole.log(total);`},
+ {type:"code",title:"Step 2: the discount",
+  body:`<p>Orders of 10 dollars or more get 2 dollars off. Print ${C("Total: 10 (discount!)")} style when there's a discount, and ${C("Total: 6")} style when there isn't.</p>`,
+  start:"const bananas = 6;\nconst price = 2;\nconst total = bananas * price;\n// if total >= 10, print the discounted total\n// otherwise print the normal total\n",
+  use:[[/\bif\s*\(/,"Use an if to check the total."]],out:["Total: 10 (discount!)"],variants:[[/= 6;/,"= 3;",["Total: 6"]],[/= 6;/,"= 5;",["Total: 8 (discount!)"]]],
+  hint:"const bananas = 6;\nconst price = 2;\nconst total = bananas * price;\nif (total >= 10) {\n  console.log(`Total: ${total - 2} (discount!)`);\n} else {\n  console.log(`Total: ${total}`);\n}"},
+ {type:"code",title:"Step 3: members only",
+  body:`<p>Now only <b>members</b> get the discount. Give the discount when ${C("total &gt;= 10")} <b>and</b> ${C("isMember")} is true.</p>`,
+  start:"const bananas = 6;\nconst price = 2;\nconst isMember = false;\nconst total = bananas * price;\n// discount only for members with total >= 10\n",
+  use:[[/&&/,"Use && to require both conditions."]],out:["Total: 12"],variants:[[/= false/,"= true",["Total: 10 (discount!)"]]],
+  hint:"const bananas = 6;\nconst price = 2;\nconst isMember = false;\nconst total = bananas * price;\nif (total >= 10 && isMember) {\n  console.log(`Total: ${total - 2} (discount!)`);\n} else {\n  console.log(`Total: ${total}`);\n}"},
+ {type:"done"}]}
+]};
+
+/* Units 3–4 */
+const JS_UNIT3={name:"Loops",lessons:[
+{id:"js9",title:"for loops",sub:"repeat code a set number of times",steps:[
+ {type:"talk",title:"Do it again (and again)",
+  body:`<p>A ${C("for")} loop repeats code. This one counts from 1 to 5.</p>`,
+  demo:`for (let i = 1; i <= 5; i++) {\n  console.log(i);\n}`,
+  say:"Five lines of output from one console.log. That's the power of loops."},
+ {type:"talk",title:"The three parts",mood:"think",
+  body:`<p>Inside the parentheses are three parts split by semicolons:</p><p><b>Start</b> ${C("let i = 10")} · <b>keep going while</b> ${C("i &gt;= 0")} · <b>after each round</b> ${C("i -= 2")}</p>`,
+  demo:`for (let i = 10; i >= 0; i -= 2) {\n  console.log(i);\n}\nconsole.log("Liftoff!");`,
+  say:"i is just a counter name. Coders use i by tradition."},
+ {type:"order",title:"Build a loop",body:`<p>Arrange the lines so TypeMonkey says "Ook!" three times.</p>`,
+  lines:["for (let i = 0; i < 3; i++) {","  console.log(\"Ook!\");","}"],why:"Loop header, the body, then close it."},
+ {type:"quiz",q:"How many times does this loop run?",code:`for (let i = 0; i < 4; i++) {\n  console.log(i);\n}`,opts:["4","3","5"],a:0,mono:true,why:"i goes 0, 1, 2, 3. That's 4 rounds."},
+ {type:"fill",title:"Count up",body:`<p>Make this print 0, 1, 2.</p>`,
+  code:`for (let i = 0; i [0] 3; i[1]) {\n  console.log(i);\n}`,blanks:["<","++"],tokens:["<","++","--",">"],why:"Keep going while i < 3, adding 1 each time."},
+ {type:"code",title:"Count to 10",
+  body:`<p>Use a ${C("for")} loop to print the numbers 1 to 10, each on its own line.</p>`,
+  start:`// your loop here\n`,
+  use:[[/\bfor\s*\(/,"Use a for loop. No copying 10 console.logs!"]],out:["1","2","3","4","5","6","7","8","9","10"],
+  hint:`for (let i = 1; i <= 10; i++) {\n  console.log(i);\n}`},
+ {type:"quiz",q:"What's the LAST number printed?",code:`for (let i = 1; i <= 3; i++) {\n  console.log(i * 2);\n}`,opts:["6","3","8"],a:0,mono:true,why:"The last round has i = 3, and 3 * 2 = 6."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`for (let i = 0; i < 3; i++) {\n  console.log(i);\n}`,["0 1 2","1 2 3","0 1 2 3"]],
+  [`for (let i = 3; i > 0; i--) {\n  console.log(i);\n}`,["3 2 1","3 2 1 0","2 1 0"]],
+  [`let s = "";\nfor (let i = 0; i < 3; i++) {\n  s += "a";\n}\nconsole.log(s);`,["aaa","a","aa"]],
+  [`for (let i = 0; i < 6; i += 2) {\n  console.log(i);\n}`,["0 2 4","0 2 4 6","2 4 6"]],
+  [`let total = 0;\nfor (let i = 1; i <= 3; i++) {\n  total += i;\n}\nconsole.log(total);`,["6","3","123"]],
+  [`for (let i = 1; i <= 2; i++) {\n  console.log("hi");\n}`,["hi hi","hi","hi hi hi"]]
+ ]},
+
+{id:"js10",title:"while loops",sub:"repeat until something changes",steps:[
+ {type:"talk",title:"Keep going while…",
+  body:`<p>A ${C("while")} loop repeats as long as its condition stays true. You change something inside so it eventually stops.</p>`,
+  demo:`let bananas = 3;\nwhile (bananas > 0) {\n  console.log("Nom! " + bananas + " left");\n  bananas--;\n}\nconsole.log("All gone");`,
+  say:"Forget bananas-- and the loop never ends. I'll stop it for you if that happens."},
+ {type:"talk",title:"When you don't know the count",mood:"think",
+  body:`<p>Use ${C("for")} when you know how many times. Use ${C("while")} when you don't, like "keep doubling until it's over 1000."</p>`,
+  demo:`let n = 1;\nwhile (n < 1000) {\n  n = n * 2;\n}\nconsole.log(n);`,
+  say:"How many doubles did that take? You didn't have to know. That's the point."},
+ {type:"quiz",q:"When is while usually the better choice?",opts:["When you don't know how many times it will repeat","When counting exactly to 10","Only when printing text"],a:0,why:"while shines when the stopping point depends on what happens."},
+ {type:"fill",title:"Lose all lives",body:`<p>Make the loop run until lives hits 0.</p>`,
+  code:`let lives = 3;\nwhile (lives [0] 0) {\n  lives[1];\n}\nconsole.log(lives);`,blanks:[">","--"],tokens:[">","--","++","<"],why:"While lives > 0, subtract one."},
+ {type:"code",title:"Double until 100",
+  body:`<p>Start with ${C("money = 1")}. Keep doubling it <b>while</b> it's less than 100, then print it.</p>`,
+  start:`let money = 1;\n// double money while it's less than 100\n`,
+  use:[[/\bwhile\s*\(/,"Use a while loop."]],out:["128"],
+  hint:`let money = 1;\nwhile (money < 100) {\n  money *= 2;\n}\nconsole.log(money);`},
+ {type:"quiz",q:"What does this print?",code:`let x = 0;\nwhile (x < 3) {\n  x++;\n}\nconsole.log(x);`,opts:["3","2","0"],a:0,mono:true,why:"The loop stops the moment x becomes 3."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`let i = 0;\nwhile (i < 3) {\n  i++;\n}\nconsole.log(i);`,["3","2","0"]],
+  [`let n = 5;\nwhile (n > 3) {\n  console.log(n);\n  n--;\n}`,["5 4","5 4 3","4 3"]],
+  [`let x = 1;\nwhile (x < 10) {\n  x *= 3;\n}\nconsole.log(x);`,["27","9","10"]],
+  [`let s = "";\nlet k = 0;\nwhile (k < 2) {\n  s += "ha";\n  k++;\n}\nconsole.log(s);`,["haha","ha","hahaha"]],
+  [`let c = 10;\nwhile (c > 10) {\n  c--;\n}\nconsole.log(c);`,["10","9","0"]]
+ ]},
+
+{id:"js11",title:"Loop patterns",sub:"totals, counting, break and continue",steps:[
+ {type:"talk",title:"The running total",
+  body:`<p>A super common pattern: start a variable at 0 and add to it every round.</p>`,
+  demo:`let sum = 0;\nfor (let i = 1; i <= 100; i++) {\n  sum += i;\n}\nconsole.log(sum);`,
+  say:"1 + 2 + … + 100 in a blink. Your calculator could never."},
+ {type:"talk",title:"break and continue",mood:"think",
+  body:`<p>${C("continue")} skips the rest of this round. ${C("break")} exits the loop completely.</p>`,
+  demo:`for (let i = 1; i <= 10; i++) {\n  if (i === 3) continue;\n  if (i === 6) break;\n  console.log(i);\n}`,
+  say:"3 gets skipped, and the loop quits at 6."},
+ {type:"quiz",q:"What does break do?",opts:["Exits the loop right away","Skips to the next round","Pauses the program"],a:0,why:"continue skips a round; break leaves the loop."},
+ {type:"order",title:"Add 1 to 4",body:`<p>Arrange the lines so it prints ${C("10")}.</p>`,
+  lines:["let sum = 0;","for (let i = 1; i <= 4; i++) {","  sum += i;","}","console.log(sum);"],why:"Make the total, loop and add, then print after the loop ends."},
+ {type:"code",title:"Count the evens",
+  body:`<p>Loop from 1 to 20. Count how many numbers are even, then print the count once at the end.</p>`,
+  start:`let count = 0;\n// loop 1 to 20 and count the evens\n`,
+  use:[[/\bfor\s*\(|\bwhile\s*\(/,"Use a loop."],[/%/,"Use % 2 to test for even numbers."]],out:["10"],
+  hint:`let count = 0;\nfor (let i = 1; i <= 20; i++) {\n  if (i % 2 === 0) {\n    count++;\n  }\n}\nconsole.log(count);`},
+ {type:"quiz",q:"What does this print?",code:`for (let i = 1; i <= 5; i++) {\n  if (i === 4) break;\n  console.log(i);\n}`,opts:["1 2 3","1 2 3 4","1 2 3 5"],a:0,mono:true,why:"At 4 the loop exits before printing."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`let p = 1;\nfor (let i = 1; i <= 4; i++) {\n  p *= 2;\n}\nconsole.log(p);`,["16","8","32"]],
+  [`for (let i = 1; i <= 4; i++) {\n  if (i === 2) continue;\n  console.log(i);\n}`,["1 3 4","1 2 3 4","3 4"]],
+  [`let c = 0;\nfor (let i = 0; i < 10; i++) {\n  if (i > 6) c++;\n}\nconsole.log(c);`,["3","4","6"]],
+  [`let s = 0;\nfor (let i = 2; i <= 6; i += 2) {\n  s += i;\n}\nconsole.log(s);`,["12","6","20"]],
+  [`let i = 0;\nwhile (true) {\n  i++;\n  if (i === 3) break;\n}\nconsole.log(i);`,["3","2","4"]]
+ ]},
+
+{id:"js12",title:"Project: FizzBuzz",sub:"the famous interview puzzle",project:true,steps:[
+ {type:"talk",title:"A classic",mood:"cheer",
+  body:`<p>FizzBuzz is a real puzzle used in coding job interviews. The rules:</p><p>Count from 1 to 15. For multiples of 3 print ${C("Fizz")}. For multiples of 5 print ${C("Buzz")}. For multiples of both print ${C("FizzBuzz")}. Otherwise print the number.</p>`,
+  say:"Hint: check the 'both' case FIRST. Order matters!"},
+ {type:"code",title:"Warm-up: countdown",
+  body:`<p>Print 5, 4, 3, 2, 1 and then ${C("Go!")}.</p>`,start:`// countdown here\n`,
+  use:[[/\bfor\s*\(|\bwhile\s*\(/,"Use a loop."]],out:["5","4","3","2","1","Go!"],
+  hint:`for (let i = 5; i >= 1; i--) {\n  console.log(i);\n}\nconsole.log("Go!");`},
+ {type:"code",title:"FizzBuzz 1 to 15",
+  body:`<p>Write the full FizzBuzz from 1 to 15. A number is a multiple of 3 when ${C("i % 3 === 0")}.</p>`,
+  start:`for (let i = 1; i <= 15; i++) {\n  // your if / else if chain here\n}\n`,
+  use:[[/\bfor\s*\(/,"Use a for loop."],[/%/,"Use % to check multiples."]],
+  out:["1","2","Fizz","4","Buzz","Fizz","7","8","Fizz","Buzz","11","Fizz","13","14","FizzBuzz"],
+  hint:`for (let i = 1; i <= 15; i++) {\n  if (i % 15 === 0) {\n    console.log("FizzBuzz");\n  } else if (i % 3 === 0) {\n    console.log("Fizz");\n  } else if (i % 5 === 0) {\n    console.log("Buzz");\n  } else {\n    console.log(i);\n  }\n}`},
+ {type:"done"}]}
+]};
+
+const JS_UNIT4={name:"Functions",lessons:[
+{id:"js13",title:"Making functions",sub:"name a chunk of code and reuse it",steps:[
+ {type:"talk",title:"Your own commands",
+  body:`<p>A <b>function</b> is reusable code with a name. Define it once, then <b>call</b> it with parentheses as often as you like.</p>`,
+  demo:`function greet() {\n  console.log("Hey there!");\n}\ngreet();\ngreet();`,
+  say:"Defining a function doesn't run it. Calling it does."},
+ {type:"talk",title:"Parameters",mood:"think",
+  body:`<p>Functions can take inputs called <b>parameters</b>. They work like variables inside the function.</p>`,
+  demo:`function greet(name) {\n  console.log("Hey " + name + "!");\n}\ngreet("Ava");\ngreet("Leo");`,
+  say:"Same function, different results. That's reuse."},
+ {type:"quiz",q:"Which line actually runs the function?",opts:["greet();","function greet() {}","greet"],a:0,mono:true,why:"The parentheses () are what call it."},
+ {type:"fill",title:"Define and call",body:`<p>Make a function called cheer and run it.</p>`,
+  code:`[0] cheer() {\n  console.log("Go team!");\n}\n[1];`,blanks:["function","cheer()"],tokens:["function","cheer()","cheer","def"],why:"function defines it; cheer() calls it."},
+ {type:"code",title:"Shout it",
+  body:`<p>Write a function ${C("shout(word)")} that prints the word in capitals with an ${C("!")} on the end. Then call ${C("shout(\"hello\")")}.</p>`,
+  start:`// define shout here\n\nshout("hello");\n`,
+  use:[[/function\s+shout\s*\(|shout\s*=/,"Define a function named shout."]],out:["HELLO!"],variants:[[/shout\("hello"\)/,"shout(\"ook\")",["OOK!"]]],
+  hint:`function shout(word) {\n  console.log(word.toUpperCase() + "!");\n}\n\nshout("hello");`},
+ {type:"quiz",q:"What does this print?",code:`function sayHi() {\n  console.log("hi");\n}`,opts:["Nothing","hi","An error"],a:0,why:"It's defined but never called."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`function f() {\n  console.log("A");\n}\nf();\nf();`,["A A","A","nothing"]],
+  [`function f(x) {\n  console.log(x + 1);\n}\nf(4);`,["5","41","x + 1"]],
+  [`function f(a, b) {\n  console.log(a * b);\n}\nf(3, 4);`,["12","7","34"]],
+  [`function f() {\n  console.log("in");\n}\nconsole.log("out");`,["out","in out","in"]],
+  [`function f(s) {\n  console.log(s + s);\n}\nf("yo");`,["yoyo","yo","s + s"]]
+ ]},
+
+{id:"js14",title:"Return values",sub:"functions that hand back an answer",steps:[
+ {type:"talk",title:"Give something back",
+  body:`<p>${C("return")} sends a value back to wherever the function was called. Then you can store it or print it.</p>`,
+  demo:`function add(a, b) {\n  return a + b;\n}\nconst result = add(2, 3);\nconsole.log(result);\nconsole.log(add(10, 20));`,
+  say:"Printing shows a value. Returning hands it over so your code can use it."},
+ {type:"talk",title:"return ends the function",mood:"think",
+  body:`<p>As soon as ${C("return")} runs, the function stops. Anything after it is skipped.</p>`,
+  demo:`function double(n) {\n  return n * 2;\n  console.log("never runs");\n}\nconsole.log(double(4));`,
+  say:"Useful trick: return early when you already know the answer."},
+ {type:"quiz",q:"What's the difference between console.log and return?",opts:["console.log shows a value; return hands it back to the code","They do the same thing","return prints in red"],a:0,why:"Returned values can be stored, combined and reused."},
+ {type:"fill",title:"Square it",body:`<p>Make square(3) print 9.</p>`,
+  code:`function square(n) {\n  [0] n * n;\n}\nconsole.log(square(3));`,blanks:["return"],tokens:["return","console.log","print","give"],why:"return hands n * n back to console.log."},
+ {type:"code",title:"Area finder",
+  body:`<p>Write ${C("area(w, h)")} that <b>returns</b> width times height. Print ${C("area(3, 4)")} and ${C("area(5, 5)")}.</p>`,
+  start:`// define area here\n\n`,
+  use:[[/\breturn\b/,"Use return to hand back the answer."]],out:["12","25"],
+  hint:`function area(w, h) {\n  return w * h;\n}\nconsole.log(area(3, 4));\nconsole.log(area(5, 5));`},
+ {type:"quiz",q:"What does this print?",code:`function f(x) {\n  if (x > 0) return "pos";\n  return "neg";\n}\nconsole.log(f(-2));`,opts:["neg","pos","pos neg"],a:0,mono:true,why:"-2 > 0 is false, so it skips to return \"neg\"."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`function f(n) {\n  return n * 3;\n}\nconsole.log(f(2));`,["6","5","n * 3"]],
+  [`function f() {\n  return 5;\n}\nconsole.log(f() + f());`,["10","55","5"]],
+  [`function f(a) {\n  return a;\n  console.log("x");\n}\nconsole.log(f(1));`,["1","x 1","1 x"]],
+  [`function f(s) {\n  return s.length;\n}\nconsole.log(f("monkey"));`,["6","monkey","5"]],
+  [`function f(n) {\n  if (n === 0) return "zero";\n  return "other";\n}\nconsole.log(f(0));`,["zero","other","0"]]
+ ]},
+
+{id:"js15",title:"Arrow functions & scope",sub:"the short way, and where variables live",steps:[
+ {type:"talk",title:"Arrow functions",
+  body:`<p>Modern JavaScript has a shorter way to write functions using ${C("=&gt;")}. If it's one expression, the answer returns automatically.</p>`,
+  demo:"const triple = (n) => n * 3;\nconsole.log(triple(4));\n\nconst greet = (name) => {\n  return `Hi, ${name}`;\n};\nconsole.log(greet(\"Sky\"));",
+  say:"You'll see arrows everywhere in real code."},
+ {type:"talk",title:"Scope: where variables live",mood:"think",
+  body:`<p>A variable made <b>inside</b> a function only exists inside it. Variables made outside can be used anywhere.</p>`,
+  demo:`const outside = "I'm global";\nfunction test() {\n  const inside = "I'm local";\n  console.log(outside);\n  console.log(inside);\n}\ntest();\nconsole.log(inside);`,
+  say:"That last line errors: inside doesn't exist out here."},
+ {type:"quiz",q:"What does this print?",code:`const half = (n) => n / 2;\nconsole.log(half(10));`,opts:["5","20","n / 2"],a:0,mono:true,why:"One-line arrow functions return automatically."},
+ {type:"fill",title:"Write an arrow",body:`<p>Make add return a + b.</p>`,
+  code:`const add = (a, b) [0] a + b;\nconsole.log(add(2, 2));`,blanks:["=>"],tokens:["=>",">=","->","=="],why:"=> is the arrow. >= means greater-or-equal."},
+ {type:"code",title:"Temperature converter",
+  body:`<p>Write an arrow function ${C("toF")} that turns Celsius into Fahrenheit: ${C("c * 9 / 5 + 32")}. Print ${C("toF(100)")} and ${C("toF(0)")}.</p>`,
+  start:`// const toF = ...\n\n`,
+  use:[[/=>/,"Use an arrow function: const toF = (c) => ..."]],out:["212","32"],
+  hint:`const toF = (c) => c * 9 / 5 + 32;\nconsole.log(toF(100));\nconsole.log(toF(0));`},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`const f = (x) => x + 10;\nconsole.log(f(5));`,["15","510","x + 10"]],
+  [`const f = () => "ook";\nconsole.log(f());`,["ook","f","undefined"]],
+  [`const f = (a, b) => a - b;\nconsole.log(f(9, 4));`,["5","13","-5"]],
+  [`let x = 1;\nfunction g() {\n  x = 5;\n}\ng();\nconsole.log(x);`,["5","1","undefined"]],
+  [`const sq = (n) => n * n;\nconsole.log(sq(sq(2)));`,["16","4","8"]]
+ ]},
+
+{id:"js16",title:"Project: Tip Calculator",sub:"functions working together",project:true,steps:[
+ {type:"talk",title:"Build a real tool",mood:"cheer",
+  body:`<p>You'll build the brain of a tip calculator app: small functions that each do one job, then combine them.</p>`,
+  say:"This is how real apps are built. Small pieces."},
+ {type:"code",title:"Step 1: the tip",
+  body:`<p>Write ${C("tip(bill, percent)")} that returns the tip amount: ${C("bill * percent / 100")}. Print ${C("tip(50, 20)")}.</p>`,
+  start:`// define tip\n\nconsole.log(tip(50, 20));\n`,
+  use:[[/\breturn\b|=>/,"Return the tip from your function."]],out:["10"],variants:[[/tip\(50, 20\)\)/,"tip(80, 15))",["12"]]],
+  hint:`function tip(bill, percent) {\n  return bill * percent / 100;\n}\n\nconsole.log(tip(50, 20));`},
+ {type:"code",title:"Step 2: the total",
+  body:`<p>Add ${C("total(bill, percent)")} that uses ${C("tip")} and returns bill plus tip. Print ${C("Total: $50")} for a 40 dollar bill with 25% tip.</p>`,
+  start:"function tip(bill, percent) {\n  return bill * percent / 100;\n}\n\n// define total here\n\nconsole.log(`Total: $${total(40, 25)}`);\n",
+  use:[[/function\s+total|total\s*=/,"Define a function called total."],[/tip\(/,"Call tip() inside total."]],out:["Total: $50"],
+  hint:"function tip(bill, percent) {\n  return bill * percent / 100;\n}\n\nfunction total(bill, percent) {\n  return bill + tip(bill, percent);\n}\n\nconsole.log(`Total: $${total(40, 25)}`);"},
+ {type:"code",title:"Step 3: split the bill",
+  body:`<p>Add ${C("split(bill, percent, people)")} that returns each person's share. Print ${C("split(90, 20, 4)")}, which should be ${C("27")}.</p>`,
+  start:"function tip(bill, percent) {\n  return bill * percent / 100;\n}\nfunction total(bill, percent) {\n  return bill + tip(bill, percent);\n}\n\n// define split here\n\nconsole.log(split(90, 20, 4));\n",
+  use:[[/total\(/,"Reuse total() inside split."]],out:["27"],
+  hint:"function tip(bill, percent) {\n  return bill * percent / 100;\n}\nfunction total(bill, percent) {\n  return bill + tip(bill, percent);\n}\n\nfunction split(bill, percent, people) {\n  return total(bill, percent) / people;\n}\n\nconsole.log(split(90, 20, 4));"},
+ {type:"done"}]}
+]};
+
+/* Units 5–6 */
+const JS_UNIT5={name:"Arrays",lessons:[
+{id:"js17",title:"Lists of things",sub:"arrays, indexes and length",steps:[
+ {type:"talk",title:"One box, many values",
+  body:`<p>An <b>array</b> is an ordered list inside square brackets. Grab an item by its <b>index</b>, which starts at 0, just like letters in a string.</p>`,
+  demo:`const fruits = ["banana", "mango", "kiwi"];\nconsole.log(fruits);\nconsole.log(fruits[0]);\nconsole.log(fruits[2]);\nconsole.log(fruits.length);`,
+  say:"Three items, so the indexes are 0, 1 and 2."},
+ {type:"talk",title:"Last item and changing items",mood:"think",
+  body:`<p>The last item is always at ${C("length - 1")}. You can also replace an item by assigning to its index, even in a ${C("const")} array.</p>`,
+  demo:`const fruits = ["banana", "mango", "kiwi"];\nconsole.log(fruits[fruits.length - 1]);\nfruits[1] = "papaya";\nconsole.log(fruits);`,
+  say:"const stops you replacing the whole array, but you can change what's inside."},
+ {type:"quiz",q:"What's the index of the FIRST item in an array?",opts:["0","1","-1"],a:0,why:"Arrays count from 0."},
+ {type:"fill",title:"Grab an item",body:`<p>Print ${C("mango")}.</p>`,
+  code:`const fruits = ["banana", "mango", "kiwi"];\nconsole.log(fruits[[0]]);`,blanks:["1"],tokens:["1","2","0","mango"],why:"banana is 0, mango is 1."},
+ {type:"code",title:"Top 3 games",
+  body:`<p>Print the <b>second</b> game in the list, then print how many games there are.</p>`,
+  start:`const games = ["Chess", "Tetris", "Minecraft"];\n// print the second game, then the count\n`,
+  use:[[/games\s*\[\s*1\s*\]/,"Use games[1] for the second item."],[/\.length/,"Use .length for the count."]],out:["Tetris","3"],
+  hint:`const games = ["Chess", "Tetris", "Minecraft"];\nconsole.log(games[1]);\nconsole.log(games.length);`},
+ {type:"quiz",q:"What does this print?",code:`const a = [10, 20, 30];\nconsole.log(a[a.length - 1]);`,opts:["30","3","20"],a:0,mono:true,why:"length is 3, so a[2] is the last item: 30."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`const a = ["x", "y", "z"];\nconsole.log(a[1]);`,["y","x","z"]],
+  [`const a = [5, 6, 7, 8];\nconsole.log(a.length);`,["4","3","8"]],
+  [`const a = [1, 2, 3];\na[0] = 9;\nconsole.log(a[0]);`,["9","1","undefined"]],
+  [`const a = ["hi"];\nconsole.log(a[1]);`,["undefined","hi","error"]],
+  [`const a = [3, 4];\nconsole.log(a[0] + a[1]);`,["7","34","3"]],
+  [`const a = ["ape", "owl"];\nconsole.log(a[1].length);`,["3","2","owl"]]
+ ]},
+
+{id:"js18",title:"Changing arrays",sub:"push, pop, includes, indexOf",steps:[
+ {type:"talk",title:"Add and remove",
+  body:`<p>${C(".push()")} adds to the end. ${C(".pop()")} removes the last item and gives it back to you.</p>`,
+  demo:`const stack = ["a", "b"];\nstack.push("c");\nconsole.log(stack);\nconst last = stack.pop();\nconsole.log(last);\nconsole.log(stack);`,
+  say:"Think of a stack of plates: push on top, pop off the top."},
+ {type:"talk",title:"Searching",
+  body:`<p>${C(".includes()")} tells you if an item is in the array. ${C(".indexOf()")} tells you <b>where</b> it is, or ${C("-1")} if it's missing.</p>`,
+  demo:`const pets = ["cat", "dog", "fish"];\nconsole.log(pets.includes("dog"));\nconsole.log(pets.indexOf("fish"));\nconsole.log(pets.indexOf("lion"));`,
+  say:"-1 is JavaScript's way of saying 'not found'."},
+ {type:"quiz",q:"What does pop() do?",opts:["Removes and returns the last item","Adds an item to the end","Removes the first item"],a:0,why:"pop takes off the end. push adds to the end."},
+ {type:"order",title:"Shopping list",body:`<p>Arrange the lines so it prints ${C("2")}.</p>`,
+  lines:["const list = [];","list.push(\"milk\");","list.push(\"eggs\");","console.log(list.length);"],why:"Make the list, add two items, then check the length."},
+ {type:"code",title:"Build the list",
+  body:`<p>Push ${C("\"eggs\"")} and ${C("\"bread\"")} onto the list. Then print the length, and then whether the list includes eggs.</p>`,
+  start:`const list = ["milk"];\n// push two items, then print length and includes\n`,
+  use:[[/\.push\(/,"Use .push() to add items."],[/\.includes\(/,"Use .includes(\"eggs\")."]],out:["3","true"],
+  hint:`const list = ["milk"];\nlist.push("eggs");\nlist.push("bread");\nconsole.log(list.length);\nconsole.log(list.includes("eggs"));`},
+ {type:"quiz",q:"What does this print?",code:`const a = [4, 8, 15];\nconsole.log(a.indexOf(8));`,opts:["1","8","2"],a:0,mono:true,why:"8 sits at index 1."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`const a = [1];\na.push(2);\nconsole.log(a.length);`,["2","1","3"]],
+  [`const a = [1, 2, 3];\nconsole.log(a.pop());`,["3","1","[1,2]"]],
+  [`const a = ["x", "y"];\nconsole.log(a.includes("z"));`,["false","true","-1"]],
+  [`const a = ["x", "y"];\nconsole.log(a.indexOf("z"));`,["-1","0","false"]],
+  [`const a = [5, 6];\na.pop();\na.pop();\nconsole.log(a.length);`,["0","2","1"]],
+  [`const a = [];\na.push("ook");\nconsole.log(a[0]);`,["ook","undefined","[]"]]
+ ]},
+
+{id:"js19",title:"Looping through arrays",sub:"for, for…of, forEach",steps:[
+ {type:"talk",title:"Visit every item",
+  body:`<p>Loop from index 0 to ${C("length - 1")} to visit every item.</p>`,
+  demo:`const names = ["Ava", "Leo", "Kai"];\nfor (let i = 0; i < names.length; i++) {\n  console.log(i + ": " + names[i]);\n}`,
+  say:"i < names.length is the classic way to stop at the last item."},
+ {type:"talk",title:"The easy way: for…of",mood:"cheer",
+  body:`<p>When you don't need the index, ${C("for...of")} hands you each item directly. ${C(".forEach()")} does the same with a function.</p>`,
+  demo:`const names = ["Ava", "Leo", "Kai"];\nfor (const name of names) {\n  console.log("Hi, " + name);\n}\nnames.forEach((n) => console.log(n.length));`,
+  say:"for...of reads almost like English."},
+ {type:"quiz",q:"What does for...of give you each round?",opts:["The item itself","The index number","The array length"],a:0,why:"for...of gives you the value. A classic for loop gives you the index."},
+ {type:"fill",title:"Loop the list",body:`<p>Print every color.</p>`,
+  code:`const colors = ["red", "blue"];\nfor (const c [0] colors) {\n  console.log([1]);\n}`,blanks:["of","c"],tokens:["of","c","in","colors"],why:"for (const c of colors) gives you each color as c."},
+ {type:"code",title:"Score total",
+  body:`<p>Add up all the scores with a loop and print the total.</p>`,
+  start:`const scores = [12, 7, 30, 1];\nlet total = 0;\n// loop and add\n`,
+  use:[[/\bfor\s*\(|forEach/,"Use a loop to add them."]],out:["50"],variants:[[/\[12, 7, 30, 1\]/,"[5, 5]",["10"]]],
+  hint:`const scores = [12, 7, 30, 1];\nlet total = 0;\nfor (const s of scores) {\n  total += s;\n}\nconsole.log(total);`},
+ {type:"code",title:"Greet the squad",
+  body:`<p>Print ${C("Hi, Ava!")} style greetings for everyone in the array.</p>`,
+  start:`const squad = ["Ava", "Leo", "Kai"];\n`,
+  use:[[/\bfor\s*\(|forEach/,"Use a loop."]],out:["Hi, Ava!","Hi, Leo!","Hi, Kai!"],
+  hint:"const squad = [\"Ava\", \"Leo\", \"Kai\"];\nfor (const name of squad) {\n  console.log(`Hi, ${name}!`);\n}"},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`const a = [1, 2, 3];\nfor (const x of a) {\n  console.log(x * 10);\n}`,["10 20 30","1 2 3","60"]],
+  [`const a = ["a", "b"];\nfor (let i = 0; i < a.length; i++) {\n  console.log(i);\n}`,["0 1","a b","1 2"]],
+  [`let s = "";\nfor (const c of ["x", "y", "z"]) {\n  s += c;\n}\nconsole.log(s);`,["xyz","x y z","z"]],
+  [`let n = 0;\n[4, 4, 4].forEach((x) => n += x);\nconsole.log(n);`,["12","4","444"]],
+  [`const a = [3, 9, 2];\nlet big = 0;\nfor (const x of a) {\n  if (x > big) big = x;\n}\nconsole.log(big);`,["9","3","2"]]
+ ]},
+
+{id:"js20",title:"map & filter",sub:"transform and pick from arrays",steps:[
+ {type:"talk",title:"map: change every item",
+  body:`<p>${C(".map()")} runs a function on every item and gives you a <b>new</b> array of results.</p>`,
+  demo:`const nums = [1, 2, 3];\nconst doubled = nums.map((n) => n * 2);\nconsole.log(doubled);\nconsole.log(nums);`,
+  say:"The original array stays the same. map makes a new one."},
+ {type:"talk",title:"filter: keep some items",
+  body:`<p>${C(".filter()")} keeps only the items where your function returns ${C("true")}.</p>`,
+  demo:`const ages = [9, 15, 21, 30, 12];\nconst adults = ages.filter((a) => a >= 18);\nconsole.log(adults);`,
+  say:"map changes things. filter chooses things."},
+ {type:"quiz",q:"Which method keeps only some of the items?",opts:["filter","map","push"],a:0,why:"filter keeps items that pass your test."},
+ {type:"fill",title:"Pick the evens",body:`<p>Keep only the even numbers.</p>`,
+  code:`const nums = [1, 2, 3, 4];\nconst evens = nums.[0]((n) => n % 2 === 0);\nconsole.log(evens);`,blanks:["filter"],tokens:["filter","map","push","pop"],why:"filter keeps items where the test is true."},
+ {type:"code",title:"Price tags",
+  body:`<p>Use ${C(".map()")} to make a new array with every price doubled, then print it.</p>`,
+  start:`const prices = [2, 5, 8, 12];\n// const doubled = ...\n`,
+  use:[[/\.map\(/,"Use .map() to transform every price."]],out:["[4,10,16,24]"],
+  hint:`const prices = [2, 5, 8, 12];\nconst doubled = prices.map((p) => p * 2);\nconsole.log(doubled);`},
+ {type:"code",title:"Bargain bin",
+  body:`<p>Use ${C(".filter()")} to keep only prices over 5, then print the result.</p>`,
+  start:`const prices = [2, 5, 8, 12];\n`,
+  use:[[/\.filter\(/,"Use .filter() to choose prices."]],out:["[8,12]"],
+  hint:`const prices = [2, 5, 8, 12];\nconst big = prices.filter((p) => p > 5);\nconsole.log(big);`},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`console.log([1, 2].map((x) => x + 1));`,["[2,3]","[1,2]","[3]"]],
+  [`console.log([1, 2, 3].filter((x) => x > 1));`,["[2,3]","[1]","[true,true]"]],
+  [`console.log(["a", "b"].map((s) => s.toUpperCase()));`,["[\"A\",\"B\"]","[\"a\",\"b\"]","AB"]],
+  [`console.log([5, 10, 15].filter((x) => x === 10).length);`,["1","10","2"]],
+  [`console.log([3, 4].map((x) => x * x));`,["[9,16]","[6,8]","[3,4]"]]
+ ]},
+
+{id:"js21",title:"Project: Shopping Cart",sub:"arrays + loops + functions",project:true,steps:[
+ {type:"talk",title:"Checkout system",mood:"cheer",
+  body:`<p>Every online store has a cart. You'll build the logic behind one using arrays and functions.</p>`,
+  say:"Real e-commerce code looks a lot like this!"},
+ {type:"code",title:"Step 1: cart total",
+  body:`<p>Write ${C("cartTotal(prices)")} that returns the sum of all prices. Print ${C("cartTotal(cart)")}.</p>`,
+  start:`const cart = [4, 10, 6];\n\n// define cartTotal\n\nconsole.log(cartTotal(cart));\n`,
+  use:[[/\breturn\b|=>/,"Return the sum from your function."]],out:["20"],variants:[[/\[4, 10, 6\]/,"[1, 2]",["3"]]],
+  hint:`const cart = [4, 10, 6];\n\nfunction cartTotal(prices) {\n  let sum = 0;\n  for (const p of prices) {\n    sum += p;\n  }\n  return sum;\n}\n\nconsole.log(cartTotal(cart));`},
+ {type:"code",title:"Step 2: add to cart",
+  body:`<p>Write ${C("addItem(cart, price)")} that pushes the price into the cart. Add an 8, then print the new total.</p>`,
+  start:"const cart = [4, 10, 6];\nfunction cartTotal(prices) {\n  let sum = 0;\n  for (const p of prices) sum += p;\n  return sum;\n}\n\n// define addItem, use it, then print cartTotal(cart)\n",
+  use:[[/\.push\(/,"Use push inside addItem."],[/addItem\(\s*cart/,"Call addItem(cart, 8)."]],out:["28"],
+  hint:"const cart = [4, 10, 6];\nfunction cartTotal(prices) {\n  let sum = 0;\n  for (const p of prices) sum += p;\n  return sum;\n}\n\nfunction addItem(cart, price) {\n  cart.push(price);\n}\naddItem(cart, 8);\nconsole.log(cartTotal(cart));"},
+ {type:"code",title:"Step 3: free shipping",
+  body:`<p>Print ${C("Free shipping!")} if the total is 25 or more, otherwise print how much more is needed like ${C("Add $5 for free shipping")}.</p>`,
+  start:"const cart = [4, 10, 6];\nfunction cartTotal(prices) {\n  let sum = 0;\n  for (const p of prices) sum += p;\n  return sum;\n}\nconst total = cartTotal(cart);\n// your if / else\n",
+  use:[[/\bif\s*\(/,"Use if / else."]],out:["Add $5 for free shipping"],variants:[[/\[4, 10, 6\]/,"[20, 10]",["Free shipping!"]],[/\[4, 10, 6\]/,"[24]",["Add $1 for free shipping"]]],
+  hint:"const cart = [4, 10, 6];\nfunction cartTotal(prices) {\n  let sum = 0;\n  for (const p of prices) sum += p;\n  return sum;\n}\nconst total = cartTotal(cart);\nif (total >= 25) {\n  console.log(\"Free shipping!\");\n} else {\n  console.log(`Add $${25 - total} for free shipping`);\n}"},
+ {type:"done"}]}
+]};
+
+const JS_UNIT6={name:"Objects",lessons:[
+{id:"js22",title:"Objects",sub:"labels and values together",steps:[
+ {type:"talk",title:"Describe a thing",
+  body:`<p>An <b>object</b> groups related values with labels called <b>keys</b>. Read a value with a dot.</p>`,
+  demo:`const monkey = {\n  name: "Mo",\n  age: 4,\n  likes: "bananas"\n};\nconsole.log(monkey.name);\nconsole.log(monkey.age + 1);\nconsole.log(monkey);`,
+  say:"Arrays are for lists. Objects are for describing one thing."},
+ {type:"talk",title:"Bracket access",mood:"think",
+  body:`<p>You can also use brackets with the key as a string. That's handy when the key is stored in a variable.</p>`,
+  demo:`const monkey = { name: "Mo", age: 4 };\nconsole.log(monkey["name"]);\nconst key = "age";\nconsole.log(monkey[key]);\nconsole.log(monkey.color);`,
+  say:"Reading a key that doesn't exist gives undefined, not an error."},
+ {type:"quiz",q:"What does this print?",code:`const car = { brand: "Kia", year: 2020 };\nconsole.log(car.year);`,opts:["2020","Kia","year"],a:0,mono:true,why:"car.year reads the value stored under year."},
+ {type:"fill",title:"Read a value",body:`<p>Print the player's score.</p>`,
+  code:`const player = { name: "Zed", score: 88 };\nconsole.log(player[0]score);`,blanks:["."],tokens:[".",",",":","="],why:"Dot notation: object.key"},
+ {type:"code",title:"Player card",
+  body:`<p>Make an object ${C("player")} with a ${C("name")} and a ${C("score")}. Print it like ${C("Zed: 88")} using a template literal.</p>`,
+  start:`// const player = { ... }\n\n`,
+  use:[[/const\s+player\s*=\s*\{/,"Make an object: const player = { ... }"],[/player\.name/,"Use player.name in your output."],[/player\.score/,"Use player.score in your output."]],
+  outRe:[[/^\S.*: \d+$/,"Print it as name: score, like Zed: 88"]],
+  hint:"const player = { name: \"Zed\", score: 88 };\nconsole.log(`${player.name}: ${player.score}`);"},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`const o = { a: 1, b: 2 };\nconsole.log(o.b);`,["2","1","b"]],
+  [`const o = { x: "hi" };\nconsole.log(o["x"]);`,["hi","x","undefined"]],
+  [`const o = { n: 3 };\nconsole.log(o.m);`,["undefined","3","error"]],
+  [`const o = { a: 2, b: 5 };\nconsole.log(o.a * o.b);`,["10","7","25"]],
+  [`const k = "c";\nconst o = { c: "yes" };\nconsole.log(o[k]);`,["yes","c","undefined"]]
+ ]},
+
+{id:"js23",title:"Changing objects & methods",sub:"update keys, add functions",steps:[
+ {type:"talk",title:"Change and add keys",
+  body:`<p>Assign to a key to change it. Assign to a new key to add it.</p>`,
+  demo:`const pet = { name: "Rex", hunger: 5 };\npet.hunger = 2;\npet.mood = "happy";\nconsole.log(pet);`,
+  say:"Objects grow and change as your program runs."},
+ {type:"talk",title:"Methods",mood:"cheer",
+  body:`<p>A function inside an object is a <b>method</b>. Inside it, ${C("this")} means "this object".</p>`,
+  demo:"const pet = {\n  name: \"Rex\",\n  hunger: 5,\n  feed() {\n    this.hunger--;\n  },\n  status() {\n    return `${this.name} hunger: ${this.hunger}`;\n  }\n};\npet.feed();\nconsole.log(pet.status());",
+  say:"You've been using methods all along: \"hi\".toUpperCase() is one!"},
+ {type:"quiz",q:"Inside a method, what does this refer to?",opts:["The object the method belongs to","The whole program","The last variable made"],a:0,why:"this.hunger means 'my own hunger'."},
+ {type:"order",title:"Level up the hero",body:`<p>Arrange the lines so it prints ${C("2")}.</p>`,
+  lines:["const hero = { level: 1 };","hero.level++;","console.log(hero.level);"],why:"Make it, change it, print it."},
+ {type:"code",title:"Feed the pet",
+  body:`<p>Call ${C("pet.feed()")} twice, then print ${C("pet.hunger")}.</p>`,
+  start:`const pet = {\n  name: "Rex",\n  hunger: 5,\n  feed() {\n    this.hunger--;\n  }\n};\n// feed twice, then print hunger\n`,
+  use:[[/pet\.feed\(\)[\s\S]*pet\.feed\(\)/,"Call pet.feed() two times."]],out:["3"],
+  hint:`const pet = {\n  name: "Rex",\n  hunger: 5,\n  feed() {\n    this.hunger--;\n  }\n};\npet.feed();\npet.feed();\nconsole.log(pet.hunger);`},
+ {type:"code",title:"Bank account",
+  body:`<p>Give ${C("account")} a ${C("deposit(amount)")} method that adds to ${C("balance")}. Deposit 50, then print the balance.</p>`,
+  start:`const account = {\n  balance: 100,\n  // add deposit(amount) here\n};\n\n`,
+  use:[[/deposit\s*\(\s*\w+\s*\)\s*\{|deposit\s*:/,"Add a deposit(amount) method."],[/this\.balance/,"Use this.balance inside the method."]],out:["150"],
+  hint:`const account = {\n  balance: 100,\n  deposit(amount) {\n    this.balance += amount;\n  }\n};\n\naccount.deposit(50);\nconsole.log(account.balance);`},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`const o = { v: 1 };\no.v = 7;\nconsole.log(o.v);`,["7","1","8"]],
+  [`const o = {};\no.k = "new";\nconsole.log(o.k);`,["new","undefined","k"]],
+  [`const o = {\n  n: 2,\n  dbl() { return this.n * 2; }\n};\nconsole.log(o.dbl());`,["4","2","n * 2"]],
+  [`const o = { c: 0 };\no.c += 5;\no.c += 5;\nconsole.log(o.c);`,["10","5","55"]],
+  [`const o = {\n  hi() { return "hey"; }\n};\nconsole.log(o.hi());`,["hey","hi","undefined"]]
+ ]},
+
+{id:"js24",title:"Arrays of objects",sub:"lists of real-world data",steps:[
+ {type:"talk",title:"Real data looks like this",
+  body:`<p>Apps store lists of objects: users, products, posts. Loop over them like any array.</p>`,
+  demo:"const students = [\n  { name: \"Ava\", score: 92 },\n  { name: \"Leo\", score: 74 },\n  { name: \"Kai\", score: 85 }\n];\nfor (const s of students) {\n  console.log(`${s.name} got ${s.score}`);\n}",
+  say:"This is basically what a database row looks like in JavaScript."},
+ {type:"talk",title:"filter and map on objects",mood:"think",
+  body:`<p>${C("filter")} and ${C("map")} shine here. Pick the students who passed, then grab just their names.</p>`,
+  demo:"const students = [\n  { name: \"Ava\", score: 92 },\n  { name: \"Leo\", score: 74 },\n  { name: \"Kai\", score: 85 }\n];\nconst honor = students.filter((s) => s.score >= 80);\nconsole.log(honor.map((s) => s.name));",
+  say:"Two lines, and you have an honor roll."},
+ {type:"quiz",q:"How do you read Leo's score?",code:`const kids = [\n  { name: "Ava", score: 92 },\n  { name: "Leo", score: 74 }\n];`,opts:["kids[1].score","kids.Leo.score","kids[score][1]"],a:0,mono:true,why:"kids[1] is Leo's object, then .score reads the value."},
+ {type:"code",title:"Honor roll",
+  body:`<p>Print the name of each student with a score of 80 or more, one per line.</p>`,
+  start:`const students = [\n  { name: "Ava", score: 92 },\n  { name: "Leo", score: 74 },\n  { name: "Kai", score: 85 },\n  { name: "Mia", score: 80 }\n];\n`,
+  use:[[/\bfor\s*\(|forEach|filter/,"Use a loop or filter."]],out:["Ava","Kai","Mia"],
+  hint:`const students = [\n  { name: "Ava", score: 92 },\n  { name: "Leo", score: 74 },\n  { name: "Kai", score: 85 },\n  { name: "Mia", score: 80 }\n];\nfor (const s of students) {\n  if (s.score >= 80) {\n    console.log(s.name);\n  }\n}`},
+ {type:"code",title:"Inventory value",
+  body:`<p>Each item has a ${C("price")} and a ${C("qty")}. Print the total value of everything in stock.</p>`,
+  start:`const stock = [\n  { item: "banana", price: 1, qty: 30 },\n  { item: "mango", price: 3, qty: 10 },\n  { item: "kiwi", price: 2, qty: 5 }\n];\n`,
+  use:[[/\bfor\s*\(|forEach|reduce/,"Loop over the stock."]],out:["70"],
+  hint:`const stock = [\n  { item: "banana", price: 1, qty: 30 },\n  { item: "mango", price: 3, qty: 10 },\n  { item: "kiwi", price: 2, qty: 5 }\n];\nlet total = 0;\nfor (const s of stock) {\n  total += s.price * s.qty;\n}\nconsole.log(total);`},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`const a = [{ n: 1 }, { n: 2 }];\nconsole.log(a[1].n);`,["2","1","undefined"]],
+  [`const a = [{ n: 1 }, { n: 2 }];\nconsole.log(a.length);`,["2","1","4"]],
+  [`const a = [{ x: 5 }, { x: 9 }];\nconsole.log(a.map((o) => o.x));`,["[5,9]","[{x:5},{x:9}]","14"]],
+  [`const a = [{ ok: true }, { ok: false }];\nconsole.log(a.filter((o) => o.ok).length);`,["1","2","true"]],
+  [`const a = [{ p: 2 }, { p: 3 }];\nlet t = 0;\nfor (const o of a) t += o.p;\nconsole.log(t);`,["5","23","6"]]
+ ]},
+
+{id:"js25",title:"Final Project: Leaderboard",sub:"everything you've learned, in one app",project:true,steps:[
+ {type:"talk",title:"The final boss",mood:"cheer",
+  body:`<p>Every game has a leaderboard. You'll build one from scratch: sorting players, printing ranks, and adding new scores. Here's one new tool you'll need:</p>`,
+  demo:`const nums = [30, 10, 20];\nnums.sort((a, b) => b - a);\nconsole.log(nums);`,
+  say:"sort with (a, b) => b - a puts the biggest first. That's all you need!"},
+ {type:"code",title:"Step 1: who's on top?",
+  body:`<p>Sort the players by score, highest first, then print the top player's name.</p>`,
+  start:`const players = [\n  { name: "Leo", score: 720 },\n  { name: "Ava", score: 950 },\n  { name: "Kai", score: 810 }\n];\n`,
+  use:[[/\.sort\(/,"Use .sort((a, b) => b.score - a.score)."]],out:["Ava"],variants:[[/score: 720/,"score: 999",["Leo"]]],
+  hint:`const players = [\n  { name: "Leo", score: 720 },\n  { name: "Ava", score: 950 },\n  { name: "Kai", score: 810 }\n];\nplayers.sort((a, b) => b.score - a.score);\nconsole.log(players[0].name);`},
+ {type:"code",title:"Step 2: print the board",
+  body:`<p>Print the sorted board with ranks, like ${C("1. Ava - 950")}.</p>`,
+  start:`const players = [\n  { name: "Leo", score: 720 },\n  { name: "Ava", score: 950 },\n  { name: "Kai", score: 810 }\n];\nplayers.sort((a, b) => b.score - a.score);\n// print each rank\n`,
+  use:[[/\bfor\s*\(|forEach/,"Use a loop. The index helps with the rank number."]],out:["1. Ava - 950","2. Kai - 810","3. Leo - 720"],
+  hint:"const players = [\n  { name: \"Leo\", score: 720 },\n  { name: \"Ava\", score: 950 },\n  { name: \"Kai\", score: 810 }\n];\nplayers.sort((a, b) => b.score - a.score);\nfor (let i = 0; i < players.length; i++) {\n  const p = players[i];\n  console.log(`${i + 1}. ${p.name} - ${p.score}`);\n}"},
+ {type:"code",title:"Step 3: new high score",
+  body:`<p>Write ${C("addScore(name, score)")} that pushes a new player, re-sorts the board and <b>returns</b> the new rank (1 for first place). Add ${C("Mo")} with 880 and print the rank.</p>`,
+  start:`const players = [\n  { name: "Leo", score: 720 },\n  { name: "Ava", score: 950 },\n  { name: "Kai", score: 810 }\n];\n\n// define addScore\n\nconsole.log(addScore("Mo", 880));\n`,
+  use:[[/\.push\(/,"Push the new player in."],[/\.sort\(/,"Sort again after adding."],[/\breturn\b/,"Return the rank."]],out:["2"],
+  variants:[[/addScore\("Mo", 880\)/,"addScore(\"Mo\", 1000)",["1"]],[/addScore\("Mo", 880\)/,"addScore(\"Mo\", 5)",["4"]]],
+  hint:`const players = [\n  { name: "Leo", score: 720 },\n  { name: "Ava", score: 950 },\n  { name: "Kai", score: 810 }\n];\n\nfunction addScore(name, score) {\n  const p = { name: name, score: score };\n  players.push(p);\n  players.sort((a, b) => b.score - a.score);\n  return players.indexOf(p) + 1;\n}\n\nconsole.log(addScore("Mo", 880));`},
+ {type:"done"}]}
+]};
+
+const COURSE_JS={id:"js",name:"JavaScript",units:[JS_UNIT1,JS_UNIT2,JS_UNIT3,JS_UNIT4,JS_UNIT5,JS_UNIT6]};
+
+/* C# and C++ courses · Unit 1 built, later units on the roadmap.
+   These languages need a compiler, so exercises are read-and-reason: quizzes, fill, order, output rush. */
+COURSE_JS.blurb="From your first console.log to building a game leaderboard. 25 lessons with real code you run yourself. Unit 1 is free.";
+
+const COURSE_CS={id:"cs",name:"C#",blurb:"The language behind Unity games, Windows apps and tons of backend systems. Unit 1 is free.",units:[
+{name:"Hello, C#",free:true,lessons:[
+{id:"cs1",title:"Hello, Console",sub:"Console.WriteLine and the Main method",steps:[
+ {type:"talk",title:"Meet C#",mood:"cheer",
+  body:`<p>C# (say "C sharp") powers Unity games, Windows apps and big company servers. It's stricter than JavaScript, and that strictness catches bugs early.</p>`,
+  say:"If you finished JavaScript, a lot of this will feel familiar!"},
+ {type:"talk",title:"Printing a line",
+  body:`<p>${C("Console.WriteLine()")} prints text and moves to a new line. Every statement ends with a semicolon ${C(";")}. Your program starts running inside ${C("Main")}.</p>`,
+  demo:`using System;\n\nclass Program {\n  static void Main() {\n    Console.WriteLine("Hello, world!");\n    Console.WriteLine("I'm learning C#");\n  }\n}`,
+  say:"Output:\nHello, world!\nI'm learning C#"},
+ {type:"talk",title:"Write vs WriteLine",mood:"think",
+  body:`<p>${C("Console.Write()")} prints <b>without</b> starting a new line, so the next print continues on the same line.</p>`,
+  demo:`Console.Write("Ook ");\nConsole.Write("ook ");\nConsole.WriteLine("OOK!");\nConsole.WriteLine("Done");`,
+  say:"That prints \"Ook ook OOK!\" on one line, then \"Done\" below it."},
+ {type:"quiz",q:"What does every C# statement end with?",opts:[";",".",":","Nothing"],a:0,mono:true,why:"Forget a semicolon and the compiler refuses to build your program."},
+ {type:"fill",title:"Print it",body:`<p>Print Hello, then move to a new line.</p>`,
+  code:`Console.[0]("Hello")[1]`,blanks:["WriteLine",";"],tokens:["WriteLine",";","log","print"],why:"Console.WriteLine(...); is C#'s console.log."},
+ {type:"order",title:"Build a program",body:`<p>Put the lines in a working order.</p>`,
+  lines:["class Program {","  static void Main() {","    Console.WriteLine(\"Hi!\");","  }","}"],why:"The class holds Main, and Main holds your code."},
+ {type:"quiz",q:"What does this print?",code:`Console.Write("A");\nConsole.Write("B");\nConsole.WriteLine("C");`,opts:["ABC","A B C","A\nB\nC"],a:0,mono:true,why:"Write doesn't add a new line, so all three end up together."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`Console.WriteLine("Hi" + "!");`,["Hi!","Hi +!","Hi !"]],
+  [`Console.Write("x");\nConsole.Write("y");`,["xy","x y","yx"]],
+  [`Console.WriteLine(2 + 3);`,["5","23","2 + 3"]],
+  [`Console.WriteLine("2" + 3);`,["23","5","Error"]],
+  [`Console.WriteLine("ook".ToUpper());`,["OOK","ook","Ook"]],
+  [`Console.WriteLine("monkey".Length);`,["6","5","monkey"]]
+ ]},
+{id:"cs2",title:"Variables & types",sub:"int, double, string, bool, var",steps:[
+ {type:"talk",title:"Every box has a type",
+  body:`<p>In C#, you say what <b>type</b> a variable holds: ${C("int")} for whole numbers, ${C("double")} for decimals, ${C("string")} for text and ${C("bool")} for true/false.</p>`,
+  demo:`int lives = 3;\ndouble price = 1.99;\nstring name = "Mo";\nbool hungry = true;\nConsole.WriteLine(name);\nConsole.WriteLine(lives);`,
+  say:"Try putting text in an int and C# won't even build. That's the safety net."},
+ {type:"talk",title:"String interpolation",mood:"cheer",
+  body:`<p>Put ${C("$")} before a string and drop variables inside ${C("{ }")}. It's like JavaScript's template literals.</p>`,
+  demo:`string name = "Mo";\nint age = 4;\nConsole.WriteLine($"{name} is {age} years old");\nConsole.WriteLine($"Next year: {age + 1}");`,
+  say:"Output:\nMo is 4 years old\nNext year: 5"},
+ {type:"talk",title:"var: let C# figure it out",mood:"think",
+  body:`<p>${C("var")} lets the compiler work out the type from the value. The type is still fixed after that.</p>`,
+  demo:`var score = 10;     // int\nvar city = "Lima";  // string\nscore = 20;         // fine\n// score = "high";  // error: score is an int`,
+  say:"var saves typing, but the variable still has one type forever."},
+ {type:"quiz",q:"Which type holds 3.14?",opts:["double","int","string","bool"],a:0,mono:true,why:"Decimals go in double. int is only for whole numbers."},
+ {type:"fill",title:"Pick the types",body:`<p>Match each value with its type.</p>`,
+  code:`[0] coins = 50;\n[1] pet = "owl";\n[2] isAwake = false;`,blanks:["int","string","bool"],tokens:["int","string","bool","double"],why:"Whole number → int, text → string, true/false → bool."},
+ {type:"quiz",q:"What does this print?",code:`bool ready = true;\nConsole.WriteLine(ready);`,opts:["True","true","1"],a:0,mono:true,why:"C# prints booleans with a capital letter: True and False."},
+ {type:"quiz",q:"Which line won't compile?",opts:["int x = \"five\";","int x = 5;","string s = \"5\";"],a:0,mono:true,why:"You can't put a string into an int box."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`int a = 4;\na = a + 1;\nConsole.WriteLine(a);`,["5","4","a + 1"]],
+  [`string s = "ab";\ns += "c";\nConsole.WriteLine(s);`,["abc","ab","c"]],
+  [`int x = 3;\nConsole.WriteLine($"x={x}");`,["x=3","x={x}","$x=3"]],
+  [`bool b = false;\nConsole.WriteLine(b);`,["False","false","0"]],
+  [`double d = 2.5;\nConsole.WriteLine(d * 2);`,["5","5.5","2.52.5"]],
+  [`var n = 7;\nn++;\nConsole.WriteLine(n);`,["8","7","n++"]]
+ ]},
+{id:"cs3",title:"Math & decisions",sub:"integer division, %, if / else",steps:[
+ {type:"talk",title:"Integer division surprise",mood:"oops",
+  body:`<p>When you divide two ${C("int")}s, C# throws away the decimal part. Use a ${C("double")} if you want the decimal.</p>`,
+  demo:`Console.WriteLine(7 / 2);     // 3\nConsole.WriteLine(7.0 / 2);   // 3.5\nConsole.WriteLine(7 % 2);     // 1`,
+  say:"This trips up everyone once. Now it won't trip you."},
+ {type:"talk",title:"if / else",
+  body:`<p>Decisions look almost exactly like JavaScript. Comparisons use ${C("==")} in C#, and conditions need parentheses.</p>`,
+  demo:`int hunger = 8;\nif (hunger > 5) {\n  Console.WriteLine("Banana time!");\n} else if (hunger > 2) {\n  Console.WriteLine("Snack time");\n} else {\n  Console.WriteLine("All good");\n}`,
+  say:"hunger is 8, so it prints \"Banana time!\""},
+ {type:"quiz",q:"What does this print?",code:`Console.WriteLine(9 / 2);`,opts:["4","4.5","5"],a:0,mono:true,why:"int / int drops the decimal, so 4.5 becomes 4."},
+ {type:"fill",title:"Even check",body:`<p>Print "even" when n divides by 2 with nothing left over.</p>`,
+  code:`int n = 6;\nif (n [0] 2 [1] 0) {\n  Console.WriteLine("even");\n}`,blanks:["%","=="],tokens:["%","==","/","="],why:"n % 2 == 0 means 'no remainder', so it's even."},
+ {type:"quiz",q:"What does this print?",code:`int t = 15;\nif (t > 20) {\n  Console.WriteLine("hot");\n} else {\n  Console.WriteLine("cool");\n}`,opts:["cool","hot","15"],a:0,mono:true,why:"15 > 20 is false, so the else runs."},
+ {type:"quiz",q:"Which operator means AND in C#?",opts:["&&","and","&|"],a:0,mono:true,why:"Same as JavaScript: && is and, || is or."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`Console.WriteLine(10 / 4);`,["2","2.5","3"]],
+  [`Console.WriteLine(10.0 / 4);`,["2.5","2","3"]],
+  [`Console.WriteLine(10 % 4);`,["2","2.5","0"]],
+  [`int a = 3;\nif (a == 3) {\n  Console.WriteLine("yes");\n}`,["yes","no","True"]],
+  [`Console.WriteLine(5 > 3 && 2 > 4);`,["False","True","false"]],
+  [`int x = 2 + 3 * 2;\nConsole.WriteLine(x);`,["8","10","7"]]
+ ]}
+]},
+{name:"Loops & methods",lessons:[
+ {id:"cs4",title:"for and while",sub:"repeating code in C#"},
+ {id:"cs5",title:"Methods",sub:"parameters, return types, void"},
+ {id:"cs6",title:"Project: Number guesser",sub:"loops + methods together",project:true}]},
+{name:"Classes & objects",lessons:[
+ {id:"cs7",title:"Your first class",sub:"fields, constructors, new"},
+ {id:"cs8",title:"Properties & methods",sub:"get, set, and behavior"},
+ {id:"cs9",title:"Project: Virtual pet",sub:"a class that lives and breathes",project:true}]},
+{name:"Collections",lessons:[
+ {id:"cs10",title:"Arrays & Lists",sub:"List&lt;T&gt;, Add, Count, foreach"},
+ {id:"cs11",title:"Dictionaries",sub:"key and value lookups"},
+ {id:"cs12",title:"Project: Inventory system",sub:"like a game backpack",project:true}]}
+]};
+
+const COURSE_CPP={id:"cpp",name:"C++",blurb:"The speed-demon language behind game engines, browsers and robots. Unit 1 is free.",units:[
+{name:"Hello, C++",free:true,lessons:[
+{id:"cpp1",title:"Hello, C++",sub:"#include, main, std::cout",steps:[
+ {type:"talk",title:"Meet C++",mood:"cheer",
+  body:`<p>C++ is one of the fastest languages around. Game engines like Unreal, web browsers and robots use it. It gives you a lot of control, so it asks for a bit more care.</p>`,
+  say:"Fast, powerful, and a little picky. Let's tame it."},
+ {type:"talk",title:"Printing with cout",
+  body:`<p>${C("#include &lt;iostream&gt;")} brings in input/output tools. Programs start in ${C("main()")}. You print by sending things into ${C("std::cout")} with ${C("&lt;&lt;")}.</p>`,
+  demo:`#include <iostream>\n\nint main() {\n  std::cout << "Hello, world!" << std::endl;\n  std::cout << "I'm learning C++" << std::endl;\n  return 0;\n}`,
+  say:"std::endl ends the line. return 0 tells the computer 'all good'."},
+ {type:"talk",title:"Chaining output",mood:"think",
+  body:`<p>You can chain as many ${C("&lt;&lt;")} as you want. ${C("\"\\n\"")} is a shorter way to end a line.</p>`,
+  demo:`std::cout << "Level " << 3 << "\\n";\nstd::cout << 2 + 2 << "\\n";`,
+  say:"Output:\nLevel 3\n4"},
+ {type:"quiz",q:"Where does a C++ program start running?",opts:["main()","start()","the first line","#include"],a:0,mono:true,why:"Every C++ program begins in main."},
+ {type:"fill",title:"Print it",body:`<p>Print Hi and end the line.</p>`,
+  code:`std::[0] [1] "Hi" << std::endl;`,blanks:["cout","<<"],tokens:["cout","<<",">>","print"],why:"std::cout << sends things to the screen. >> is for reading input."},
+ {type:"order",title:"Build a program",body:`<p>Put the lines in a working order.</p>`,
+  lines:["#include <iostream>","int main() {","  std::cout << \"Ook!\";","  return 0;","}"],why:"Include first, then main wraps your code and returns 0."},
+ {type:"quiz",q:"What does this print?",code:`std::cout << "A" << "B" << "\\n";\nstd::cout << "C";`,opts:["AB\nC","ABC","A B C"],a:0,mono:true,why:"\\n ends the first line after AB, then C goes on the next line."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`std::cout << "Hi" << "!";`,["Hi!","Hi !","Hi << !"]],
+  [`std::cout << 3 + 4;`,["7","34","3 + 4"]],
+  [`std::cout << "3" << 4;`,["34","7","Error"]],
+  [`std::cout << "x\\n" << "y";`,["x y","xy","x\\ny"]],
+  [`std::cout << 10 - 2 * 3;`,["4","24","6"]],
+  [`std::cout << "a" << " " << "b";`,["a b","ab","a  b"]]
+ ]},
+{id:"cpp2",title:"Variables & types",sub:"int, double, std::string, bool, auto",steps:[
+ {type:"talk",title:"Typed boxes",
+  body:`<p>Like C#, every C++ variable has a type: ${C("int")}, ${C("double")}, ${C("bool")}, and ${C("std::string")} for text (which needs ${C("#include &lt;string&gt;")}).</p>`,
+  demo:`int lives = 3;\ndouble price = 1.99;\nstd::string name = "Mo";\nbool hungry = true;\nstd::cout << name << " has " << lives << " lives";`,
+  say:"Output: Mo has 3 lives"},
+ {type:"talk",title:"bool prints as a number",mood:"oops",
+  body:`<p>Surprise: by default, C++ prints ${C("true")} as ${C("1")} and ${C("false")} as ${C("0")}.</p>`,
+  demo:`bool a = true;\nbool b = false;\nstd::cout << a << " " << b;`,
+  say:"Output: 1 0. Computers love ones and zeros."},
+ {type:"talk",title:"auto",mood:"think",
+  body:`<p>${C("auto")} lets the compiler pick the type from the value, like ${C("var")} in C#.</p>`,
+  demo:`auto score = 10;     // int\nauto ratio = 0.5;    // double\nscore = score + 5;\nstd::cout << score;  // 15`,
+  say:"The type still never changes after it's decided."},
+ {type:"quiz",q:"What does this print?",code:`bool ok = true;\nstd::cout << ok;`,opts:["1","true","True"],a:0,mono:true,why:"C++ prints booleans as 1 and 0 by default."},
+ {type:"fill",title:"Pick the types",body:`<p>Match each value with its type.</p>`,
+  code:`[0] coins = 50;\n[1] speed = 2.5;\n[2] name = "Kai";`,blanks:["int","double","std::string"],tokens:["int","double","std::string","bool"],why:"Whole → int, decimal → double, text → std::string."},
+ {type:"quiz",q:"Which header do you need for std::string?",opts:["#include <string>","#include <text>","#include <iostream> only"],a:0,mono:true,why:"<string> brings in std::string."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`int a = 5;\na += 2;\nstd::cout << a;`,["7","52","5"]],
+  [`bool b = false;\nstd::cout << b;`,["0","false","False"]],
+  [`std::string s = "ook";\nstd::cout << s.length();`,["3","ook","2"]],
+  [`int x = 4;\nint y = x;\nx = 10;\nstd::cout << y;`,["4","10","0"]],
+  [`double d = 1.5;\nstd::cout << d + d;`,["3","1.51.5","2"]],
+  [`auto n = 9;\nn--;\nstd::cout << n;`,["8","9","10"]]
+ ]},
+{id:"cpp3",title:"Math & decisions",sub:"integer division, %, if / else",steps:[
+ {type:"talk",title:"Integer division",mood:"oops",
+  body:`<p>${C("int")} divided by ${C("int")} drops the decimal in C++ too. Make one side a decimal to keep it.</p>`,
+  demo:`std::cout << 7 / 2 << "\\n";    // 3\nstd::cout << 7.0 / 2 << "\\n";  // 3.5\nstd::cout << 7 % 2 << "\\n";    // 1`,
+  say:"Same trap as C#. You're now immune."},
+ {type:"talk",title:"if / else",
+  body:`<p>Decisions use the same shape you already know: ${C("if")}, ${C("else if")}, ${C("else")}, plus ${C("==")}, ${C("&amp;&amp;")} and ${C("||")}.</p>`,
+  demo:`int score = 84;\nif (score >= 90) {\n  std::cout << "A";\n} else if (score >= 80) {\n  std::cout << "B";\n} else {\n  std::cout << "Keep going";\n}`,
+  say:"84 lands on B."},
+ {type:"quiz",q:"What does this print?",code:`std::cout << 11 / 3;`,opts:["3","3.67","4"],a:0,mono:true,why:"11 / 3 is 3 with the decimal dropped."},
+ {type:"fill",title:"Both must be true",body:`<p>Print "Go" only if ready AND fueled.</p>`,
+  code:`bool ready = true;\nbool fueled = true;\nif (ready [0] fueled) {\n  std::cout << "Go";\n}`,blanks:["&&"],tokens:["&&","||","==","and"],why:"&& requires both sides to be true."},
+ {type:"quiz",q:"What does this print?",code:`int x = 5;\nif (x = 0) {\n  std::cout << "zero";\n} else {\n  std::cout << "not zero";\n}`,opts:["not zero","zero","5"],a:0,mono:true,why:"Bug alert! x = 0 ASSIGNS 0 (which counts as false). You wanted x == 0. Classic C++ trap."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`std::cout << 9 / 2;`,["4","4.5","5"]],
+  [`std::cout << 9.0 / 2;`,["4.5","4","5"]],
+  [`std::cout << 9 % 4;`,["1","2","0"]],
+  [`int a = 2;\nif (a > 1) std::cout << "big";\nelse std::cout << "small";`,["big","small","bigsmall"]],
+  [`std::cout << (3 > 2 && 1 > 5);`,["0","1","false"]],
+  [`std::cout << (4 == 4);`,["1","true","4"]]
+ ]}
+]},
+{name:"Loops & functions",lessons:[
+ {id:"cpp4",title:"for and while",sub:"repeating code in C++"},
+ {id:"cpp5",title:"Functions",sub:"return types, parameters, void"},
+ {id:"cpp6",title:"Project: Times table",sub:"loops inside loops",project:true}]},
+{name:"Memory & pointers",lessons:[
+ {id:"cpp7",title:"References",sub:"another name for the same box"},
+ {id:"cpp8",title:"Pointers",sub:"addresses, * and &"},
+ {id:"cpp9",title:"Project: Swap machine",sub:"change values through pointers",project:true}]},
+{name:"Classes & vectors",lessons:[
+ {id:"cpp10",title:"std::vector",sub:"growable lists"},
+ {id:"cpp11",title:"Your first class",sub:"members, constructors, methods"},
+ {id:"cpp12",title:"Project: Monster battle",sub:"classes fighting it out",project:true}]}
+]};
+
+</script>
+<script>
+/* ---------- TypeMonkey mascot (original character) ---------- */
+function monkey(mood="happy"){
+  const mouth={
+    happy:'<path d="M49 77 Q60 87 71 77" stroke="#3A1A05" stroke-width="3.2" fill="none" stroke-linecap="round"/>',
+    cheer:'<path d="M48 75 Q60 92 72 75 Z" fill="#3A1A05"/><path d="M53 80 Q60 86 67 80" fill="#FF6B6B"/>',
+    think:'<path d="M52 79 Q60 77 69 80" stroke="#3A1A05" stroke-width="3" fill="none" stroke-linecap="round"/>',
+    oops:'<ellipse cx="60" cy="80" rx="5" ry="6" fill="#3A1A05"/>'
+  }[mood]||'';
+  const ey=mood==="think"?-2:0;
+  return `<svg viewBox="0 0 120 120" aria-hidden="true">
+  <circle cx="20" cy="60" r="15" fill="#F26A0F"/><circle cx="20" cy="60" r="8.5" fill="#FFD2A6"/>
+  <circle cx="100" cy="60" r="15" fill="#F26A0F"/><circle cx="100" cy="60" r="8.5" fill="#FFD2A6"/>
+  <circle cx="60" cy="58" r="40" fill="#FF7A1A"/>
+  <path d="M52 20 Q58 8 64 19 Q70 10 72 22" fill="#E05E08"/>
+  <circle cx="47" cy="54" r="15" fill="#FFD2A6"/><circle cx="73" cy="54" r="15" fill="#FFD2A6"/>
+  <ellipse cx="60" cy="74" rx="25" ry="18" fill="#FFD2A6"/>
+  <circle cx="47" cy="${54+ey}" r="4.6" fill="#22130A"/><circle cx="73" cy="${54+ey}" r="4.6" fill="#22130A"/>
+  <circle cx="48.6" cy="${52.4+ey}" r="1.5" fill="#fff"/><circle cx="74.6" cy="${52.4+ey}" r="1.5" fill="#fff"/>
+  <circle cx="47" cy="54" r="10.5" fill="none" stroke="#1B2B25" stroke-width="2.6"/>
+  <circle cx="73" cy="54" r="10.5" fill="none" stroke="#1B2B25" stroke-width="2.6"/>
+  <path d="M57.5 54 Q60 51.5 62.5 54" stroke="#1B2B25" stroke-width="2.6" fill="none"/>
+  <circle cx="56" cy="68" r="1.8" fill="#8A4A1E"/><circle cx="64" cy="68" r="1.8" fill="#8A4A1E"/>
+  ${mouth}
+  <circle cx="38" cy="72" r="4" fill="#FF9E7A" opacity=".55"/><circle cx="82" cy="72" r="4" fill="#FF9E7A" opacity=".55"/>
+</svg>`;
+}
+(function favicon(){
+  try{const l=document.createElement("link");l.rel="icon";l.type="image/svg+xml";
+  l.href="data:image/svg+xml,"+encodeURIComponent(monkey().replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" '));
+  document.head.appendChild(l);}catch(e){}
+})();
+document.getElementById("brandMonkey").innerHTML=monkey();
+
+/* ---------- Helpers ---------- */
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function buddy(text,mood="happy"){return `<div class="buddy bounce">${monkey(mood)}<div class="bubble">${text}</div></div>`}
+function toast(msg){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(t._h);t._h=setTimeout(()=>t.hidden=true,2800)}
+const Q=t=>`“${t}${/[?!.]$/.test(t)?"":"."}”`;
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const WINS=["Nailed it!","Clean code. Love it.","Ook ook! That's right!","You're on fire!","Banana-level genius."];
+
+/* ---------- State ---------- */
+const KEY="typemonkey-v1";
+let S={xp:0,bananas:0,streak:0,lastDay:null,done:[],progress:{},pro:false,tester:false};
+try{const raw=localStorage.getItem(KEY);if(raw)S={...S,...JSON.parse(raw)}}catch(e){}
+if(S.inProgress){S.progress=S.progress||{};if(S.inProgress.id)S.progress[S.inProgress.id]={step:S.inProgress.step,earned:S.inProgress.earned,drafts:{}};delete S.inProgress}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}renderStats()}
+function renderStats(){$("#sStreak").textContent=S.streak;$("#sBan").textContent=S.bananas;$("#sXp").textContent=S.xp}
+const dayStr=d=>d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
+function bumpStreak(){const t=dayStr(new Date());if(S.lastDay===t)return;const y=dayStr(new Date(Date.now()-864e5));S.streak=S.lastDay===y?S.streak+1:1;S.lastDay=t}
+
+/* ---------- Code runner: in-page, loop-guarded, with a fallback if eval is blocked ---------- */
+function guardLoops(code){
+  const G="__tmG()";let res="",i=0;const re=/\b(for|while)\s*\(|\bdo\s*\{/g;
+  while(i<code.length){
+    re.lastIndex=i;const m=re.exec(code);
+    if(!m){res+=code.slice(i);break}
+    res+=code.slice(i,m.index);
+    if(m[0].startsWith("do")){res+="do{"+G+";";i=m.index+m[0].length;continue}
+    let j=m.index+m[0].length,depth=1,q=null;const start=j;
+    for(;j<code.length&&depth;j++){const ch=code[j];
+      if(q){if(ch==="\\")j++;else if(ch===q)q=null;continue}
+      if(ch==='"'||ch==="'"||ch==="`")q=ch;else if(ch==="(")depth++;else if(ch===")")depth--;}
+    if(depth){res+=code.slice(m.index);break}
+    const inner=code.slice(start,j-1);let out;
+    if(m[1]==="while")out=`while(${G}&&(${inner}))`;
+    else{
+      let parts=[],d=0,last=0,qq=null;
+      for(let k=0;k<inner.length;k++){const ch=inner[k];
+        if(qq){if(ch==="\\")k++;else if(ch===qq)qq=null;continue}
+        if(ch==='"'||ch==="'"||ch==="`")qq=ch;else if("([{".includes(ch))d++;else if(")]}".includes(ch))d--;
+        else if(ch===";"&&!d){parts.push(inner.slice(last,k));last=k+1}}
+      parts.push(inner.slice(last));
+      if(parts.length===3)out=`for(${parts[0]};${G}&&(${parts[1].trim()||"true"});${parts[2]})`;
+      else{const b=code.slice(j).match(/^\s*\{/);out=`for(${inner})`+(b?b[0]+G+";":"");if(b)j+=b[0].length}
+    }
+    res+=out;i=j;
+  }
+  return res;
+}
+function makeConsole(out){
+  const fmt=v=>typeof v==="string"?v:(()=>{try{const j=JSON.stringify(v);return j===undefined?String(v):j}catch(_){return String(v)}})();
+  const lg=(...a)=>out.push(["log",a.map(fmt).join(" ")]);
+  return {log:lg,info:lg,warn:lg,error:(...a)=>out.push(["err",a.map(fmt).join(" ")])};
+}
+let evalBlocked=false;
+function runCode(code){
+  const out=[];const con=makeConsole(out);
+  const body="let __tmN=0;const __tmG=()=>{if(++__tmN>100000)throw new Error('Your loop ran 100,000 times, so I stopped it. Check that it can end.');return true};\n"+guardLoops(code);
+  if(!evalBlocked){
+    let fn=null;
+    try{fn=new Function("console",body)}catch(err){
+      if(err instanceof SyntaxError){out.push(["err","SyntaxError: "+err.message]);return Promise.resolve(out)}
+      evalBlocked=true;
+    }
+    if(fn){try{fn(con)}catch(err){out.push(["err",(err.name||"Error")+": "+err.message])}return Promise.resolve(out)}
+  }
+  return new Promise(res=>{
+    window.__tmCon=con;
+    const onErr=e=>{out.push(["err",String(e.message||e).replace(/^Uncaught /,"").replace(/Failed to execute '\w+' on '\w+': /,"")]);e.preventDefault&&e.preventDefault()};
+    window.addEventListener("error",onErr);
+    const s=document.createElement("script");
+    s.textContent="(function(console){try{"+body+"\n}catch(err){console.error((err.name||'Error')+': '+err.message)}})(window.__tmCon);";
+    document.body.appendChild(s);s.remove();window.removeEventListener("error",onErr);res(out);
+  });
+}
+function paintConsole(el,out){
+  el.innerHTML=out.length?out.map(([k,v])=>`<div class="${k==="err"?"err":""}">${k==="err"?"✖ ":"› "}${esc(v)}</div>`).join(""):'<span class="dim">(nothing printed. Try console.log)</span>';
+}
+
+/* ---------- Grading code challenges ---------- */
+const norm=l=>{l=String(l).trim();return /^[\[{]/.test(l)?l.replace(/\s+/g,""):l};
+function checkOut(st,out){
+  const err=out.find(o=>o[0]==="err");
+  if(err)return [false,"Your code hit an error. Read the red line in the console. A missing quote, bracket or brace is the usual suspect."];
+  const logs=out.filter(o=>o[0]==="log").map(o=>o[1]);
+  if(st.out){
+    const ok=st.out.length===logs.length&&st.out.every((e,i)=>norm(e)===norm(logs[i]));
+    if(!ok)return [false,"Close! The output doesn't match yet.",`Expected:\n${st.out.join("\n")}\n\nYou printed:\n${logs.join("\n")||"(nothing)"}`];
+  }
+  for(const [re,msg] of st.outRe||[])if(!logs.some(l=>re.test(l)))return [false,msg];
+  return [true];
+}
+async function grade(st,code){
+  for(const [re,msg] of st.use||[])if(!re.test(code))return [false,msg];
+  const r=checkOut(st,await runCode(code));if(!r[0])return r;
+  for(const [find,rep,lines] of st.variants||[]){
+    if(!find.test(code))continue;
+    const r2=checkOut({out:lines},await runCode(code.replace(find,rep)));
+    if(!r2[0])return [false,`Works for this example, but I changed the starting value (${rep}) and it broke. Make sure your code uses the variables instead of fixed answers.`,r2[2]];
+  }
+  return [true,st.win||pick(WINS)];
+}
+
+/* ---------- Courses ---------- */
+const COURSES=[
+  {...COURSE_JS,tag:"console.log('hi')",runnable:true,lang:"script.js"},
+  {...COURSE_CS,tag:'Console.WriteLine("hi");',lang:"Program.cs"},
+  {...COURSE_CPP,tag:'std::cout << "hi";',lang:"main.cpp"},
+  {id:"py",name:"Python",tag:"print('hi')",soon:true},
+  {id:"web",name:"HTML & CSS",tag:"<h1>hi</h1>",soon:true},
+  {id:"sql",name:"SQL",tag:"SELECT 'hi';",soon:true},
+  {id:"jr",name:"TypeMonkey Jr.",tag:"for ages 7–12",soon:true,kids:true}
+];
+const courseById=id=>COURSES.find(c=>c.id===id);
+function flat(c){const L=[];(c.units||[]).forEach((u,ui)=>u.lessons.forEach((l,li)=>L.push({l,u,ui,li,idx:L.length})));return L}
+function findLesson(id){for(const c of COURSES){const f=flat(c).find(x=>x.l.id===id);if(f)return {c,...f}}return null}
+function status(c,item){
+  const {l,u,idx}=item;
+  if(!l.steps)return "soon";
+  if(S.done.includes(l.id))return "done";
+  if(!u.free&&!S.pro)return "pro";
+  if(S.tester||idx===0)return "open";
+  const L=flat(c);const prev=L[idx-1];
+  return (!prev.l.steps||S.done.includes(prev.l.id))?"open":"locked";
+}
+function countLessons(c){const L=flat(c).filter(x=>x.l.steps);return [L.filter(x=>S.done.includes(x.l.id)).length,L.length,flat(c).length]}
+function nextUp(c){const L=flat(c);return L.find(x=>S.progress[x.l.id])||L.find(x=>status(c,x)==="open")}
+
+/* ---------- Home ---------- */
+function home(){
+  const js=COURSES[0];const nu=nextUp(js);const resume=nu&&S.progress[nu.l.id];
+  const nextPro=!nu&&flat(js).find(x=>x.l.steps&&status(js,x)==="pro");
+  const greet=resume?`Welcome back! You were in the middle of ${Q(nu.l.title)}`:
+    nextPro?`You finished every free JavaScript lesson! Unlock the full course to keep going with ${Q(nextPro.l.title)}`:
+    S.done.length?(nu?`Nice to see you! Next up: ${Q(nu.l.title)}`:"You've finished JavaScript! Try C# or C++ next, or build something in the Playground."):"Hey! I'm TypeMonkey, your coding buddy. Let's write your first line of code.";
+  $("#screen").innerHTML=`<div class="stack">
+    <section class="hero"><h1>Learn to code, one banana at a time.</h1><p>Bite-size lessons, real code you run yourself, quizzes and mini-games. Built for teens, college students and anyone starting from zero.</p></section>
+    ${buddy(greet,resume?"cheer":"happy")}
+    ${nu?`<div class="row"><button class="btn" id="cont">${resume?"Pick up where you left off":S.done.length?"Continue learning":"Start lesson 1"}</button></div>`:nextPro?`<div class="row"><button class="btn banana" id="unl">See the full course</button></div>`:""}
+    <div class="tools">
+      <button class="tool" id="practice"><b>⚡ Practice rush</b><span>60-second review of everything you've learned</span></button>
+      <button class="tool" id="play"><b>›_ Playground</b><span>Write any code you want and run it</span></button>
+    </div>
+    <div class="label">Courses</div>
+    <div class="courses">${COURSES.map(c=>{
+      if(c.soon)return `<button class="course locked" data-c="${c.id}"><span class="pill ${c.kids?"kid":""}">${c.kids?"Kids section":"Coming soon"}</span><h3>${c.name}</h3><span class="tag">${esc(c.tag)}</span></button>`;
+      const [d,n,all]=countLessons(c);
+      return `<button class="course ${c.id==="js"?"live":""}" data-c="${c.id}"><span class="pill ${d===n&&n===all?"ok":"go"}">${d===n&&n===all?"Complete":d?"In progress":c.id==="js"?"Start here":"New"}</span>
+        <h3>${c.name}</h3><span class="tag">${esc(c.tag)}</span><span class="meta">${c.units.length} units · ${n} lessons${all>n?" (more coming)":""}</span>
+        <div class="mini"><span style="width:${n?d/n*100:0}%"></span></div></button>`}).join("")}</div>
+  </div>`;
+  if($("#cont"))$("#cont").onclick=()=>startLesson(nu.l.id);
+  if($("#unl"))$("#unl").onclick=()=>coursePage("js");
+  $("#practice").onclick=practice;$("#play").onclick=()=>playground();
+  $$(".course").forEach(b=>b.onclick=()=>{const c=courseById(b.dataset.c);
+    if(c.soon)toast(c.kids?"TypeMonkey Jr. is on the roadmap!":c.name+" is coming soon.");else coursePage(c.id)});
+  foot();window.scrollTo(0,0);
+}
+function foot(){
+  $("#foot").innerHTML=`<span>Prototype · progress saves on this device only</span>
+   <div class="row"><button class="linkbtn" id="tester">${S.tester?"Tester mode: ON (all lessons open)":"Tester mode: off"}</button><button class="linkbtn" id="reset">Reset progress</button></div><div id="confirm"></div>`;
+  $("#tester").onclick=()=>{S.tester=!S.tester;save();toast(S.tester?"Tester mode on: every lesson is open.":"Tester mode off.");rerender()};
+  $("#reset").onclick=()=>{$("#confirm").innerHTML=`<div class="row"><span>Erase all XP, bananas and lessons?</span><button class="btn sm" id="yes">Erase</button><button class="btn ghost sm" id="no">Keep</button></div>`;
+    $("#yes").onclick=()=>{S={xp:0,bananas:0,streak:0,lastDay:null,done:[],progress:{},pro:false,tester:false};save();toast("Progress erased.");home()};
+    $("#no").onclick=()=>$("#confirm").innerHTML=""};
+}
+let rerender=home;
+
+/* ---------- Course page ---------- */
+function coursePage(cid){
+  rerender=()=>coursePage(cid);
+  const c=courseById(cid);const L=flat(c);const [d,n]=countLessons(c);
+  $("#screen").innerHTML=`<div class="stack">
+    <div class="row"><button class="btn ghost sm" id="back">← Courses</button></div>
+    <section class="hero"><div class="label">Course</div><h1>${c.name}</h1><p>${c.blurb||""}</p></section>
+    <div class="row"><div class="progress"><span style="width:${n?d/n*100:0}%"></span></div><b style="font-variant-numeric:tabular-nums">${d}/${n}</b></div>
+    ${c.units.map((u,ui)=>`<div class="unit"><div class="unit-head"><h3>Unit ${ui+1} · ${u.name}</h3><span class="label">${u.free?"Free":S.pro?"Unlocked":"Pro"}</span></div><div class="lessons">${
+      L.filter(x=>x.ui===ui).map(x=>{const st=status(c,x);const res=S.progress[x.l.id]&&st!=="pro"&&st!=="soon";
+        const cls=st==="done"&&!res?"done":(st==="open"||res||st==="done")?"open":"";
+        return `<button class="lesson ${cls} ${x.l.project?"proj":""}" data-l="${x.l.id}" ${st==="open"||st==="done"||res?"":"disabled"}>
+          <span class="dot">${st==="done"&&!res?"✓":x.l.project?"★":x.idx+1}</span>
+          <span class="t"><b>${x.l.title}</b><span>${res?`Step ${S.progress[x.l.id].step+1} of ${x.l.steps.length-1} · saved`:x.l.sub}</span></span>
+          <span class="pill ${st==="open"||res?"go":st==="done"?"ok":""}">${res?"Resume":{done:"Replay",open:"Play",pro:"Pro",locked:"🔒",soon:"Soon"}[st]}</span></button>
+          ${res?`<button class="linkbtn" data-restart="${x.l.id}">Start “${x.l.title}” over</button>`:""}`}).join("")}</div></div>`).join("")}
+    ${S.pro?"":`<div class="paywall"><div><h3>Unlock all of TypeMonkey</h3><p>Every unit in every language, plus future courses and bonus games. One-time purchase.</p></div><button class="btn banana" id="buy">Unlock · $4.99</button></div>`}
+  </div>`;
+  $("#back").onclick=home;
+  if($("#buy"))$("#buy").onclick=()=>{S.pro=true;save();toast("Demo unlock: everything is open. In the real app this is the App Store / Google Play purchase.");coursePage(cid)};
+  $$(".lesson:not([disabled])").forEach(b=>b.onclick=()=>startLesson(b.dataset.l));
+  $$("[data-restart]").forEach(b=>b.onclick=()=>{delete S.progress[b.dataset.restart];save();startLesson(b.dataset.restart)});
+  foot();window.scrollTo(0,0);
+}
+
+/* ---------- Lesson runner ---------- */
+let cur=null;
+function startLesson(id){
+  const f=findLesson(id);const p=S.progress[id];
+  cur={c:f.c,l:f.l,item:f,step:0,earned:{xp:0,ban:0,right:0,total:0}};
+  if(p&&p.step>0&&p.step<f.l.steps.length-1){cur.step=p.step;cur.earned={...cur.earned,...p.earned}}
+  rerender=renderStep;renderStep();
+}
+function saveSpot(){
+  const p=S.progress[cur.l.id]||{drafts:{}};
+  S.progress[cur.l.id]={...p,step:cur.step,earned:{...cur.earned}};save();
+}
+function draft(k,v){const p=S.progress[cur.l.id];if(!p)return;p.drafts=p.drafts||{};if(v===undefined)return p.drafts[k];p.drafts[k]=v;save()}
+function shell(inner){
+  const pct=Math.round(cur.step/(cur.l.steps.length-1)*100);
+  $("#screen").innerHTML=`<div class="stack">
+    <div class="lessonbar"><button class="x" id="quit" aria-label="Leave lesson">×</button><div class="progress"><span style="width:${pct}%"></span></div></div>
+    ${inner}</div>`;
+  $("#quit").onclick=()=>coursePage(cur.c.id);
+  $("#foot").innerHTML="";window.scrollTo(0,0);
+}
+function next(){cur.step++;renderStep()}
+function editorBlock(id,code,runnable,file){
+  return `<div class="editor"><div class="head"><span>${file}</span>${runnable?`<button class="run" id="run-${id}">▶ Run</button>`:""}</div>
+    ${runnable?`<textarea id="code-${id}" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="Code editor" rows="${Math.min(14,Math.max(5,code.split("\n").length+1))}">${esc(code)}</textarea>
+    <div class="console" id="out-${id}"><span class="dim">Console output appears here</span></div>`:`<pre>${esc(code)}</pre>`}</div>`;
+}
+function wireEditor(id,after){
+  const ta=$("#code-"+id);if(!ta)return;
+  ta.addEventListener("keydown",e=>{if(e.key==="Tab"){e.preventDefault();const s=ta.selectionStart;ta.value=ta.value.slice(0,s)+"  "+ta.value.slice(ta.selectionEnd);ta.selectionStart=ta.selectionEnd=s+2}});
+  $("#run-"+id).onclick=async()=>{const out=await runCode(ta.value);paintConsole($("#out-"+id),out);after&&after(ta.value,out)};
+}
+const award=(xp,ban=0)=>{cur.earned.xp+=xp;cur.earned.ban+=ban};
+
+function renderStep(){
+  const s=cur.l.steps[cur.step];const R=cur.c.runnable;
+  if(s.type!=="done")saveSpot();
+  const T={talk,code:codeStep,quiz,fill,order,game:gameIntro,done:finish}[s.type];T(s,R);
+}
+function talk(s,R){
+  shell(`<div class="card"><h2>${s.title}</h2>${s.body}${s.demo?editorBlock("d",s.demo,R,cur.c.lang):""}</div>
+    ${buddy(s.say||"",s.mood||"happy")}<div class="row"><button class="btn" id="go">Continue</button></div>`);
+  if(s.demo&&R)wireEditor("d");$("#go").onclick=next;
+}
+function codeStep(s){
+  let tries=0,solved=false;const k="c"+cur.step;
+  shell(`<div class="card"><div class="label">${cur.l.project?"Project step":"Code challenge"} · +30 XP</div><h2>${s.title}</h2>${s.body}${editorBlock("c",draft(k)||s.start,true,cur.c.lang)}<div id="fb"></div></div>
+    <div id="bud">${buddy("Write your code, then hit ▶ Run. I'll check it for you.","think")}</div>
+    <div class="row"><button class="btn" id="go" disabled>Continue</button><button class="btn ghost" id="hint">Show me how</button></div>`);
+  wireEditor("c",async(code)=>{
+    tries++;const [ok,msg,detail]=await grade(s,code);
+    $("#fb").innerHTML=`<div class="feedback ${ok?"good":"bad"}">${ok?"✓ ":""}${esc(msg)}${detail?`<pre>${esc(detail)}</pre>`:""}</div>`;
+    $("#bud").innerHTML=buddy(ok?"Look at you go! 🍌 +5":tries>2?"Stuck? Tap “Show me how”. Peeking is part of learning.":"Not quite yet. You've got this.",ok?"cheer":"oops");
+    if(ok&&!solved){solved=true;$("#go").disabled=false;award(30,5)}
+  });
+  $("#code-c").addEventListener("input",()=>draft(k,$("#code-c").value));
+  $("#hint").onclick=()=>{$("#code-c").value=s.hint;draft(k,s.hint);$("#bud").innerHTML=buddy("Here's one way to write it. Read it line by line, then press ▶ Run.","happy")};
+  $("#go").onclick=next;
+}
+function quiz(s){
+  const order=shuffle(s.opts.map((o,i)=>i));
+  shell(`<div class="card"><div class="label">Quick quiz · +10 XP</div><h2 style="font-size:1.35rem">${s.q}</h2>${s.code?`<div class="editor"><pre>${esc(s.code)}</pre></div>`:""}
+    <div class="opts">${order.map(i=>`<button class="opt ${s.mono?"mono":""}" data-i="${i}">${esc(s.opts[i])}</button>`).join("")}</div><div id="fb"></div></div>
+    <div id="bud">${buddy("Take your best guess!","think")}</div><div class="row"><button class="btn" id="go" hidden>Continue</button></div>`);
+  $$(".opt").forEach(b=>b.onclick=()=>{
+    const ok=+b.dataset.i===s.a;
+    $$(".opt").forEach(x=>{x.disabled=true;if(+x.dataset.i===s.a)x.classList.add("right")});
+    if(!ok)b.classList.add("wrong");else{award(10);cur.earned.right++}
+    cur.earned.total++;
+    $("#fb").innerHTML=`<div class="feedback ${ok?"good":"bad"}">${ok?"Correct! ":"Not this time. "}${esc(s.why)}</div>`;
+    $("#bud").innerHTML=buddy(ok?"Big brain moment! 🧠":"No worries, now you know!",ok?"cheer":"oops");
+    $("#go").hidden=false;
+  });
+  $("#go").onclick=next;
+}
+function fill(s){
+  const n=s.blanks.length;let slots=Array(n).fill(null),tries=0,doneF=false;
+  const toks=shuffle(s.tokens.map((t,i)=>i));
+  shell(`<div class="card"><div class="label">Fill in the blanks · +15 XP</div><h2>${s.title}</h2>${s.body||""}
+    <div class="editor"><div class="head"><span>${cur.c.lang}</span></div><pre id="fcode"></pre></div>
+    <div class="tokens" id="toks">${toks.map(i=>`<button class="token" data-t="${i}">${esc(s.tokens[i])}</button>`).join("")}</div><div id="fb"></div></div>
+    <div id="bud">${buddy("Tap a piece to drop it in the next blank. Tap a blank to take it back.","think")}</div>
+    <div class="row"><button class="btn" id="check" disabled>Check</button><button class="btn" id="go" hidden>Continue</button></div>`);
+  const draw=(marks)=>{
+    $("#fcode").innerHTML=esc(s.code).replace(/\[(\d)\]/g,(m,d)=>{const t=slots[d];const mk=marks?marks[d]:"";
+      return `<button class="slot ${t!==null?"filled":""} ${mk}" data-s="${d}">${t!==null?esc(s.tokens[t]):"&nbsp;"}</button>`});
+    $$(".slot").forEach(b=>b.onclick=()=>{if(doneF)return;const d=+b.dataset.s;if(slots[d]!==null){slots[d]=null;sync()}});
+  };
+  const sync=()=>{draw();$$(".token").forEach(b=>b.disabled=doneF||slots.includes(+b.dataset.t));$("#check").disabled=slots.includes(null)||doneF};
+  $$(".token").forEach(b=>b.onclick=()=>{const e=slots.indexOf(null);if(e<0)return;slots[e]=+b.dataset.t;sync()});
+  $("#check").onclick=()=>{
+    tries++;const marks=slots.map((t,i)=>s.tokens[t]===s.blanks[i]?"right":"wrong");const ok=!marks.includes("wrong");
+    draw(marks);
+    if(ok||tries>=2){doneF=true;$("#check").hidden=true;$("#go").hidden=false;$$(".token").forEach(b=>b.disabled=true)}
+    if(ok){award(tries===1?15:8);$("#fb").innerHTML=`<div class="feedback good">✓ ${esc(s.why)}</div>`;$("#bud").innerHTML=buddy(pick(WINS),"cheer")}
+    else if(tries>=2){$("#fb").innerHTML=`<div class="feedback bad">The answer is: ${s.blanks.map(esc).join(" , ")}. ${esc(s.why)}</div>`;$("#bud").innerHTML=buddy("Tricky one! Now you've seen it, it'll stick.","oops")}
+    else{$("#fb").innerHTML=`<div class="feedback bad">The red blanks aren't right yet. Tap them to swap.</div>`;$("#bud").innerHTML=buddy("So close! One more try.","oops")}
+  };
+  sync();$("#go").onclick=next;
+}
+function order(s){
+  let pool=shuffle(s.lines.map((l,i)=>i));let tries=0;
+  if(pool.every((v,i)=>v===i))pool.reverse();
+  let picked=[],doneO=false;
+  shell(`<div class="card"><div class="label">Put it in order · +15 XP</div><h2>${s.title}</h2>${s.body||""}
+    <div class="lines" id="ans"></div><div class="label">Tap the lines in order</div><div class="lines pick" id="pool"></div><div id="fb"></div></div>
+    <div id="bud">${buddy("Tap lines to add them. Tap a placed line to send it back.","think")}</div>
+    <div class="row"><button class="btn" id="check" disabled>Check</button><button class="btn" id="go" hidden>Continue</button></div>`);
+  const draw=(marks)=>{
+    $("#ans").innerHTML=picked.length?picked.map((i,k)=>`<button class="ln ${marks?marks[k]:""}" data-k="${k}">${esc(s.lines[i])}</button>`).join(""):'<span class="empty">Your program builds here</span>';
+    $("#pool").innerHTML=pool.filter(i=>!picked.includes(i)).map(i=>`<button class="ln" data-i="${i}">${esc(s.lines[i])}</button>`).join("");
+    $$("#ans .ln").forEach(b=>b.onclick=()=>{if(doneO)return;picked.splice(+b.dataset.k,1);draw()});
+    $$("#pool .ln").forEach(b=>b.onclick=()=>{picked.push(+b.dataset.i);draw()});
+    $("#check").disabled=picked.length!==s.lines.length||doneO;
+  };
+  $("#check").onclick=()=>{
+    tries++;
+    const marks=picked.map((i,k)=>s.lines[i]===s.lines[k]?"right":"wrong");const ok=!marks.includes("wrong");
+    if(ok||tries>=2){doneO=true;$("#check").hidden=true;$("#go").hidden=false}
+    if(ok){draw(marks);award(tries===1?15:8);$("#fb").innerHTML=`<div class="feedback good">✓ ${esc(s.why)}</div>`;$("#bud").innerHTML=buddy(pick(WINS),"cheer")}
+    else if(tries>=2){picked=s.lines.map((l,i)=>i);draw(picked.map(()=>"right"));$("#fb").innerHTML=`<div class="feedback bad">Here's the right order. ${esc(s.why)}</div>`;$("#bud").innerHTML=buddy("Order is everything in code. You'll get the next one!","oops")}
+    else{draw(marks);$("#fb").innerHTML=`<div class="feedback bad">The red lines are in the wrong spot. Tap them to take them back out.</div>`;$("#bud").innerHTML=buddy("Almost! Rearrange the red ones.","oops")}
+  };
+  draw();$("#go").onclick=next;
+}
+
+/* ---------- Mini-game: Output Rush ---------- */
+function gameIntro(){
+  if(!cur.l.pool||!cur.l.pool.length)return next();
+  shell(`<div class="card"><div class="label">Mini-game</div><h2>Output Rush</h2><p>45 seconds on the clock. Read each snippet and tap what it prints. Every right answer earns 2 bananas.</p></div>
+    ${buddy("Speed round! Don't overthink it.","cheer")}<div class="row"><button class="btn banana" id="go">Start the clock</button><button class="btn ghost" id="skip">Skip</button></div>`);
+  $("#go").onclick=()=>rush(cur.l.pool,45,(score)=>{award(score*3,score*2);next()},()=>coursePage(cur.c.id),cur.c.lang);
+  $("#skip").onclick=next;
+}
+function rush(poolIn,secs,onEnd,onQuit,file){
+  const pool=shuffle(poolIn);let i=0,score=0,left=secs,ended=false;
+  const timer=setInterval(()=>{left--;const t=$("#tleft");if(t){t.textContent=left;$("#tbar").style.width=(left/secs*100)+"%"}if(left<=0)end()},1000);
+  function end(){if(ended)return;ended=true;clearInterval(timer);
+    $("#screen").innerHTML=`<div class="stack"><div class="card" style="align-items:center;text-align:center"><div class="label">Time!</div><div class="big">${score}/${pool.length}</div><p>+${score*2} bananas · +${score*3} XP</p></div>
+      ${buddy(score>=Math.ceil(pool.length*.8)?"Unreal speed. Are you secretly a monkey?":score>=pool.length/2?"Solid run! Practice makes it automatic.":"Good warm-up. These get easy fast.",score>=pool.length/2?"cheer":"happy")}
+      <div class="row"><button class="btn" id="fin">Continue</button></div></div>`;
+    $("#fin").onclick=()=>onEnd(score);}
+  function round(){
+    if(i>=pool.length)return end();
+    const [code,opts]=pool[i];const ord=shuffle(opts.map((o,k)=>k));
+    $("#screen").innerHTML=`<div class="stack"><div class="game-hud"><button class="x" id="quitg" aria-label="Quit game">×</button><span>⏱ <span id="tleft">${left}</span>s</span><div class="timer"><span id="tbar" style="width:${left/secs*100}%"></span></div><span>🍌 ${score*2}</span></div>
+      <div class="card"><div class="label">What prints? · ${i+1} of ${pool.length}</div><div class="editor"><div class="head"><span>${file}</span></div><pre>${esc(code)}</pre></div>
+      <p style="color:var(--muted);font-size:.85rem">Several lines of output are shown with spaces between them.</p>
+      <div class="opts">${ord.map(k=>`<button class="opt mono" data-k="${k}">${esc(opts[k])}</button>`).join("")}</div></div></div>`;
+    $("#quitg").onclick=()=>{clearInterval(timer);ended=true;onQuit()};
+    $$(".opt").forEach(b=>b.onclick=()=>{
+      const ok=+b.dataset.k===0;b.classList.add(ok?"right":"wrong");if(ok)score++;
+      $$(".opt").forEach(x=>{x.disabled=true;if(+x.dataset.k===0)x.classList.add("right")});
+      setTimeout(()=>{i++;if(!ended)round()},ok?350:900);
+    });
+  }
+  round();
+}
+function practice(){
+  rerender=home;
+  let pool=[];let file="script.js";
+  for(const c of COURSES)for(const x of flat(c))if(S.done.includes(x.l.id)&&x.l.pool)pool.push(...x.l.pool);
+  if(!pool.length){pool=[...COURSES[0].units[0].lessons[0].pool]}
+  pool=shuffle(pool).slice(0,12);
+  $("#foot").innerHTML="";
+  rush(pool,60,(score)=>{S.xp+=score*3;S.bananas+=score*2;if(score)bumpStreak();save();home()},home,file);
+}
+
+/* ---------- Finish ---------- */
+function finish(){
+  const id=cur.l.id;const first=!S.done.includes(id);
+  const bonus=first?20:0;cur.earned.xp+=bonus;
+  S.xp+=cur.earned.xp;S.bananas+=cur.earned.ban;bumpStreak();if(first)S.done.push(id);delete S.progress[id];save();
+  const L=flat(cur.c);const nx=L[cur.item.idx+1];const nst=nx&&status(cur.c,nx);
+  const [d,n,all]=countLessons(cur.c);const courseDone=first&&d===n&&n===all;
+  shell(`<div class="card" style="text-align:center;align-items:center"><div class="label">${cur.l.project?"Project complete":"Lesson complete"}</div><h2>${esc(cur.l.title)} ✓</h2>
+    <div class="reward"><div><b>+${cur.earned.xp}</b><span>XP</span></div><div><b>+${cur.earned.ban}</b><span>Bananas</span></div><div><b>${S.streak}</b><span>Day streak</span></div></div>
+    ${cur.earned.total?`<p>Quiz: ${cur.earned.right} of ${cur.earned.total} right${first?" · first-time bonus +20 XP":""}</p>`:first?"<p>First-time bonus +20 XP</p>":""}</div>
+    ${courseDone?`<div class="cert"><div class="label">Course complete</div><h3>You finished ${cur.c.name}!</h3><p>${d} lessons, every project built. TypeMonkey is officially impressed.</p></div>`:""}
+    ${buddy(courseDone?"WE DID IT! Time to build something of your own in the Playground.":nx?`Next up: ${Q(nx.l.title)} Come back tomorrow to keep your streak alive!`:"That's everything in this course for now. More is on the way!","cheer")}
+    <div class="row">${nx&&(nst==="open"||nst==="done")?`<button class="btn" id="nxt">Next lesson</button>`:""}${nx&&nst==="pro"?`<button class="btn banana" id="nxt">Unlock the next unit</button>`:""}<button class="btn ghost" id="back">Back to course</button></div>`);
+  $("#back").onclick=()=>coursePage(cur.c.id);
+  if($("#nxt"))$("#nxt").onclick=()=>nst==="pro"?coursePage(cur.c.id):startLesson(nx.l.id);
+}
+
+/* ---------- Playground ---------- */
+const PLAY={
+  js:{name:"JavaScript",file:"script.js",run:true,start:`// Try anything! Press ▶ Run.\nconst name = "TypeMonkey";\nfor (let i = 1; i <= 3; i++) {\n  console.log(\`\${name} says ook #\${i}\`);\n}\n`},
+  py:{name:"Python",file:"main.py",start:`name = "TypeMonkey"\nfor i in range(1, 4):\n    print(f"{name} says ook #{i}")\n`},
+  cs:{name:"C#",file:"Program.cs",start:`using System;\n\nclass Program {\n  static void Main() {\n    for (int i = 1; i <= 3; i++) {\n      Console.WriteLine($"TypeMonkey says ook #{i}");\n    }\n  }\n}\n`},
+  cpp:{name:"C++",file:"main.cpp",start:`#include <iostream>\n\nint main() {\n  for (int i = 1; i <= 3; i++) {\n    std::cout << "TypeMonkey says ook #" << i << "\\n";\n  }\n  return 0;\n}\n`}
+};
+function playground(lang="js"){
+  rerender=()=>playground(lang);
+  const P=PLAY[lang];
+  let saved;try{saved=(S.play||{})[lang]}catch(e){}
+  $("#screen").innerHTML=`<div class="stack">
+    <div class="row"><button class="btn ghost sm" id="back">← Home</button></div>
+    <section class="hero"><div class="label">Playground</div><h1>Code anything.</h1><p>No lesson, no rules. Write code, run it, break it, fix it. Your code is saved as you type.</p></section>
+    <div class="langs">${Object.entries(PLAY).map(([k,v])=>`<button class="lang" data-k="${k}" aria-pressed="${k===lang}">${v.name}</button>`).join("")}</div>
+    ${P.run?"":`<div class="note">${P.name} needs its compiler, which ships inside the full TypeMonkey app. In this preview only JavaScript runs, so you can write ${P.name} here but not run it yet.</div>`}
+    <div class="editor"><div class="head"><span>${P.file}</span><button class="linkbtn" id="clear" style="color:var(--code-dim)">Reset</button><button class="run" id="run-p" ${P.run?"":"disabled"}>▶ Run</button></div>
+      <textarea id="code-p" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="Playground editor" rows="14">${esc(saved||P.start)}</textarea>
+      <div class="console" id="out-p"><span class="dim">${P.run?"Output appears here":"Running "+P.name+" is coming in the full app"}</span></div></div>
+    ${buddy(P.run?"Tip: console.log anything you're curious about. That's how pros explore code too.":"You can still practice typing "+P.name+" syntax here. Your code is saved.","happy")}
+  </div>`;
+  $("#back").onclick=home;
+  $$(".lang").forEach(b=>b.onclick=()=>playground(b.dataset.k));
+  const ta=$("#code-p");
+  ta.addEventListener("input",()=>{S.play=S.play||{};S.play[lang]=ta.value;save()});
+  ta.addEventListener("keydown",e=>{if(e.key==="Tab"){e.preventDefault();const s=ta.selectionStart;ta.value=ta.value.slice(0,s)+"  "+ta.value.slice(ta.selectionEnd);ta.selectionStart=ta.selectionEnd=s+2}});
+  $("#clear").onclick=()=>{ta.value=P.start;S.play=S.play||{};delete S.play[lang];save()};
+  if(P.run)$("#run-p").onclick=async()=>paintConsole($("#out-p"),await runCode(ta.value));
+  foot();window.scrollTo(0,0);
+}
+
+$("#homeBtn").onclick=home;
+renderStats();home();
+</script>
+
+</body>
+</html>

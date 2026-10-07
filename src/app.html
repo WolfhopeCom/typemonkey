@@ -1,0 +1,632 @@
+<title>TypeMonkey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: phone-first single column app shell; sticky stat bar, screens swap in the middle, TypeMonkey talks from a speech bubble */
+:root{
+  --bg:#EEF4F1; --surface:#FFFFFF; --surface2:#E3ECE7; --fg:#15211C; --muted:#5B6D65;
+  --line:#CFDDD5; --accent:#FF7A1A; --accent-ink:#2A1300; --banana:#FFC83D; --leaf:#1F9D63;
+  --bad:#D9443A; --code-bg:#14201B; --code-fg:#E6F2EC; --code-dim:#7FA394;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:16px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1714; --surface:#16231E; --surface2:#1E2E28; --fg:#E9F3EE; --muted:#9AB2A7;
+  --line:#2A3D35; --accent:#FF8A33; --accent-ink:#2A1300; --banana:#FFD25C; --leaf:#3CC486;
+  --bad:#FF6B5E; --code-bg:#0A120F; --code-fg:#E6F2EC; --code-dim:#6E9283; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1714; --surface:#16231E; --surface2:#1E2E28; --fg:#E9F3EE; --muted:#9AB2A7;
+  --line:#2A3D35; --accent:#FF8A33; --accent-ink:#2A1300; --banana:#FFD25C; --leaf:#3CC486;
+  --bad:#FF6B5E; --code-bg:#0A120F; --code-fg:#E6F2EC; --code-dim:#6E9283; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55;margin:0}
+.app{max-width:720px;margin:0 auto;padding:12px 16px 40px;display:flex;flex-direction:column;gap:18px}
+.stack{display:flex;flex-direction:column;gap:16px}
+h1,h2,h3{font-family:var(--display);line-height:1.1;margin:0;text-wrap:balance}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;align-items:center;gap:10px;padding-block:8px}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:800;font-size:1.35rem;background:none;border:0;color:var(--fg);padding:0}
+.brand svg{width:38px;height:38px}
+.brand b{color:var(--accent)}
+.stats{margin-left:auto;display:flex;gap:6px}
+.stat{display:flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-weight:800;font-size:.9rem;font-variant-numeric:tabular-nums}
+.stat i{font-style:normal;font-size:.75rem;color:var(--muted);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+@media (max-width:400px){.brand .word{display:none}}
+
+.buddy{display:flex;gap:12px;align-items:flex-end}
+.buddy svg{width:88px;height:88px;flex:none}
+.buddy.bounce svg{animation:bob .6s ease}
+@keyframes bob{40%{transform:translateY(-10px) rotate(-4deg)}}
+.bubble{background:var(--surface);border:2px solid var(--fg);border-radius:18px 18px 18px 4px;padding:12px 14px;font-weight:700;min-width:0;flex:1}
+
+.hero h1{font-size:clamp(2rem,7vw,2.8rem)}
+.hero p{margin:6px 0 0;color:var(--muted);max-width:60ch}
+.label{font-size:.75rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+.courses{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.course{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:6px;text-align:left;color:var(--fg)}
+.course .tag{font-family:var(--mono);font-size:.8rem;color:var(--muted)}
+.course h3{font-size:1.3rem}
+.course .meta{font-size:.85rem;color:var(--muted)}
+.course.live{border:2px solid var(--accent)}
+.course.locked{opacity:.7}
+.mini{height:6px;background:var(--surface2);border-radius:999px;overflow:hidden;margin-top:4px}
+.mini span{display:block;height:100%;background:var(--leaf)}
+.pill{align-self:flex-start;font-size:.72rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;border-radius:999px;padding:2px 9px;background:var(--surface2);color:var(--muted);white-space:nowrap}
+.pill.go{background:var(--accent);color:var(--accent-ink)}
+.pill.kid{background:var(--banana);color:var(--accent-ink)}
+.pill.ok{background:var(--leaf);color:#fff}
+
+.tools{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:420px){.tools{grid-template-columns:1fr}}
+.tool{background:var(--code-bg);color:var(--code-fg);border:0;border-radius:var(--r);padding:14px;text-align:left;display:flex;flex-direction:column;gap:4px}
+.tool b{font-family:var(--display);font-size:1.2rem}
+.tool span{color:var(--code-dim);font-size:.88rem}
+
+.unit{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
+.unit-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.unit-head h3{font-size:1.15rem}
+.unit-head .label{margin-left:auto}
+.lessons{display:flex;flex-direction:column;gap:8px}
+.lesson{display:flex;align-items:center;gap:12px;background:var(--surface2);border:0;border-radius:12px;padding:10px 12px;color:var(--fg);text-align:left;width:100%}
+.lesson .dot{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;flex:none;background:var(--line);color:var(--muted);font-variant-numeric:tabular-nums}
+.lesson.open .dot{background:var(--accent);color:var(--accent-ink)}
+.lesson.done .dot{background:var(--leaf);color:#fff}
+.lesson.proj .dot{border-radius:10px}
+.lesson .t{flex:1;min-width:0}
+.lesson .t b{display:block}
+.lesson .t span{font-size:.85rem;color:var(--muted)}
+.lesson[disabled]{cursor:not-allowed;opacity:.62}
+.linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:.85rem;padding:0;align-self:flex-start}
+
+.paywall{background:var(--code-bg);color:var(--code-fg);border-radius:var(--r);padding:16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.paywall div{flex:1;min-width:200px}
+.paywall h3{font-size:1.25rem;color:var(--code-fg)}
+.paywall p{margin:4px 0 0;color:var(--code-dim);font-size:.9rem}
+
+.btn{border:0;border-radius:12px;padding:11px 18px;font-weight:800;background:var(--accent);color:var(--accent-ink);box-shadow:0 4px 0 color-mix(in srgb,var(--accent) 60%,#000);transition:transform .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 color-mix(in srgb,var(--accent) 60%,#000)}
+.btn.ghost{background:var(--surface2);color:var(--fg);box-shadow:0 4px 0 var(--line)}
+.btn.banana{background:var(--banana);box-shadow:0 4px 0 color-mix(in srgb,var(--banana) 55%,#000)}
+.btn.sm{padding:7px 12px;font-size:.88rem}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+.progress{height:12px;background:var(--surface2);border-radius:999px;overflow:hidden;flex:1}
+.progress span{display:block;height:100%;background:var(--leaf);border-radius:999px;transition:width .4s}
+.lessonbar{display:flex;align-items:center;gap:12px}
+.x{background:none;border:0;color:var(--muted);font-size:1.6rem;line-height:1;padding:0 4px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card h2{font-size:1.55rem}
+.card p{margin:0;max-width:62ch}
+code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);padding:1px 6px;border-radius:6px;white-space:nowrap}
+
+.editor{background:var(--code-bg);border-radius:12px;overflow:hidden;min-width:0}
+.editor .head{display:flex;align-items:center;gap:8px;padding:8px 12px;color:var(--code-dim);font-family:var(--mono);font-size:.8rem;border-bottom:1px solid #ffffff14}
+.editor .head span{margin-right:auto}
+.editor textarea{display:block;width:100%;min-height:150px;resize:vertical;background:transparent;color:var(--code-fg);border:0;outline:0;padding:12px 14px;font-family:var(--mono);font-size:.92rem;line-height:1.6;tab-size:2;white-space:pre;overflow-x:auto}
+.editor pre{margin:0;padding:12px 14px;color:var(--code-fg);font-family:var(--mono);font-size:.92rem;line-height:1.6;overflow-x:auto}
+.run{background:var(--leaf);color:#fff;border:0;border-radius:8px;padding:5px 12px;font-weight:800;font-family:var(--body)}
+.run[disabled]{opacity:.4;cursor:not-allowed}
+.console{background:#000;color:#B8F5D3;font-family:var(--mono);font-size:.88rem;padding:10px 14px;min-height:44px;white-space:pre-wrap;word-break:break-word;border-top:1px solid #ffffff14}
+.console .err{color:#FF9C92}
+.console .dim{color:#5E7E70}
+
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{text-align:left;background:var(--surface2);border:2px solid transparent;border-radius:12px;padding:12px 14px;color:var(--fg);font-weight:700}
+.opt.mono{font-family:var(--mono);font-weight:600;white-space:pre-wrap}
+.opt:hover:not([disabled]){border-color:var(--line)}
+.opt.right{border-color:var(--leaf);background:color-mix(in srgb,var(--leaf) 16%,var(--surface))}
+.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--surface))}
+.feedback{font-weight:700;border-radius:12px;padding:10px 14px}
+.feedback pre{font-family:var(--mono);font-weight:600;font-size:.85rem;margin:6px 0 0;white-space:pre-wrap}
+.feedback.good{background:color-mix(in srgb,var(--leaf) 16%,var(--surface))}
+.feedback.bad{background:color-mix(in srgb,var(--bad) 14%,var(--surface))}
+
+/* fill-in-the-blank + ordering */
+.slot{font-family:var(--mono);font-size:.92rem;min-width:3.2em;padding:0 8px;margin:0 2px;border-radius:6px;border:2px dashed var(--code-dim);background:transparent;color:var(--banana);font-weight:600;line-height:1.5}
+.slot.filled{border-style:solid;border-color:var(--banana)}
+.slot.right{border-color:var(--leaf);color:#B8F5D3}
+.slot.wrong{border-color:var(--bad);color:#FF9C92}
+.tokens{display:flex;flex-wrap:wrap;gap:8px}
+.token{font-family:var(--mono);font-weight:600;background:var(--surface2);border:2px solid var(--line);border-radius:10px;padding:8px 14px;color:var(--fg);box-shadow:0 3px 0 var(--line)}
+.token[disabled]{opacity:.25}
+.lines{display:flex;flex-direction:column;gap:6px;min-height:52px;background:var(--code-bg);border-radius:12px;padding:10px}
+.lines.pick{background:transparent;padding:0}
+.ln{font-family:var(--mono);font-size:.88rem;text-align:left;white-space:pre;overflow-x:auto;background:var(--surface2);border:2px solid var(--line);border-radius:10px;padding:8px 12px;color:var(--fg)}
+.lines:not(.pick) .ln{background:#ffffff0d;color:var(--code-fg);border-color:#ffffff1f}
+.lines .ln.right{border-color:var(--leaf)}
+.lines .ln.wrong{border-color:var(--bad)}
+.empty{color:var(--code-dim);font-size:.85rem;font-family:var(--body);padding:6px}
+
+.game-hud{display:flex;gap:10px;align-items:center;font-weight:800;font-variant-numeric:tabular-nums}
+.timer{height:10px;flex:1;background:var(--surface2);border-radius:999px;overflow:hidden}
+.timer span{display:block;height:100%;background:var(--banana);transition:width 1s linear}
+.big{font-family:var(--display);font-size:3rem;font-weight:800;color:var(--accent);line-height:1}
+.reward{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%}
+.reward div{background:var(--surface2);border-radius:12px;padding:12px;text-align:center}
+.reward b{display:block;font-family:var(--display);font-size:1.7rem;font-variant-numeric:tabular-nums}
+.reward span{font-size:.8rem;color:var(--muted);font-weight:700}
+.cert{border:3px solid var(--banana);border-radius:var(--r);padding:16px;text-align:center;background:color-mix(in srgb,var(--banana) 12%,var(--surface))}
+.cert h3{font-size:1.5rem}
+
+.langs{display:flex;gap:6px;flex-wrap:wrap}
+.lang{border:2px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:5px 12px;font-weight:800;font-size:.88rem}
+.lang[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.note{background:color-mix(in srgb,var(--banana) 18%,var(--surface));border-radius:12px;padding:10px 14px;font-weight:600;font-size:.92rem}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;max-width:calc(100% - 32px);z-index:9}
+.foot{color:var(--muted);font-size:.8rem;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.foot .row{justify-content:center}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="app">
+  <header class="topbar">
+    <button class="brand" id="homeBtn" aria-label="TypeMonkey home"><span id="brandMonkey"></span><span class="word">Type<b>Monkey</b></span></button>
+    <div class="stats">
+      <div class="stat" title="Day streak">🔥 <span id="sStreak">0</span></div>
+      <div class="stat" title="Bananas">🍌 <span id="sBan">0</span></div>
+      <div class="stat"><i>XP</i> <span id="sXp">0</span></div>
+    </div>
+  </header>
+  <main id="screen"></main>
+  <footer class="foot" id="foot"></footer>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/*COURSE_DATA*/
+</script>
+<script>
+/* ---------- TypeMonkey mascot (original character) ---------- */
+function monkey(mood="happy"){
+  const mouth={
+    happy:'<path d="M49 77 Q60 87 71 77" stroke="#3A1A05" stroke-width="3.2" fill="none" stroke-linecap="round"/>',
+    cheer:'<path d="M48 75 Q60 92 72 75 Z" fill="#3A1A05"/><path d="M53 80 Q60 86 67 80" fill="#FF6B6B"/>',
+    think:'<path d="M52 79 Q60 77 69 80" stroke="#3A1A05" stroke-width="3" fill="none" stroke-linecap="round"/>',
+    oops:'<ellipse cx="60" cy="80" rx="5" ry="6" fill="#3A1A05"/>'
+  }[mood]||'';
+  const ey=mood==="think"?-2:0;
+  return `<svg viewBox="0 0 120 120" aria-hidden="true">
+  <circle cx="20" cy="60" r="15" fill="#F26A0F"/><circle cx="20" cy="60" r="8.5" fill="#FFD2A6"/>
+  <circle cx="100" cy="60" r="15" fill="#F26A0F"/><circle cx="100" cy="60" r="8.5" fill="#FFD2A6"/>
+  <circle cx="60" cy="58" r="40" fill="#FF7A1A"/>
+  <path d="M52 20 Q58 8 64 19 Q70 10 72 22" fill="#E05E08"/>
+  <circle cx="47" cy="54" r="15" fill="#FFD2A6"/><circle cx="73" cy="54" r="15" fill="#FFD2A6"/>
+  <ellipse cx="60" cy="74" rx="25" ry="18" fill="#FFD2A6"/>
+  <circle cx="47" cy="${54+ey}" r="4.6" fill="#22130A"/><circle cx="73" cy="${54+ey}" r="4.6" fill="#22130A"/>
+  <circle cx="48.6" cy="${52.4+ey}" r="1.5" fill="#fff"/><circle cx="74.6" cy="${52.4+ey}" r="1.5" fill="#fff"/>
+  <circle cx="47" cy="54" r="10.5" fill="none" stroke="#1B2B25" stroke-width="2.6"/>
+  <circle cx="73" cy="54" r="10.5" fill="none" stroke="#1B2B25" stroke-width="2.6"/>
+  <path d="M57.5 54 Q60 51.5 62.5 54" stroke="#1B2B25" stroke-width="2.6" fill="none"/>
+  <circle cx="56" cy="68" r="1.8" fill="#8A4A1E"/><circle cx="64" cy="68" r="1.8" fill="#8A4A1E"/>
+  ${mouth}
+  <circle cx="38" cy="72" r="4" fill="#FF9E7A" opacity=".55"/><circle cx="82" cy="72" r="4" fill="#FF9E7A" opacity=".55"/>
+</svg>`;
+}
+(function favicon(){
+  try{const l=document.createElement("link");l.rel="icon";l.type="image/svg+xml";
+  l.href="data:image/svg+xml,"+encodeURIComponent(monkey().replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" '));
+  document.head.appendChild(l);}catch(e){}
+})();
+document.getElementById("brandMonkey").innerHTML=monkey();
+
+/* ---------- Helpers ---------- */
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function buddy(text,mood="happy"){return `<div class="buddy bounce">${monkey(mood)}<div class="bubble">${text}</div></div>`}
+function toast(msg){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(t._h);t._h=setTimeout(()=>t.hidden=true,2800)}
+const Q=t=>`“${t}${/[?!.]$/.test(t)?"":"."}”`;
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const WINS=["Nailed it!","Clean code. Love it.","Ook ook! That's right!","You're on fire!","Banana-level genius."];
+
+/* ---------- State ---------- */
+const KEY="typemonkey-v1";
+let S={xp:0,bananas:0,streak:0,lastDay:null,done:[],progress:{},pro:false,tester:false};
+try{const raw=localStorage.getItem(KEY);if(raw)S={...S,...JSON.parse(raw)}}catch(e){}
+if(S.inProgress){S.progress=S.progress||{};if(S.inProgress.id)S.progress[S.inProgress.id]={step:S.inProgress.step,earned:S.inProgress.earned,drafts:{}};delete S.inProgress}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}renderStats()}
+function renderStats(){$("#sStreak").textContent=S.streak;$("#sBan").textContent=S.bananas;$("#sXp").textContent=S.xp}
+const dayStr=d=>d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
+function bumpStreak(){const t=dayStr(new Date());if(S.lastDay===t)return;const y=dayStr(new Date(Date.now()-864e5));S.streak=S.lastDay===y?S.streak+1:1;S.lastDay=t}
+
+/* ---------- Code runner: in-page, loop-guarded, with a fallback if eval is blocked ---------- */
+function guardLoops(code){
+  const G="__tmG()";let res="",i=0;const re=/\b(for|while)\s*\(|\bdo\s*\{/g;
+  while(i<code.length){
+    re.lastIndex=i;const m=re.exec(code);
+    if(!m){res+=code.slice(i);break}
+    res+=code.slice(i,m.index);
+    if(m[0].startsWith("do")){res+="do{"+G+";";i=m.index+m[0].length;continue}
+    let j=m.index+m[0].length,depth=1,q=null;const start=j;
+    for(;j<code.length&&depth;j++){const ch=code[j];
+      if(q){if(ch==="\\")j++;else if(ch===q)q=null;continue}
+      if(ch==='"'||ch==="'"||ch==="`")q=ch;else if(ch==="(")depth++;else if(ch===")")depth--;}
+    if(depth){res+=code.slice(m.index);break}
+    const inner=code.slice(start,j-1);let out;
+    if(m[1]==="while")out=`while(${G}&&(${inner}))`;
+    else{
+      let parts=[],d=0,last=0,qq=null;
+      for(let k=0;k<inner.length;k++){const ch=inner[k];
+        if(qq){if(ch==="\\")k++;else if(ch===qq)qq=null;continue}
+        if(ch==='"'||ch==="'"||ch==="`")qq=ch;else if("([{".includes(ch))d++;else if(")]}".includes(ch))d--;
+        else if(ch===";"&&!d){parts.push(inner.slice(last,k));last=k+1}}
+      parts.push(inner.slice(last));
+      if(parts.length===3)out=`for(${parts[0]};${G}&&(${parts[1].trim()||"true"});${parts[2]})`;
+      else{const b=code.slice(j).match(/^\s*\{/);out=`for(${inner})`+(b?b[0]+G+";":"");if(b)j+=b[0].length}
+    }
+    res+=out;i=j;
+  }
+  return res;
+}
+function makeConsole(out){
+  const fmt=v=>typeof v==="string"?v:(()=>{try{const j=JSON.stringify(v);return j===undefined?String(v):j}catch(_){return String(v)}})();
+  const lg=(...a)=>out.push(["log",a.map(fmt).join(" ")]);
+  return {log:lg,info:lg,warn:lg,error:(...a)=>out.push(["err",a.map(fmt).join(" ")])};
+}
+let evalBlocked=false;
+function runCode(code){
+  const out=[];const con=makeConsole(out);
+  const body="let __tmN=0;const __tmG=()=>{if(++__tmN>100000)throw new Error('Your loop ran 100,000 times, so I stopped it. Check that it can end.');return true};\n"+guardLoops(code);
+  if(!evalBlocked){
+    let fn=null;
+    try{fn=new Function("console",body)}catch(err){
+      if(err instanceof SyntaxError){out.push(["err","SyntaxError: "+err.message]);return Promise.resolve(out)}
+      evalBlocked=true;
+    }
+    if(fn){try{fn(con)}catch(err){out.push(["err",(err.name||"Error")+": "+err.message])}return Promise.resolve(out)}
+  }
+  return new Promise(res=>{
+    window.__tmCon=con;
+    const onErr=e=>{out.push(["err",String(e.message||e).replace(/^Uncaught /,"").replace(/Failed to execute '\w+' on '\w+': /,"")]);e.preventDefault&&e.preventDefault()};
+    window.addEventListener("error",onErr);
+    const s=document.createElement("script");
+    s.textContent="(function(console){try{"+body+"\n}catch(err){console.error((err.name||'Error')+': '+err.message)}})(window.__tmCon);";
+    document.body.appendChild(s);s.remove();window.removeEventListener("error",onErr);res(out);
+  });
+}
+function paintConsole(el,out){
+  el.innerHTML=out.length?out.map(([k,v])=>`<div class="${k==="err"?"err":""}">${k==="err"?"✖ ":"› "}${esc(v)}</div>`).join(""):'<span class="dim">(nothing printed. Try console.log)</span>';
+}
+
+/* ---------- Grading code challenges ---------- */
+const norm=l=>{l=String(l).trim();return /^[\[{]/.test(l)?l.replace(/\s+/g,""):l};
+function checkOut(st,out){
+  const err=out.find(o=>o[0]==="err");
+  if(err)return [false,"Your code hit an error. Read the red line in the console. A missing quote, bracket or brace is the usual suspect."];
+  const logs=out.filter(o=>o[0]==="log").map(o=>o[1]);
+  if(st.out){
+    const ok=st.out.length===logs.length&&st.out.every((e,i)=>norm(e)===norm(logs[i]));
+    if(!ok)return [false,"Close! The output doesn't match yet.",`Expected:\n${st.out.join("\n")}\n\nYou printed:\n${logs.join("\n")||"(nothing)"}`];
+  }
+  for(const [re,msg] of st.outRe||[])if(!logs.some(l=>re.test(l)))return [false,msg];
+  return [true];
+}
+async function grade(st,code){
+  for(const [re,msg] of st.use||[])if(!re.test(code))return [false,msg];
+  const r=checkOut(st,await runCode(code));if(!r[0])return r;
+  for(const [find,rep,lines] of st.variants||[]){
+    if(!find.test(code))continue;
+    const r2=checkOut({out:lines},await runCode(code.replace(find,rep)));
+    if(!r2[0])return [false,`Works for this example, but I changed the starting value (${rep}) and it broke. Make sure your code uses the variables instead of fixed answers.`,r2[2]];
+  }
+  return [true,st.win||pick(WINS)];
+}
+
+/* ---------- Courses ---------- */
+const COURSES=[
+  {...COURSE_JS,tag:"console.log('hi')",runnable:true,lang:"script.js"},
+  {...COURSE_CS,tag:'Console.WriteLine("hi");',lang:"Program.cs"},
+  {...COURSE_CPP,tag:'std::cout << "hi";',lang:"main.cpp"},
+  {id:"py",name:"Python",tag:"print('hi')",soon:true},
+  {id:"web",name:"HTML & CSS",tag:"<h1>hi</h1>",soon:true},
+  {id:"sql",name:"SQL",tag:"SELECT 'hi';",soon:true},
+  {id:"jr",name:"TypeMonkey Jr.",tag:"for ages 7–12",soon:true,kids:true}
+];
+const courseById=id=>COURSES.find(c=>c.id===id);
+function flat(c){const L=[];(c.units||[]).forEach((u,ui)=>u.lessons.forEach((l,li)=>L.push({l,u,ui,li,idx:L.length})));return L}
+function findLesson(id){for(const c of COURSES){const f=flat(c).find(x=>x.l.id===id);if(f)return {c,...f}}return null}
+function status(c,item){
+  const {l,u,idx}=item;
+  if(!l.steps)return "soon";
+  if(S.done.includes(l.id))return "done";
+  if(!u.free&&!S.pro)return "pro";
+  if(S.tester||idx===0)return "open";
+  const L=flat(c);const prev=L[idx-1];
+  return (!prev.l.steps||S.done.includes(prev.l.id))?"open":"locked";
+}
+function countLessons(c){const L=flat(c).filter(x=>x.l.steps);return [L.filter(x=>S.done.includes(x.l.id)).length,L.length,flat(c).length]}
+function nextUp(c){const L=flat(c);return L.find(x=>S.progress[x.l.id])||L.find(x=>status(c,x)==="open")}
+
+/* ---------- Home ---------- */
+function home(){
+  const js=COURSES[0];const nu=nextUp(js);const resume=nu&&S.progress[nu.l.id];
+  const nextPro=!nu&&flat(js).find(x=>x.l.steps&&status(js,x)==="pro");
+  const greet=resume?`Welcome back! You were in the middle of ${Q(nu.l.title)}`:
+    nextPro?`You finished every free JavaScript lesson! Unlock the full course to keep going with ${Q(nextPro.l.title)}`:
+    S.done.length?(nu?`Nice to see you! Next up: ${Q(nu.l.title)}`:"You've finished JavaScript! Try C# or C++ next, or build something in the Playground."):"Hey! I'm TypeMonkey, your coding buddy. Let's write your first line of code.";
+  $("#screen").innerHTML=`<div class="stack">
+    <section class="hero"><h1>Learn to code, one banana at a time.</h1><p>Bite-size lessons, real code you run yourself, quizzes and mini-games. Built for teens, college students and anyone starting from zero.</p></section>
+    ${buddy(greet,resume?"cheer":"happy")}
+    ${nu?`<div class="row"><button class="btn" id="cont">${resume?"Pick up where you left off":S.done.length?"Continue learning":"Start lesson 1"}</button></div>`:nextPro?`<div class="row"><button class="btn banana" id="unl">See the full course</button></div>`:""}
+    <div class="tools">
+      <button class="tool" id="practice"><b>⚡ Practice rush</b><span>60-second review of everything you've learned</span></button>
+      <button class="tool" id="play"><b>›_ Playground</b><span>Write any code you want and run it</span></button>
+    </div>
+    <div class="label">Courses</div>
+    <div class="courses">${COURSES.map(c=>{
+      if(c.soon)return `<button class="course locked" data-c="${c.id}"><span class="pill ${c.kids?"kid":""}">${c.kids?"Kids section":"Coming soon"}</span><h3>${c.name}</h3><span class="tag">${esc(c.tag)}</span></button>`;
+      const [d,n,all]=countLessons(c);
+      return `<button class="course ${c.id==="js"?"live":""}" data-c="${c.id}"><span class="pill ${d===n&&n===all?"ok":"go"}">${d===n&&n===all?"Complete":d?"In progress":c.id==="js"?"Start here":"New"}</span>
+        <h3>${c.name}</h3><span class="tag">${esc(c.tag)}</span><span class="meta">${c.units.length} units · ${n} lessons${all>n?" (more coming)":""}</span>
+        <div class="mini"><span style="width:${n?d/n*100:0}%"></span></div></button>`}).join("")}</div>
+  </div>`;
+  if($("#cont"))$("#cont").onclick=()=>startLesson(nu.l.id);
+  if($("#unl"))$("#unl").onclick=()=>coursePage("js");
+  $("#practice").onclick=practice;$("#play").onclick=()=>playground();
+  $$(".course").forEach(b=>b.onclick=()=>{const c=courseById(b.dataset.c);
+    if(c.soon)toast(c.kids?"TypeMonkey Jr. is on the roadmap!":c.name+" is coming soon.");else coursePage(c.id)});
+  foot();window.scrollTo(0,0);
+}
+function foot(){
+  $("#foot").innerHTML=`<span>Prototype · progress saves on this device only</span>
+   <div class="row"><button class="linkbtn" id="tester">${S.tester?"Tester mode: ON (all lessons open)":"Tester mode: off"}</button><button class="linkbtn" id="reset">Reset progress</button></div><div id="confirm"></div>`;
+  $("#tester").onclick=()=>{S.tester=!S.tester;save();toast(S.tester?"Tester mode on: every lesson is open.":"Tester mode off.");rerender()};
+  $("#reset").onclick=()=>{$("#confirm").innerHTML=`<div class="row"><span>Erase all XP, bananas and lessons?</span><button class="btn sm" id="yes">Erase</button><button class="btn ghost sm" id="no">Keep</button></div>`;
+    $("#yes").onclick=()=>{S={xp:0,bananas:0,streak:0,lastDay:null,done:[],progress:{},pro:false,tester:false};save();toast("Progress erased.");home()};
+    $("#no").onclick=()=>$("#confirm").innerHTML=""};
+}
+let rerender=home;
+
+/* ---------- Course page ---------- */
+function coursePage(cid){
+  rerender=()=>coursePage(cid);
+  const c=courseById(cid);const L=flat(c);const [d,n]=countLessons(c);
+  $("#screen").innerHTML=`<div class="stack">
+    <div class="row"><button class="btn ghost sm" id="back">← Courses</button></div>
+    <section class="hero"><div class="label">Course</div><h1>${c.name}</h1><p>${c.blurb||""}</p></section>
+    <div class="row"><div class="progress"><span style="width:${n?d/n*100:0}%"></span></div><b style="font-variant-numeric:tabular-nums">${d}/${n}</b></div>
+    ${c.units.map((u,ui)=>`<div class="unit"><div class="unit-head"><h3>Unit ${ui+1} · ${u.name}</h3><span class="label">${u.free?"Free":S.pro?"Unlocked":"Pro"}</span></div><div class="lessons">${
+      L.filter(x=>x.ui===ui).map(x=>{const st=status(c,x);const res=S.progress[x.l.id]&&st!=="pro"&&st!=="soon";
+        const cls=st==="done"&&!res?"done":(st==="open"||res||st==="done")?"open":"";
+        return `<button class="lesson ${cls} ${x.l.project?"proj":""}" data-l="${x.l.id}" ${st==="open"||st==="done"||res?"":"disabled"}>
+          <span class="dot">${st==="done"&&!res?"✓":x.l.project?"★":x.idx+1}</span>
+          <span class="t"><b>${x.l.title}</b><span>${res?`Step ${S.progress[x.l.id].step+1} of ${x.l.steps.length-1} · saved`:x.l.sub}</span></span>
+          <span class="pill ${st==="open"||res?"go":st==="done"?"ok":""}">${res?"Resume":{done:"Replay",open:"Play",pro:"Pro",locked:"🔒",soon:"Soon"}[st]}</span></button>
+          ${res?`<button class="linkbtn" data-restart="${x.l.id}">Start “${x.l.title}” over</button>`:""}`}).join("")}</div></div>`).join("")}
+    ${S.pro?"":`<div class="paywall"><div><h3>Unlock all of TypeMonkey</h3><p>Every unit in every language, plus future courses and bonus games. One-time purchase.</p></div><button class="btn banana" id="buy">Unlock · $4.99</button></div>`}
+  </div>`;
+  $("#back").onclick=home;
+  if($("#buy"))$("#buy").onclick=()=>{S.pro=true;save();toast("Demo unlock: everything is open. In the real app this is the App Store / Google Play purchase.");coursePage(cid)};
+  $$(".lesson:not([disabled])").forEach(b=>b.onclick=()=>startLesson(b.dataset.l));
+  $$("[data-restart]").forEach(b=>b.onclick=()=>{delete S.progress[b.dataset.restart];save();startLesson(b.dataset.restart)});
+  foot();window.scrollTo(0,0);
+}
+
+/* ---------- Lesson runner ---------- */
+let cur=null;
+function startLesson(id){
+  const f=findLesson(id);const p=S.progress[id];
+  cur={c:f.c,l:f.l,item:f,step:0,earned:{xp:0,ban:0,right:0,total:0}};
+  if(p&&p.step>0&&p.step<f.l.steps.length-1){cur.step=p.step;cur.earned={...cur.earned,...p.earned}}
+  rerender=renderStep;renderStep();
+}
+function saveSpot(){
+  const p=S.progress[cur.l.id]||{drafts:{}};
+  S.progress[cur.l.id]={...p,step:cur.step,earned:{...cur.earned}};save();
+}
+function draft(k,v){const p=S.progress[cur.l.id];if(!p)return;p.drafts=p.drafts||{};if(v===undefined)return p.drafts[k];p.drafts[k]=v;save()}
+function shell(inner){
+  const pct=Math.round(cur.step/(cur.l.steps.length-1)*100);
+  $("#screen").innerHTML=`<div class="stack">
+    <div class="lessonbar"><button class="x" id="quit" aria-label="Leave lesson">×</button><div class="progress"><span style="width:${pct}%"></span></div></div>
+    ${inner}</div>`;
+  $("#quit").onclick=()=>coursePage(cur.c.id);
+  $("#foot").innerHTML="";window.scrollTo(0,0);
+}
+function next(){cur.step++;renderStep()}
+function editorBlock(id,code,runnable,file){
+  return `<div class="editor"><div class="head"><span>${file}</span>${runnable?`<button class="run" id="run-${id}">▶ Run</button>`:""}</div>
+    ${runnable?`<textarea id="code-${id}" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="Code editor" rows="${Math.min(14,Math.max(5,code.split("\n").length+1))}">${esc(code)}</textarea>
+    <div class="console" id="out-${id}"><span class="dim">Console output appears here</span></div>`:`<pre>${esc(code)}</pre>`}</div>`;
+}
+function wireEditor(id,after){
+  const ta=$("#code-"+id);if(!ta)return;
+  ta.addEventListener("keydown",e=>{if(e.key==="Tab"){e.preventDefault();const s=ta.selectionStart;ta.value=ta.value.slice(0,s)+"  "+ta.value.slice(ta.selectionEnd);ta.selectionStart=ta.selectionEnd=s+2}});
+  $("#run-"+id).onclick=async()=>{const out=await runCode(ta.value);paintConsole($("#out-"+id),out);after&&after(ta.value,out)};
+}
+const award=(xp,ban=0)=>{cur.earned.xp+=xp;cur.earned.ban+=ban};
+
+function renderStep(){
+  const s=cur.l.steps[cur.step];const R=cur.c.runnable;
+  if(s.type!=="done")saveSpot();
+  const T={talk,code:codeStep,quiz,fill,order,game:gameIntro,done:finish}[s.type];T(s,R);
+}
+function talk(s,R){
+  shell(`<div class="card"><h2>${s.title}</h2>${s.body}${s.demo?editorBlock("d",s.demo,R,cur.c.lang):""}</div>
+    ${buddy(s.say||"",s.mood||"happy")}<div class="row"><button class="btn" id="go">Continue</button></div>`);
+  if(s.demo&&R)wireEditor("d");$("#go").onclick=next;
+}
+function codeStep(s){
+  let tries=0,solved=false;const k="c"+cur.step;
+  shell(`<div class="card"><div class="label">${cur.l.project?"Project step":"Code challenge"} · +30 XP</div><h2>${s.title}</h2>${s.body}${editorBlock("c",draft(k)||s.start,true,cur.c.lang)}<div id="fb"></div></div>
+    <div id="bud">${buddy("Write your code, then hit ▶ Run. I'll check it for you.","think")}</div>
+    <div class="row"><button class="btn" id="go" disabled>Continue</button><button class="btn ghost" id="hint">Show me how</button></div>`);
+  wireEditor("c",async(code)=>{
+    tries++;const [ok,msg,detail]=await grade(s,code);
+    $("#fb").innerHTML=`<div class="feedback ${ok?"good":"bad"}">${ok?"✓ ":""}${esc(msg)}${detail?`<pre>${esc(detail)}</pre>`:""}</div>`;
+    $("#bud").innerHTML=buddy(ok?"Look at you go! 🍌 +5":tries>2?"Stuck? Tap “Show me how”. Peeking is part of learning.":"Not quite yet. You've got this.",ok?"cheer":"oops");
+    if(ok&&!solved){solved=true;$("#go").disabled=false;award(30,5)}
+  });
+  $("#code-c").addEventListener("input",()=>draft(k,$("#code-c").value));
+  $("#hint").onclick=()=>{$("#code-c").value=s.hint;draft(k,s.hint);$("#bud").innerHTML=buddy("Here's one way to write it. Read it line by line, then press ▶ Run.","happy")};
+  $("#go").onclick=next;
+}
+function quiz(s){
+  const order=shuffle(s.opts.map((o,i)=>i));
+  shell(`<div class="card"><div class="label">Quick quiz · +10 XP</div><h2 style="font-size:1.35rem">${s.q}</h2>${s.code?`<div class="editor"><pre>${esc(s.code)}</pre></div>`:""}
+    <div class="opts">${order.map(i=>`<button class="opt ${s.mono?"mono":""}" data-i="${i}">${esc(s.opts[i])}</button>`).join("")}</div><div id="fb"></div></div>
+    <div id="bud">${buddy("Take your best guess!","think")}</div><div class="row"><button class="btn" id="go" hidden>Continue</button></div>`);
+  $$(".opt").forEach(b=>b.onclick=()=>{
+    const ok=+b.dataset.i===s.a;
+    $$(".opt").forEach(x=>{x.disabled=true;if(+x.dataset.i===s.a)x.classList.add("right")});
+    if(!ok)b.classList.add("wrong");else{award(10);cur.earned.right++}
+    cur.earned.total++;
+    $("#fb").innerHTML=`<div class="feedback ${ok?"good":"bad"}">${ok?"Correct! ":"Not this time. "}${esc(s.why)}</div>`;
+    $("#bud").innerHTML=buddy(ok?"Big brain moment! 🧠":"No worries, now you know!",ok?"cheer":"oops");
+    $("#go").hidden=false;
+  });
+  $("#go").onclick=next;
+}
+function fill(s){
+  const n=s.blanks.length;let slots=Array(n).fill(null),tries=0,doneF=false;
+  const toks=shuffle(s.tokens.map((t,i)=>i));
+  shell(`<div class="card"><div class="label">Fill in the blanks · +15 XP</div><h2>${s.title}</h2>${s.body||""}
+    <div class="editor"><div class="head"><span>${cur.c.lang}</span></div><pre id="fcode"></pre></div>
+    <div class="tokens" id="toks">${toks.map(i=>`<button class="token" data-t="${i}">${esc(s.tokens[i])}</button>`).join("")}</div><div id="fb"></div></div>
+    <div id="bud">${buddy("Tap a piece to drop it in the next blank. Tap a blank to take it back.","think")}</div>
+    <div class="row"><button class="btn" id="check" disabled>Check</button><button class="btn" id="go" hidden>Continue</button></div>`);
+  const draw=(marks)=>{
+    $("#fcode").innerHTML=esc(s.code).replace(/\[(\d)\]/g,(m,d)=>{const t=slots[d];const mk=marks?marks[d]:"";
+      return `<button class="slot ${t!==null?"filled":""} ${mk}" data-s="${d}">${t!==null?esc(s.tokens[t]):"&nbsp;"}</button>`});
+    $$(".slot").forEach(b=>b.onclick=()=>{if(doneF)return;const d=+b.dataset.s;if(slots[d]!==null){slots[d]=null;sync()}});
+  };
+  const sync=()=>{draw();$$(".token").forEach(b=>b.disabled=doneF||slots.includes(+b.dataset.t));$("#check").disabled=slots.includes(null)||doneF};
+  $$(".token").forEach(b=>b.onclick=()=>{const e=slots.indexOf(null);if(e<0)return;slots[e]=+b.dataset.t;sync()});
+  $("#check").onclick=()=>{
+    tries++;const marks=slots.map((t,i)=>s.tokens[t]===s.blanks[i]?"right":"wrong");const ok=!marks.includes("wrong");
+    draw(marks);
+    if(ok||tries>=2){doneF=true;$("#check").hidden=true;$("#go").hidden=false;$$(".token").forEach(b=>b.disabled=true)}
+    if(ok){award(tries===1?15:8);$("#fb").innerHTML=`<div class="feedback good">✓ ${esc(s.why)}</div>`;$("#bud").innerHTML=buddy(pick(WINS),"cheer")}
+    else if(tries>=2){$("#fb").innerHTML=`<div class="feedback bad">The answer is: ${s.blanks.map(esc).join(" , ")}. ${esc(s.why)}</div>`;$("#bud").innerHTML=buddy("Tricky one! Now you've seen it, it'll stick.","oops")}
+    else{$("#fb").innerHTML=`<div class="feedback bad">The red blanks aren't right yet. Tap them to swap.</div>`;$("#bud").innerHTML=buddy("So close! One more try.","oops")}
+  };
+  sync();$("#go").onclick=next;
+}
+function order(s){
+  let pool=shuffle(s.lines.map((l,i)=>i));let tries=0;
+  if(pool.every((v,i)=>v===i))pool.reverse();
+  let picked=[],doneO=false;
+  shell(`<div class="card"><div class="label">Put it in order · +15 XP</div><h2>${s.title}</h2>${s.body||""}
+    <div class="lines" id="ans"></div><div class="label">Tap the lines in order</div><div class="lines pick" id="pool"></div><div id="fb"></div></div>
+    <div id="bud">${buddy("Tap lines to add them. Tap a placed line to send it back.","think")}</div>
+    <div class="row"><button class="btn" id="check" disabled>Check</button><button class="btn" id="go" hidden>Continue</button></div>`);
+  const draw=(marks)=>{
+    $("#ans").innerHTML=picked.length?picked.map((i,k)=>`<button class="ln ${marks?marks[k]:""}" data-k="${k}">${esc(s.lines[i])}</button>`).join(""):'<span class="empty">Your program builds here</span>';
+    $("#pool").innerHTML=pool.filter(i=>!picked.includes(i)).map(i=>`<button class="ln" data-i="${i}">${esc(s.lines[i])}</button>`).join("");
+    $$("#ans .ln").forEach(b=>b.onclick=()=>{if(doneO)return;picked.splice(+b.dataset.k,1);draw()});
+    $$("#pool .ln").forEach(b=>b.onclick=()=>{picked.push(+b.dataset.i);draw()});
+    $("#check").disabled=picked.length!==s.lines.length||doneO;
+  };
+  $("#check").onclick=()=>{
+    tries++;
+    const marks=picked.map((i,k)=>s.lines[i]===s.lines[k]?"right":"wrong");const ok=!marks.includes("wrong");
+    if(ok||tries>=2){doneO=true;$("#check").hidden=true;$("#go").hidden=false}
+    if(ok){draw(marks);award(tries===1?15:8);$("#fb").innerHTML=`<div class="feedback good">✓ ${esc(s.why)}</div>`;$("#bud").innerHTML=buddy(pick(WINS),"cheer")}
+    else if(tries>=2){picked=s.lines.map((l,i)=>i);draw(picked.map(()=>"right"));$("#fb").innerHTML=`<div class="feedback bad">Here's the right order. ${esc(s.why)}</div>`;$("#bud").innerHTML=buddy("Order is everything in code. You'll get the next one!","oops")}
+    else{draw(marks);$("#fb").innerHTML=`<div class="feedback bad">The red lines are in the wrong spot. Tap them to take them back out.</div>`;$("#bud").innerHTML=buddy("Almost! Rearrange the red ones.","oops")}
+  };
+  draw();$("#go").onclick=next;
+}
+
+/* ---------- Mini-game: Output Rush ---------- */
+function gameIntro(){
+  if(!cur.l.pool||!cur.l.pool.length)return next();
+  shell(`<div class="card"><div class="label">Mini-game</div><h2>Output Rush</h2><p>45 seconds on the clock. Read each snippet and tap what it prints. Every right answer earns 2 bananas.</p></div>
+    ${buddy("Speed round! Don't overthink it.","cheer")}<div class="row"><button class="btn banana" id="go">Start the clock</button><button class="btn ghost" id="skip">Skip</button></div>`);
+  $("#go").onclick=()=>rush(cur.l.pool,45,(score)=>{award(score*3,score*2);next()},()=>coursePage(cur.c.id),cur.c.lang);
+  $("#skip").onclick=next;
+}
+function rush(poolIn,secs,onEnd,onQuit,file){
+  const pool=shuffle(poolIn);let i=0,score=0,left=secs,ended=false;
+  const timer=setInterval(()=>{left--;const t=$("#tleft");if(t){t.textContent=left;$("#tbar").style.width=(left/secs*100)+"%"}if(left<=0)end()},1000);
+  function end(){if(ended)return;ended=true;clearInterval(timer);
+    $("#screen").innerHTML=`<div class="stack"><div class="card" style="align-items:center;text-align:center"><div class="label">Time!</div><div class="big">${score}/${pool.length}</div><p>+${score*2} bananas · +${score*3} XP</p></div>
+      ${buddy(score>=Math.ceil(pool.length*.8)?"Unreal speed. Are you secretly a monkey?":score>=pool.length/2?"Solid run! Practice makes it automatic.":"Good warm-up. These get easy fast.",score>=pool.length/2?"cheer":"happy")}
+      <div class="row"><button class="btn" id="fin">Continue</button></div></div>`;
+    $("#fin").onclick=()=>onEnd(score);}
+  function round(){
+    if(i>=pool.length)return end();
+    const [code,opts]=pool[i];const ord=shuffle(opts.map((o,k)=>k));
+    $("#screen").innerHTML=`<div class="stack"><div class="game-hud"><button class="x" id="quitg" aria-label="Quit game">×</button><span>⏱ <span id="tleft">${left}</span>s</span><div class="timer"><span id="tbar" style="width:${left/secs*100}%"></span></div><span>🍌 ${score*2}</span></div>
+      <div class="card"><div class="label">What prints? · ${i+1} of ${pool.length}</div><div class="editor"><div class="head"><span>${file}</span></div><pre>${esc(code)}</pre></div>
+      <p style="color:var(--muted);font-size:.85rem">Several lines of output are shown with spaces between them.</p>
+      <div class="opts">${ord.map(k=>`<button class="opt mono" data-k="${k}">${esc(opts[k])}</button>`).join("")}</div></div></div>`;
+    $("#quitg").onclick=()=>{clearInterval(timer);ended=true;onQuit()};
+    $$(".opt").forEach(b=>b.onclick=()=>{
+      const ok=+b.dataset.k===0;b.classList.add(ok?"right":"wrong");if(ok)score++;
+      $$(".opt").forEach(x=>{x.disabled=true;if(+x.dataset.k===0)x.classList.add("right")});
+      setTimeout(()=>{i++;if(!ended)round()},ok?350:900);
+    });
+  }
+  round();
+}
+function practice(){
+  rerender=home;
+  let pool=[];let file="script.js";
+  for(const c of COURSES)for(const x of flat(c))if(S.done.includes(x.l.id)&&x.l.pool)pool.push(...x.l.pool);
+  if(!pool.length){pool=[...COURSES[0].units[0].lessons[0].pool]}
+  pool=shuffle(pool).slice(0,12);
+  $("#foot").innerHTML="";
+  rush(pool,60,(score)=>{S.xp+=score*3;S.bananas+=score*2;if(score)bumpStreak();save();home()},home,file);
+}
+
+/* ---------- Finish ---------- */
+function finish(){
+  const id=cur.l.id;const first=!S.done.includes(id);
+  const bonus=first?20:0;cur.earned.xp+=bonus;
+  S.xp+=cur.earned.xp;S.bananas+=cur.earned.ban;bumpStreak();if(first)S.done.push(id);delete S.progress[id];save();
+  const L=flat(cur.c);const nx=L[cur.item.idx+1];const nst=nx&&status(cur.c,nx);
+  const [d,n,all]=countLessons(cur.c);const courseDone=first&&d===n&&n===all;
+  shell(`<div class="card" style="text-align:center;align-items:center"><div class="label">${cur.l.project?"Project complete":"Lesson complete"}</div><h2>${esc(cur.l.title)} ✓</h2>
+    <div class="reward"><div><b>+${cur.earned.xp}</b><span>XP</span></div><div><b>+${cur.earned.ban}</b><span>Bananas</span></div><div><b>${S.streak}</b><span>Day streak</span></div></div>
+    ${cur.earned.total?`<p>Quiz: ${cur.earned.right} of ${cur.earned.total} right${first?" · first-time bonus +20 XP":""}</p>`:first?"<p>First-time bonus +20 XP</p>":""}</div>
+    ${courseDone?`<div class="cert"><div class="label">Course complete</div><h3>You finished ${cur.c.name}!</h3><p>${d} lessons, every project built. TypeMonkey is officially impressed.</p></div>`:""}
+    ${buddy(courseDone?"WE DID IT! Time to build something of your own in the Playground.":nx?`Next up: ${Q(nx.l.title)} Come back tomorrow to keep your streak alive!`:"That's everything in this course for now. More is on the way!","cheer")}
+    <div class="row">${nx&&(nst==="open"||nst==="done")?`<button class="btn" id="nxt">Next lesson</button>`:""}${nx&&nst==="pro"?`<button class="btn banana" id="nxt">Unlock the next unit</button>`:""}<button class="btn ghost" id="back">Back to course</button></div>`);
+  $("#back").onclick=()=>coursePage(cur.c.id);
+  if($("#nxt"))$("#nxt").onclick=()=>nst==="pro"?coursePage(cur.c.id):startLesson(nx.l.id);
+}
+
+/* ---------- Playground ---------- */
+const PLAY={
+  js:{name:"JavaScript",file:"script.js",run:true,start:`// Try anything! Press ▶ Run.\nconst name = "TypeMonkey";\nfor (let i = 1; i <= 3; i++) {\n  console.log(\`\${name} says ook #\${i}\`);\n}\n`},
+  py:{name:"Python",file:"main.py",start:`name = "TypeMonkey"\nfor i in range(1, 4):\n    print(f"{name} says ook #{i}")\n`},
+  cs:{name:"C#",file:"Program.cs",start:`using System;\n\nclass Program {\n  static void Main() {\n    for (int i = 1; i <= 3; i++) {\n      Console.WriteLine($"TypeMonkey says ook #{i}");\n    }\n  }\n}\n`},
+  cpp:{name:"C++",file:"main.cpp",start:`#include <iostream>\n\nint main() {\n  for (int i = 1; i <= 3; i++) {\n    std::cout << "TypeMonkey says ook #" << i << "\\n";\n  }\n  return 0;\n}\n`}
+};
+function playground(lang="js"){
+  rerender=()=>playground(lang);
+  const P=PLAY[lang];
+  let saved;try{saved=(S.play||{})[lang]}catch(e){}
+  $("#screen").innerHTML=`<div class="stack">
+    <div class="row"><button class="btn ghost sm" id="back">← Home</button></div>
+    <section class="hero"><div class="label">Playground</div><h1>Code anything.</h1><p>No lesson, no rules. Write code, run it, break it, fix it. Your code is saved as you type.</p></section>
+    <div class="langs">${Object.entries(PLAY).map(([k,v])=>`<button class="lang" data-k="${k}" aria-pressed="${k===lang}">${v.name}</button>`).join("")}</div>
+    ${P.run?"":`<div class="note">${P.name} needs its compiler, which ships inside the full TypeMonkey app. In this preview only JavaScript runs, so you can write ${P.name} here but not run it yet.</div>`}
+    <div class="editor"><div class="head"><span>${P.file}</span><button class="linkbtn" id="clear" style="color:var(--code-dim)">Reset</button><button class="run" id="run-p" ${P.run?"":"disabled"}>▶ Run</button></div>
+      <textarea id="code-p" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="Playground editor" rows="14">${esc(saved||P.start)}</textarea>
+      <div class="console" id="out-p"><span class="dim">${P.run?"Output appears here":"Running "+P.name+" is coming in the full app"}</span></div></div>
+    ${buddy(P.run?"Tip: console.log anything you're curious about. That's how pros explore code too.":"You can still practice typing "+P.name+" syntax here. Your code is saved.","happy")}
+  </div>`;
+  $("#back").onclick=home;
+  $$(".lang").forEach(b=>b.onclick=()=>playground(b.dataset.k));
+  const ta=$("#code-p");
+  ta.addEventListener("input",()=>{S.play=S.play||{};S.play[lang]=ta.value;save()});
+  ta.addEventListener("keydown",e=>{if(e.key==="Tab"){e.preventDefault();const s=ta.selectionStart;ta.value=ta.value.slice(0,s)+"  "+ta.value.slice(ta.selectionEnd);ta.selectionStart=ta.selectionEnd=s+2}});
+  $("#clear").onclick=()=>{ta.value=P.start;S.play=S.play||{};delete S.play[lang];save()};
+  if(P.run)$("#run-p").onclick=async()=>paintConsole($("#out-p"),await runCode(ta.value));
+  foot();window.scrollTo(0,0);
+}
+
+$("#homeBtn").onclick=home;
+renderStats();home();
+</script>
