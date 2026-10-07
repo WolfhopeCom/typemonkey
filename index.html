@@ -46,7 +46,7 @@ button{font:inherit;cursor:pointer}
 @media (max-width:520px){.brand .word{display:none}}
 .stats{min-width:0}.stat{min-width:0;flex-shrink:1}
 /* app feel: never slide sideways, no double-tap zoom */
-html,body{overflow-x:hidden;max-width:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{touch-action:manipulation}
+html{overflow-x:hidden}html,body{max-width:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{overflow-x:clip;touch-action:manipulation}
 
 .buddy{display:flex;gap:12px;align-items:flex-end}
 .buddy .tm{width:88px;height:88px;flex:none}
@@ -305,10 +305,25 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 .tile.tl{text-align:left;white-space:pre-wrap;overflow-wrap:anywhere}
 .tile.on{background:#FFD9B5;color:#2A1300;box-shadow:0 2px 0 #E0A060}
 .tbuild .tline.tile.on{display:block;width:fit-content;max-width:100%}
-.tapmode .tbuild,.tapmode .ttray{display:flex}
-.tapmode .editor textarea,.tapmode .symbar{display:none}
 .symbar{display:flex;gap:4px;overflow-x:auto;padding:6px 8px;background:#0F1A16;scrollbar-width:none}
 .symbar button{flex:none;min-width:38px;height:38px;border:0;border-radius:8px;background:#22332C;color:#E8F2EC;font-family:var(--mono);font-size:1.05rem;font-weight:700}
+.app:has(.actionbar){padding-bottom:0;min-height:100vh;min-height:100dvh}
+.app:has(.actionbar) #screen{flex:1;display:flex;flex-direction:column}
+#screen>.stack:has(.actionbar){flex:1}
+.actionbar{margin-top:auto}
+.actionbar{position:sticky;bottom:0;z-index:6;display:flex;flex-direction:column;gap:8px;background:var(--bg);margin-inline:-16px;padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 16px -12px #0004;border-top:1px solid var(--line)}
+.actionbar .actrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.actionbar .actrow>.btn:not(.ghost):not([hidden]){flex:1 1 160px;justify-content:center;min-height:52px;font-size:1.08rem}
+.actionbar #fb:empty{display:none}
+.actionbar #fb{max-height:38vh;overflow:auto;border-radius:14px}
+.actionbar #fb .feedback{animation:sheetUp .25s ease;margin:0}
+@keyframes sheetUp{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
+.actionbar:has(.feedback.good){background:color-mix(in srgb,var(--leaf) 10%,var(--bg))}
+.actionbar:has(.feedback.bad),.actionbar:has(.feedback.oops){background:color-mix(in srgb,var(--banana) 14%,var(--bg))}
+.actionbar .ttray{max-height:34vh;overflow:auto;padding:2px}
+.actionbar .kidrow{position:static;box-shadow:none;padding:0;margin:0;background:none}
+.tapmode .tbuild,.tapmode .ttray{display:flex}
+.tapmode .editor textarea,.tapmode .symbar{display:none}
 .kcode{margin-top:10px;text-align:left}.kcode small{display:block;font-weight:700;margin-bottom:4px}.kcode pre{margin:0;background:var(--code-bg);color:var(--code-fg);border-radius:10px;padding:10px 12px;font-size:.92rem;line-height:1.45;overflow-x:auto}
 .mk{position:absolute;width:calc(100% / var(--w));height:calc(100% / var(--h));display:grid;place-items:center;transition:left .32s ease,top .32s ease,transform .25s ease;pointer-events:none}
 .mface{width:82%;height:82%;display:grid;place-items:center}.mface svg{width:100%;height:100%;filter:drop-shadow(0 2px 2px #0004)}
@@ -53084,7 +53099,18 @@ function shell(inner){
     <div class="lessonbar"><button class="x" id="quit" aria-label="Leave lesson">×</button><div class="progress"><span style="width:${pct}%"></span></div></div>
     ${inner}${cur.c.tables?`<details class="drawer"><summary>📋 Show the zoo tables</summary>${Object.keys(cur.c.tables).map(t=>tableHTML(cur.c,t)).join("")}</details>`:""}</div>`;
   $("#quit").onclick=()=>cur.review||cur.daily?home():coursePage(cur.c.id);
+  dockActions();
   $("#foot").innerHTML="";window.scrollTo(0,0);
+}
+/* Phone-first lesson layout: the main buttons live in one bar pinned to the bottom (where your thumb is).
+   Feedback slides up inside that bar, and in tap mode the tile tray sits there too, like a keyboard. */
+function dockActions(){
+  const scr=$("#screen");scr.classList.remove("tapmode");
+  const act=[...scr.querySelectorAll(".stack > .row")].find(r=>r.querySelector("#go,#check,#run"));if(!act)return;
+  const bar=document.createElement("div");bar.className="actionbar";act.replaceWith(bar);
+  const tray=scr.querySelector("#ttray");if(tray)bar.appendChild(tray);
+  const fb=scr.querySelector(".card #fb");if(fb)bar.appendChild(fb);
+  act.classList.add("actrow");bar.appendChild(act);
 }
 function next(){if(cur&&cur.daily){const st=cur.l.steps[cur.step];if(st&&st.type!=="quiz"&&st.type!=="done"){cur.earned.total++;cur.earned.right++}}cur.step++;renderStep()}
 const inputBox=(id,val)=>`<details class="stdin" ${val?"open":""}><summary>⌨️ Input <span>(what the player types)</span></summary><textarea id="in-${id}" rows="2" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="Type what the user would type, one answer per line" aria-label="Program input">${esc(val||"")}</textarea></details>`;
@@ -53198,9 +53224,9 @@ function tilePlan(s){
   return {mode:"lines",given,pieces:todo};
 }
 const tileCode=(p,placed)=>[...p.given,...(p.mode==="tokens"?(placed.length?[placed.map(i=>p.pieces[i]).join("")]:[]):placed.map(i=>p.pieces[i]))].join("\n");
-const codeInputMode=()=>(S.settings.codeInput||(isTouch()?"tap":"type"));
+const codeInputMode=()=>(S.settings.codeInput||"tap");
 function wireTiles(s,p,onMode){
-  const ta=$("#code-c"),card=ta.closest(".card");let placed=[];
+  const ta=$("#code-c"),card=$("#screen");let placed=[];
   const order=(()=>{let o=shuffle(p.pieces.map((_,i)=>i));if(o.length>1&&o.every((v,i)=>v===i))o.reverse();return o})();
   const show=t=>esc(t.replace(/\s+$/,""));
   const indent=t=>(t.match(/^\s*/)[0].length);
@@ -53211,7 +53237,7 @@ function wireTiles(s,p,onMode){
         (placed.map((i,k)=>`<button class="tline tile on" data-k="${k}" style="--in:${indent(p.pieces[i])}">${show(p.pieces[i].trimStart())}</button>`).join("")||'<span class="empty">Tap the lines below in the right order</span>'));
     $("#ttray").innerHTML=order.filter(i=>!placed.includes(i)).map(i=>`<button class="tile ${p.mode==="lines"?"tl":""}" data-i="${i}">${show(p.mode==="lines"?p.pieces[i].trim():p.pieces[i].trim())}</button>`).join("")||'<span class="empty">All tiles placed! Press ▶ Run.</span>';
     $$("#tbuild .tile").forEach(b=>b.onclick=()=>{placed.splice(+b.dataset.k,1);sync();draw()});
-    $$("#ttray .tile").forEach(b=>b.onclick=()=>{placed.push(+b.dataset.i);sync();draw();if(placed.length===p.pieces.length){const r=$("#run-c");r&&r.classList.add("ready")}});
+    $$("#ttray .tile").forEach(b=>b.onclick=()=>{placed.push(+b.dataset.i);sync();draw();try{$("#tbuild").scrollIntoView({block:"nearest",behavior:"smooth"})}catch(e){}if(placed.length===p.pieces.length){const r=$("#run-c");r&&r.classList.add("ready")}});
   };
   const setMode=m=>{S.settings.codeInput=m;save();card.classList.toggle("tapmode",m==="tap");
     $$("#tmode button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===m));
@@ -53242,7 +53268,7 @@ function codeStep(s){
   const doIt=isBug?"Press ▶ Run to see the bug, fix the code, then run it again.":tapNow?doTap:cur.c.runnable==="web"?"Type your code, then tap ▶ Show page.":"Type your code, then press ▶ Run.";
   shell(`<div class="card"><div class="label">${label} · +30 XP ${LN}</div>${todo(doIt,`<button class="hint2" id="hint2" type="button">💡 Stuck? Get help</button>`)}<h2>${s.title}</h2>${s.body}${s.tests&&s.tests.length>1?`<p class="testnote">TypeMonkey will test it ${s.tests.length} ways, typing different answers each time.</p>`:""}${TP?tileBlock():""}${editorBlock("c",draft(k)||s.start,cur.c.runnable||true,cur.c.lang,firstIn)}<div id="fb"></div><div id="peek"></div></div>
     <div id="bud">${buddy(isBug?"This code is broken! Press ▶ Run to see what happens, then fix it. Tap 💡 Hint if you get stuck.":cur.c.runnable==="web"?"Type your code, then tap ▶ Show page. I'll check what you built. Stuck? Tap 💡 Help and I'll give you one clue at a time.":(tapNow?"Tap the pieces in the right order, then hit ▶ Run. Stuck? Tap 💡 Help and I'll give you one clue at a time.":"Write your code, then hit ▶ Run. Stuck? Tap 💡 Help and I'll give you one clue at a time."),"think")}</div>
-    <div class="row"><button class="btn" id="go" disabled>Continue</button><button class="btn ghost helpbtn" id="hint">${isBug?"💡 Hint 1":"💡 Help"}</button><button class="linkbtn" id="answer" hidden>${isBug?"Show the fixed code":"Show the whole answer"}</button></div>`);
+    <div class="row">${TP?`<button class="btn banana" id="trun" hidden>${cur.c.runnable==="web"?"▶ Show page":"▶ Run"}</button>`:""}<button class="btn" id="go" disabled>Continue</button><button class="btn ghost helpbtn" id="hint">${isBug?"💡 Hint 1":"💡 Help"}</button><button class="linkbtn" id="answer" hidden>${isBug?"Show the fixed code":"Show the whole answer"}</button></div>`);
   const showBugHelp=()=>{
     const hs=s.hints||[];
     if(level<hs.length){level++;
@@ -53274,11 +53300,13 @@ function codeStep(s){
     $("#bud").innerHTML=buddy(ok?(isBug?(level===0?"Bug squashed with no hints! You're a real debugger. 🐛🔨":"Bug squashed! 🐛🔨 Every programmer fixes bugs like this."):level>1?"You did it! Using hints is how everyone learns. 🍌 +5":s.final?"You built the whole thing yourself! 🏆":"Look at you go! 🍌 +5"):tries>=2&&level===0?(isBug?"Tricky bug! Tap 💡 Hint 1 for a clue.":"This one's tricky! Tap 💡 Help and I'll show you the plan."):tries>=2?"Getting closer! Tap 💡 for the next clue.":"Not quite yet. Read the message above, tweak it, and run it again.",ok?"cheer":"oops");
     if(ok&&isBug)bump("bugsFixed");
     if(!ok&&tries===2&&level===0)$("#hint").classList.add("nudge");
-    if(ok&&!solved){solved=true;$("#go").disabled=false;award(30,5);bump("challenges");if(tries===1)bump("firstTry")}
+    if(ok&&!solved){solved=true;$("#go").disabled=false;$("#go").hidden=false;if($("#trun"))$("#trun").hidden=true;award(30,5);bump("challenges");if(tries===1)bump("firstTry")}
   });
   $("#code-c").addEventListener("input",()=>{if(!T||T.mode()==="type")draft(k,$("#code-c").value)});
   const doType=cur.c.runnable==="web"?"Type your code, then tap ▶ Show page.":"Type your code, then press ▶ Run.";
-  const T=TP?wireTiles(s,TP,m=>{const t=document.querySelector(".card .todo span");if(t)t.textContent="👉 "+(m==="tap"?doTap:doType)}):null;
+  const syncRun=m=>{const tr=$("#trun");if(tr){tr.hidden=!(m==="tap"&&!solved);$("#go").hidden=m==="tap"&&!solved}};
+  const T=TP?wireTiles(s,TP,m=>{const t=document.querySelector(".card .todo span");if(t)t.textContent="👉 "+(m==="tap"?doTap:doType);syncRun(m)}):null;
+  if($("#trun"))$("#trun").onclick=()=>{$("#run-c").click();setTimeout(()=>{try{$("#out-c").scrollIntoView({block:"nearest",behavior:"smooth"})}catch(e){}},400)};
   wireSymBar("c");
   $("#hint").onclick=()=>{$("#hint").classList.remove("nudge");sfx("hint");showHelp()};
   $("#hint2").onclick=()=>{if(!$("#hint").hidden)$("#hint").click();else{$("#answer").hidden=false;$("#answer").scrollIntoView({block:"center",behavior:"smooth"});$("#peek").scrollIntoView({block:"nearest"})}};
