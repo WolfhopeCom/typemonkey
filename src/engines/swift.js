@@ -706,7 +706,9 @@ const TMSwift=(()=>{
       }
       if(ai<args.length){const a=args[ai];fail(`line ${line}: ${a.label?`extra argument '${a.label}' in call`:"extra argument in call"}${a.label&&need.some(s=>s.name===a.label)?` (arguments go in the order the properties are listed)`:""}`)}
     }
-    function allInits(ty){for(let t=ty;t;t=t.sup){if(t.inits.length)return t.inits;if(t!==ty&&false)break;if(t.stored.some(x=>!x.init&&!(x.type&&x.type.k==="opt"))&&t!==ty)break}return []}
+    // a class's own inits, plus the convenience inits of its parent class (which Swift lets it inherit)
+    function allInits(ty){for(let t=ty;t;t=t.sup){if(t.inits.length){const conv=[];for(let u=t.sup;u;u=u.sup)conv.push(...u.inits.filter(f=>f.mods.includes("convenience")&&!t.inits.some(g=>g.params.map(q=>q.label).join()===f.params.map(q=>q.label).join())));return conv.length?[...t.inits,...conv]:t.inits}
+      if(t.stored.some(x=>!x.init&&!(x.type&&x.type.k==="opt"))&&t!==ty)break}return []}
     function storedAll(ty){const r=[];for(let t=ty;t;t=t.sup)r.push(...t.stored);return r}
     function initStored(o,ty,line,memberwise){
       const chain=[];for(let t=ty;t;t=t.sup)chain.unshift(t);
@@ -1140,6 +1142,8 @@ const TMSwift=(()=>{
       if(env.selfType&&env.selfType.kind==="builtin"&&env.self!=null){const sv=env.selfRef?env.selfRef.get():env.self;
         try{return memberOf(sv,e.v,{k:"member",e:{k:"self",line:e.line},name:e.v,line:e.line},env)}catch(x){if(!(x instanceof SErr&&/has no member/.test(x.message)))throw x}}
       if(types[e.v])return {isType:true,ty:types[e.v]};
+      if(e.v==="Self"&&(env.self instanceof Obj||env.self instanceof ECase))return {isType:true,ty:env.self.type};
+      if(e.v==="Self"&&env.selfType&&env.selfType.kind!=="builtin")return {isType:true,ty:env.selfType};
       const b=BUILTINS[e.v];if(b!==undefined){if(MATHF.has(e.v)&&!mathOK)fail(`line ${e.line}: cannot find '${e.v}' in scope. Add import Foundation at the top of your program to use it`);return b}
       notFound(e.v,e.line);
     }
@@ -1225,7 +1229,7 @@ const TMSwift=(()=>{
         const args=argList(e,env);const inits=allInits(st);
         if(!inits.length){if(args.length)fail(`line ${e.line}: argument passed to call that takes no arguments`);return undefined}
         callInit(env.self,pickFn(inits,args,e.line),args,e.line);return undefined}
-      if((f.k==="name"&&f.v==="init"||f.k==="member"&&f.e.k==="self"&&f.name==="init")&&env.self){const args=argList(e,env);const inits=allInits(env.selfType);
+      if((f.k==="name"&&f.v==="init"||f.k==="member"&&f.e.k==="self"&&f.name==="init")&&env.self){const args=argList(e,env);const inits=allInits(env.self instanceof Obj?env.self.type:env.selfType);
         if(env.selfType.kind==="struct"&&inits.every(x=>x.fromExt)&&!inits.some(x=>labelsFit(x.params,args))){memberwise(env.self,env.selfType,args,e.line);return undefined}
         callInit(env.self,pickFn(inits,args,e.line),args,e.line);return undefined}
       // optional call: f?(1, 2)
@@ -1499,8 +1503,8 @@ const TMSwift=(()=>{
         if(a.v instanceof Some||a.v===NIL)fail(`line ${line}: value of optional type '${typeOfV(a.v)}' must be unwrapped before turning it into a String (or use String(describing:))`);
         if(a.v&&a.v.substr)return a.v;
         return desc(a.v)},
-      Character:(args,line)=>{const v=args[0].v;if(v instanceof Chr)return new Chr(v.s);if(typeof v!=="string"||[...v].length!==1)fail(`line ${line}: Character(...) needs exactly one character`);return new Chr(v)},
-      UnicodeScalar:(args,line)=>{const v=args[0].v;let c;if(isInt(v)){if(v<0||v>0x10FFFF||v>=0xD800&&v<=0xDFFF)return NIL;c=new Chr(String.fromCodePoint(v));c.scalar=true;return args[0].lit||v<256?c:new Some(c)}
+      Character:(args,line)=>{let v=args[0].v;if(v instanceof Some&&v.v instanceof Chr&&v.v.scalar)v=v.v;if(v instanceof Chr)return new Chr(v.s);if(typeof v!=="string"||[...v].length!==1)fail(`line ${line}: Character(...) needs exactly one character`);return new Chr(v)},
+      UnicodeScalar:(args,line)=>{const v=args[0].v;let c;if(isInt(v)){if(v<0||v>0x10FFFF||v>=0xD800&&v<=0xDFFF)return NIL;c=new Chr(String.fromCodePoint(v));c.scalar=true;return args[0].lit?c:new Some(c)}
         const s=v instanceof Chr?v.s:v;if(typeof s!=="string"||[...s].length!==1)fail(`line ${line}: UnicodeScalar(...) needs exactly one character`);c=new Chr(s);c.scalar=true;return c},
       Optional:(args)=>{const v=args[0].v;return v instanceof Some||v===NIL?v:new Some(v)},
       Float:(args,line)=>{const v=CONV.Double(args,line);return v instanceof Some?new Some(F32(v.v.v)):v instanceof D?F32(v.v):v},
