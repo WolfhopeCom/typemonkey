@@ -428,7 +428,8 @@ const TMSwift=(()=>{
       const needF=(line,what)=>{if(!foundation)fail(`line ${line}: ${what} comes from Foundation. Add import Foundation at the top of your program to use it`)};
     let out="",steps=0,depth=0;const IN=input==null?"":String(input).replace(/\r/g,"");let inPos=0;
     const W=s=>{out+=s;if(out.length>200000)fail("Your program printed too much, so I stopped it.","Timeout")};
-    const tick=()=>{if(++steps>400000)fail("Your program ran too long, so I stopped it. Check for a loop that never ends.","Timeout")};
+    const t0=Date.now();  // a loop that never ends is stopped after about 3 seconds (or 20 million steps)
+    const tick=()=>{if(++steps>20000000||(steps&8191)===0&&Date.now()-t0>3000)fail("Your program ran too long, so I stopped it. Check for a loop that never ends.","Timeout")};
     const types=Object.create(null);     // user types
     const protoDefaults=Object.create(null);
     const globals=new Env(null);
@@ -588,6 +589,7 @@ const TMSwift=(()=>{
     }
     function linkTypes(){
       for(const ty of Object.values(types)){
+        if(ty.kind==="class"&&!ty.inits.length&&ty.stored.some(s=>!s.init&&!(s.type&&s.type.k==="opt")))fail(`line ${ty.line}: class '${ty.name}' has no initializers. Give every property a starting value, or write an init`);
         if(ty.kind==="class"&&ty.inherits.length&&types[ty.inherits[0]]&&types[ty.inherits[0]].kind==="class")ty.sup=types[ty.inherits[0]];
         if(ty.kind==="struct"&&ty.inherits.some(n=>types[n]&&types[n].kind==="class"))fail(`line ${ty.line}: a struct can't inherit from a class (only classes can)`);
         if(ty.kind==="enum"){
@@ -794,7 +796,7 @@ const TMSwift=(()=>{
       let r;
       switch(op){
         case "+":r=a+b;break;case "-":r=a-b;break;case "*":r=a*b;break;
-        case "/":if(b===0)fatal("Division by zero");r=Math.trunc(a/b);break;
+        case "/":if(b===0){if(e&&isLitE(e.r)&&isLitE(e.l))fail(`line ${line}: division by zero`);fatal("Division by zero")}r=Math.trunc(a/b);break;
         case "%":if(b===0)fatal("Division by zero in remainder operation");r=a%b;if(Object.is(r,-0))r=0;break;
         case "&":return Number(BigInt(a)&BigInt(b));case "|":return Number(BigInt(a)|BigInt(b));case "^":return Number(BigInt(a)^BigInt(b));
         case "<<":return b>=64?0:Number(BigInt.asIntN(64,BigInt(a)<<BigInt(b)));case ">>":return Number(BigInt(a)>>BigInt(Math.min(b,64)));
@@ -949,6 +951,7 @@ const TMSwift=(()=>{
       return new ECase(ty,cd.name,args.map((a,i)=>conform(copy(a.v),cd.assoc[i].type,line,a.lit,"convert value")))}})}
     const CHARSETS=["whitespaces","whitespacesAndNewlines","newlines","punctuationCharacters","decimalDigits","letters"];
     function implicitMember(name,line){
+      if(["up","down","towardZero","awayFromZero","toNearestOrEven","toNearestOrAwayFromZero"].includes(name)&&!Object.values(types).some(t=>t.kind==="enum"&&t.cases.some(c=>c.name===name)))return {rule:name};
       if(CHARSETS.includes(name)&&!Object.values(types).some(t=>t.kind==="enum"&&t.cases.some(c=>c.name===name)))return {charset:name};
       const hits=Object.values(types).filter(t=>t.kind==="enum"&&t.caseVals&&t.caseVals.some(c=>c.name===name));
       if(hits.length){const ty=hits[0];const c=ty.caseVals.find(c=>c.name===name);const cd=ty.cases.find(x=>x.name===name);if(cd.assoc)return caseMaker(ty,cd);return c}
@@ -1372,7 +1375,7 @@ const TMSwift=(()=>{
         const seq=function*(){const step=num(by);for(let i=num(from),k=0;;k++){const x=dblMode?num(from)+k*step:i;if(step>0?(to?x>=num(end):x>num(end)):(to?x<=num(end):x<num(end)))return;yield dblMode?new D(x):x;i+=step}}();
         return {seq,stride:true}}),
       zip:B(([a,b],args,line)=>{const x=[...iterate(a,line)],y=[...iterate(b,line)];return new Arr(x.slice(0,Math.min(x.length,y.length)).map((v,i)=>new Tup([v,y[i]])),null)}),
-      type:B(([v])=>({isTypeName:typeOfV(v)})),
+      type:B(([v])=>({isTypeName:runtimeType(v)})),
       readLine:B(()=>{if(inPos>=IN.length)return NIL;const e2=IN.indexOf("\n",inPos);const end=e2<0?IN.length:e2;const line=IN.slice(inPos,end);inPos=end+1;if(!quiet)W(line+"\n");return new Some(line)}),
       fatalError:B(([m])=>fatal(m===undefined?"":desc(m))),
       precondition:B(([c,m])=>{if(!c)fatal(m===undefined?"Precondition failed":"Precondition failed: "+desc(m));return undefined}),
@@ -1381,8 +1384,21 @@ const TMSwift=(()=>{
       Int:{isTypeName:"Int",ns:{max:9223372036854775807,min:-9223372036854775808,random:B((vals,args,line)=>{const r=args[0].v;const lo=r.lo,hi=r.closed?r.hi:r.hi-1;return lo+Math.floor(Math.random()*(hi-lo+1))})}},
       Double:{isTypeName:"Double",ns:{pi:new D(Math.PI),infinity:new D(Infinity),nan:new D(NaN),greatestFiniteMagnitude:new D(Number.MAX_VALUE),leastNonzeroMagnitude:new D(5e-324),ulpOfOne:new D(Number.EPSILON),random:B((vals,args)=>{const r=args[0].v;return new D(num(r.lo)+Math.random()*(num(r.hi)-num(r.lo)))})}},
       Bool:{isTypeName:"Bool",ns:{random:B(()=>Math.random()<0.5)}},
+      Float:{isTypeName:"Float",ns:{pi:F32(Math.PI),infinity:F32(Infinity),nan:F32(NaN),greatestFiniteMagnitude:F32(3.4028234663852886e38)}},
+      Character:{isTypeName:"Character",ns:{}},
       String:{isTypeName:"String",ns:{}},
     };
+    for(const n in IRANGE)BUILTINS[n]={isTypeName:n,ns:{max:IRANGE[n][1],min:IRANGE[n][0]}};
+    // the names type(of:) prints: Array<Int>, Optional<String>, Dictionary<String, Int>
+    function runtimeType(v){
+      const T=t=>{if(!t)return "Any";switch(t.k){case "name":return t.args&&t.args.length?t.name+"<"+t.args.map(T).join(", ")+">":t.name;case "arr":return "Array<"+T(t.el)+">";case "dict":return "Dictionary<"+T(t.key)+", "+T(t.val)+">";case "opt":return "Optional<"+T(t.of)+">";case "set":return "Set<"+T(t.el)+">";case "tuple":return "("+t.items.map(T).join(", ")+")"}return "Any"};
+      if(v instanceof Some)return "Optional<"+runtimeType(v.v)+">";
+      if(v instanceof Arr)return "Array<"+(v.et?T(v.et):v.items.length?runtimeType(v.items[0]):"Any")+">";
+      if(v instanceof Dict)return "Dictionary<"+(v.kt?T(v.kt):"Any")+", "+(v.vt?T(v.vt):"Any")+">";
+      if(v instanceof SetV)return "Set<"+(v.et?T(v.et):v.m.size?runtimeType([...v.m.values()][0]):"Any")+">";
+      if(v instanceof Tup)return "("+v.items.map((x,i)=>(v.labels[i]?v.labels[i]+": ":"")+runtimeType(x)).join(", ")+")";
+      return typeOfV(v);
+    }
     function swiftRound(x){return x<0?-Math.round(-x):Math.round(x)}  // rounds halves away from zero
     function builtinMember(b,n,e,env){
       const line=e.line;
@@ -1397,7 +1413,8 @@ const TMSwift=(()=>{
         switch(n){
           case "isMultiple":return M(([x],args)=>{if(args[0].label!=="of")fail(`line ${line}: use isMultiple(of:)`);return b%x===0});
           case "description":return desc(b);
-          case "rounded":return M(()=>new D(swiftRound(num(b))));
+          case "rounded":return M(([rule])=>{const x=num(b);const r=rule&&(rule.rule||rule.name);
+            const v=r==="up"?Math.ceil(x):r==="down"?Math.floor(x):r==="towardZero"?Math.trunc(x):r==="toNearestOrEven"?(Math.abs(x%1)===0.5?2*Math.round(x/2):Math.round(x)):swiftRound(x);return new D(v)});
           case "squareRoot":return M(()=>new D(Math.sqrt(num(b))));
           case "truncatingRemainder":return M(([x])=>new D(num(b)%num(x)));
           case "magnitude":return b instanceof D?new D(Math.abs(b.v)):Math.abs(b);
@@ -1414,6 +1431,7 @@ const TMSwift=(()=>{
         fail(`line ${line}: value of type '${typeOfV(b)}' has no member '${n}'`);
       }
       if(typeof b==="string")return strMember(b,n,e,env,mut);
+      if(typeof b==="boolean"){if(n==="toggle")return M(()=>{const lv=mut();lv.set(!lv.get());return undefined});if(n==="description")return String(b);fail(`line ${line}: value of type 'Bool' has no member '${n}'`)}
       if(b instanceof Chr){
         const c=b.s;
         switch(n){
