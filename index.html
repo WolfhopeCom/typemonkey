@@ -372,6 +372,7 @@ html.calm *{animation:none!important;transition:none!important}
       <div class="stat" title="Bananas">🍌 <span id="sBan">0</span></div>
       <div class="stat"><i>XP</i> <span id="sXp">0</span></div>
     </div>
+    <button class="gear" id="sndBtn" aria-label="Sounds on" aria-pressed="true" title="Sounds on or off">🔊</button>
     <button class="gear" id="gearBtn" aria-label="Settings"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg></button>
   </header>
   <main id="screen"></main>
@@ -49199,7 +49200,63 @@ function applySettings(){
   r.classList.toggle("bigtext",st.text==="large");r.classList.toggle("calm",!!st.calm);
 }
 applySettings();
-function renderStats(){$("#sStreak").textContent=S.streak;$("#sBan").textContent=S.bananas;$("#sXp").textContent=S.xp;$("#brandMonkey").innerHTML=monkey()}
+/* ---------- Sounds: tiny synthesized effects (Web Audio, no files). Soft, short, throttled, never throws.
+   The AudioContext is only created/resumed inside a user gesture (iOS / Safari rule). ---------- */
+const SFX=(()=>{
+  // Each recipe schedules notes on (ctx, out, t). note(f,at,dur,opts): smooth attack + exponential release, so no clicks.
+  const note=(ctx,out,f,at,dur,o={})=>{
+    const osc=ctx.createOscillator(),g=ctx.createGain();const vol=o.vol||.12,a=o.attack||.008;
+    osc.type=o.type||"sine";osc.frequency.setValueAtTime(f,at);if(o.to)osc.frequency.exponentialRampToValueAtTime(o.to,at+dur);
+    g.gain.setValueAtTime(.0001,at);g.gain.linearRampToValueAtTime(vol,at+a);g.gain.exponentialRampToValueAtTime(.0001,at+dur);
+    osc.connect(g);g.connect(out);osc.start(at);osc.stop(at+dur+.03);
+  };
+  const R={
+    tap:(c,o,t)=>note(c,o,880,t,.05,{type:"triangle",vol:.035,attack:.004}),
+    correct:(c,o,t)=>{note(c,o,784,t,.16,{type:"triangle",vol:.1});note(c,o,1175,t+.09,.3,{type:"sine",vol:.1})},
+    wrong:(c,o,t)=>note(c,o,300,t,.28,{type:"sine",vol:.12,attack:.02,to:220}),
+    complete:(c,o,t)=>{[523,659,784].forEach((f,i)=>note(c,o,f,t+i*.11,.18,{type:"triangle",vol:.09}));note(c,o,1047,t+.33,.55,{type:"triangle",vol:.1});note(c,o,784,t+.33,.55,{type:"sine",vol:.05})},
+    badge:(c,o,t)=>[1568,2093,2637,3136,2637].forEach((f,i)=>note(c,o,f,t+i*.06,.22,{type:"sine",vol:.045})),
+    coins:(c,o,t)=>{note(c,o,988,t,.08,{type:"square",vol:.025});note(c,o,1319,t+.07,.25,{type:"square",vol:.025})},
+    step:(c,o,t)=>note(c,o,500+Math.random()*120,t,.09,{type:"triangle",vol:.05}),
+    success:(c,o,t)=>[523,659,784,1047].forEach((f,i)=>note(c,o,f,t+i*.08,i===3?.4:.14,{type:"triangle",vol:.09})),
+    oops:(c,o,t)=>{note(c,o,440,t,.15,{type:"sine",vol:.09,attack:.015});note(c,o,349,t+.15,.26,{type:"sine",vol:.09,attack:.015})},
+    hint:(c,o,t)=>{note(c,o,660,t,.12,{type:"sine",vol:.06});note(c,o,990,t+.08,.2,{type:"sine",vol:.05})}
+  };
+  const GAP={tap:60,step:90,coins:150};const last={};let ctx=null,master=null,gestured=false,lastBig=0;
+  const AC=typeof window!=="undefined"&&(window.AudioContext||window.webkitAudioContext);
+  const on=()=>{try{return !(S&&S.settings&&S.settings.sound===false)}catch(e){return true}};
+  function wake(){ // called from inside a real user gesture
+    gestured=true;if(!AC||!on())return;
+    try{if(!ctx){ctx=new AC();master=ctx.createGain();master.gain.value=.7;master.connect(ctx.destination)}
+      if(ctx.state!=="running")ctx.resume().catch(()=>{})}catch(e){ctx=null}
+  }
+  if(typeof document!=="undefined")["pointerdown","touchend","keydown"].forEach(ev=>document.addEventListener(ev,wake,{capture:true,passive:true}));
+  function play(name){
+    try{
+      const r=R[name];if(!r||!on()||!gestured||!AC)return false;
+      if(!ctx)wake();if(!ctx)return false;
+      const now=performance.now();if(now-(last[name]||0)<(GAP[name]||250))return false;
+      if(name==="tap"&&now-lastBig<150)return false;  // don't click over a chime
+      last[name]=now;if(name!=="tap"&&name!=="step")lastBig=now;
+      if(ctx.state!=="running")ctx.resume().catch(()=>{});
+      r(ctx,master,ctx.currentTime+.01);return true;
+    }catch(e){return false}
+  }
+  play.names=Object.keys(R);
+  play.state=()=>ctx?ctx.state:"none";
+  /* Self-test: render every sound into a silent offline buffer; returns {name:"ok"|error} */
+  play.test=async()=>{const out={};const OAC=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+    for(const n of Object.keys(R)){try{if(!OAC){out[n]="ok";continue}const oc=new OAC(1,44100,44100);R[n](oc,oc.destination,0);const buf=await oc.startRendering();
+      const d=buf.getChannelData(0);let peak=0;for(let i=0;i<d.length;i++)peak=Math.max(peak,Math.abs(d[i]));out[n]=peak>0&&peak<.5?"ok":"peak "+peak.toFixed(3)}catch(e){out[n]=String(e)}}
+    return out};
+  return play;
+})();
+window.tmSound=SFX;
+const sfx=n=>SFX(n);
+/* soft tap on every enabled button */
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("button");if(b&&!b.disabled)sfx("tap")},true);
+function renderStats(){$("#sStreak").textContent=S.streak;$("#sBan").textContent=S.bananas;$("#sXp").textContent=S.xp;$("#brandMonkey").innerHTML=monkey();renderSnd()}
+function renderSnd(){const b=$("#sndBtn");if(!b)return;const on=S.settings.sound!==false;b.textContent=on?"🔊":"🔇";b.setAttribute("aria-pressed",on);b.setAttribute("aria-label",on?"Sounds on. Tap to turn off":"Sounds off. Tap to turn on")}
 const dayStr=d=>d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
 function bumpStreak(){const t=dayStr(new Date());if(S.lastDay===t)return;const y=dayStr(new Date(Date.now()-864e5));S.streak=S.lastDay===y?S.streak+1:1;S.lastDay=t}
 
@@ -49703,7 +49760,7 @@ function codeStep(s){
     if(shown>=H.lines.length)$("#hint").hidden=true;
   };
   wireEditor("c",async(code)=>{
-    tries++;const [ok,msg,detail]=cur.c.runnable==="web"?gradeWebNow(s,code):await grade(s,code,kindOf(cur.c));
+    tries++;const [ok,msg,detail]=cur.c.runnable==="web"?gradeWebNow(s,code):await grade(s,code,kindOf(cur.c));sfx(ok?"correct":"wrong");
     $("#fb").innerHTML=`<div class="feedback ${ok?"good":"bad"}">${ok?"✓ ":""}${esc(msg)}${detail?`<pre>${esc(detail)}</pre>`:""}</div>`;
     $("#bud").innerHTML=buddy(ok?(isBug?(level===0?"Bug squashed with no hints! You're a real debugger. 🐛🔨":"Bug squashed! 🐛🔨 Every programmer fixes bugs like this."):level>1?"You did it! Using hints is how everyone learns. 🍌 +5":s.final?"You built the whole thing yourself! 🏆":"Look at you go! 🍌 +5"):tries>=2&&level===0?(isBug?"Tricky bug! Tap 💡 Hint 1 for a clue.":"This one's tricky! Tap 💡 Help and I'll show you the plan."):tries>=2?"Getting closer! Tap 💡 for the next clue.":"Not quite yet. Read the message above, tweak it, and run it again.",ok?"cheer":"oops");
     if(ok&&isBug)bump("bugsFixed");
@@ -49711,7 +49768,7 @@ function codeStep(s){
     if(ok&&!solved){solved=true;$("#go").disabled=false;award(30,5);bump("challenges");if(tries===1)bump("firstTry")}
   });
   $("#code-c").addEventListener("input",()=>draft(k,$("#code-c").value));
-  $("#hint").onclick=()=>{$("#hint").classList.remove("nudge");showHelp()};
+  $("#hint").onclick=()=>{$("#hint").classList.remove("nudge");sfx("hint");showHelp()};
   $("#answer").onclick=()=>{$("#code-c").value=s.hint;draft(k,s.hint);$("#peek").innerHTML="";$("#bud").innerHTML=buddy("Here's one way to write it. Read it line by line so it makes sense, then press ▶ Run.","happy")};
   $("#go").onclick=next;
 }
@@ -49721,7 +49778,7 @@ function quiz(s){
     <div class="opts">${order.map(i=>`<button class="opt ${s.mono?"mono":""}" data-i="${i}">${esc(s.opts[i])}</button>`).join("")}</div><div id="fb"></div></div>
     <div id="bud">${buddy("Take your best guess!","think")}</div><div class="row"><button class="btn" id="go" hidden>Continue</button></div>`);
   $$(".opt").forEach(b=>b.onclick=()=>{
-    const ok=+b.dataset.i===s.a;answered(ok);
+    const ok=+b.dataset.i===s.a;sfx(ok?"correct":"wrong");answered(ok);
     $$(".opt").forEach(x=>{x.disabled=true;if(+x.dataset.i===s.a)x.classList.add("right")});
     if(!ok)b.classList.add("wrong");else{award(10);cur.earned.right++}
     cur.earned.total++;
@@ -49747,7 +49804,7 @@ function fill(s){
   const sync=()=>{draw();$$(".token").forEach(b=>b.disabled=doneF||slots.includes(+b.dataset.t));$("#check").disabled=slots.includes(null)||doneF};
   $$(".token").forEach(b=>b.onclick=()=>{const e=slots.indexOf(null);if(e<0)return;slots[e]=+b.dataset.t;sync()});
   $("#check").onclick=()=>{
-    tries++;const marks=slots.map((t,i)=>s.tokens[t]===s.blanks[i]?"right":"wrong");const ok=!marks.includes("wrong");
+    tries++;const marks=slots.map((t,i)=>s.tokens[t]===s.blanks[i]?"right":"wrong");const ok=!marks.includes("wrong");sfx(ok?"correct":"wrong");
     draw(marks);
     if(ok||tries>=2){doneF=true;$("#check").hidden=true;$("#go").hidden=false;$$(".token").forEach(b=>b.disabled=true);answered(ok&&tries===1)}
     if(ok){award(tries===1?15:8);$("#fb").innerHTML=`<div class="feedback good">✓ ${esc(s.why)}</div>`;$("#bud").innerHTML=buddy(pick(WINS),"cheer")}
@@ -49784,7 +49841,7 @@ function dance(s){
     $$("#tg .dchip").forEach(c=>c.classList.remove("good","bad"));st.classList.add("live");
     $("#beat").innerHTML=list.map(()=>"<i></i>").join("");
     for(let i=0;i<list.length;i++){const m=list[i];if(!dz.isConnected)return;dz.className="dancer";void dz.offsetWidth;dz.classList.add("d-"+m);
-      lab.textContent=DMOVES[m].icon+" "+DMOVES[m].label+"!";lab.classList.add("on");sh.style.transform=m==="jump"?"scale(.6)":"";setTimeout(()=>{if(sh)sh.style.transform=""},300);
+      sfx("step");lab.textContent=DMOVES[m].icon+" "+DMOVES[m].label+"!";lab.classList.add("on");sh.style.transform=m==="jump"?"scale(.6)":"";setTimeout(()=>{if(sh)sh.style.transform=""},300);
       $$("#beat i").forEach((b,k)=>b.classList.toggle("on",k<=i));
       const n=document.createElement("span");n.className="note";n.textContent=["🎵","🎶","✨","🍌"][i%4];n.style.left=(20+Math.random()*60)+"%";st.appendChild(n);setTimeout(()=>n.remove(),1100);
       $$("#tg .dchip").forEach(c=>{const k=+c.dataset.i;c.classList.toggle("now",k===i&&(mark||k<s.target.length));if(!mark&&k===i)c.classList.add(m===s.target[k]?"good":"bad")});
@@ -49794,15 +49851,15 @@ function dance(s){
   if(loop){$("#tm").onclick=()=>{if(!won&&times>1){times--;draw()}};$("#tp").onclick=()=>{if(!won&&times<6){times++;draw()}}}
   $("#undo").onclick=()=>{if(busy||won)return;prog.pop();draw()};
   $("#watch").onclick=()=>{if(!busy)perform(s.target,true)};
-  $("#hint").onclick=()=>{if(busy)return;prog=[...s.solution.pattern];times=s.solution.times||1;draw();$("#bud").innerHTML=buddy("Here's one way! Press Dance to try it.","happy")};
+  $("#hint").onclick=()=>{if(busy)return;sfx("hint");prog=[...s.solution.pattern];times=s.solution.times||1;draw();$("#bud").innerHTML=buddy("Here's one way! Press Dance to try it.","happy")};
   $("#run").onclick=async()=>{if(busy||won||!prog.length)return;
     const flatP=loop?Array.from({length:times},()=>prog).flat():prog;
     await perform(flatP,false);if(!$("#dz"))return;
     const ok=flatP.length===s.target.length&&flatP.every((m,i)=>m===s.target[i]);
-    if(ok){won=true;award(15,3);bump("dances");$("#dz").innerHTML=monkey("cheer");
+    if(ok){won=true;sfx("success");award(15,3);bump("dances");$("#dz").innerHTML=monkey("cheer");
       $("#fb").innerHTML=`<div class="feedback good">🎉 ${esc(s.win||"Perfect dance!")}<div class="kcode"><small>🧑‍💻 Your dance, written as code:</small><pre>${esc(danceCode(prog,times,loop))}</pre></div></div>`;
       $("#bud").innerHTML=buddy(pick(KID_WINS),"cheer");bananaBurst();["run","undo","hint"].forEach(i=>$("#"+i).hidden=true);$("#go").hidden=false;return}
-    tries++;const wrongAt=flatP.findIndex((m,i)=>m!==s.target[i]);
+    tries++;sfx("oops");const wrongAt=flatP.findIndex((m,i)=>m!==s.target[i]);
     const rightPat=loop&&prog.length&&s.target.length%prog.length===0&&s.target.every((m,i)=>m===prog[i%prog.length]);
     const msg=rightPat?`Nice pattern! But the dance is ${s.target.length} moves long and yours is ${flatP.length}. Change the repeat number!`:
       wrongAt>=0&&wrongAt<s.target.length?`Oops! Move ${wrongAt+1} should be ${DMOVES[s.target[wrongAt]].icon} ${DMOVES[s.target[wrongAt]].label}.`:flatP.length<s.target.length?"Good so far! The dance keeps going. Add more moves.":"Too many moves! Take some away.";
@@ -49822,13 +49879,13 @@ function sorter(s){
     <div class="row">${readAloudBtn()}<button class="btn" id="go" hidden>Continue</button></div>`);
   const show=()=>{const it=s.items[i];const el=$("#item");el.className="item";void el.offsetWidth;el.classList.add("in");el.innerHTML=`<span>${it.icon}</span>${it.name?`<small>${esc(it.name)}</small>`:""}`;$("#left").textContent=`${s.items.length-i} to go`};
   $$(".bin").forEach(b=>b.onclick=()=>{if(i>=s.items.length)return;const k=+b.dataset.k,it=s.items[i];
-    if(k===it.bin){counts[k]++;$("#bc"+k).textContent=counts[k];b.classList.remove("ok");void b.offsetWidth;b.classList.add("ok");i++;
+    if(k===it.bin){sfx(i+1>=s.items.length?"success":"step");counts[k]++;$("#bc"+k).textContent=counts[k];b.classList.remove("ok");void b.offsetWidth;b.classList.add("ok");i++;
       $("#fb").innerHTML="";
       if(i>=s.items.length){award(miss?10:15,3);bump("sorted");$("#item").innerHTML="✨";$("#left").textContent="All sorted!";
         $("#fb").innerHTML=`<div class="feedback good">🎉 ${esc(s.win||"Everything is sorted!")}${s.code?`<div class="kcode"><small>🧑‍💻 The rule, written as code:</small><pre>${esc(s.code)}</pre></div>`:""}</div>`;
         $("#bud").innerHTML=buddy(pick(KID_WINS),"cheer");bananaBurst();$("#go").hidden=false;return}
       $("#bud").innerHTML=buddy(pick(["Yes!","Good one!","That's right!","Sorted!","You're fast!"]),"happy");show()}
-    else{miss++;const el=$("#item");el.classList.remove("shake");void el.offsetWidth;el.classList.add("shake");
+    else{miss++;sfx("oops");const el=$("#item");el.classList.remove("shake");void el.offsetWidth;el.classList.add("shake");
       $("#fb").innerHTML=`<div class="feedback bad">${esc(it.why||"Not that one. Read the rule again!")}</div>`;$("#bud").innerHTML=buddy("Check the rule, then try again.","oops")}});
   show();$("#go").onclick=next;wireReadAloud();
 }
@@ -49853,19 +49910,19 @@ function boxGame(s){
     if(bump){const b=$("#vb");b.classList.remove("hop");void b.offsetWidth;b.classList.add("hop")}
     $("#vc").innerHTML=[`${esc(name)} = ${s.startVal||0}`,...ops.map(o=>esc(opCode(name,o)))].map((l,k)=>`<span class="${k===ops.length&&ops.length?"new":""}">${l}</span>`).join("\n");
     if(won)return;
-    if(val===s.goal&&(!s.max||ops.length<=s.max)){won=true;award(tries?10:15,3);bump2();
+    if(val===s.goal&&(!s.max||ops.length<=s.max)){won=true;sfx("success");award(tries?10:15,3);bump2();
       $("#fb").innerHTML=`<div class="feedback good">🎉 ${esc(name)} is ${s.goal}! ${esc(s.win||"You changed a variable like a real coder.")}</div>`;
       $("#bud").innerHTML=buddy(pick(KID_WINS),"cheer");bananaBurst();["undo","clr","hint"].forEach(i=>$("#"+i).hidden=true);$$(".vop").forEach(b=>b.disabled=true);$("#go").hidden=false;return}
-    if(val===s.goal){$("#fb").innerHTML=`<div class="feedback bad">You got ${s.goal}, but used ${ops.length} taps. Can you do it in ${s.max}? Try a bigger jump!</div>`;tries++}
-    else if(val>s.goal&&!s.ops.includes("-1")){$("#fb").innerHTML=`<div class="feedback bad">Too many bananas! ${val} is more than ${s.goal}. Tap Undo.</div>`;tries++;$("#bud").innerHTML=buddy("Oops! Undo takes back the last line.","oops")}
-    else if(s.max&&ops.length>=s.max){$("#fb").innerHTML=`<div class="feedback bad">Out of taps! Start over and try different buttons.</div>`;tries++}
+    if(val===s.goal){$("#fb").innerHTML=`<div class="feedback bad">You got ${s.goal}, but used ${ops.length} taps. Can you do it in ${s.max}? Try a bigger jump!</div>`;tries++;sfx("oops")}
+    else if(val>s.goal&&!s.ops.includes("-1")){$("#fb").innerHTML=`<div class="feedback bad">Too many bananas! ${val} is more than ${s.goal}. Tap Undo.</div>`;tries++;sfx("oops");$("#bud").innerHTML=buddy("Oops! Undo takes back the last line.","oops")}
+    else if(s.max&&ops.length>=s.max){$("#fb").innerHTML=`<div class="feedback bad">Out of taps! Start over and try different buttons.</div>`;tries++;sfx("oops")}
     else $("#fb").innerHTML="";
     if(tries>=2&&s.solution)$("#hint").hidden=false};
   const bump2=()=>bump("boxes");
-  $$(".vop").forEach(b=>b.onclick=()=>{if(won)return;if(s.max&&ops.length>=s.max)return;ops.push(b.dataset.o);draw(true)});
+  $$(".vop").forEach(b=>b.onclick=()=>{if(won)return;if(s.max&&ops.length>=s.max)return;ops.push(b.dataset.o);sfx("step");draw(true)});
   $("#undo").onclick=()=>{if(won)return;ops.pop();draw()};
   $("#clr").onclick=()=>{if(won)return;ops=[];draw()};
-  $("#hint").onclick=()=>{ops=[];draw();$("#bud").innerHTML=buddy("Try these, in order: "+s.solution.map(opLabel).join(", then "),"happy")};
+  $("#hint").onclick=()=>{sfx("hint");ops=[];draw();$("#bud").innerHTML=buddy("Try these, in order: "+s.solution.map(opLabel).join(", then "),"happy")};
   draw();$("#go").onclick=next;wireReadAloud();
 }
 
@@ -49886,7 +49943,7 @@ function order(s){
   };
   $("#check").onclick=()=>{
     tries++;
-    const marks=picked.map((i,k)=>s.lines[i]===s.lines[k]?"right":"wrong");const ok=!marks.includes("wrong");
+    const marks=picked.map((i,k)=>s.lines[i]===s.lines[k]?"right":"wrong");const ok=!marks.includes("wrong");sfx(ok?"correct":"wrong");
     if(ok||tries>=2){doneO=true;$("#check").hidden=true;$("#go").hidden=false;answered(ok&&tries===1)}
     if(ok){draw(marks);award(tries===1?15:8);$("#fb").innerHTML=`<div class="feedback good">✓ ${esc(s.why)}</div>`;$("#bud").innerHTML=buddy(pick(WINS),"cheer")}
     else if(tries>=2){picked=s.lines.map((l,i)=>i);draw(picked.map(()=>"right"));$("#fb").innerHTML=`<div class="feedback bad">Here's the right order. ${esc(s.why)}</div>`;$("#bud").innerHTML=buddy("Order is everything in code. You'll get the next one!","oops")}
@@ -50001,18 +50058,18 @@ function maze(s){
   $$(".lane").forEach(b=>b.onclick=()=>{lane=b.dataset.lane;open=null;draw()});
   $("#undo").onclick=()=>{if(running||won)return;if(s.func&&lane==="fn"){fn.pop();return draw()}if(open!==null&&prog[open].body.length)prog[open].body.pop();else{prog.pop();open=null}draw()};
   $("#clr").onclick=()=>{if(running||won)return;prog=[];fn=[];open=null;draw();reset()};
-  $("#hint").onclick=()=>{peeked=true;if(s.func){prog=JSON.parse(JSON.stringify(s.solution.main));fn=JSON.parse(JSON.stringify(s.solution.fn))}else prog=JSON.parse(JSON.stringify(s.solution));open=null;draw();reset();$("#bud").innerHTML=buddy("Here's one way. Press Go to watch it work!","happy")};
+  $("#hint").onclick=()=>{peeked=true;sfx("hint");if(s.func){prog=JSON.parse(JSON.stringify(s.solution.main));fn=JSON.parse(JSON.stringify(s.solution.fn))}else prog=JSON.parse(JSON.stringify(s.solution));open=null;draw();reset();$("#bud").innerHTML=buddy("Here's one way. Press Go to watch it work!","happy")};
   $("#run").onclick=()=>{
     if(running||won||!prog.length)return;running=true;open=null;draw();reset();
     const {path,result}=simulate(s.grid,s.dir,prog,fn);let k=1;
     const tick=()=>{
-      if(k<path.length){const [x,y,d,bump,ate]=path[k];place(x,y,d,bump);if(ate){const c=document.querySelector(`.mc[data-xy="${ate}"]`);if(c)setTimeout(()=>{c.textContent="✨"},250)}k++;return setTimeout(tick,path.length>40?220:380)}
+      if(k<path.length){const [x,y,d,bump,ate]=path[k];place(x,y,d,bump);sfx(ate?"coins":"step");if(ate){const c=document.querySelector(`.mc[data-xy="${ate}"]`);if(c)setTimeout(()=>{c.textContent="✨"},250)}k++;return setTimeout(tick,path.length>40?220:380)}
       running=false;
       const tooMany=s.max&&total()>s.max;
-      if(result==="win"&&!tooMany){const first=!won;won=true;if(first){award(15,3);bump("mazes");if(s.start)bump("bugsFixed")}$("#mface").innerHTML=monkey("cheer");
+      if(result==="win"&&!tooMany){const first=!won;won=true;sfx("success");if(first){award(15,3);bump("mazes");if(s.start)bump("bugsFixed")}$("#mface").innerHTML=monkey("cheer");
         $("#fb").innerHTML=`<div class="feedback good">🍌 ${nB>1?"All bananas collected!":"Banana reached!"} ${esc(s.win||pick(WINS))}<div class="kcode"><small>🧑‍💻 Your blocks, written as code:</small><pre>${esc(kidCode(prog,s.func?fn:null))}</pre></div></div>`;
         $("#bud").innerHTML=buddy(pick(KID_WINS),"cheer");if(cur.c.kids)bananaBurst();["run","undo","clr","hint"].forEach(i=>$("#"+i).hidden=true);$("#go").hidden=false;return}
-      fails++;$("#mface").innerHTML=monkey("oops");setTimeout(()=>{const f=$("#mface");if(f)f.innerHTML=monkey("happy")},900);
+      fails++;sfx("oops");$("#mface").innerHTML=monkey("oops");setTimeout(()=>{const f=$("#mface");if(f)f.innerHTML=monkey("happy")},900);
       const msg=result==="win"?`You got there, but used ${total()} blocks. Can you do it with ${s.max} or fewer? Try a Repeat block!`:result==="wall"?"Bonk! TypeMonkey bumped into a tree. Find the step that went wrong and fix it.":result==="loop"?"TypeMonkey kept going around and around! Your repeat never got him to every banana.":result==="extra"?"Too many steps! TypeMonkey got the banana, then kept going. A program has to stop at exactly the right spot. Remove the extra blocks.":"So close! TypeMonkey stopped before reaching the banana. Add more steps.";
       $("#fb").innerHTML=`<div class="feedback bad">${msg}</div>`;
       $("#bud").innerHTML=buddy(fails>=3?"Want a peek? Tap “Show me”.":"Bugs are normal! Every coder fixes their programs.","oops");
@@ -50034,7 +50091,7 @@ function gameIntro(){
 function rush(poolIn,secs,onEnd,onQuit){
   const pool=shuffle(poolIn);let i=0,score=0,left=secs,ended=false;
   const timer=setInterval(()=>{left--;const t=$("#tleft");if(t){t.textContent=left;$("#tbar").style.width=(left/secs*100)+"%"}if(left<=0)end()},1000);
-  function end(){if(ended)return;ended=true;clearInterval(timer);
+  function end(){if(ended)return;ended=true;clearInterval(timer);sfx("complete");
     bump("rushes");if(score===pool.length&&pool.length>=5)bump("rushPerfect");S.stats.rushBest=Math.max(S.stats.rushBest||0,score);
     $("#screen").innerHTML=`<div class="stack"><div class="card" style="align-items:center;text-align:center"><div class="label">Time!</div><div class="big">${score}/${pool.length}</div><p>+${score*2} bananas · +${score*3} XP</p></div>
       ${buddy(score>=Math.ceil(pool.length*.8)?"Unreal speed. Are you secretly a monkey?":score>=pool.length/2?"Solid run! Practice makes it automatic.":"Good warm-up. These get easy fast.",score>=pool.length/2?"cheer":"happy")}
@@ -50049,7 +50106,7 @@ function rush(poolIn,secs,onEnd,onQuit){
       <div class="opts">${ord.map(k=>`<button class="opt mono" data-k="${k}">${esc(opts[k])}</button>`).join("")}</div></div></div>`;
     $("#quitg").onclick=()=>{clearInterval(timer);ended=true;onQuit()};
     $$(".opt").forEach(b=>b.onclick=()=>{
-      const ok=+b.dataset.k===0;b.classList.add(ok?"right":"wrong");if(ok)score++;
+      const ok=+b.dataset.k===0;sfx(ok?"correct":"wrong");b.classList.add(ok?"right":"wrong");if(ok)score++;
       const meta=pool[i][4];if(!ok&&meta)missed(meta.lid+"#p"+meta.j,{kind:"pool",lid:meta.lid,j:meta.j});
       $$(".opt").forEach(x=>{x.disabled=true;if(+x.dataset.k===0)x.classList.add("right")});
       setTimeout(()=>{i++;if(!ended)round()},ok?350:900);
@@ -50088,6 +50145,7 @@ function finish(){
     ${buddy(courseDone?"WE DID IT! Time to build something of your own in the Playground.":nx?`Next up: ${Q(nx.l.title)} Come back tomorrow to keep your streak alive!`:"That's everything in this course for now. More is on the way!","cheer")}
     <div class="row">${nx&&(nst==="open"||nst==="done")?`<button class="btn" id="nxt">Next lesson</button>`:""}${nx&&nst==="pro"?`<button class="btn banana" id="nxt">Unlock the next unit</button>`:""}<button class="btn ghost" id="back">Back to course</button></div>`);
   $("#back").onclick=()=>coursePage(cur.c.id);
+  sfx("complete");if(cur.earned.ban)setTimeout(()=>sfx("coins"),750);
   if($("#nxt"))$("#nxt").onclick=()=>nst==="pro"?coursePage(cur.c.id):startLesson(nx.l.id);
   if(cur.c.kids){
     setTimeout(bananaBurst,150);
@@ -50150,7 +50208,7 @@ function showBadge(){
   g.innerHTML=`<div class="card"><div class="confetti" aria-hidden="true">${"🎉🍌⭐✨🎊".repeat(3).split("").filter(x=>x.trim()).map((c,i)=>`<span style="--i:${i}">${c}</span>`).join("")}</div>
     <div class="label">Badge unlocked!</div><div class="badge-big">${b.icon}</div><h2>${b.name}</h2><p>${b.desc}</p><div class="pill kid" style="align-self:center">+${b.reward} bananas</div>
     <button class="btn" id="cel-ok">Awesome!</button></div>`;
-  document.body.appendChild(g);
+  document.body.appendChild(g);sfx("badge");
   g.querySelector("#cel-ok").onclick=()=>{g.remove();showBadge()};
 }
 function badgesPage(){
@@ -50216,7 +50274,7 @@ function reviewDone(){
     <p>${n-ok?`${n-ok} question${n-ok===1?"":"s"} will come back soon for another try.`:"Every one right! They'll come back in a few days to make sure they stick."}</p></div>
     ${buddy(ok===n?"Your memory is getting stronger every day!":"Mistakes are how brains grow. See you next review!",ok===n?"cheer":"happy")}
     <div class="row"><button class="btn" id="back">Back home</button></div>`);
-  $("#back").onclick=home;
+  $("#back").onclick=home;sfx("complete");
 }
 
 /* ---------- Daily challenge: 3 questions, the same for everyone on a given day ---------- */
@@ -50255,7 +50313,7 @@ function dailyDone(){
     <p>${streak>=3?"Streak bonus +5 bananas! ":""}A new challenge unlocks tomorrow.</p></div>
     ${buddy(ok===n?"Perfect daily! See you tomorrow!":"Nice work! Anything you missed is waiting in Review.",ok===n?"cheer":"happy")}
     <div class="row"><button class="btn" id="back">Back home</button></div>`);
-  $("#back").onclick=home;
+  $("#back").onclick=home;sfx("complete");
 }
 
 /* ---------- TypeMonkey shop ---------- */
@@ -50284,7 +50342,7 @@ function shop(tab="hat",preview){
       <button class="btn banana" id="buy" ${S.bananas>=it.price?"":"disabled"}>Buy · 🍌 ${it.price}</button><button class="btn ghost" id="nobuy">Cancel</button></div>`;
     $("#buybar").scrollIntoView({block:"nearest"});
     $("#nobuy").onclick=()=>shop(tab);
-    $("#buy").onclick=()=>{if(S.bananas<it.price)return;S.bananas-=it.price;S.owned[slot].push(id);S.look[slot]=id;bump("purchases");save();toast(`You bought ${it.name}! 🎉`);shop(tab)};
+    $("#buy").onclick=()=>{if(S.bananas<it.price)return;S.bananas-=it.price;S.owned[slot].push(id);sfx("coins");S.look[slot]=id;bump("purchases");save();toast(`You bought ${it.name}! 🎉`);shop(tab)};
   });
   foot();window.scrollTo(0,0);
 }
@@ -50302,6 +50360,7 @@ function settingsPage(){
       <h3>Appearance</h3>
       <div class="setrow"><div><b>Theme</b><span>Light, dark, or match your device</span></div>${seg("theme",st.theme,[["system","Device"],["light","Light"],["dark","Dark"]])}</div>
       <div class="setrow"><div><b>Text size</b><span>Make lessons easier to read</span></div>${seg("text",st.text,[["normal","Normal"],["large","Large"]])}</div>
+      <div class="setrow"><div><b>Sounds</b><span>Little chimes and boops when you tap and answer</span></div>${seg("sound",st.sound===false?"off":"on",[["on","On"],["off","Off"]])}</div>
       <div class="setrow"><div><b>Calm mode</b><span>Turn off bouncing and moving effects</span></div>${seg("calm",st.calm?"on":"off",[["off","Off"],["on","On"]])}</div>
     </div>
     <div class="card setlist">
@@ -50327,7 +50386,7 @@ function settingsPage(){
   </div>`;
   $("#back").onclick=()=>back();
   const bindSeg=(id,fn)=>$$(`#${id} button`).forEach(b=>b.onclick=()=>{fn(b.dataset.v);save();applySettings();settingsPage()});
-  bindSeg("theme",v=>st.theme=v);bindSeg("text",v=>st.text=v);bindSeg("calm",v=>st.calm=v==="on");
+  bindSeg("theme",v=>st.theme=v);bindSeg("text",v=>st.text=v);bindSeg("calm",v=>st.calm=v==="on");bindSeg("sound",v=>{st.sound=v==="on";if(st.sound)setTimeout(()=>sfx("correct"),40)});
   if($("#sbuy"))$("#sbuy").onclick=()=>unlockFull(settingsPage);
   $("#restore").onclick=()=>toast(S.pro?"Your purchase is already active.":"In the real app this checks the App Store / Google Play for your purchase. Nothing to restore in the demo.");
   $("#sbackup").onclick=backupPage;
@@ -50483,6 +50542,7 @@ function playground(lang="js"){
 }
 
 $("#homeBtn").onclick=home;$("#gearBtn").onclick=settingsPage;
+$("#sndBtn").onclick=()=>{S.settings.sound=S.settings.sound===false;save();toast(S.settings.sound?"Sounds on 🔊":"Sounds off 🔇");if(S.settings.sound)setTimeout(()=>sfx("correct"),40);if(rerender===settingsPage)settingsPage()};
 try{addWarmups()}catch(e){console.warn(e)}
 renderStats();home();
 </script>
