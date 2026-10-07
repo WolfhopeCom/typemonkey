@@ -13,6 +13,7 @@ const JR_UNIT1={name:"Monkey moves",free:true,lessons:[
  {type:"maze",title:"A longer walk",grid:["S....B"],dir:"E",blocks:[JF],solution:[JF,JF,JF,JF,JF],say:"Count the empty squares between me and the banana!"},
  {type:"quiz",q:"What is a program?",opts:["A list of steps for a computer to follow","A kind of banana","A TV show"],a:0,why:"Programs are instructions. Computers follow them exactly, in order."},
  {type:"dance",title:"Three-move dance",moves:["clap","jump","wave"],target:["wave","clap","jump"],solution:{pattern:["wave","clap","jump"]},say:"Same order as the dance. Watch it first!"},
+ {type:"box",title:"Bonus: my banana box",body:`<p>This is my banana box! Its name is <b>bananas</b>. Coders call a box with a name a <b>variable</b>. Tap <b>+ 1</b> to put in a banana until there are 3.</p>`,name:"bananas",startVal:0,goal:3,ops:["+1"],solution:["+1","+1","+1"],say:"Watch the code change every time you tap!"},
  {type:"done"}]},
 {id:"jr2",title:"Turning corners",sub:"turn left, turn right",steps:[
  {type:"talk",title:"Turning",mood:"think",

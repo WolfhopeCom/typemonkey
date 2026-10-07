@@ -276,6 +276,7 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 .vgoal{display:flex;flex-direction:column;align-items:center;background:var(--surface2);border-radius:16px;padding:10px 18px}.vgoal span{font-size:.8rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}.vgoal b{font-size:2.4rem;line-height:1.1}.vgoal small{color:var(--muted)}
 .vcode{margin:0;background:var(--code-bg);color:var(--code-fg);border-radius:12px;padding:10px 12px;font-size:.95rem;line-height:1.5;min-height:46px;overflow-x:auto}.vcode .new{color:#FFD25C}
 .blk.vop{background:#FFD25C;font-size:1.3rem}.blk.vop span{font-size:1.4rem}.blk.vop:disabled{opacity:.5}
+.langtag{display:inline-flex;align-items:center;gap:4px;margin-left:6px;padding:2px 10px;border-radius:999px;background:#3776AB;color:#fff;font-size:.78rem;letter-spacing:.02em;text-transform:none;font-weight:800;vertical-align:middle}.langtag.big{font-size:.9rem;padding:4px 12px}
 .kcode{margin-top:10px;text-align:left}.kcode small{display:block;font-weight:700;margin-bottom:4px}.kcode pre{margin:0;background:var(--code-bg);color:var(--code-fg);border-radius:10px;padding:10px 12px;font-size:.92rem;line-height:1.45;overflow-x:auto}
 .mk{position:absolute;width:calc(100% / var(--w));height:calc(100% / var(--h));display:grid;place-items:center;transition:left .32s ease,top .32s ease,transform .25s ease;pointer-events:none}
 .mface{width:82%;height:82%;display:grid;place-items:center}.mface svg{width:100%;height:100%;filter:drop-shadow(0 2px 2px #0004)}
@@ -42674,7 +42675,348 @@ const COURSE_SWIFT={id:"swift",name:"Swift",blurb:"Apple's language for iPhone, 
    thing and TypeMonkey plays it with different answers ("tests"). Bug Lab: broken code to fix, with
    hints that come one at a time. Every answer is checked against real Python by tests/verify_extras.py. */
 
-const COURSE_PROJECTS={id:"projects",name:"Build Projects",extra:true,blurb:"Real programs, built step by step. Each project gives you a mission, teaches the pieces as you need them, then you build the whole thing yourself and TypeMonkey plays it to check it works. In Python. The Beginner project is free.",units:[
+const PJ_MADLIBS={id:"pj4",title:"Project 02 · Silly Story Maker",sub:"input, f-strings, text tricks",project:true,steps:[
+ {type:"talk",title:"🏗️ Your mission",mood:"cheer",
+  body:`<p><b>Build a story maker: the player types some words, and your program turns them into a ridiculous story.</b></p><p>The sillier the words, the funnier the story. Try a "sparkly llama" who eats "spaghetti"!</p>`,
+  say:"This one is pure fun. Two missions, then you build it!"},
+ {type:"code",mission:"Mission 1",title:"Ask for a name",body:`<p>Ask for the player's name with ${C('input("Your name: ")')}, then print ${C("Hi Mo, let's make a story!")} using their name. Use an f-string: ${C('f"Hi {name}..."')}</p>`,start:`# Mission 1: ask for a name\n`,
+  use:[[/input\s*\(/,"Ask with input(...)."],[/f["']/,"Put the name in with an f-string: f\"Hi {name}...\""]],tests:[{input:"Mo",out:["Hi Mo, let's make a story!"]},{input:"Ava",out:["Hi Ava, let's make a story!"]}],
+  hint:`name = input("Your name: ")
+print(f"Hi {name}, let's make a story!")`},
+ {type:"talk",title:"New piece: text tricks",mood:"think",
+  body:`<p>Text has superpowers. ${C(".upper()")} makes it SHOUT, ${C(".title()")} Capitalizes Each Word, and you can drop any variable into an f-string.</p>`,
+  input:"banana bread",demo:`food = input("A food: ")
+print(f"I love {food}!")
+print(food.upper())
+print(food.title())`,
+  say:"Change the food in the Input box and run it again!"},
+ {type:"code",mission:"Mission 2",title:"Ask for more words",body:`<p>Ask for ${C('"An animal: "')} and ${C('"A food: "')}. Print ${C("The cat ate a pizza.")} and then ${C("It yelled: PIZZA!")} (the food in capitals).</p>`,start:`# Mission 2: ask for an animal and a food\n`,
+  use:[[/upper\s*\(\s*\)/,"Shout the food with .upper()."]],tests:[{input:"cat\npizza",out:["The cat ate a pizza.","It yelled: PIZZA!"]},{input:"monkey\nbanana",out:["The monkey ate a banana.","It yelled: BANANA!"]}],
+  hint:`animal = input("An animal: ")
+food = input("A food: ")
+print(f"The {animal} ate a {food}.")
+print(f"It yelled: {food.upper()}!")`},
+ {type:"talk",title:"🎉 The tutorial is over",mood:"cheer",
+  body:`<p>Now build the whole Silly Story Maker yourself. TypeMonkey will feed it two sets of silly words.</p>`,say:"Make it silly!"},
+ {type:"code",final:true,title:"Build the Silly Story Maker",body:`<p>Ask for 5 words, in this order: a <b>name</b>, an <b>adjective</b> (describing word), an <b>animal</b>, a <b>food</b> and a <b>place</b>. Then print:</p><ul><li>${C("Once upon a time, Mo met a silly llama.")}</li><li>${C("They ate tacos together in the jungle.")}</li><li>${C('Mo shouted: "TACOS IS THE BEST!"')}</li><li>${C("The end.")}</li></ul>`,start:`# Build the Silly Story Maker here!\n`,
+  use:[[/input[\s\S]*input[\s\S]*input[\s\S]*input[\s\S]*input/,"Ask for all 5 words with input()."],[/upper\s*\(/,"Shout the food with .upper()."]],
+  tests:[{input:"Mo\nsilly\nllama\ntacos\nthe jungle",out:["Once upon a time, Mo met a silly llama.","They ate tacos together in the jungle.","Mo shouted: \"TACOS IS THE BEST!\"","The end."]},{input:"Zoe\nsparkly\ndragon\nspaghetti\nParis",out:["Once upon a time, Zoe met a sparkly dragon.","They ate spaghetti together in Paris.","Zoe shouted: \"SPAGHETTI IS THE BEST!\"","The end."]}],
+  hint:`name = input("A name: ")
+adjective = input("An adjective: ")
+animal = input("An animal: ")
+food = input("A food: ")
+place = input("A place: ")
+print(f"Once upon a time, {name} met a {adjective} {animal}.")
+print(f"They ate {food} together in {place}.")
+print(f'{name} shouted: "{food.upper()} IS THE BEST!"')
+print("The end.")`},
+ {type:"talk",title:"Make it yours",mood:"cheer",body:`<p>Ideas for the Playground: add more words, ask for a number and repeat a word that many times with ${C('"ha" * n')}, or write a whole second chapter.</p>`,say:"Every app you use is just words and logic like this."},
+ {type:"done"}]};
+
+const PJ_8BALL={id:"pj5",title:"Project 03 · Magic 8-Ball",sub:"lists, len, remainder, loops",project:true,steps:[
+ {type:"talk",title:"🏗️ Your mission",mood:"cheer",
+  body:`<p><b>Build a Magic 8-Ball that answers any yes-or-no question.</b></p><p>Secret: it isn't really magic. Your program picks the answer using the <b>length of the question</b>, so the same question always gets the same answer. Shhh!</p>`,
+  say:"Will this be fun? 🎱 Signs point to yes!"},
+ {type:"code",mission:"Mission 1",title:"The answer list",body:`<p>Make a list ${C("answers")} with these four, in order: ${C("Yes!")}, ${C("No way.")}, ${C("Ask again later.")}, ${C("Definitely!")} Then print ${C("4 answers ready")} using ${C("len()")}, and print the first answer.</p>`,start:`# Mission 1: make the list of answers\n`,
+  use:[[/answers\s*=\s*\[/,"Make a list called answers."],[/len\s*\(\s*answers\s*\)/,"Count them with len(answers)."]],out:["4 answers ready","Yes!"],
+  hint:`answers = ["Yes!", "No way.", "Ask again later.", "Definitely!"]
+print(f"{len(answers)} answers ready")
+print(answers[0])`},
+ {type:"talk",title:"New piece: remainder %",mood:"think",
+  body:`<p>${C("%")} gives the <b>remainder</b> after dividing. ${C("10 % 4")} is ${C("2")}, because 4 goes into 10 twice with 2 left over. The answer is always smaller than 4, so it's always a safe spot in a list of 4!</p>`,
+  demo:`print(10 % 4)
+print(7 % 4)
+print(len("hello") % 4)`,say:"Remainders keep any number inside the list."},
+ {type:"code",mission:"Mission 2",title:"Answer a question",body:`<p>Ask ${C('input("Ask the 8-Ball: ")')}. Pick the answer at position ${C("len(question) % len(answers)")} and print ${C("8-Ball says: Definitely!")} (or whichever answer it picks).</p>`,start:`answers = ["Yes!", "No way.", "Ask again later.", "Definitely!"]\n# Mission 2: answer one question\n`,
+  use:[[/%/,"Use % to pick a spot in the list."]],tests:[{input:"Will I win?",out:["8-Ball says: Definitely!"]},{input:"Can I fly?",out:["8-Ball says: Ask again later."]},{input:"Is it pizza day?",out:["8-Ball says: Yes!"]}],
+  hint:`answers = ["Yes!", "No way.", "Ask again later.", "Definitely!"]
+question = input("Ask the 8-Ball: ")
+pick = len(question) % len(answers)
+print(f"8-Ball says: {answers[pick]}")`},
+ {type:"talk",title:"🎉 The tutorial is over",mood:"cheer",
+  body:`<p>Now build the whole 8-Ball yourself. This time it keeps answering until the player says ${C("bye")}.</p>`,say:"Ask it if you'll finish this. 🎱"},
+ {type:"code",final:true,title:"Build the Magic 8-Ball",body:`<p>From scratch:</p><ul><li>the same 4 answers, in the same order</li><li>keep asking ${C('"Ask the 8-Ball: "')} until the player types ${C("bye")}</li><li>if they type nothing (just spaces), print ${C("You have to ask something!")}</li><li>otherwise print ${C("8-Ball says: ...")} using the length of the question (without extra spaces, so use ${C(".strip()")})</li><li>at the end, print ${C("The 8-Ball fades away...")}</li></ul>`,start:`# Build the Magic 8-Ball here!\n`,
+  use:[[/while/,"Keep answering in a while loop."],[/%/,"Use % to pick the answer."]],
+  tests:[{input:"Will I win?\n\nCan I fly?\nbye",out:["8-Ball says: Definitely!","You have to ask something!","8-Ball says: Ask again later.","The 8-Ball fades away..."]},{input:"bye",out:["The 8-Ball fades away..."]},{input:"  Is it raining?  \nbye",out:["8-Ball says: Ask again later.","The 8-Ball fades away..."]}],
+  hint:`answers = ["Yes!", "No way.", "Ask again later.", "Definitely!"]
+while True:
+    question = input("Ask the 8-Ball: ").strip()
+    if question == "bye":
+        break
+    if question == "":
+        print("You have to ask something!")
+    else:
+        pick = len(question) % len(answers)
+        print(f"8-Ball says: {answers[pick]}")
+print("The 8-Ball fades away...")`},
+ {type:"talk",title:"Make it yours",mood:"cheer",body:`<p>Add more answers (it still works, because ${C("len(answers)")} changes too!), or use ${C("import random")} and ${C("random.choice(answers)")} for real randomness.</p>`,say:"Outlook good!"},
+ {type:"done"}]};
+
+const PJ_RPS={id:"pj6",title:"Project 05 · Rock Paper Scissors",sub:"functions, dictionaries, game loops",project:true,steps:[
+ {type:"talk",title:"🏗️ Your mission",mood:"cheer",
+  body:`<p><b>Build Rock Paper Scissors: best of 3 rounds against the computer.</b></p><p>The computer plays a secret pattern: rock, then paper, then scissors. Once you build it, you'll know how to beat it every time. 😎</p>`,
+  say:"Rock beats scissors, scissors beats paper, paper beats rock!"},
+ {type:"talk",title:"New piece: dictionaries",mood:"think",
+  body:`<p>A <b>dictionary</b> matches keys to values. Here each move points to the move it beats. ${C('beats["rock"]')} gives ${C('"scissors"')}.</p>`,
+  demo:`beats = {"rock": "scissors", "paper": "rock", "scissors": "paper"}
+print(beats["rock"])
+print("paper" in beats)
+print("banana" in beats)`,say:"One dictionary holds all the rules."},
+ {type:"code",mission:"Mission 1",title:"Who wins?",body:`<p>Write a function ${C("winner(player, computer)")} that returns ${C('"win"')}, ${C('"lose"')} or ${C('"tie"')} for the player. Use the ${C("beats")} dictionary.</p>`,start:`beats = {"rock": "scissors", "paper": "rock", "scissors": "paper"}\n\n# Mission 1: write winner(player, computer)\n\n\nprint(winner("rock", "scissors"))\nprint(winner("rock", "paper"))\nprint(winner("paper", "paper"))\n`,
+  use:[[/def\s+winner\s*\(/,"Define the function with def winner(player, computer):"],[/return/,"Send the answer back with return."]],out:["win","lose","tie"],
+  hint:`beats = {"rock": "scissors", "paper": "rock", "scissors": "paper"}
+
+def winner(player, computer):
+    if player == computer:
+        return "tie"
+    if beats[player] == computer:
+        return "win"
+    return "lose"
+
+print(winner("rock", "scissors"))
+print(winner("rock", "paper"))
+print(winner("paper", "paper"))`},
+ {type:"code",mission:"Mission 2",title:"Play 3 rounds",body:`<p>The computer's moves are ${C('moves = ["rock", "paper", "scissors"]')}, and in round ${C("r")} (starting at 0) it plays ${C("moves[r % 3]")}. Play 3 rounds. Each round ask ${C('"rock, paper or scissors? "')} and print ${C("Computer picked rock. You win!")}, ${C("... You lose!")} or ${C("... It's a tie!")}</p>`,start:`beats = {"rock": "scissors", "paper": "rock", "scissors": "paper"}\n\ndef winner(player, computer):\n    if player == computer:\n        return "tie"\n    if beats[player] == computer:\n        return "win"\n    return "lose"\n\n# Mission 2: play 3 rounds\n`,
+  use:[[/for\s+\w+\s+in\s+range\s*\(\s*3\s*\)|while/,"Play 3 rounds with for r in range(3):"],[/%\s*3/,"Pick the computer's move with moves[r % 3]."]],
+  tests:[{input:"rock\nrock\nrock",out:["Computer picked rock. It's a tie!","Computer picked paper. You lose!","Computer picked scissors. You win!"]},{input:"paper\nscissors\nrock",out:["Computer picked rock. You win!","Computer picked paper. You win!","Computer picked scissors. You win!"]}],
+  hint:`beats = {"rock": "scissors", "paper": "rock", "scissors": "paper"}
+
+def winner(player, computer):
+    if player == computer:
+        return "tie"
+    if beats[player] == computer:
+        return "win"
+    return "lose"
+
+moves = ["rock", "paper", "scissors"]
+messages = {"win": "You win!", "lose": "You lose!", "tie": "It's a tie!"}
+for r in range(3):
+    player = input("rock, paper or scissors? ").strip().lower()
+    computer = moves[r % 3]
+    print(f"Computer picked {computer}. {messages[winner(player, computer)]}")`},
+ {type:"talk",title:"🎉 The tutorial is over",mood:"cheer",
+  body:`<p>Build the full game yourself, with two upgrades: <b>keep score</b>, and if the player types something that isn't a move, ask again (that round doesn't count).</p>`,say:"May the best monkey win!"},
+ {type:"code",final:true,title:"Build Rock Paper Scissors",body:`<p>From scratch, with a ${C("winner")} function:</p><ul><li>3 counted rounds; the computer plays ${C("moves[round % 3]")}</li><li>a bad move prints ${C("Pick rock, paper or scissors!")} and asks again</li><li>each round prints ${C("Computer picked rock. You win!")} (or You lose! / It's a tie!)</li><li>then ${C("Final score: You 2, Computer 1")}</li><li>then ${C("You won the match!")}, ${C("The computer won the match!")} or ${C("The match is a tie!")}</li></ul>`,start:`# Build Rock Paper Scissors here!\n`,
+  use:[[/def\s+\w+\s*\(/,"Put the rules in a function with def."],[/input\s*\(/,"Ask for moves with input(...)."]],
+  tests:[{input:"paper\nbanana\nscissors\nrock",out:["Computer picked rock. You win!","Pick rock, paper or scissors!","Computer picked paper. You win!","Computer picked scissors. You win!","Final score: You 3, Computer 0","You won the match!"]},{input:"rock\nrock\nrock",out:["Computer picked rock. It's a tie!","Computer picked paper. You lose!","Computer picked scissors. You win!","Final score: You 1, Computer 1","The match is a tie!"]},{input:"scissors\nRock\nscissors",out:["Computer picked rock. You lose!","Computer picked paper. You lose!","Computer picked scissors. It's a tie!","Final score: You 0, Computer 2","The computer won the match!"]}],
+  hint:`beats = {"rock": "scissors", "paper": "rock", "scissors": "paper"}
+moves = ["rock", "paper", "scissors"]
+
+def winner(player, computer):
+    if player == computer:
+        return "tie"
+    if beats[player] == computer:
+        return "win"
+    return "lose"
+
+you = 0
+cpu = 0
+r = 0
+while r < 3:
+    player = input("rock, paper or scissors? ").strip().lower()
+    if player not in beats:
+        print("Pick rock, paper or scissors!")
+        continue
+    computer = moves[r % 3]
+    result = winner(player, computer)
+    if result == "win":
+        you += 1
+        print(f"Computer picked {computer}. You win!")
+    elif result == "lose":
+        cpu += 1
+        print(f"Computer picked {computer}. You lose!")
+    else:
+        print(f"Computer picked {computer}. It's a tie!")
+    r += 1
+
+print(f"Final score: You {you}, Computer {cpu}")
+if you > cpu:
+    print("You won the match!")
+elif cpu > you:
+    print("The computer won the match!")
+else:
+    print("The match is a tie!")`},
+ {type:"talk",title:"Make it yours",mood:"cheer",body:`<p>Make the computer unbeatable... or fair! Try ${C("random.choice(moves)")}, add lizard and Spock, or play best of 5.</p>`,say:"Now you can beat the pattern every time. Paper, scissors, rock! 😉"},
+ {type:"done"}]};
+
+const PJ_PET={id:"pj7",title:"Project 06 · Pet Monkey Simulator",sub:"dictionaries, commands, limits",project:true,steps:[
+ {type:"talk",title:"🏗️ Your mission",mood:"cheer",
+  body:`<p><b>Build a virtual pet monkey!</b> The player names it, then types commands: ${C("feed")}, ${C("play")}, ${C("sleep")} and ${C("status")}. Your monkey gets hungry, tired and happy, just like a real pet.</p>`,
+  say:"I've always wanted a little brother! 🐒"},
+ {type:"code",mission:"Mission 1",title:"Hatch your pet",body:`<p>Ask ${C('input("Name your pet monkey: ")')}. Make a dictionary ${C("pet")} with the name, plus ${C("hunger")}, ${C("energy")} and ${C("fun")} all set to 5. Print ${C("Mo: hunger 5, energy 5, fun 5")}</p>`,start:`# Mission 1: create your pet\n`,
+  use:[[/pet\s*=\s*\{/,"Make a dictionary: pet = {...}"]],tests:[{input:"Mo",out:["Mo: hunger 5, energy 5, fun 5"]},{input:"Kiki",out:["Kiki: hunger 5, energy 5, fun 5"]}],
+  hint:`name = input("Name your pet monkey: ")
+pet = {"name": name, "hunger": 5, "energy": 5, "fun": 5}
+print(f"{pet['name']}: hunger {pet['hunger']}, energy {pet['energy']}, fun {pet['fun']}")`},
+ {type:"talk",title:"New piece: changing values with limits",mood:"think",
+  body:`<p>You can change a value in a dictionary: ${C('pet["hunger"] -= 3')}. But hunger can't go below 0! ${C("max(0, x)")} keeps a number from dropping under 0, and ${C("min(10, x)")} keeps it from going over 10.</p>`,
+  demo:`pet = {"hunger": 2, "fun": 9}
+pet["hunger"] = max(0, pet["hunger"] - 3)
+pet["fun"] = min(10, pet["fun"] + 3)
+print(pet)`,say:"Games use max and min for health bars all the time."},
+ {type:"code",mission:"Mission 2",title:"Feed your pet",body:`<p>After the status line, keep reading commands with ${C('input("> ")')}:</p><ul><li>${C("feed")}: hunger goes down 3 (not below 0), print ${C("Mo munches a banana. Yum!")}</li><li>${C("status")}: print the status line again</li><li>${C("quit")}: stop and print ${C("Bye, Mo!")}</li><li>anything else: ${C("Mo doesn't know how to dance.")}</li></ul>`,start:`name = input("Name your pet monkey: ")\npet = {"name": name, "hunger": 5, "energy": 5, "fun": 5}\nprint(f"{pet['name']}: hunger {pet['hunger']}, energy {pet['energy']}, fun {pet['fun']}")\n# Mission 2: read commands\n`,
+  use:[[/while/,"Keep reading commands in a while loop."],[/max\s*\(/,"Use max(0, ...) so hunger stays at 0 or more."]],
+  tests:[{input:"Mo\nfeed\nstatus\nfeed\nstatus\nquit",out:["Mo: hunger 5, energy 5, fun 5","Mo munches a banana. Yum!","Mo: hunger 2, energy 5, fun 5","Mo munches a banana. Yum!","Mo: hunger 0, energy 5, fun 5","Bye, Mo!"]},{input:"Zip\ndance\nquit",out:["Zip: hunger 5, energy 5, fun 5","Zip doesn't know how to dance.","Bye, Zip!"]}],
+  hint:`name = input("Name your pet monkey: ")
+pet = {"name": name, "hunger": 5, "energy": 5, "fun": 5}
+
+def status():
+    print(f"{pet['name']}: hunger {pet['hunger']}, energy {pet['energy']}, fun {pet['fun']}")
+
+status()
+while True:
+    cmd = input("> ").strip().lower()
+    if cmd == "quit":
+        break
+    elif cmd == "feed":
+        pet["hunger"] = max(0, pet["hunger"] - 3)
+        print(f"{name} munches a banana. Yum!")
+    elif cmd == "status":
+        status()
+    else:
+        print(f"{name} doesn't know how to {cmd}.")
+print(f"Bye, {name}!")`},
+ {type:"talk",title:"🎉 The tutorial is over",mood:"cheer",
+  body:`<p>Build the whole simulator yourself, with two new commands: ${C("play")} and ${C("sleep")}. Playing is fun but makes your monkey tired and hungry!</p>`,say:"Take good care of your monkey!"},
+ {type:"code",final:true,title:"Build the Pet Monkey Simulator",body:`<p>From scratch, with at least one function. Start by asking the name and printing the status line. Then:</p><ul><li>${C("feed")}: hunger −3 (min 0) → ${C("Mo munches a banana. Yum!")}</li><li>${C("play")}: if energy is under 2 → ${C("Mo is too tired to play!")} Otherwise fun +3 (max 10), energy −2, hunger +2 (max 10) → ${C("Mo swings from the vines. Wheee!")}</li><li>${C("sleep")}: energy back to 10 → ${C("Mo takes a nap. Zzz...")}</li><li>${C("status")}, ${C("quit")} and unknown commands work like before</li></ul>`,start:`# Build the Pet Monkey Simulator here!\n`,
+  use:[[/def\s+\w+\s*\(/,"Put some of the work in a function with def."],[/min\s*\(/,"Use min(10, ...) so values don't go over 10."]],
+  tests:[{input:"Mo\nplay\nplay\nplay\nstatus\nsleep\nfeed\nstatus\nquit",out:["Mo: hunger 5, energy 5, fun 5","Mo swings from the vines. Wheee!","Mo swings from the vines. Wheee!","Mo is too tired to play!","Mo: hunger 9, energy 1, fun 10","Mo takes a nap. Zzz...","Mo munches a banana. Yum!","Mo: hunger 6, energy 10, fun 10","Bye, Mo!"]},{input:"Bo\nsing\nfeed\nfeed\nstatus\nquit",out:["Bo: hunger 5, energy 5, fun 5","Bo doesn't know how to sing.","Bo munches a banana. Yum!","Bo munches a banana. Yum!","Bo: hunger 0, energy 5, fun 5","Bye, Bo!"]}],
+  hint:`name = input("Name your pet monkey: ")
+pet = {"name": name, "hunger": 5, "energy": 5, "fun": 5}
+
+def status():
+    print(f"{name}: hunger {pet['hunger']}, energy {pet['energy']}, fun {pet['fun']}")
+
+def play():
+    if pet["energy"] < 2:
+        print(f"{name} is too tired to play!")
+        return
+    pet["fun"] = min(10, pet["fun"] + 3)
+    pet["energy"] -= 2
+    pet["hunger"] = min(10, pet["hunger"] + 2)
+    print(f"{name} swings from the vines. Wheee!")
+
+status()
+while True:
+    cmd = input("> ").strip().lower()
+    if cmd == "quit":
+        break
+    elif cmd == "feed":
+        pet["hunger"] = max(0, pet["hunger"] - 3)
+        print(f"{name} munches a banana. Yum!")
+    elif cmd == "play":
+        play()
+    elif cmd == "sleep":
+        pet["energy"] = 10
+        print(f"{name} takes a nap. Zzz...")
+    elif cmd == "status":
+        status()
+    else:
+        print(f"{name} doesn't know how to {cmd}.")
+print(f"Bye, {name}!")`},
+ {type:"talk",title:"Make it yours",mood:"cheer",body:`<p>Ideas: make hunger go up a little after <i>every</i> command, add a ${C("bath")} command, or print a sad face when fun drops to 0.</p>`,say:"You built a living (well, digital) creature!"},
+ {type:"done"}]};
+
+const ADV_ROOMS=`rooms = {
+    "gate": {"desc": "You are at the temple gate. A path leads north.", "exits": {"north": "hall"}},
+    "hall": {"desc": "A dusty hall. Something shiny is on the floor. Exits: south, east.", "exits": {"south": "gate", "east": "vault"}, "item": "key"},
+    "vault": {"desc": "A huge golden door blocks the way. Exit: west.", "exits": {"west": "hall"}},
+}`;
+const PJ_ADVENTURE={id:"pj8",title:"Project 08 · Temple Escape Adventure",sub:"nested dictionaries, game state, functions",project:true,steps:[
+ {type:"talk",title:"🏗️ Your mission",mood:"cheer",
+  body:`<p><b>Build a text adventure game!</b> The player explores an ancient temple by typing commands like ${C("go north")}, ${C("look")}, ${C("take")} and ${C("open")}. Somewhere inside is the legendary <b>Golden Banana</b>. 🍌✨</p><p>Games like this were some of the very first computer games ever made.</p>`,
+  say:"Grab your explorer hat!"},
+ {type:"talk",title:"New piece: a map in a dictionary",mood:"think",
+  body:`<p>Each room is a dictionary <i>inside</i> a bigger dictionary. A room has a description, its exits (another dictionary!), and maybe an item. ${C('rooms["gate"]["exits"]["north"]')} tells you where north leads.</p>`,
+  demo:`${ADV_ROOMS}
+room = "gate"
+print(rooms[room]["desc"])
+print(rooms[room]["exits"])
+print("east" in rooms["hall"]["exits"])`,say:"The whole world of the game lives in one variable."},
+ {type:"code",mission:"Mission 1",title:"Take a step",body:`<p>Start with ${C('room = "gate"')} and print the room's description. Then move north by setting ${C("room")} to where the north exit leads, and print the new description.</p>`,start:`${ADV_ROOMS}\n\n# Mission 1: start at the gate, then walk north\n`,
+  use:[[/rooms\s*\[\s*room\s*\]/,"Look up the current room with rooms[room]."],[/\[\s*["']exits["']\s*\]/,"Find where north leads with rooms[room][\"exits\"][\"north\"]."]],out:["You are at the temple gate. A path leads north.","A dusty hall. Something shiny is on the floor. Exits: south, east."],
+  hint:`${ADV_ROOMS}
+
+room = "gate"
+print(rooms[room]["desc"])
+room = rooms[room]["exits"]["north"]
+print(rooms[room]["desc"])`},
+ {type:"code",mission:"Mission 2",title:"Explore",body:`<p>Print the starting room, then read commands with ${C('input("> ")')}:</p><ul><li>${C("look")}: print the description again</li><li>${C("go DIRECTION")}: if that exit exists, move and print the new room. Otherwise ${C("You can't go that way.")}</li><li>${C("quit")}: stop</li><li>anything else: ${C("I don't understand.")}</li></ul><p>At the end print ${C("Thanks for playing!")}</p>`,start:`${ADV_ROOMS}\n\nroom = "gate"\n# Mission 2: the explore loop\n`,
+  use:[[/while/,"Keep reading commands in a while loop."],[/startswith|split/,"Spot go commands with cmd.startswith(\"go \") or .split()."]],
+  tests:[{input:"go north\ngo west\ngo east\nlook\nquit",out:["You are at the temple gate. A path leads north.","A dusty hall. Something shiny is on the floor. Exits: south, east.","You can't go that way.","A huge golden door blocks the way. Exit: west.","A huge golden door blocks the way. Exit: west.","Thanks for playing!"]},{input:"dance\nquit",out:["You are at the temple gate. A path leads north.","I don't understand.","Thanks for playing!"]}],
+  hint:`${ADV_ROOMS}
+
+room = "gate"
+print(rooms[room]["desc"])
+while True:
+    cmd = input("> ").strip().lower()
+    if cmd == "quit":
+        break
+    elif cmd == "look":
+        print(rooms[room]["desc"])
+    elif cmd.startswith("go "):
+        direction = cmd[3:]
+        if direction in rooms[room]["exits"]:
+            room = rooms[room]["exits"][direction]
+            print(rooms[room]["desc"])
+        else:
+            print("You can't go that way.")
+    else:
+        print("I don't understand.")
+print("Thanks for playing!")`},
+ {type:"talk",title:"🎉 The tutorial is over",mood:"cheer",
+  body:`<p>Final build: the whole adventure, with an <b>inventory</b> list and two new commands. Find the key, open the golden door, and win! TypeMonkey will play through it twice.</p>`,say:"The Golden Banana awaits!"},
+ {type:"code",final:true,title:"Build Temple Escape",body:`<p>Use the same ${C("rooms")} map. With at least one function, add to your explore game:</p><ul><li>${C("take")}: if the room has an item, add it to an ${C("inventory")} list, remove it from the room, and print ${C("You picked up the key.")} Otherwise ${C("There's nothing to take.")}</li><li>${C("open")}: only works in the vault. With the key → ${C("The door swings open. You found the Golden Banana! You win!")} and the game ends. Without it → ${C("It's locked. You need a key.")} Anywhere else → ${C("There's nothing to open here.")}</li><li>finish with ${C("Thanks for playing!")}</li></ul>`,start:`${ADV_ROOMS}\n\n# Build Temple Escape here!\n`,
+  use:[[/def\s+\w+\s*\(/,"Put some of the work in a function with def."],[/inventory/,"Keep picked-up items in a list called inventory."]],
+  tests:[{input:"go north\ngo east\nopen\ngo west\ntake\ntake\ngo east\nopen",out:["You are at the temple gate. A path leads north.","A dusty hall. Something shiny is on the floor. Exits: south, east.","A huge golden door blocks the way. Exit: west.","It's locked. You need a key.","A dusty hall. Something shiny is on the floor. Exits: south, east.","You picked up the key.","There's nothing to take.","A huge golden door blocks the way. Exit: west.","The door swings open. You found the Golden Banana! You win!","Thanks for playing!"]},{input:"open\nlook\ngo south\nquit",out:["You are at the temple gate. A path leads north.","There's nothing to open here.","You are at the temple gate. A path leads north.","You can't go that way.","Thanks for playing!"]}],
+  hint:`${ADV_ROOMS}
+
+room = "gate"
+inventory = []
+
+def describe():
+    print(rooms[room]["desc"])
+
+def take():
+    item = rooms[room].get("item")
+    if item:
+        inventory.append(item)
+        del rooms[room]["item"]
+        print(f"You picked up the {item}.")
+    else:
+        print("There's nothing to take.")
+
+describe()
+while True:
+    cmd = input("> ").strip().lower()
+    if cmd == "quit":
+        break
+    elif cmd == "look":
+        describe()
+    elif cmd.startswith("go "):
+        direction = cmd[3:]
+        if direction in rooms[room]["exits"]:
+            room = rooms[room]["exits"][direction]
+            describe()
+        else:
+            print("You can't go that way.")
+    elif cmd == "take":
+        take()
+    elif cmd == "open":
+        if room != "vault":
+            print("There's nothing to open here.")
+        elif "key" in inventory:
+            print("The door swings open. You found the Golden Banana! You win!")
+            break
+        else:
+            print("It's locked. You need a key.")
+    else:
+        print("I don't understand.")
+print("Thanks for playing!")`},
+ {type:"talk",title:"Make it yours",mood:"cheer",body:`<p>Your game, your world! Add more rooms, a ${C("inventory")} command, a sleeping snake you have to sneak past, or a secret room only found with ${C("go down")}.</p>`,say:"You're officially a game designer! 🏆"},
+ {type:"done"}]};
+
+const COURSE_PROJECTS={id:"projects",name:"Build Projects",extra:true,blurb:"Real programs, built step by step. Each project gives you a mission, teaches the pieces as you need them, then you build the whole thing yourself and TypeMonkey plays it to check it works. In Python. The Beginner projects are free.",units:[
 {name:"Beginner",free:true,lessons:[
 {id:"pj1",title:"Project 01 · Number Guessing Game",sub:"variables, input, if, while",project:true,steps:[
  {type:"talk",title:"🏗️ Your mission",mood:"cheer",
@@ -42713,9 +43055,9 @@ const COURSE_PROJECTS={id:"projects",name:"Build Projects",extra:true,blurb:"Rea
   body:`<p>Your game works! Ideas to try in the Playground: use ${C("import random")} and ${C("random.randint(1, 100)")} for a real secret, give the player only 5 tries, or print a different message for a one-try win.</p>`,
   say:"Real programmers add features one at a time, exactly like you just did."},
  {type:"done"}]}
-]},
+,PJ_MADLIBS,PJ_8BALL]},
 {name:"Intermediate",lessons:[
-{id:"pj2",title:"Project 02 · Quiz Master",sub:"lists, tuples, loops, scores",project:true,steps:[
+{id:"pj2",title:"Project 04 · Quiz Master",sub:"lists, tuples, loops, scores",project:true,steps:[
  {type:"talk",title:"🏗️ Your mission",mood:"cheer",
   body:`<p><b>Build a quiz game that asks questions, checks the answers, and gives a final score.</b></p><p>Answers shouldn't care about capital letters or extra spaces, so <i>Yellow</i> and <i> yellow </i> both count. At the end the player gets a score and a rating.</p>`,
   say:"Quiz shows are just loops and if statements!"},
@@ -42739,9 +43081,9 @@ const COURSE_PROJECTS={id:"projects",name:"Build Projects",extra:true,blurb:"Rea
   use:[[/input\s*\(/,"Ask with input(...)."],[/for\s/,"Loop over the questions."]],tests:[{input:"yellow\n6\nEarth",out:["Correct!","Nope, it was 8","Correct!","You scored 2/3","Nice job!"]},{input:"YELLOW\n8\n earth ",out:["Correct!","Correct!","Correct!","You scored 3/3","Perfect!"]},{input:"red\n8\nmars",out:["Nope, it was yellow","Correct!","Nope, it was earth","You scored 1/3","Keep practicing!"]}],
   hint:`questions = [\n    ("What color are bananas?", "yellow"),\n    ("How many legs does a spider have?", "8"),\n    ("What planet do we live on?", "earth"),\n]\nscore = 0\nfor q, a in questions:\n    reply = input(q + " ")\n    if reply.strip().lower() == a:\n        print("Correct!")\n        score += 1\n    else:\n        print(f"Nope, it was {a}")\nprint(f"You scored {score}/{len(questions)}")\nif score == len(questions):\n    print("Perfect!")\nelif score >= len(questions) / 2:\n    print("Nice job!")\nelse:\n    print("Keep practicing!")`},
  {type:"done"}]}
-]},
+,PJ_RPS,PJ_PET]},
 {name:"Advanced",lessons:[
-{id:"pj3",title:"Project 03 · To-Do List App",sub:"command loops, lists, functions, errors",project:true,steps:[
+{id:"pj3",title:"Project 07 · To-Do List App",sub:"command loops, lists, functions, errors",project:true,steps:[
  {type:"talk",title:"🏗️ Your mission",mood:"cheer",
   body:`<p><b>Build a to-do list app that the user controls by typing commands.</b></p><ul><li><code class="i">add buy bananas</code> adds a task</li><li><code class="i">list</code> shows the tasks, numbered</li><li><code class="i">done 1</code> finishes task 1</li><li><code class="i">quit</code> ends the app</li></ul><p>This is how real command-line tools work.</p>`,
   say:"Your first real app! Let's build it piece by piece."},
@@ -42769,11 +43111,12 @@ const COURSE_PROJECTS={id:"projects",name:"Build Projects",extra:true,blurb:"Rea
   use:[[/def\s+\w+\s*\(/,"Put some of the work in a function with def."],[/input\s*\(/,"Read commands with input(...)."]],tests:[{input:"add buy bananas\nadd feed Mo\ndone 1\nlist\nquit",out:["Added: buy bananas","Added: feed Mo","Finished: buy bananas","1. feed Mo","Bye! 1 tasks left"]},{input:"list\ndance\nquit",out:["Nothing to do!","Unknown command: dance","Bye! 0 tasks left"]},{input:"add a\nadd b\nadd c\ndone 2\ndone 9\nlist\nquit",out:["Added: a","Added: b","Added: c","Finished: b","No task #9","1. a","2. c","Bye! 2 tasks left"]}],
   hint:`tasks = []\n\ndef add_task(text):\n    tasks.append(text)\n    print(f"Added: {text}")\n\ndef show_tasks():\n    if not tasks:\n        print("Nothing to do!")\n    for i, t in enumerate(tasks, 1):\n        print(f"{i}. {t}")\n\ndef finish(num):\n    try:\n        n = int(num)\n        if n < 1:\n            raise IndexError\n        print(f"Finished: {tasks.pop(n - 1)}")\n    except (ValueError, IndexError):\n        print(f"No task #{num}")\n\nwhile True:\n    cmd = input("> ")\n    parts = cmd.split(" ", 1)\n    if parts[0] == "quit":\n        break\n    elif parts[0] == "add" and len(parts) > 1:\n        add_task(parts[1])\n    elif parts[0] == "list":\n        show_tasks()\n    elif parts[0] == "done" and len(parts) > 1:\n        finish(parts[1])\n    else:\n        print(f"Unknown command: {cmd}")\nprint(f"Bye! {len(tasks)} tasks left")`},
  {type:"done"}]}
+,PJ_ADVENTURE
 ]}
 ]};
 
 const BUG_INTRO=(level,what)=>({type:"talk",title:`🐛 Bug Lab · Level ${level}`,mood:"think",
-  body:`<p>${what}</p><p>For each one: press <b>▶ Run</b> to see what goes wrong, then fix the code until it does what it should. If you're stuck, hints come one at a time. Try to fix it without them!</p>`,
+  body:`<p>${what}</p><p>All the code in Bug Lab is <b>Python</b> 🐍. For each one: press <b>▶ Run</b> to see what goes wrong, then fix the code until it does what it should. If you're stuck, hints come one at a time. Try to fix it without them!</p>`,
   say:"Finding bugs is a real programmer superpower. Let's train it!"});
 
 const COURSE_BUGLAB={id:"buglab",name:"Bug Lab",extra:true,blurb:"This code is broken. Fix it! Five levels, from typos to debugging a real mini-project. Hints come one at a time. In Python. Level 1 is free.",units:[
@@ -43816,6 +44159,7 @@ const JR_UNIT1={name:"Monkey moves",free:true,lessons:[
  {type:"maze",title:"A longer walk",grid:["S....B"],dir:"E",blocks:[JF],solution:[JF,JF,JF,JF,JF],say:"Count the empty squares between me and the banana!"},
  {type:"quiz",q:"What is a program?",opts:["A list of steps for a computer to follow","A kind of banana","A TV show"],a:0,why:"Programs are instructions. Computers follow them exactly, in order."},
  {type:"dance",title:"Three-move dance",moves:["clap","jump","wave"],target:["wave","clap","jump"],solution:{pattern:["wave","clap","jump"]},say:"Same order as the dance. Watch it first!"},
+ {type:"box",title:"Bonus: my banana box",body:`<p>This is my banana box! Its name is <b>bananas</b>. Coders call a box with a name a <b>variable</b>. Tap <b>+ 1</b> to put in a banana until there are 3.</p>`,name:"bananas",startVal:0,goal:3,ops:["+1"],solution:["+1","+1","+1"],say:"Watch the code change every time you tap!"},
  {type:"done"}]},
 {id:"jr2",title:"Turning corners",sub:"turn left, turn right",steps:[
  {type:"talk",title:"Turning",mood:"think",
@@ -49110,8 +49454,8 @@ const COURSES=[
   {...COURSE_JAVA,tag:'System.out.println("hi");',runnable:"java",lang:"Main.java"},
   {...COURSE_SWIFT,tag:'print("hi")',runnable:"swift",lang:"main.swift"},
   {...COURSE_JR,tag:"puzzles for ages 7–12",kids:true,lang:"TypeMonkey moves"},
-  {...COURSE_PROJECTS,tag:"build real programs",runnable:"py",lang:"main.py"},
-  {...COURSE_BUGLAB,tag:"fix broken code",runnable:"py",lang:"main.py"}
+  {...COURSE_PROJECTS,tag:"build real programs",runnable:"py",lang:"main.py",langName:"Python"},
+  {...COURSE_BUGLAB,tag:"fix broken code",runnable:"py",lang:"main.py",langName:"Python"}
 ];
 const courseById=id=>COURSES.find(c=>c.id===id);
 function flat(c){const L=[];(c.units||[]).forEach((u,ui)=>u.lessons.forEach((l,li)=>L.push({l,u,ui,li,idx:L.length})));return L}
@@ -49144,8 +49488,8 @@ function home(){
     <div class="tools">
       <button class="tool" id="review"><b>🧠 Review${dueCount()?` <span class="due">${dueCount()}</span>`:""}</b><span>${dueCount()?"Questions you missed are ready to try again":reviewSize()?"All caught up! Missed questions come back here":"Questions you miss come back here later"}</span></button>
       <button class="tool" id="play"><b>›_ Playground</b><span>Write any code you want and run it</span></button>
-      <button class="tool" id="projects"><b>🏗️ Build Projects</b><span>Make real games and apps, one mission at a time</span></button>
-      <button class="tool" id="buglab"><b>🐛 Bug Lab</b><span>This code is broken. Can you fix it?</span></button>
+      <button class="tool" id="projects"><b>🏗️ Build Projects</b><span>Make real games and apps in Python, one mission at a time</span></button>
+      <button class="tool" id="buglab"><b>🐛 Bug Lab</b><span>This Python code is broken. Can you fix it?</span></button>
     </div>
     <div class="label">Courses</div>
     <div class="courses">${COURSES.filter(c=>!c.extra).map(c=>{
@@ -49184,7 +49528,7 @@ function coursePage(cid){
   const c=courseById(cid);setMode(c.kids);const L=flat(c);const [d,n]=countLessons(c);
   $("#screen").innerHTML=`<div class="stack">
     <div class="row"><button class="btn ghost sm" id="back">← ${c.extra?"Home":"Courses"}</button></div>
-    <section class="hero"><div class="label">${c.extra?"Practice":"Course"}</div><h1>${c.name}</h1><p>${c.blurb||""}</p></section>
+    <section class="hero"><div class="label">${c.extra?"Practice":"Course"}</div><h1>${c.name}${c.langName?` <span class="langtag big">🐍 ${c.langName}</span>`:""}</h1><p>${c.blurb||""}</p></section>
     <div class="row"><div class="progress"><span style="width:${n?d/n*100:0}%"></span></div><b style="font-variant-numeric:tabular-nums">${d}/${n}</b></div>
     ${c.units.map((u,ui)=>`<div class="unit"><div class="unit-head"><h3>${c.kids?WORLDS[ui%WORLDS.length].emoji+" ":""}Unit ${ui+1} · ${u.name}</h3><span class="label">${u.free?"Free":S.pro?"Unlocked":"Pro"}</span></div><div class="lessons">${
       L.filter(x=>x.ui===ui).map(x=>{const st=status(c,x);const res=S.progress[x.l.id]&&st!=="pro"&&st!=="soon";
@@ -49306,9 +49650,10 @@ function addWarmups(){
 function codeStep(s){
   let tries=0,solved=false;const k="c"+cur.step;
   const H=helpPlan(s);let level=0;const isBug=s.type==="bug";
+  const LN=cur.c.langName?`<span class="langtag">🐍 ${cur.c.langName}</span>`:"";
   const label=isBug?"🐛 Bug Lab · fix the code":s.final?"🏁 Final build":s.mission?"🏗️ "+esc(s.mission):cur.l.project?"Project step":"Code challenge";
   const firstIn=s.input||(s.tests&&s.tests[0].input)||"";
-  shell(`<div class="card"><div class="label">${label} · +30 XP</div><h2>${s.title}</h2>${s.body}${s.tests&&s.tests.length>1?`<p class="testnote">TypeMonkey will test it ${s.tests.length} ways, typing different answers each time.</p>`:""}${editorBlock("c",draft(k)||s.start,cur.c.runnable||true,cur.c.lang,firstIn)}<div id="fb"></div><div id="peek"></div></div>
+  shell(`<div class="card"><div class="label">${label} · +30 XP ${LN}</div><h2>${s.title}</h2>${s.body}${s.tests&&s.tests.length>1?`<p class="testnote">TypeMonkey will test it ${s.tests.length} ways, typing different answers each time.</p>`:""}${editorBlock("c",draft(k)||s.start,cur.c.runnable||true,cur.c.lang,firstIn)}<div id="fb"></div><div id="peek"></div></div>
     <div id="bud">${buddy(isBug?"This code is broken! Press ▶ Run to see what happens, then fix it. Tap 💡 Hint if you get stuck.":cur.c.runnable==="web"?"Type your code, then tap ▶ Show page. I'll check what you built. Stuck? Tap 💡 Help and I'll give you one clue at a time.":"Write your code, then hit ▶ Run. Stuck? Tap 💡 Help and I'll give you one clue at a time.","think")}</div>
     <div class="row"><button class="btn" id="go" disabled>Continue</button><button class="btn ghost" id="hint">${isBug?"💡 Hint 1":"💡 Help"}</button><button class="linkbtn" id="answer" hidden>${isBug?"Show the fixed code":"Show the whole answer"}</button></div>`);
   const showBugHelp=()=>{
