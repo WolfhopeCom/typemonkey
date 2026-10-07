@@ -226,9 +226,26 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 .mc{display:grid;place-items:center;font-size:clamp(1.1rem,5vw,1.9rem)}
 .mc.path{background:var(--path,#F3DFA8);box-shadow:inset 0 0 0 1px var(--pathline,#E5CC88)}
 .mc.tree{background:var(--tree,#5FAE5A)}
-.stars{font-size:1.6rem;letter-spacing:2px;margin-bottom:2px;animation:pop .5s ease}
-.jrfinish{display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:6px}.jrfinish span{color:var(--muted);font-size:.9rem}.jrfinish .stars{font-size:1.4rem;word-break:break-all;text-align:center}
-.jrstars{display:inline-flex;align-items:center;gap:6px;background:var(--banana);color:#2A1300;font-weight:800;border-radius:999px;padding:4px 12px;font-size:.95rem}
+.stage{position:relative;display:grid;place-items:center;height:170px;border-radius:16px;background:radial-gradient(circle at 50% 120%,#FFB34766,transparent 60%),linear-gradient(#2B1A4A,#4A2A6A);overflow:hidden}
+.stage::before{content:"✨ 🎵 ✨";position:absolute;top:8px;left:0;right:0;text-align:center;opacity:.6;letter-spacing:30px}
+.dancer{width:110px;height:110px}.dancer svg{width:100%;height:100%}
+.dlab{position:absolute;bottom:8px;left:0;right:0;text-align:center;color:#fff;font-weight:800;font-size:1.1rem;min-height:1.4em}
+.d-jump{animation:dj .6s ease}.d-spin{animation:ds .6s ease}.d-clap{animation:dc .6s ease}.d-wave{animation:dw .6s ease}.d-wiggle{animation:dg .6s ease}
+@keyframes dj{40%{transform:translateY(-38px)}}@keyframes ds{to{transform:rotate(360deg)}}@keyframes dc{30%,70%{transform:scale(1.18)}50%{transform:scale(.92)}}
+@keyframes dw{25%{transform:rotate(-14deg)}75%{transform:rotate(14deg)}}@keyframes dg{20%{transform:translateX(-12px)}40%{transform:translateX(12px)}60%{transform:translateX(-8px)}80%{transform:translateX(8px)}}
+.dtarget{display:flex;flex-wrap:wrap;gap:6px}.dchip{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:var(--surface2);font-size:1.4rem;transition:transform .2s}.dchip.now{transform:scale(1.2);background:var(--banana)}
+.dloop{display:flex;align-items:center;gap:8px;font-weight:800;color:var(--leaf)}.dloop b{min-width:24px;text-align:center;font-size:1.2rem}
+.prog.inloop{outline:3px dashed var(--leaf);outline-offset:2px}
+.blk.dm{background:#FF8FC0;color:#3A0F24;box-shadow:0 4px 0 #C9578A}
+.rule{background:var(--surface2);border-left:5px solid #7C5CFF;border-radius:12px;padding:10px 14px;font-weight:700;line-height:1.5}
+.belt{position:relative;display:grid;place-items:center;height:130px;border-radius:16px;background:repeating-linear-gradient(90deg,var(--surface2) 0 18px,transparent 18px 36px);border:3px solid var(--surface2)}
+.belt .item{display:flex;flex-direction:column;align-items:center;font-size:3.4rem;line-height:1}.belt .item small{font-size:.9rem;font-weight:800;margin-top:4px}
+.belt .item.in{animation:pop .4s ease}.belt .item.shake{animation:dg .45s ease}
+.belt .left{position:absolute;top:6px;right:10px;font-size:.85rem;font-weight:700;color:var(--muted)}
+.bins{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.bin{display:flex;flex-direction:column;align-items:center;gap:2px;border:3px solid var(--surface2);background:var(--surface);color:var(--fg);border-radius:16px;padding:12px}
+.bin .bi{font-size:2rem}.bin .bc{font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}.bin.ok{animation:dc .4s ease;border-color:var(--leaf)}
+.kcode{margin-top:10px;text-align:left}.kcode small{display:block;font-weight:700;margin-bottom:4px}.kcode pre{margin:0;background:var(--code-bg);color:var(--code-fg);border-radius:10px;padding:10px 12px;font-size:.92rem;line-height:1.45;overflow-x:auto}
 .mk{position:absolute;width:calc(100% / var(--w));height:calc(100% / var(--h));display:grid;place-items:center;transition:left .32s ease,top .32s ease,transform .25s ease;pointer-events:none}
 .mface{width:82%;height:82%;display:grid;place-items:center}.mface svg{width:100%;height:100%;filter:drop-shadow(0 2px 2px #0004)}
 .arr{position:absolute;right:-2px;bottom:-2px;width:46%;height:46%;display:grid;place-items:center;background:#14201B;color:#FFD25C;border-radius:50%;font-size:clamp(.7rem,3vw,1rem);font-weight:900;transition:transform .25s ease}
@@ -821,7 +838,7 @@ function coursePage(cid){
   const c=courseById(cid);setMode(c.kids);const L=flat(c);const [d,n]=countLessons(c);
   $("#screen").innerHTML=`<div class="stack">
     <div class="row"><button class="btn ghost sm" id="back">← ${c.extra?"Home":"Courses"}</button></div>
-    <section class="hero"><div class="label">${c.extra?"Practice":"Course"}</div><h1>${c.name}</h1><p>${c.blurb||""}</p>${c.kids?(()=>{const [g,t]=jrStars(c);return `<span class="jrstars">⭐ ${g} of ${t} stars</span>`})():""}</section>
+    <section class="hero"><div class="label">${c.extra?"Practice":"Course"}</div><h1>${c.name}</h1><p>${c.blurb||""}</p></section>
     <div class="row"><div class="progress"><span style="width:${n?d/n*100:0}%"></span></div><b style="font-variant-numeric:tabular-nums">${d}/${n}</b></div>
     ${c.units.map((u,ui)=>`<div class="unit"><div class="unit-head"><h3>${c.kids?WORLDS[ui%WORLDS.length].emoji+" ":""}Unit ${ui+1} · ${u.name}</h3><span class="label">${u.free?"Free":S.pro?"Unlocked":"Pro"}</span></div><div class="lessons">${
       L.filter(x=>x.ui===ui).map(x=>{const st=status(c,x);const res=S.progress[x.l.id]&&st!=="pro"&&st!=="soon";
@@ -886,7 +903,7 @@ function renderStep(){
   const s=cur.l.steps[cur.step];const R=cur.c.runnable;
   if(s._course)cur.c=s._course;
   if(s.type!=="done"&&!cur.review&&!cur.daily)saveSpot();
-  const T={talk,code:codeStep,bug:codeStep,quiz,fill,order,maze,game:gameIntro,done:finish}[s.type];T(s,R);
+  const T={talk,code:codeStep,bug:codeStep,quiz,fill,order,maze,dance,sort:sorter,game:gameIntro,done:finish}[s.type];T(s,R);
 }
 /* For TypeMonkey Jr.: read the card out loud for kids who are still learning to read */
 const canSpeak=typeof window!=="undefined"&&"speechSynthesis" in window&&typeof SpeechSynthesisUtterance!=="undefined";
@@ -1027,6 +1044,73 @@ function fill(s){
   };
   sync();$("#go").onclick=next;
 }
+/* ---------- TypeMonkey Jr. mini-games ---------- */
+/* Dance party: copy a dance by building a program of moves. With loop:true the kid builds the
+   pattern once and sets how many times it repeats (a loop). */
+const DMOVES={clap:{icon:"👏",label:"Clap"},jump:{icon:"⬆️",label:"Jump"},spin:{icon:"🌀",label:"Spin"},wave:{icon:"👋",label:"Wave"},wiggle:{icon:"🎵",label:"Wiggle"}};
+const danceCode=(prog,times,loop)=>loop?`repeat ${times} times:\n`+prog.map(m=>"    "+m+"()").join("\n"):prog.map(m=>m+"()").join("\n");
+function dance(s){
+  let prog=[...(s.start||[])],times=s.startTimes||1,tries=0,won=false,busy=false;const loop=!!s.loop;
+  shell(`<div class="card"><div class="label">🎶 Dance party${loop?" · use a loop":""} · +15 XP</div><h2>${s.title}</h2>${s.body||""}
+    <div class="stage" id="stage"><div class="dancer" id="dz">${monkey("happy")}</div><div class="dlab" id="dlab" aria-live="polite"></div></div>
+    <div class="label">The dance to copy <button class="linkbtn" id="watch">👀 Watch it</button></div>
+    <div class="dtarget" id="tg">${s.target.map((m,i)=>`<span class="dchip" data-i="${i}" title="${DMOVES[m].label}">${DMOVES[m].icon}</span>`).join("")}</div>
+    <div class="label">Your dance program</div>
+    ${loop?`<div class="dloop"><span>🔁 Repeat</span><button class="btn ghost sm" id="tm" aria-label="Fewer times">−</button><b id="tv">${times}</b><button class="btn ghost sm" id="tp" aria-label="More times">+</button><span>times:</span></div>`:""}
+    <div class="prog ${loop?"inloop":""}" id="dp"></div>
+    <div class="palette">${s.moves.map(m=>`<button class="blk dm" data-m="${m}"><span>${DMOVES[m].icon}</span>${DMOVES[m].label}</button>`).join("")}</div><div id="fb"></div></div>
+    <div id="bud">${buddy(s.say||(loop?"Find the part that repeats! Build it once, then set the repeat number.":"Watch the dance, then tap the moves in the same order."),"think")}</div>
+    <div class="row"><button class="btn banana" id="run">▶ Dance!</button><button class="btn ghost" id="undo">Undo</button><button class="btn ghost" id="hint" hidden>Show me</button>${readAloudBtn()}<button class="btn" id="go" hidden>Continue</button></div>`);
+  const draw=()=>{$("#dp").innerHTML=prog.length?prog.map((m,i)=>`<button class="chip" data-i="${i}" aria-label="Remove ${DMOVES[m].label}">${DMOVES[m].icon}</button>`).join(""):'<span class="empty">Tap moves below to add them here</span>';
+    $$("#dp .chip").forEach(c=>c.onclick=()=>{if(busy||won)return;prog.splice(+c.dataset.i,1);draw()});if(loop)$("#tv").textContent=times};
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  const perform=async(list,mark)=>{busy=true;const dz=$("#dz");
+    for(let i=0;i<list.length;i++){const m=list[i];if(!dz.isConnected)return;dz.className="dancer";void dz.offsetWidth;dz.classList.add("d-"+m);$("#dlab").textContent=DMOVES[m].icon+" "+DMOVES[m].label+"!";
+      $$("#tg .dchip").forEach(c=>c.classList.toggle("now",mark&&+c.dataset.i===i));await sleep(620)}
+    dz.className="dancer";$("#dlab").textContent="";$$("#tg .dchip").forEach(c=>c.classList.remove("now"));busy=false};
+  $$(".dm").forEach(b=>b.onclick=()=>{if(busy||won)return;if(prog.length>=12)return;prog.push(b.dataset.m);draw()});
+  if(loop){$("#tm").onclick=()=>{if(!won&&times>1){times--;draw()}};$("#tp").onclick=()=>{if(!won&&times<6){times++;draw()}}}
+  $("#undo").onclick=()=>{if(busy||won)return;prog.pop();draw()};
+  $("#watch").onclick=()=>{if(!busy)perform(s.target,true)};
+  $("#hint").onclick=()=>{if(busy)return;prog=[...s.solution.pattern];times=s.solution.times||1;draw();$("#bud").innerHTML=buddy("Here's one way! Press Dance to try it.","happy")};
+  $("#run").onclick=async()=>{if(busy||won||!prog.length)return;
+    const flatP=loop?Array.from({length:times},()=>prog).flat():prog;
+    await perform(flatP,false);if(!$("#dz"))return;
+    const ok=flatP.length===s.target.length&&flatP.every((m,i)=>m===s.target[i]);
+    if(ok){won=true;award(15,3);bump("dances");$("#dz").innerHTML=monkey("cheer");
+      $("#fb").innerHTML=`<div class="feedback good">🎉 ${esc(s.win||"Perfect dance!")}<div class="kcode"><small>🧑‍💻 Your dance, written as code:</small><pre>${esc(danceCode(prog,times,loop))}</pre></div></div>`;
+      $("#bud").innerHTML=buddy(pick(KID_WINS),"cheer");bananaBurst();["run","undo","hint"].forEach(i=>$("#"+i).hidden=true);$("#go").hidden=false;return}
+    tries++;const wrongAt=flatP.findIndex((m,i)=>m!==s.target[i]);
+    const rightPat=loop&&prog.length&&s.target.length%prog.length===0&&s.target.every((m,i)=>m===prog[i%prog.length]);
+    const msg=rightPat?`Nice pattern! But the dance is ${s.target.length} moves long and yours is ${flatP.length}. Change the repeat number!`:
+      wrongAt>=0&&wrongAt<s.target.length?`Oops! Move ${wrongAt+1} should be ${DMOVES[s.target[wrongAt]].icon} ${DMOVES[s.target[wrongAt]].label}.`:flatP.length<s.target.length?"Good so far! The dance keeps going. Add more moves.":"Too many moves! Take some away.";
+    $("#fb").innerHTML=`<div class="feedback bad">${msg}</div>`;$("#bud").innerHTML=buddy(tries>=2?"Want a peek? Tap “Show me”.":"Every coder fixes their program. Try again!","oops");
+    if(tries>=2)$("#hint").hidden=false};
+  draw();$("#go").onclick=next;wireReadAloud();
+}
+/* Sorting machine: things come down a belt one at a time; the kid follows an IF / ELSE rule
+   by tapping the right bin. */
+function sorter(s){
+  let i=0,miss=0,counts=s.bins.map(()=>0);
+  shell(`<div class="card"><div class="label">🏭 Sorting machine · +15 XP</div><h2>${s.title}</h2>${s.body||""}
+    <div class="rule">${s.rule}</div>
+    <div class="belt"><div class="item" id="item"></div><div class="left" id="left"></div></div>
+    <div class="bins">${s.bins.map((b,k)=>`<button class="bin" data-k="${k}"><span class="bi">${b.icon}</span><b>${b.name}</b><span class="bc" id="bc${k}">0</span></button>`).join("")}</div><div id="fb"></div></div>
+    <div id="bud">${buddy(s.say||"Look at each thing. Follow the rule and tap the right place!","think")}</div>
+    <div class="row">${readAloudBtn()}<button class="btn" id="go" hidden>Continue</button></div>`);
+  const show=()=>{const it=s.items[i];const el=$("#item");el.className="item";void el.offsetWidth;el.classList.add("in");el.innerHTML=`<span>${it.icon}</span>${it.name?`<small>${esc(it.name)}</small>`:""}`;$("#left").textContent=`${s.items.length-i} to go`};
+  $$(".bin").forEach(b=>b.onclick=()=>{if(i>=s.items.length)return;const k=+b.dataset.k,it=s.items[i];
+    if(k===it.bin){counts[k]++;$("#bc"+k).textContent=counts[k];b.classList.remove("ok");void b.offsetWidth;b.classList.add("ok");i++;
+      $("#fb").innerHTML="";
+      if(i>=s.items.length){award(miss?10:15,3);bump("sorted");$("#item").innerHTML="✨";$("#left").textContent="All sorted!";
+        $("#fb").innerHTML=`<div class="feedback good">🎉 ${esc(s.win||"Everything is sorted!")}${s.code?`<div class="kcode"><small>🧑‍💻 The rule, written as code:</small><pre>${esc(s.code)}</pre></div>`:""}</div>`;
+        $("#bud").innerHTML=buddy(pick(KID_WINS),"cheer");bananaBurst();$("#go").hidden=false;return}
+      $("#bud").innerHTML=buddy(pick(["Yes!","Good one!","That's right!","Sorted!","You're fast!"]),"happy");show()}
+    else{miss++;const el=$("#item");el.classList.remove("shake");void el.offsetWidth;el.classList.add("shake");
+      $("#fb").innerHTML=`<div class="feedback bad">${esc(it.why||"Not that one. Read the rule again!")}</div>`;$("#bud").innerHTML=buddy("Check the rule, then try again.","oops")}});
+  show();$("#go").onclick=next;wireReadAloud();
+}
+
 function order(s){
   let pool=shuffle(s.lines.map((l,i)=>i));let tries=0;
   if(pool.every((v,i)=>v===i))pool.reverse();
@@ -1114,10 +1198,10 @@ const WORLDS=[
   {name:"Candy land",emoji:"🍭",wall:"🍭",path:"#FFE0F0",line:"#F7C3DE",tree:"#F48FC0"}];
 const worldFor=()=>WORLDS[((cur&&cur.item&&cur.item.ui)||0)%WORLDS.length];
 const KID_WINS=["Ooh ooh! Banana time!","You're a coding superstar!","Monkey dance time! 💃","Wow, that program was perfect!","High five! ✋","Yum yum, thank you!","You did it! I'm so proud!"];
-function mazeBest(s){return s.func?blockCount(s.solution.main)+s.solution.fn.length:blockCount(s.solution)}
-function starsFor(s,used,peeked){if(peeked)return 1;const best=mazeBest(s);return used<=best?3:used<=best+2?2:1}
-const starStr=n=>"⭐".repeat(n)+"☆".repeat(3-n);
-function jrStars(c){let got=0,total=0;for(const x of flat(c))(x.l.steps||[]).forEach((st,i)=>{if(st.type==="maze"){total+=3;got+=((S.stars||{})[x.l.id+"#"+i]||0)}});return [got,total]}
+/* Shows a kid's block program as simple code, so they see what "real code" looks like. */
+const KCODE={fwd:"forward()",left:"turn_left()",right:"turn_right()",ifR:"if tree_ahead(): turn_right()",ifL:"if tree_ahead(): turn_left()",call:"my_move()"};
+function kidCode(prog,fn){const out=[];const walk=(L,ind)=>L.forEach(b=>{if(typeof b==="string")out.push(ind+KCODE[b]);else{out.push(ind+(b.until?"repeat until banana:":`repeat ${b.rep} times:`));walk(b.body,ind+"    ")}});
+  if(fn&&fn.length){out.push("def my_move():");walk(fn,"    ");out.push("")}walk(prog,"");return out.join("\n")}
 function maze(s){
   const m=mazeInfo(s.grid);let prog=JSON.parse(JSON.stringify(s.start||[]));let open=null,running=false,fails=0,won=false;
   let fn=JSON.parse(JSON.stringify(s.startFn||[])),lane="main";const FN_OK=["fwd","left","right","ifR","ifL"];
@@ -1132,7 +1216,7 @@ function maze(s){
     <div class="palette">${s.blocks.map(b=>`<button class="blk b-${b}" data-b="${b}"><span>${BLOCKS[b].icon}</span>${BLOCKS[b].label}</button>`).join("")}</div>
     <div id="fb"></div></div>
     <div id="bud">${buddy(s.say||"Tap the blocks to build a program, then press Go!","think")}</div>
-    <div class="row"><button class="btn banana" id="run">▶ Go!</button><button class="btn ghost" id="undo">Undo</button><button class="btn ghost" id="clr">Clear</button><button class="btn ghost" id="hint" hidden>Show me</button><button class="btn ghost" id="again" hidden>🔁 Go for ⭐⭐⭐</button>${readAloudBtn()}<button class="btn" id="go" hidden>Continue</button></div>`);
+    <div class="row"><button class="btn banana" id="run">▶ Go!</button><button class="btn ghost" id="undo">Undo</button><button class="btn ghost" id="clr">Clear</button><button class="btn ghost" id="hint" hidden>Show me</button>${readAloudBtn()}<button class="btn" id="go" hidden>Continue</button></div>`);
   const place=(x,y,d,bump)=>{const k=$("#mk");k.style.left=`calc(${x} * 100% / ${m.w})`;k.style.top=`calc(${y} * 100% / ${m.h})`;k.style.transform=bump?"translateX(4px)":"none";$("#arr").style.transform=`rotate(${ROT[d]}deg)`};
   const reset=()=>{place(m.start[0],m.start[1],s.dir);m.goals.forEach(([gx,gy])=>{const c=document.querySelector(`.mc[data-xy="${gx},${gy}"]`);if(c)c.textContent="🍌"})};
   const draw=()=>{
@@ -1168,11 +1252,8 @@ function maze(s){
       running=false;
       const tooMany=s.max&&total()>s.max;
       if(result==="win"&&!tooMany){const first=!won;won=true;if(first){award(15,3);bump("mazes");if(s.start)bump("bugsFixed")}$("#mface").innerHTML=monkey("cheer");
-        const st=starsFor(s,total(),peeked);const key=cur.l.id+"#"+cur.step;
-        if(!cur.review&&!cur.daily){S.stars=S.stars||{};if(st>(S.stars[key]||0)){S.stars[key]=st;save()}}
-        const best=mazeBest(s);
-        $("#fb").innerHTML=`<div class="feedback good"><div class="stars" aria-label="${st} of 3 stars">${starStr(st)}</div>🍌 ${nB>1?"All bananas collected!":"Banana reached!"} ${esc(s.win||pick(WINS))}${st<3&&!peeked?`<br><small>Can you do it with ${best} block${best===1?"":"s"}? That's 3 stars!</small>`:""}</div>`;
-        $("#bud").innerHTML=buddy(st===3?pick(KID_WINS):"YES! Your program worked!","cheer");if(cur.c.kids)bananaBurst();["run","undo","clr","hint"].forEach(i=>$("#"+i).hidden=true);$("#go").hidden=false;$("#again").hidden=st===3||peeked;return}
+        $("#fb").innerHTML=`<div class="feedback good">🍌 ${nB>1?"All bananas collected!":"Banana reached!"} ${esc(s.win||pick(WINS))}<div class="kcode"><small>🧑‍💻 Your blocks, written as code:</small><pre>${esc(kidCode(prog,s.func?fn:null))}</pre></div></div>`;
+        $("#bud").innerHTML=buddy(pick(KID_WINS),"cheer");if(cur.c.kids)bananaBurst();["run","undo","clr","hint"].forEach(i=>$("#"+i).hidden=true);$("#go").hidden=false;return}
       fails++;$("#mface").innerHTML=monkey("oops");setTimeout(()=>{const f=$("#mface");if(f)f.innerHTML=monkey("happy")},900);
       const msg=result==="win"?`You got there, but used ${total()} blocks. Can you do it with ${s.max} or fewer? Try a Repeat block!`:result==="wall"?"Bonk! TypeMonkey bumped into a tree. Find the step that went wrong and fix it.":result==="loop"?"TypeMonkey kept going around and around! Your repeat never got him to every banana.":result==="extra"?"Too many steps! TypeMonkey got the banana, then kept going. A program has to stop at exactly the right spot. Remove the extra blocks.":"So close! TypeMonkey stopped before reaching the banana. Add more steps.";
       $("#fb").innerHTML=`<div class="feedback bad">${msg}</div>`;
@@ -1181,7 +1262,6 @@ function maze(s){
     };
     setTimeout(tick,200);
   };
-  $("#again").onclick=()=>{won=false;["run","undo","clr"].forEach(i=>$("#"+i).hidden=false);$("#again").hidden=true;$("#fb").innerHTML="";reset();$("#bud").innerHTML=buddy("Try a shorter program! Repeat blocks can save lots of steps.","think")};
   draw();reset();$("#go").onclick=next;wireReadAloud();
 }
 
@@ -1252,10 +1332,6 @@ function finish(){
   $("#back").onclick=()=>coursePage(cur.c.id);
   if($("#nxt"))$("#nxt").onclick=()=>nst==="pro"?coursePage(cur.c.id):startLesson(nx.l.id);
   if(cur.c.kids){
-    const keys=cur.l.steps.map((st,i)=>st.type==="maze"?cur.l.id+"#"+i:null).filter(Boolean);
-    if(keys.length){const got=keys.reduce((n,k)=>n+((S.stars||{})[k]||0),0);const box=document.createElement("div");box.className="jrfinish";
-      box.innerHTML=`<div class="stars">${"⭐".repeat(got)}${"☆".repeat(keys.length*3-got)}</div><b>${got} of ${keys.length*3} stars</b>${got<keys.length*3?"<span>Play again with fewer blocks to get them all!</span>":"<span>Every star! You're a maze master! 🏆</span>"}`;
-      const card=document.querySelector(".card");if(card)card.appendChild(box)}
     setTimeout(bananaBurst,150);
   }
 }
@@ -1286,7 +1362,9 @@ function badgeList(){
     ["memory","🧠","Elephant memory","Remember 10 questions in Review",()=>st("remembered")>=10,30],
     ["learned","🎓","It stuck!","Fully learn 5 review questions",()=>st("learned")>=5,40],
     ["maze10","🗺️","Pathfinder","Solve 10 mazes",()=>st("mazes")>=10,25],
-    ["bug5","🐛","Bug squasher","Fix 5 buggy programs in TypeMonkey Jr.",()=>st("bugsFixed")>=5,30],
+    ["dance5","💃","Dance star","Copy 5 dances in TypeMonkey Jr.",()=>st("dances")>=5,25],
+    ["sort3","🏭","Sorting pro","Finish 3 sorting machines",()=>st("sorted")>=3,25],
+    ["bug5","🐛","Bug squasher","Fix 5 buggy programs",()=>st("bugsFixed")>=5,30],
     ["shopper","🛍️","Fashion monkey","Buy your first item in the shop",()=>st("purchases")>=1,10],
     ["collector","👑","Collector","Own 10 shop items",()=>ownedCount()>=10,75],
     ["rich","🍌","Banana hoard","Have 500 bananas at once",()=>S.bananas>=500,50],

@@ -68,6 +68,19 @@ CHECK = r"""async () => {
   }
   // TypeMonkey Jr.: every maze is well-formed, the solution wins within max, buggy starters fail
   const jr = COURSES.find(c => c.id === "jr");
+  for (const x of flat(jr)) for (const [i, s] of (x.l.steps || []).entries()) {
+    if (s.type === "dance") {
+      const p = s.solution.pattern, t = s.solution.times || 1, flatP = Array.from({ length: t }, () => p).flat();
+      if (JSON.stringify(flatP) !== JSON.stringify(s.target)) R.push(`${x.l.id} step ${i}: dance solution doesn't match target`);
+      if (!s.loop && t !== 1) R.push(`${x.l.id} step ${i}: non-loop dance with times`);
+      if ([...s.target, ...(s.start || [])].some(m => !s.moves.includes(m) || !DMOVES[m])) R.push(`${x.l.id} step ${i}: dance uses a move not offered`);
+      if (s.start && JSON.stringify(s.start) === JSON.stringify(s.target)) R.push(`${x.l.id} step ${i}: buggy dance already correct`);
+    }
+    if (s.type === "sort") {
+      if (!s.items.length || s.items.some(it => !(it.bin >= 0 && it.bin < s.bins.length))) R.push(`${x.l.id} step ${i}: sort item with bad bin`);
+      if (s.bins.some((b, k) => !s.items.some(it => it.bin === k))) R.push(`${x.l.id} step ${i}: a sort bin gets nothing`);
+    }
+  }
   for (const x of flat(jr)) for (const [i, s] of (x.l.steps || []).entries()) if (s.type === "maze") {
     const w = s.grid[0].length;
     if (!s.grid.every(r => r.length === w)) R.push(`${x.l.id} step ${i}: grid rows differ in length`);
