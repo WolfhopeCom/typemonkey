@@ -130,11 +130,15 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 .arcade-win{background:#FFC83D;color:#2A1300}.arcade-lose{background:#3A2350;color:#FFB4C2}
 @keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
 @media (prefers-reduced-motion:reduce){.arcade-win,.arcade-lose{animation:none}}
-/* TypeMonkey Jr.: a sunny background so the kids' section stands out */
-body.jr{--bg:#FFF1BF;--surface:#FFFCF0;--surface2:#FFE8A3;--line:#F0D27C;--muted:#6E5A2A}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) body.jr{--bg:#2B2410;--surface:#3A3116;--surface2:#4A3E1A;--line:#5E4F22;--muted:#D6C48E}}
-:root[data-theme="dark"] body.jr{--bg:#2B2410;--surface:#3A3116;--surface2:#4A3E1A;--line:#5E4F22;--muted:#D6C48E}
-body{transition:background-color .3s}
+/* TypeMonkey Jr. card on the home screen: sunny yellow so the kids' section stands out */
+.course.kids{background:#FFE58A;border-color:#F2C230;color:#2A1F00}
+.course.kids .tag,.course.kids .meta{color:#6B5300}
+.course.kids .mini{background:#F7D35A}
+.course.kids .pill{background:#FFFFFF;color:#7A4E00}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .course.kids{background:#4A3B0E;border-color:#B88F1E;color:#FFF3C9}:root:not([data-theme="light"]) .course.kids .tag,:root:not([data-theme="light"]) .course.kids .meta{color:#E8D08A}:root:not([data-theme="light"]) .course.kids .mini{background:#6A5414}}
+:root[data-theme="dark"] .course.kids{background:#4A3B0E;border-color:#B88F1E;color:#FFF3C9}
+:root[data-theme="dark"] .course.kids .tag,:root[data-theme="dark"] .course.kids .meta{color:#E8D08A}
+:root[data-theme="dark"] .course.kids .mini{background:#6A5414}
 .console .dim{color:#5E7E70}
 
 .opts{display:flex;flex-direction:column;gap:8px}
@@ -724,7 +728,7 @@ function home(){
     <div class="courses">${COURSES.map(c=>{
       if(c.soon)return `<button class="course locked" data-c="${c.id}"><span class="pill ${c.kids?"kid":""}">${c.kids?"Kids section":"Coming soon"}</span><h3>${c.name}</h3><span class="tag">${esc(c.tag)}</span></button>`;
       const [d,n,all]=countLessons(c);
-      return `<button class="course ${c.id==="js"?"live":""}" data-c="${c.id}"><span class="pill ${d===n&&n===all?"ok":c.kids&&!d?"kid":"go"}">${d===n&&n===all?"Complete":d?"In progress":c.id==="js"?"Start here":c.kids?"Kids section":"New"}</span>
+      return `<button class="course ${c.id==="js"?"live":""} ${c.kids?"kids":""}" data-c="${c.id}"><span class="pill ${d===n&&n===all?"ok":c.kids&&!d?"kid":"go"}">${d===n&&n===all?"Complete":d?"In progress":c.id==="js"?"Start here":c.kids?"Kids section":"New"}</span>
         <h3>${c.name}</h3><span class="tag">${esc(c.tag)}</span><span class="meta">${c.units.length} units · ${n} lessons${all>n?" (more coming)":""}</span>
         <div class="mini"><span style="width:${n?d/n*100:0}%"></span></div></button>`}).join("")}</div>
     ${S.pro?`<div class="unlocked">✓ Full version unlocked. Thanks for supporting TypeMonkey!</div>`:`<div class="paywall"><div><h3>Unlock the full version</h3><p>All ${COURSES.reduce((n,c)=>n+countLessons(c)[1],0)} lessons in all ${COURSES.length} courses, every project, and everything we add later. One-time purchase, no subscription.</p></div><button class="btn banana" id="homebuy">Unlock · $4.99</button></div>`}
@@ -749,7 +753,7 @@ function foot(){
 }
 function unlockFull(after){grownUpGate(()=>{S.pro=true;save();toast("Demo unlock: everything is open. In the real app this is the App Store / Google Play purchase.");after&&after()})}
 let rerender=home;
-function setMode(kids){document.body.classList.toggle("jr",!!kids)}
+function setMode(){}
 
 /* ---------- Course page ---------- */
 function coursePage(cid){
