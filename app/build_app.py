@@ -85,6 +85,10 @@ def patch_podfile():
     if proj.exists():
         p = proj.read_text()
         q = p.replace("IPHONEOS_DEPLOYMENT_TARGET = 14.0;", "IPHONEOS_DEPLOYMENT_TARGET = 15.0;")
+        # Xcode's user-script sandbox blocks CocoaPods' "[CP] Embed Pods Frameworks" step (PhaseScriptExecution failed)
+        q = q.replace("ENABLE_USER_SCRIPT_SANDBOXING = YES;", "ENABLE_USER_SCRIPT_SANDBOXING = NO;")
+        if "ENABLE_USER_SCRIPT_SANDBOXING" not in q:
+            q = q.replace("IPHONEOS_DEPLOYMENT_TARGET = 15.0;", "IPHONEOS_DEPLOYMENT_TARGET = 15.0;\n\t\t\t\tENABLE_USER_SCRIPT_SANDBOXING = NO;")
         if q != p:
             proj.write_text(q)
             print("set the App target's iOS Deployment Target to 15.0")
