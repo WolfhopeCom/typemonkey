@@ -315,6 +315,18 @@ span.repn{display:inline-block}
 .legal p{color:var(--fg);line-height:1.6}
 .gate{position:fixed;inset:0;z-index:20;background:color-mix(in srgb,#000 55%,transparent);display:grid;place-items:center;padding:16px}
 .gate .card{max-width:420px;width:100%}
+.continue{display:flex;align-items:center;gap:12px;width:100%;background:var(--accent);color:var(--accent-ink);border:0;border-radius:var(--r);padding:14px 16px;text-align:left;box-shadow:0 5px 0 color-mix(in srgb,var(--accent) 60%,#000);transition:transform .08s}
+.continue:active{transform:translateY(3px);box-shadow:0 2px 0 color-mix(in srgb,var(--accent) 60%,#000)}
+.continue .cicon{width:44px;height:44px;border-radius:50%;background:#FFFFFFD9;display:grid;place-items:center;font-size:1.1rem;flex:none;padding-left:3px}
+.continue .ctext{flex:1;min-width:0;display:flex;flex-direction:column}
+.continue small{font-weight:800;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;opacity:.8}
+.continue b{font-family:var(--display);font-size:1.3rem;line-height:1.15}
+.continue .ctext>span{font-size:.85rem;font-weight:700;opacity:.8}
+.continue .cgo{font-weight:800;background:var(--accent-ink);color:#fff;border-radius:999px;padding:6px 14px;flex:none}
+@media (max-width:380px){.continue .cgo{display:none}}
+.todo{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:0!important;max-width:none!important;font-weight:800;color:var(--fg);background:color-mix(in srgb,var(--banana) 22%,var(--surface));border-radius:10px;padding:8px 12px}
+.todo .hint2{margin-left:auto;background:var(--surface);border:2px solid var(--banana);border-radius:999px;padding:3px 12px;font-weight:800;font-size:.85rem;color:var(--fg)}
+.btn.helpbtn{background:color-mix(in srgb,var(--banana) 55%,var(--surface));box-shadow:0 4px 0 color-mix(in srgb,var(--banana) 50%,#000)}
 .daily{display:flex;align-items:center;gap:12px;background:linear-gradient(120deg,color-mix(in srgb,var(--banana) 35%,var(--surface)),var(--surface));border:2px solid var(--banana);border-radius:var(--r);padding:12px 14px;text-align:left;color:var(--fg)}
 .daily.done{border-color:var(--line);background:var(--surface)}
 .daily .dicon{font-size:1.8rem}
@@ -885,15 +897,16 @@ function nextUp(c){const L=flat(c);return L.find(x=>S.progress[x.l.id])||L.find(
 /* ---------- Home ---------- */
 function home(){
   rerender=home;setMode(false);
-  const js=COURSES[0];const nu=nextUp(js);const resume=nu&&S.progress[nu.l.id];
+  const lc=courseById(S.lastCourse);const js=lc&&lc.units&&nextUp(lc)?lc:COURSES[0];const nu=nextUp(js);const resume=nu&&S.progress[nu.l.id];
+  const inC=js===COURSES[0]?"":` in ${js.name}`;
   const nextPro=!nu&&flat(js).find(x=>x.l.steps&&status(js,x)==="pro");
   const greet=resume?`Welcome back! You were in the middle of ${Q(nu.l.title)}`:
     nextPro?`You finished every free JavaScript lesson! Unlock the full course to keep going with ${Q(nextPro.l.title)}`:
-    S.done.length?(nu?`Nice to see you! Next up: ${Q(nu.l.title)}`:"You've finished JavaScript! Try Java, C# or C++ next, or build something in the Playground."):"Hey! I'm TypeMonkey, your coding buddy. Let's write your first line of code.";
+    S.done.length?(nu?`Nice to see you! Next up${inC}: ${Q(nu.l.title)} Tap the big orange button to keep going.`:"You've finished JavaScript! Try Java, C# or C++ next, or build something in the Playground."):"Hey! I'm TypeMonkey, your coding buddy. Tap the big orange button to write your first line of code. I'll help you every step of the way!";
   $("#screen").innerHTML=`<div class="stack">
     <section class="hero"><h1>Learn to code, one banana at a time.</h1><p>Bite-size lessons, real code you run yourself, quizzes and mini-games. Built for all ages and experience levels.</p></section>
     ${buddy(greet,resume?"cheer":"happy")}
-    ${nu?`<div class="row"><button class="btn" id="cont">${resume?"Pick up where you left off":S.done.length?"Continue learning":"Start lesson 1"}</button></div>`:nextPro?`<div class="row"><button class="btn banana" id="unl">See the full course</button></div>`:""}
+    ${nu?`<button class="continue" id="cont"><span class="cicon" aria-hidden="true">▶</span><span class="ctext"><small>${resume?"Pick up where you left off":S.done.length?"Continue":"Start here"} · ${esc(js.name)}</small><b>${esc(nu.l.title)}</b><span>${resume?`Step ${resume.step+1} of ${nu.l.steps.length-1} · saved`:`Unit ${nu.ui+1} · ${esc(nu.u.name)}`}</span></span><span class="cgo">${resume?"Resume":S.done.length?"Continue":"Start"}</span></button>`:nextPro?`<div class="row"><button class="btn banana" id="unl">See the full course</button></div>`:""}
     <button class="daily ${dailyDoneToday()?"done":""}" id="daily"><span class="dicon">🎯</span><span class="dtext"><b>${dailyDoneToday()?"Daily challenge done!":"Daily challenge"}</b><span>${dailyDoneToday()?`Come back tomorrow for a new one · 🔥 ${(S.daily||{}).streak||1}-day daily streak`:`3 quick questions · bonus bananas${(S.daily||{}).streak?` · keep your ${(S.daily||{}).streak}-day streak going`:""}`}</span></span><span class="pill ${dailyDoneToday()?"ok":"kid"}">${dailyDoneToday()?"✓":"+10 🍌"}</span></button>
     <div class="tools">
       <button class="tool" id="review"><b>🧠 Review${dueCount()?` <span class="due">${dueCount()}</span>`:""}</b><span>${dueCount()?"Questions you missed are ready to try again":reviewSize()?"All caught up! Missed questions come back here":"Questions you miss come back here later"}</span></button>
@@ -941,6 +954,7 @@ function coursePage(cid){
     <div class="row"><button class="btn ghost sm" id="back">← ${c.extra?"Home":"Courses"}</button></div>
     <section class="hero"><div class="label">${c.extra?"Practice":"Course"}</div><h1>${c.name}${c.langName?` <span class="langtag big">🐍 ${c.langName}</span>`:""}</h1><p>${c.blurb||""}</p></section>
     <div class="row"><div class="progress"><span style="width:${n?d/n*100:0}%"></span></div><b style="font-variant-numeric:tabular-nums">${d}/${n}</b></div>
+    ${nuId?`<button class="btn" id="ccont">▶ ${S.progress[nuId]?"Resume":c.pickAny&&!d?"Start":d?"Continue":"Start"}: ${esc(nu.l.title)}</button>`:""}
     ${c.pickAny?`<p class="pickhint">👉 Pick any project you like in an open level. Not sure where to start? Try the one marked <b>⭐ Recommended next</b>.</p>`:""}
     ${c.units.map((u,ui)=>`<div class="unit"><div class="unit-head"><h3>${c.kids?WORLDS[ui%WORLDS.length].emoji+" ":""}Unit ${ui+1} · ${u.name}</h3><span class="label">${u.free?"Free":S.pro?"Unlocked":"Pro"}</span></div><div class="lessons">${
       L.filter(x=>x.ui===ui).map(x=>{const st=status(c,x);const res=S.progress[x.l.id]&&st!=="pro"&&st!=="soon";
@@ -954,6 +968,7 @@ function coursePage(cid){
     ${S.pro?"":`<div class="paywall"><div><h3>Unlock all of TypeMonkey</h3><p>Every unit in every language, plus future courses and bonus games. One-time purchase.</p></div><button class="btn banana" id="buy">Unlock · $4.99</button></div>`}
   </div>`;
   $("#back").onclick=home;
+  if($("#ccont"))$("#ccont").onclick=()=>startLesson(nuId);
   if($("#buy"))$("#buy").onclick=()=>unlockFull(()=>coursePage(cid));
   $$(".lesson:not([disabled])").forEach(b=>b.onclick=()=>startLesson(b.dataset.l));
   $$("[data-restart]").forEach(b=>b.onclick=()=>{delete S.progress[b.dataset.restart];save();startLesson(b.dataset.restart)});
@@ -964,7 +979,7 @@ function coursePage(cid){
 let cur=null;
 function startLesson(id){
   {const f0=findLesson(id);if(f0){S.stats.started=S.stats.started||[];if(!S.stats.started.includes(f0.c.id)){S.stats.started.push(f0.c.id)}}}
-  const f=findLesson(id);const p=S.progress[id];
+  const f=findLesson(id);const p=S.progress[id];if(f.c.units&&!f.c.extra)S.lastCourse=f.c.id;
   cur={c:f.c,l:f.l,item:f,step:0,earned:{xp:0,ban:0,right:0,total:0}};
   if(p&&p.step>0&&p.step<f.l.steps.length-1){cur.step=p.step;cur.earned={...cur.earned,...p.earned}}
   rerender=renderStep;renderStep();
@@ -1015,8 +1030,9 @@ function wireReadAloud(){const b=$("#say");if(!b)return;b.onclick=()=>{try{speec
 function bananaBurst(){if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;const box=document.createElement("div");box.className="burst";box.setAttribute("aria-hidden","true");
   for(let i=0;i<18;i++){const sp=document.createElement("span");sp.textContent=i%3?"🍌":"⭐";sp.style.setProperty("--x",(Math.random()*2-1)*160+"px");sp.style.setProperty("--y",-(80+Math.random()*180)+"px");sp.style.setProperty("--r",(Math.random()*720-360)+"deg");sp.style.animationDelay=(Math.random()*.15)+"s";box.appendChild(sp)}
   document.body.appendChild(box);setTimeout(()=>box.remove(),1600)}
+const todo=(txt,extra="")=>`<p class="todo"><span>👉 ${txt}</span>${extra}</p>`;
 function talk(s,R){
-  shell(`<div class="card"><h2>${s.title}</h2>${s.body}${(s.show||[]).map(t=>tableHTML(cur.c,t)).join("")}${s.demo?editorBlock("d",s.demo,R,cur.c.lang,s.input):""}</div>
+  shell(`<div class="card">${s.demo&&R?todo("Read this, press ▶ Run to try the code, then tap Continue."):cur.step===0?todo("Read this, then tap Continue."):""}<h2>${s.title}</h2>${s.body}${(s.show||[]).map(t=>tableHTML(cur.c,t)).join("")}${s.demo?editorBlock("d",s.demo,R,cur.c.lang,s.input):""}</div>
     ${buddy(s.say||"",s.mood||"happy")}<div class="row"><button class="btn" id="go">Continue</button>${readAloudBtn()}</div>`);
   if(s.demo&&R)wireEditor("d");$("#go").onclick=next;wireReadAloud();
 }
@@ -1066,9 +1082,10 @@ function codeStep(s){
   const LN=cur.c.langName?`<span class="langtag">🐍 ${cur.c.langName}</span>`:"";
   const label=isBug?"🐛 Bug Lab · fix the code":s.final?"🏁 Final build":s.mission?"🏗️ "+esc(s.mission):cur.l.project?"Project step":"Code challenge";
   const firstIn=s.input||(s.tests&&s.tests[0].input)||"";
-  shell(`<div class="card"><div class="label">${label} · +30 XP ${LN}</div><h2>${s.title}</h2>${s.body}${s.tests&&s.tests.length>1?`<p class="testnote">TypeMonkey will test it ${s.tests.length} ways, typing different answers each time.</p>`:""}${editorBlock("c",draft(k)||s.start,cur.c.runnable||true,cur.c.lang,firstIn)}<div id="fb"></div><div id="peek"></div></div>
+  const doIt=isBug?"Press ▶ Run to see the bug, fix the code, then run it again.":cur.c.runnable==="web"?"Type your code, then tap ▶ Show page.":"Type your code, then press ▶ Run.";
+  shell(`<div class="card"><div class="label">${label} · +30 XP ${LN}</div>${todo(doIt,`<button class="hint2" id="hint2" type="button">💡 Stuck? Get help</button>`)}<h2>${s.title}</h2>${s.body}${s.tests&&s.tests.length>1?`<p class="testnote">TypeMonkey will test it ${s.tests.length} ways, typing different answers each time.</p>`:""}${editorBlock("c",draft(k)||s.start,cur.c.runnable||true,cur.c.lang,firstIn)}<div id="fb"></div><div id="peek"></div></div>
     <div id="bud">${buddy(isBug?"This code is broken! Press ▶ Run to see what happens, then fix it. Tap 💡 Hint if you get stuck.":cur.c.runnable==="web"?"Type your code, then tap ▶ Show page. I'll check what you built. Stuck? Tap 💡 Help and I'll give you one clue at a time.":"Write your code, then hit ▶ Run. Stuck? Tap 💡 Help and I'll give you one clue at a time.","think")}</div>
-    <div class="row"><button class="btn" id="go" disabled>Continue</button><button class="btn ghost" id="hint">${isBug?"💡 Hint 1":"💡 Help"}</button><button class="linkbtn" id="answer" hidden>${isBug?"Show the fixed code":"Show the whole answer"}</button></div>`);
+    <div class="row"><button class="btn" id="go" disabled>Continue</button><button class="btn ghost helpbtn" id="hint">${isBug?"💡 Hint 1":"💡 Help"}</button><button class="linkbtn" id="answer" hidden>${isBug?"Show the fixed code":"Show the whole answer"}</button></div>`);
   const showBugHelp=()=>{
     const hs=s.hints||[];
     if(level<hs.length){level++;
@@ -1104,12 +1121,13 @@ function codeStep(s){
   });
   $("#code-c").addEventListener("input",()=>draft(k,$("#code-c").value));
   $("#hint").onclick=()=>{$("#hint").classList.remove("nudge");sfx("hint");showHelp()};
+  $("#hint2").onclick=()=>{if(!$("#hint").hidden)$("#hint").click();else{$("#answer").hidden=false;$("#answer").scrollIntoView({block:"center",behavior:"smooth"});$("#peek").scrollIntoView({block:"nearest"})}};
   $("#answer").onclick=()=>{$("#code-c").value=s.hint;draft(k,s.hint);$("#peek").innerHTML="";$("#bud").innerHTML=buddy("Here's one way to write it. Read it line by line so it makes sense, then press ▶ Run.","happy")};
   $("#go").onclick=next;
 }
 function quiz(s){
   const order=shuffle(s.opts.map((o,i)=>i));
-  shell(`<div class="card"><div class="label">${s._from?`${cur.daily?`Daily challenge · ${cur.step+1} of ${cur.l.steps.length-1}`:"Review"} · from ${esc(s._from)}`:"Quick quiz · +10 XP"}</div><h2 style="font-size:1.35rem">${s.q}</h2>${s.code?`<div class="editor"><pre>${esc(s.code)}</pre></div>`:""}
+  shell(`<div class="card"><div class="label">${s._from?`${cur.daily?`Daily challenge · ${cur.step+1} of ${cur.l.steps.length-1}`:"Review"} · from ${esc(s._from)}`:"Quick quiz · +10 XP"}</div>${todo(s.code?"Read the code, then pick one answer.":"Pick one answer.")}<h2 style="font-size:1.35rem">${s.q}</h2>${s.code?`<div class="editor"><pre>${esc(s.code)}</pre></div>`:""}
     <div class="opts">${order.map(i=>`<button class="opt ${s.mono?"mono":""}" data-i="${i}">${esc(s.opts[i])}</button>`).join("")}</div><div id="fb"></div></div>
     <div id="bud">${buddy("Take your best guess!","think")}</div><div class="row"><button class="btn" id="go" hidden>Continue</button></div>`);
   $$(".opt").forEach(b=>b.onclick=()=>{
@@ -1126,7 +1144,7 @@ function quiz(s){
 function fill(s){
   const n=s.blanks.length;let slots=Array(n).fill(null),tries=0,doneF=false;
   const toks=shuffle(s.tokens.map((t,i)=>i));
-  shell(`<div class="card"><div class="label">Fill in the blanks · +15 XP</div><h2>${s.title}</h2>${s.body||""}
+  shell(`<div class="card"><div class="label">Fill in the blanks · +15 XP</div>${todo("Tap the words to fill the gaps, then press Check.")}<h2>${s.title}</h2>${s.body||""}
     <div class="editor"><div class="head"><span>${cur.c.lang}</span></div><pre id="fcode"></pre></div>
     <div class="tokens" id="toks">${toks.map(i=>`<button class="token" data-t="${i}">${esc(s.tokens[i])}</button>`).join("")}</div><div id="fb"></div></div>
     <div id="bud">${buddy("Tap a piece to drop it in the next blank. Tap a blank to take it back.","think")}</div>
@@ -1265,7 +1283,7 @@ function order(s){
   let pool=shuffle(s.lines.map((l,i)=>i));let tries=0;
   if(pool.every((v,i)=>v===i))pool.reverse();
   let picked=[],doneO=false;
-  shell(`<div class="card"><div class="label">Put it in order · +15 XP</div><h2>${s.title}</h2>${s.body||""}
+  shell(`<div class="card"><div class="label">Put it in order · +15 XP</div>${todo("Tap the lines in the right order, then press Check.")}<h2>${s.title}</h2>${s.body||""}
     <div class="lines" id="ans"></div><div class="label">Tap the lines in order</div><div class="lines pick" id="pool"></div><div id="fb"></div></div>
     <div id="bud">${buddy("Tap lines to add them. Tap a placed line to send it back.","think")}</div>
     <div class="row"><button class="btn" id="check" disabled>Check</button><button class="btn" id="go" hidden>Continue</button></div>`);
