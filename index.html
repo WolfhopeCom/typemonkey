@@ -92,6 +92,9 @@ button{font:inherit;cursor:pointer}
 .lesson .t b{display:block}
 .lesson .t span{font-size:.85rem;color:var(--muted)}
 .lesson[disabled]{cursor:not-allowed;opacity:.62}
+.lesson.next{background:color-mix(in srgb,var(--accent) 14%,var(--surface));box-shadow:inset 0 0 0 2px var(--accent)}
+.lesson .t .nexttag{display:block;font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.pickhint{margin:0;font-weight:700;color:var(--muted)}
 .linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:.85rem;padding:0;align-self:flex-start}
 
 .paywall{background:var(--code-bg);color:var(--code-fg);border-radius:var(--r);padding:16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
@@ -49466,7 +49469,7 @@ const COURSES=[
   {...COURSE_JAVA,tag:'System.out.println("hi");',runnable:"java",lang:"Main.java"},
   {...COURSE_SWIFT,tag:'print("hi")',runnable:"swift",lang:"main.swift"},
   {...COURSE_JR,tag:"puzzles for ages 7–12",kids:true,lang:"TypeMonkey moves"},
-  {...COURSE_PROJECTS,tag:"build real programs",runnable:"py",lang:"main.py",langName:"Python"},
+  {...COURSE_PROJECTS,pickAny:true,tag:"build real programs",runnable:"py",lang:"main.py",langName:"Python"},
   {...COURSE_BUGLAB,tag:"fix broken code",runnable:"py",lang:"main.py",langName:"Python"}
 ];
 const courseById=id=>COURSES.find(c=>c.id===id);
@@ -49478,7 +49481,10 @@ function status(c,item){
   if(S.done.includes(l.id))return "done";
   if(!u.free&&!S.pro)return "pro";
   if(idx===0)return "open";
-  const L=flat(c);const prev=L[idx-1];
+  const L=flat(c);
+  /* Build Projects: pick any project in a level once that level is open (the level before it is finished) */
+  if(c.pickAny){if(item.ui===0)return "open";return L.filter(x=>x.ui===item.ui-1&&x.l.steps).every(x=>S.done.includes(x.l.id))?"open":"locked"}
+  const prev=L[idx-1];
   return (!prev.l.steps||S.done.includes(prev.l.id))?"open":"locked";
 }
 function countLessons(c){const L=flat(c).filter(x=>x.l.steps);return [L.filter(x=>S.done.includes(x.l.id)).length,L.length,flat(c).length]}
@@ -49538,16 +49544,19 @@ function setMode(){}
 function coursePage(cid){
   rerender=()=>coursePage(cid);
   const c=courseById(cid);setMode(c.kids);const L=flat(c);const [d,n]=countLessons(c);
+  const nu=nextUp(c);const nuId=nu&&status(c,nu)!=="pro"?nu.l.id:null;
   $("#screen").innerHTML=`<div class="stack">
     <div class="row"><button class="btn ghost sm" id="back">← ${c.extra?"Home":"Courses"}</button></div>
     <section class="hero"><div class="label">${c.extra?"Practice":"Course"}</div><h1>${c.name}${c.langName?` <span class="langtag big">🐍 ${c.langName}</span>`:""}</h1><p>${c.blurb||""}</p></section>
     <div class="row"><div class="progress"><span style="width:${n?d/n*100:0}%"></span></div><b style="font-variant-numeric:tabular-nums">${d}/${n}</b></div>
+    ${c.pickAny?`<p class="pickhint">👉 Pick any project you like in an open level. Not sure where to start? Try the one marked <b>⭐ Recommended next</b>.</p>`:""}
     ${c.units.map((u,ui)=>`<div class="unit"><div class="unit-head"><h3>${c.kids?WORLDS[ui%WORLDS.length].emoji+" ":""}Unit ${ui+1} · ${u.name}</h3><span class="label">${u.free?"Free":S.pro?"Unlocked":"Pro"}</span></div><div class="lessons">${
       L.filter(x=>x.ui===ui).map(x=>{const st=status(c,x);const res=S.progress[x.l.id]&&st!=="pro"&&st!=="soon";
         const cls=st==="done"&&!res?"done":(st==="open"||res||st==="done")?"open":"";
-        return `<button class="lesson ${cls} ${x.l.project?"proj":""}" data-l="${x.l.id}" ${st==="open"||st==="done"||res?"":"disabled"}>
+        const isNext=x.l.id===nuId;
+        return `<button class="lesson ${cls} ${x.l.project?"proj":""} ${isNext?"next":""}" data-l="${x.l.id}" ${st==="open"||st==="done"||res?"":"disabled"}>
           <span class="dot">${st==="done"&&!res?"✓":x.l.project?"★":x.idx+1}</span>
-          <span class="t"><b>${x.l.title}</b><span>${res?`Step ${S.progress[x.l.id].step+1} of ${x.l.steps.length-1} · saved`:x.l.sub}</span></span>
+          <span class="t">${isNext?`<span class="nexttag">${c.pickAny?"⭐ Recommended next":"👉 Next up"}</span>`:""}<b>${x.l.title}</b><span>${res?`Step ${S.progress[x.l.id].step+1} of ${x.l.steps.length-1} · saved`:x.l.sub}</span></span>
           <span class="pill ${st==="open"||res?"go":st==="done"?"ok":""}">${res?"Resume":{done:"Replay",open:"Play",pro:"Pro",locked:"🔒",soon:"Soon"}[st]}</span></button>
           ${res?`<button class="linkbtn" data-restart="${x.l.id}">Start “${x.l.title}” over</button>`:""}`}).join("")}</div></div>`).join("")}
     ${S.pro?"":`<div class="paywall"><div><h3>Unlock all of TypeMonkey</h3><p>Every unit in every language, plus future courses and bonus games. One-time purchase.</p></div><button class="btn banana" id="buy">Unlock · $4.99</button></div>`}
