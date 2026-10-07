@@ -45,8 +45,12 @@ def add_platforms():
     if not have_capacitor():
         sys.exit("Capacitor is not installed yet: run `npm install` in app/ first.")
     if not IOS.is_dir():
-        # Swift Package Manager: no CocoaPods needed on the Mac.
-        run(["npx", "cap", "add", "ios", "--packagemanager", "SPM"])
+        # With CocoaPods installed, use Capacitor's standard CocoaPods project (some Capacitor 7 versions still run
+        # `pod install` on SPM projects and fail with "no Podfile"). Without CocoaPods, fall back to Swift Package Manager.
+        if shutil.which("pod"):
+            run(["npx", "cap", "add", "ios"])
+        else:
+            run(["npx", "cap", "add", "ios", "--packagemanager", "SPM"])
     if not ANDROID.is_dir():
         run(["npx", "cap", "add", "android"])
 

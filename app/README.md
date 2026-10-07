@@ -23,7 +23,7 @@ app/
 ## What you need
 
 - **Node.js 20 or newer** (Capacitor 7 requirement) and Python 3.
-- **iOS:** a Mac with **Xcode 16+**. Swift Package Manager is used, so CocoaPods is not needed. To run on your own iPhone you need an Apple ID; a paid Apple Developer account ($99/yr) is needed for TestFlight and the App Store.
+- **iOS:** a Mac with **Xcode 16+**. Install **CocoaPods** first (`brew install cocoapods`; get Homebrew from brew.sh, then run the `eval "$(/opt/homebrew/bin/brew shellenv)"` line it prints). With CocoaPods present the setup uses Capacitor's standard CocoaPods project and you open `ios/App/App.xcworkspace` (or just run `npx cap open ios`). Without it, setup falls back to Swift Package Manager, but some Capacitor 7 versions fail that with "no such file … Podfile"; if you see that, install CocoaPods, run `rm -rf ios`, and run setup again. To run on your own iPhone you need an Apple ID; a paid Apple Developer account ($99/yr) is needed for TestFlight and the App Store.
 - **Android:** **Android Studio** (Ladybug or newer, includes the JDK and SDK). Google Play developer account ($25 once).
 - Pillow (`pip3 install pillow`) only if `@capacitor/assets` cannot run on your machine.
 
