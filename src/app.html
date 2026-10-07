@@ -218,6 +218,19 @@ span.repn{display:inline-block}
 .legal p{color:var(--fg);line-height:1.6}
 .gate{position:fixed;inset:0;z-index:20;background:color-mix(in srgb,#000 55%,transparent);display:grid;place-items:center;padding:16px}
 .gate .card{max-width:420px;width:100%}
+.gear{background:var(--surface);border:1px solid var(--line);color:var(--fg);border-radius:999px;width:36px;height:36px;display:grid;place-items:center;padding:0;flex:none}
+.setlist{gap:4px}
+.setlist h3{font-size:1.1rem;margin-bottom:4px}
+.setrow{display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap;padding-block:10px;border-top:1px solid var(--line)}
+.setrow:first-of-type{border-top:0}
+.setrow>div:first-child{min-width:0;flex:1 1 180px;display:flex;flex-direction:column}
+.setrow span{color:var(--muted);font-size:.88rem}
+.seg{display:flex;background:var(--surface2);border-radius:12px;padding:3px;gap:2px}
+.seg button{border:0;background:none;color:var(--fg);font-weight:800;font-size:.88rem;padding:7px 12px;border-radius:9px}
+.seg button[aria-checked="true"]{background:var(--surface);box-shadow:0 1px 3px #0002;color:var(--accent)}
+.unlocked{text-align:center;font-weight:800;color:var(--leaf);background:color-mix(in srgb,var(--leaf) 12%,var(--surface));border-radius:var(--r);padding:14px}
+html.bigtext{font-size:112.5%}html.bigtext body{font-size:18px}
+html.calm *{animation:none!important;transition:none!important}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 
@@ -229,6 +242,7 @@ span.repn{display:inline-block}
       <div class="stat" title="Bananas">🍌 <span id="sBan">0</span></div>
       <div class="stat"><i>XP</i> <span id="sXp">0</span></div>
     </div>
+    <button class="gear" id="gearBtn" aria-label="Settings"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg></button>
   </header>
   <main id="screen"></main>
   <footer class="foot" id="foot"></footer>
@@ -343,13 +357,21 @@ const WINS=["Nailed it!","Clean code. Love it.","Ook ook! That's right!","You're
 
 /* ---------- State ---------- */
 const KEY="typemonkey-v1";
-let S={xp:0,bananas:0,streak:0,lastDay:null,done:[],progress:{},pro:false,tester:false,look:{...DEFAULT_LOOK},owned:{fur:["orange"],hat:["none"],eyes:["round","none"],neck:["none"]},review:{}};
+const freshState=()=>({xp:0,bananas:0,streak:0,lastDay:null,done:[],progress:{},pro:false,tester:false,look:{...DEFAULT_LOOK},owned:{fur:["orange"],hat:["none"],eyes:["round","none"],neck:["none"]},review:{},settings:{theme:"system",text:"normal",calm:false}});
+let S=freshState();
 try{const raw=localStorage.getItem(KEY);if(raw)S={...S,...JSON.parse(raw)}}catch(e){}
 if(S.inProgress){S.progress=S.progress||{};if(S.inProgress.id)S.progress[S.inProgress.id]={step:S.inProgress.step,earned:S.inProgress.earned,drafts:{}};delete S.inProgress}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}renderStats()}
 S.look={...DEFAULT_LOOK,...(S.look||{})};S.owned=S.owned||{};for(const k of ["fur","hat","eyes","neck"])S.owned[k]=S.owned[k]||[];
 ["orange"].forEach(x=>S.owned.fur.includes(x)||S.owned.fur.push(x));["none"].forEach(x=>S.owned.hat.includes(x)||S.owned.hat.push(x));
 ["round","none"].forEach(x=>S.owned.eyes.includes(x)||S.owned.eyes.push(x));["none"].forEach(x=>S.owned.neck.includes(x)||S.owned.neck.push(x));S.review=S.review||{};
+S.settings={theme:"system",text:"normal",calm:false,...(S.settings||{})};
+function applySettings(){
+  const r=document.documentElement;const st=S.settings;
+  if(st.theme==="system")r.removeAttribute("data-theme");else r.setAttribute("data-theme",st.theme);
+  r.classList.toggle("bigtext",st.text==="large");r.classList.toggle("calm",!!st.calm);
+}
+applySettings();
 function renderStats(){$("#sStreak").textContent=S.streak;$("#sBan").textContent=S.bananas;$("#sXp").textContent=S.xp;$("#brandMonkey").innerHTML=monkey()}
 const dayStr=d=>d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
 function bumpStreak(){const t=dayStr(new Date());if(S.lastDay===t)return;const y=dayStr(new Date(Date.now()-864e5));S.streak=S.lastDay===y?S.streak+1:1;S.lastDay=t}
@@ -579,6 +601,7 @@ function nextUp(c){const L=flat(c);return L.find(x=>S.progress[x.l.id])||L.find(
 
 /* ---------- Home ---------- */
 function home(){
+  rerender=home;
   const js=COURSES[0];const nu=nextUp(js);const resume=nu&&S.progress[nu.l.id];
   const nextPro=!nu&&flat(js).find(x=>x.l.steps&&status(js,x)==="pro");
   const greet=resume?`Welcome back! You were in the middle of ${Q(nu.l.title)}`:
@@ -601,24 +624,22 @@ function home(){
       return `<button class="course ${c.id==="js"?"live":""}" data-c="${c.id}"><span class="pill ${d===n&&n===all?"ok":c.kids&&!d?"kid":"go"}">${d===n&&n===all?"Complete":d?"In progress":c.id==="js"?"Start here":c.kids?"Kids section":"New"}</span>
         <h3>${c.name}</h3><span class="tag">${esc(c.tag)}</span><span class="meta">${c.units.length} units · ${n} lessons${all>n?" (more coming)":""}</span>
         <div class="mini"><span style="width:${n?d/n*100:0}%"></span></div></button>`}).join("")}</div>
+    ${S.pro?`<div class="unlocked">✓ Full version unlocked. Thanks for supporting TypeMonkey!</div>`:`<div class="paywall"><div><h3>Unlock the full version</h3><p>All ${COURSES.reduce((n,c)=>n+countLessons(c)[1],0)} lessons in all ${COURSES.length} courses, every project, and everything we add later. One-time purchase, no subscription.</p></div><button class="btn banana" id="homebuy">Unlock · $4.99</button></div>`}
   </div>`;
   if($("#cont"))$("#cont").onclick=()=>startLesson(nu.l.id);
   if($("#unl"))$("#unl").onclick=()=>coursePage("js");
+  if($("#homebuy"))$("#homebuy").onclick=()=>unlockFull(home);
   $("#practice").onclick=practice;$("#play").onclick=()=>playground();$("#shop").onclick=()=>shop();$("#review").onclick=startReview;
   $$(".course").forEach(b=>b.onclick=()=>{const c=courseById(b.dataset.c);
     if(c.soon)toast(c.kids?"TypeMonkey Jr. is on the roadmap!":c.name+" is coming soon.");else coursePage(c.id)});
   foot();window.scrollTo(0,0);
 }
 function foot(){
-  $("#foot").innerHTML=`<span>Prototype · progress saves on this device only</span>
-   <div class="row"><button class="linkbtn" id="terms">Terms of Service</button><button class="linkbtn" id="privacy">Privacy Policy</button></div>
-   <div class="row"><button class="linkbtn" id="tester">${S.tester?"Tester mode: ON (all lessons open)":"Tester mode: off"}</button><button class="linkbtn" id="reset">Reset progress</button></div><div id="confirm"></div>`;
-  $("#terms").onclick=()=>legalPage("terms");$("#privacy").onclick=()=>legalPage("privacy");
-  $("#tester").onclick=()=>{S.tester=!S.tester;save();toast(S.tester?"Tester mode on: every lesson is open.":"Tester mode off.");rerender()};
-  $("#reset").onclick=()=>{$("#confirm").innerHTML=`<div class="row"><span>Erase all XP, bananas and lessons?</span><button class="btn sm" id="yes">Erase</button><button class="btn ghost sm" id="no">Keep</button></div>`;
-    $("#yes").onclick=()=>{S={xp:0,bananas:0,streak:0,lastDay:null,done:[],progress:{},pro:false,tester:false};save();toast("Progress erased.");home()};
-    $("#no").onclick=()=>$("#confirm").innerHTML=""};
+  $("#foot").innerHTML=`<span>TypeMonkey prototype · progress saves on this device only</span>
+   <div class="row"><button class="linkbtn" id="terms">Terms</button><button class="linkbtn" id="privacy">Privacy</button><button class="linkbtn" id="fset">Settings</button></div>`;
+  $("#terms").onclick=()=>legalPage("terms");$("#privacy").onclick=()=>legalPage("privacy");$("#fset").onclick=settingsPage;
 }
+function unlockFull(after){grownUpGate(()=>{S.pro=true;save();toast("Demo unlock: everything is open. In the real app this is the App Store / Google Play purchase.");after&&after()})}
 let rerender=home;
 
 /* ---------- Course page ---------- */
@@ -640,7 +661,7 @@ function coursePage(cid){
     ${S.pro?"":`<div class="paywall"><div><h3>Unlock all of TypeMonkey</h3><p>Every unit in every language, plus future courses and bonus games. One-time purchase.</p></div><button class="btn banana" id="buy">Unlock · $4.99</button></div>`}
   </div>`;
   $("#back").onclick=home;
-  if($("#buy"))$("#buy").onclick=()=>grownUpGate(()=>{S.pro=true;save();toast("Demo unlock: everything is open. In the real app this is the App Store / Google Play purchase.");coursePage(cid)});
+  if($("#buy"))$("#buy").onclick=()=>unlockFull(()=>coursePage(cid));
   $$(".lesson:not([disabled])").forEach(b=>b.onclick=()=>startLesson(b.dataset.l));
   $$("[data-restart]").forEach(b=>b.onclick=()=>{delete S.progress[b.dataset.restart];save();startLesson(b.dataset.restart)});
   foot();window.scrollTo(0,0);
@@ -1022,6 +1043,55 @@ function shop(tab="hat",preview){
   foot();window.scrollTo(0,0);
 }
 
+/* ---------- Settings ---------- */
+const APP_VERSION="0.9 (prototype)";
+function settingsPage(){
+  const back=rerender===settingsPage?home:rerender;rerender=settingsPage;
+  const st=S.settings;
+  const seg=(id,val,opts)=>`<div class="seg" role="radiogroup" id="${id}">${opts.map(([v,l])=>`<button role="radio" aria-checked="${val===v}" data-v="${v}">${l}</button>`).join("")}</div>`;
+  $("#screen").innerHTML=`<div class="stack">
+    <div class="row"><button class="btn ghost sm" id="back">← Back</button></div>
+    <section class="hero"><div class="label">TypeMonkey</div><h1>Settings</h1></section>
+    <div class="card setlist">
+      <h3>Appearance</h3>
+      <div class="setrow"><div><b>Theme</b><span>Light, dark, or match your device</span></div>${seg("theme",st.theme,[["system","Device"],["light","Light"],["dark","Dark"]])}</div>
+      <div class="setrow"><div><b>Text size</b><span>Make lessons easier to read</span></div>${seg("text",st.text,[["normal","Normal"],["large","Large"]])}</div>
+      <div class="setrow"><div><b>Calm mode</b><span>Turn off bouncing and moving effects</span></div>${seg("calm",st.calm?"on":"off",[["off","Off"],["on","On"]])}</div>
+    </div>
+    <div class="card setlist">
+      <h3>Full version</h3>
+      ${S.pro?`<div class="setrow"><div><b>✓ Unlocked</b><span>You have every lesson in every course.</span></div></div>`:
+        `<div class="setrow"><div><b>Unlock everything</b><span>All courses and future updates. One-time $4.99.</span></div><button class="btn banana sm" id="sbuy">Unlock</button></div>`}
+      <div class="setrow"><div><b>Restore purchase</b><span>Already bought it on another device?</span></div><button class="btn ghost sm" id="restore">Restore</button></div>
+    </div>
+    <div class="card setlist">
+      <h3>Progress</h3>
+      <div class="setrow"><div><b>Your stats</b><span>${S.done.length} lessons done · ${S.xp} XP · ${S.bananas} bananas · ${reviewSize()} in review</span></div></div>
+      <div class="setrow"><div><b>Tester mode</b><span>Open every lesson without playing in order</span></div>${seg("tester",S.tester?"on":"off",[["off","Off"],["on","On"]])}</div>
+      <div class="setrow"><div><b>Reset progress</b><span>Erase lessons, XP, bananas, outfits and review</span></div><button class="btn ghost sm" id="reset">Reset…</button></div>
+      <div id="confirm"></div>
+    </div>
+    <div class="card setlist">
+      <h3>About</h3>
+      <div class="setrow"><div><b>Terms of Service</b></div><button class="btn ghost sm" id="sterms">Read</button></div>
+      <div class="setrow"><div><b>Privacy Policy</b><span>TypeMonkey doesn't collect any personal information.</span></div><button class="btn ghost sm" id="sprivacy">Read</button></div>
+      <div class="setrow"><div><b>Version</b><span>${APP_VERSION}</span></div></div>
+      <div class="setrow"><div><b>Credits</b><span>Python runs on Brython (BSD license, © Pierre Quentel). Fonts: Baloo 2, Nunito and JetBrains Mono (SIL Open Font License).</span></div></div>
+    </div>
+  </div>`;
+  $("#back").onclick=()=>back();
+  const bindSeg=(id,fn)=>$$(`#${id} button`).forEach(b=>b.onclick=()=>{fn(b.dataset.v);save();applySettings();settingsPage()});
+  bindSeg("theme",v=>st.theme=v);bindSeg("text",v=>st.text=v);bindSeg("calm",v=>st.calm=v==="on");
+  bindSeg("tester",v=>{S.tester=v==="on";toast(S.tester?"Tester mode on: every lesson is open.":"Tester mode off.")});
+  if($("#sbuy"))$("#sbuy").onclick=()=>unlockFull(settingsPage);
+  $("#restore").onclick=()=>toast(S.pro?"Your purchase is already active.":"In the real app this checks the App Store / Google Play for your purchase. Nothing to restore in the demo.");
+  $("#sterms").onclick=()=>legalPage("terms");$("#sprivacy").onclick=()=>legalPage("privacy");
+  $("#reset").onclick=()=>{$("#confirm").innerHTML=`<div class="feedback bad"><b>Erase everything?</b> This can't be undone.<div class="row" style="margin-top:8px"><button class="btn sm" id="yes">Erase everything</button><button class="btn ghost sm" id="no">Keep my progress</button></div></div>`;
+    $("#yes").onclick=()=>{const keep=S.settings;S=freshState();S.settings=keep;save();applySettings();toast("Progress erased.");home()};
+    $("#no").onclick=()=>$("#confirm").innerHTML=""};
+  $("#foot").innerHTML="";window.scrollTo(0,0);
+}
+
 /* ---------- Legal screens ---------- */
 function legalPage(kind){
   const back=rerender;const L=LEGAL[kind];
@@ -1078,6 +1148,6 @@ function playground(lang="js"){
   foot();window.scrollTo(0,0);
 }
 
-$("#homeBtn").onclick=home;
+$("#homeBtn").onclick=home;$("#gearBtn").onclick=settingsPage;
 renderStats();home();
 </script>
