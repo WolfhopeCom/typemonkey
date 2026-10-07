@@ -26,6 +26,7 @@ COURSE_FILES = [  # order matters: later files can reference earlier ones
     "pools-extra.js",  # extra Output Rush rounds (attaches to lessons above)
     "more-js-py.js",  # JavaScript Unit 7, Python Unit 7
     "more-web-sql-cs-cpp.js",  # HTML & CSS, SQL, C#, C++ Unit 5
+    "deep-python.js", "deep-sql.js", "deep-cs-cpp.js", "deep-web.js", "deep-game.js",  # launch depth units
 ]
 
 ENGINE_FILES = ["sql.js", "clike.js", "swift.js", "pylib.js"]  # in-house SQL engine and C#/C++ runner; Python is Brython (src/vendor)
