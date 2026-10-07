@@ -144,15 +144,12 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 .arcade-win{background:#FFC83D;color:#2A1300}.arcade-lose{background:#3A2350;color:#FFB4C2}
 @keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
 @media (prefers-reduced-motion:reduce){.arcade-win,.arcade-lose{animation:none}}
-/* TypeMonkey Jr. card on the home screen: sunny yellow so the kids' section stands out */
-.course.kids{background:#FFE58A;border-color:#F2C230;color:#2A1F00}
-.course.kids .tag,.course.kids .meta{color:#6B5300}
-.course.kids .mini{background:#F7D35A}
+/* TypeMonkey Jr. card on the home screen: the same banana yellow as the Unlock button, so the kids' section stands out */
+.course.kids{background:var(--banana);border-color:var(--banana);color:#2A1300}
+.course.kids .tag,.course.kids .meta{color:#5A3B00}
+.course.kids .mini{background:#00000018}
+.course.kids .mini span{background:#2A1300}
 .course.kids .pill{background:#FFFFFF;color:#7A4E00}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .course.kids{background:#4A3B0E;border-color:#B88F1E;color:#FFF3C9}:root:not([data-theme="light"]) .course.kids .tag,:root:not([data-theme="light"]) .course.kids .meta{color:#E8D08A}:root:not([data-theme="light"]) .course.kids .mini{background:#6A5414}}
-:root[data-theme="dark"] .course.kids{background:#4A3B0E;border-color:#B88F1E;color:#FFF3C9}
-:root[data-theme="dark"] .course.kids .tag,:root[data-theme="dark"] .course.kids .meta{color:#E8D08A}
-:root[data-theme="dark"] .course.kids .mini{background:#6A5414}
 .console .dim{color:#5E7E70}
 
 .opts{display:flex;flex-direction:column;gap:8px}
@@ -41605,38 +41602,74 @@ COURSE_JAVA.units.push(
    can be checked; tests/verify_course.py runs every snippet. */
 const RAND_FN=`function makeRandom(seed) {\n  return function () {\n    seed = (seed * 9301 + 49297) % 233280;\n    return seed / 233280;\n  };\n}\n`;
 
-const COURSE_GAME={id:"game",name:"Build a Game",blurb:"Make real games in JavaScript: dice duels, treasure maps, hangman, tic-tac-toe and a dungeon crawler. Best after JavaScript Units 1–3. Unit 1 is free.",units:[
+const DICE=`// 🎲 TypeMonkey's dice: same seed, same rolls every time.
+// (You don't need to change anything down here.)
+function roll() {
+  seed = (seed * 9301 + 49297) % 233280;
+  return Math.floor(seed / 233280 * 6) + 1;
+}
+`;
+
+const COURSE_GAME={id:"game",name:"Build a Game",blurb:"Make real games in JavaScript: dice duels, treasure maps, hangman, tic-tac-toe and a dungeon crawler. Starts super easy, so it's a fun first course too. Unit 1 is free.",units:[
 {name:"Game basics",free:true,lessons:[
-{id:"g1",title:"Game state",sub:"the numbers that make a game",steps:[
- {type:"talk",title:"Every game is just numbers",mood:"cheer",
-  body:`<p>Under the hood, every game is a bunch of values that change: health, score, level, position. Those values are the <b>game state</b>. Your job is to keep them right and show them to the player.</p>`,
-  demo:`let hp = 10;\nlet score = 0;\nlet level = 1;\nconsole.log("HP: " + hp + " | Score: " + score + " | Level: " + level);\nscore += 50;\nhp -= 3;\nconsole.log("HP: " + hp + " | Score: " + score + " | Level: " + level);`,
-  say:"This is a status bar, the same thing you see at the top of most games."},
- {type:"talk",title:"Drawing a health bar",
-  body:`<p>${C('"♥".repeat(n)')} repeats a piece of text. Use it to draw bars: full hearts for the health you have, empty ones for what's missing.</p>`,
-  demo:`const maxHp = 5;\nlet hp = 3;\nconsole.log("♥".repeat(hp) + "♡".repeat(maxHp - hp));\nhp = 5;\nconsole.log("♥".repeat(hp) + "♡".repeat(maxHp - hp));`,
-  say:"♥♥♥♡♡, then ♥♥♥♥♥."},
- {type:"talk",title:"Keeping values in range",mood:"think",
-  body:`<p>Health shouldn't go below 0 or above the max. ${C("Math.max")} and ${C("Math.min")} <b>clamp</b> a value into range.</p>`,
-  demo:`const maxHp = 10;\nlet hp = 8;\nhp = Math.min(maxHp, hp + 5);   // heal, but not past max\nconsole.log(hp);\nhp = Math.max(0, hp - 25);      // big hit, but not below 0\nconsole.log(hp);`,
-  say:"10, then 0."},
- {type:"talk",title:"Grouping state in an object",
-  body:`<p>Once there's lots of state, keep it together in one object. Then a function can take the whole player.</p>`,
-  demo:`const player = { name: "Mo", hp: 10, coins: 0 };\n\nfunction status(p) {\n  return p.name + " ♥" + p.hp + " 🪙" + p.coins;\n}\n\nplayer.coins += 3;\nconsole.log(status(player));`,
-  say:"Mo ♥10 🪙3"},
- {type:"quiz",q:"What does this print?",code:`let hp = 4;\nhp = Math.max(0, hp - 9);\nconsole.log(hp);`,opts:["0","-5","4"],a:0,mono:true,why:"Math.max(0, -5) picks the bigger one: 0."},
- {type:"quiz",q:"What does this print?",code:`console.log("=".repeat(3) + "|");`,opts:["===|","=3|","= = =|"],a:0,mono:true,why:"repeat(3) makes three copies."},
- {type:"fill",title:"Heal, but not too much",body:`<p>Heal by 4 without going past the max.</p>`,code:`const maxHp = 10;\nlet hp = 9;\nhp = Math.[0](maxHp, hp + 4);\nconsole.log(hp);`,blanks:["min"],tokens:["min","max","round","abs"],why:"min picks the smaller value, so it can never pass maxHp."},
- {type:"code",title:"Health bar",body:`<p>Print the bar with ${C("#")} for each point of ${C("hp")} and ${C("-")} for each missing point, inside square brackets. With 3 of 8 it looks like ${C("[###-----]")}.</p>`,start:`const maxHp = 8;\nlet hp = 3;\n// print the bar\n`,
-  use:[[/repeat/,"Use .repeat() to draw the pieces."]],out:["[###-----]"],variants:[[/hp = 3/,"hp = 6",["[######--]"]]],
-  hint:`const maxHp = 8;\nlet hp = 3;\nconsole.log("[" + "#".repeat(hp) + "-".repeat(maxHp - hp) + "]");`},
- {type:"code",title:"Damage and healing",body:`<p>Finish ${C("hit")} and ${C("heal")} so hp always stays between 0 and ${C("player.maxHp")}.</p>`,start:`const player = { hp: 10, maxHp: 10 };\n\nfunction hit(p, dmg) {\n  // your code here\n}\nfunction heal(p, amount) {\n  // your code here\n}\n\nhit(player, 4);\nconsole.log(player.hp);\nheal(player, 99);\nconsole.log(player.hp);\nhit(player, 50);\nconsole.log(player.hp);\n`,
-  use:[[/Math\.max|Math\.min|if\s*\(/,"Clamp with Math.max/Math.min (or an if)."]],out:["6","10","0"],
-  hint:`const player = { hp: 10, maxHp: 10 };\n\nfunction hit(p, dmg) {\n  p.hp = Math.max(0, p.hp - dmg);\n}\nfunction heal(p, amount) {\n  p.hp = Math.min(p.maxHp, p.hp + amount);\n}\n\nhit(player, 4);\nconsole.log(player.hp);\nheal(player, 99);\nconsole.log(player.hp);\nhit(player, 50);\nconsole.log(player.hp);`},
+{id:"g0",title:"Your first game",sub:"a title screen and a score",steps:[
+ {type:"talk",title:"Let's make games!",mood:"cheer",
+  body:`<p>Every game you've ever played is made of code. In this course you'll build real (text) games: dice battles, treasure maps, hangman and a dungeon. We'll start super small. Press ▶ Run and watch the <b>game screen</b>.</p>`,
+  demo:`console.log("=== BANANA QUEST ===");\nconsole.log("🐵 A hungry monkey needs bananas!");\nconsole.log("Press START to play");`,
+  say:"That's a title screen. Every game starts with one!"},
+ {type:"talk",title:"Games remember things",
+  body:`<p>A game needs to remember stuff: the player's name, the score, how many bananas you have. That's what <b>variables</b> are for. Use ${C("let")} for things that will change.</p>`,
+  demo:`let player = "Mo";\nlet bananas = 0;\nconsole.log(player + " has " + bananas + " bananas");\nbananas = bananas + 3;\nconsole.log(player + " found some! Now: " + bananas);`,
+  say:"Mo has 0 bananas, then Mo found some! Now: 3"},
+ {type:"talk",title:"Scoring points",mood:"think",
+  body:`<p>${C("score += 10")} is a quick way to add 10 points. You'll use it in almost every game.</p>`,
+  demo:`let score = 0;\nscore += 10;   // grabbed a coin\nscore += 50;   // beat a monster\nconsole.log("⭐ Score: " + score);`,
+  say:"⭐ Score: 60"},
+ {type:"quiz",q:"What does this print?",code:`let coins = 2;\ncoins += 3;\nconsole.log(coins);`,opts:["5","23","3"],a:0,mono:true,why:"2 + 3 = 5."},
+ {type:"fill",title:"Add points",body:`<p>Give the player 25 points.</p>`,code:`let score = 0;\nscore [0] 25;\nconsole.log(score);`,blanks:["+="],tokens:["+=","-=","=="],why:"+= adds to what's already there."},
+ {type:"code",title:"Your title screen",body:`<p>Make a title screen for your own game! Print ${C("=== MONKEY MAYHEM ===")} and then ${C("Player: Mo")} using the ${C("player")} variable.</p>`,start:`let player = "Mo";\n// print the title, then the player\n`,
+  use:[[/console\.log/,"Print with console.log(...)."],[/\+\s*player|player\s*\+/,"Glue the player variable on with +."]],out:["=== MONKEY MAYHEM ===","Player: Mo"],variants:[[/"Mo"/,"\"Kiki\"",["=== MONKEY MAYHEM ===","Player: Kiki"]]],
+  hint:`let player = "Mo";\nconsole.log("=== MONKEY MAYHEM ===");\nconsole.log("Player: " + player);`},
+ {type:"code",title:"Banana grab",body:`<p>The monkey finds 3 bananas, then 5 more. Add them to ${C("bananas")} with ${C("+=")}, then print ${C("Bananas: 8")}.</p>`,start:`let bananas = 0;\n// found 3, then 5\n`,
+  use:[[/\+=/,"Add them with +=."]],out:["Bananas: 8"],variants:[[/let bananas = 0/,"let bananas = 10",["Bananas: 18"]]],
+  hint:`let bananas = 0;\nbananas += 3;\nbananas += 5;\nconsole.log("Bananas: " + bananas);`},
  {type:"game"},{type:"done"}],
  pool:[
-  [`let s = 0;\ns += 10;\ns *= 3;\nconsole.log(s);`,["30","13","10"]],
-  [`console.log("♥".repeat(2) + "♡");`,["♥♥♡","♥♡♡","♥2♡"]],
+  [`let s = 0;\ns += 10;\nconsole.log(s);`,["10","0","s"]],
+  [`let name = "Mo";\nconsole.log("Hi " + name);`,["Hi Mo","Hi name","Mo"]],
+  [`let b = 5;\nb = b + 1;\nconsole.log(b);`,["6","5","51"]],
+  [`console.log("=" + "=" + "=");`,["===","3","= = ="]],
+  [`let lives = 3;\nlives -= 1;\nconsole.log(lives);`,["2","3","4"]]
+ ]},
+{id:"g1",title:"Health bars",sub:"drawing hearts and keeping hp in range",steps:[
+ {type:"talk",title:"Drawing a health bar",mood:"cheer",
+  body:`<p>${C('"♥".repeat(3)')} makes ♥♥♥. Use it to draw a health bar: full hearts for the health you have, empty ones for what's missing.</p>`,
+  demo:`const maxHp = 5;\nlet hp = 3;\nconsole.log("♥".repeat(hp) + "♡".repeat(maxHp - hp));\nhp = 5;\nconsole.log("♥".repeat(hp) + "♡".repeat(maxHp - hp));`,
+  say:"♥♥♥♡♡, then ♥♥♥♥♥."},
+ {type:"talk",title:"Ouch! And healing",
+  body:`<p>Getting hit takes hp away; a potion gives some back. Print the bar after each change and you can watch it go up and down.</p>`,
+  demo:`let hp = 5;\nhp -= 2;\nconsole.log("Ouch! " + "♥".repeat(hp));\nhp += 1;\nconsole.log("Potion! " + "♥".repeat(hp));`,
+  say:"Ouch! ♥♥♥ then Potion! ♥♥♥♥"},
+ {type:"talk",title:"Keeping values in range",mood:"think",
+  body:`<p>Health shouldn't go below 0 or above the max. ${C("Math.min")} picks the smaller number, ${C("Math.max")} the bigger one. Together they keep a value in range.</p>`,
+  demo:`const maxHp = 10;\nlet hp = 8;\nhp = Math.min(maxHp, hp + 5);   // heal, but not past max\nconsole.log(hp);\nhp = Math.max(0, hp - 25);      // big hit, but not below 0\nconsole.log(hp);`,
+  say:"10, then 0."},
+ {type:"talk",title:"Keeping it all together",
+  body:`<p>Once there's lots to remember, keep it together in one object, like ${C("player.hp")} and ${C("player.coins")}.</p>`,
+  demo:`const player = { name: "Mo", hp: 10, coins: 0 };\nplayer.coins += 3;\nconsole.log(player.name + " ♥" + player.hp + " 🪙" + player.coins);`,
+  say:"Mo ♥10 🪙3"},
+ {type:"quiz",q:"What does this print?",code:`console.log("♥".repeat(2) + "♡");`,opts:["♥♥♡","♥♡♡","♥2♡"],a:0,mono:true,why:"Two full hearts, then one empty."},
+ {type:"quiz",q:"What does this print?",code:`let hp = 4;\nhp = Math.max(0, hp - 9);\nconsole.log(hp);`,opts:["0","-5","4"],a:0,mono:true,why:"Math.max(0, -5) picks the bigger one: 0."},
+ {type:"fill",title:"Heal, but not too much",body:`<p>Heal by 4 without going past the max.</p>`,code:`const maxHp = 10;\nlet hp = 9;\nhp = Math.[0](maxHp, hp + 4);\nconsole.log(hp);`,blanks:["min"],tokens:["min","max","round","abs"],why:"min picks the smaller value, so it can never pass maxHp."},
+ {type:"code",title:"Draw the bar",body:`<p>Print a bar with ${C("♥")} for each point of ${C("hp")} and ${C("♡")} for each missing point. With 3 of 5 it looks like ${C("♥♥♥♡♡")}.</p>`,start:`const maxHp = 5;\nlet hp = 3;\n// print the bar\n`,
+  use:[[/repeat/,"Use .repeat() to draw the hearts."]],out:["♥♥♥♡♡"],variants:[[/hp = 3/,"hp = 1",["♥♡♡♡♡"]]],
+  hint:`const maxHp = 5;\nlet hp = 3;\nconsole.log("♥".repeat(hp) + "♡".repeat(maxHp - hp));`},
+ {type:"code",title:"Drink a potion",body:`<p>${C("hit")} is done for you. Finish ${C("heal")} so it adds the amount but never goes past ${C("player.maxHp")}.</p>`,start:`const player = { hp: 10, maxHp: 10 };\n\nfunction hit(p, dmg) {\n  p.hp = Math.max(0, p.hp - dmg);\n}\nfunction heal(p, amount) {\n  // your code here\n}\n\nhit(player, 4);\nconsole.log(player.hp);\nheal(player, 2);\nconsole.log(player.hp);\nheal(player, 99);\nconsole.log(player.hp);\n`,
+  use:[[/Math\.min|if\s*\(/,"Use Math.min (or an if) so hp can't go past maxHp."]],out:["6","8","10"],
+  hint:`const player = { hp: 10, maxHp: 10 };\n\nfunction hit(p, dmg) {\n  p.hp = Math.max(0, p.hp - dmg);\n}\nfunction heal(p, amount) {\n  p.hp = Math.min(p.maxHp, p.hp + amount);\n}\n\nhit(player, 4);\nconsole.log(player.hp);\nheal(player, 2);\nconsole.log(player.hp);\nheal(player, 99);\nconsole.log(player.hp);`},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`console.log("♥".repeat(3));`,["♥♥♥","♥3","♥ ♥ ♥"]],
   [`console.log(Math.min(5, 12));`,["5","12","17"]],
   [`const p = { hp: 3 };\np.hp--;\nconsole.log(p.hp);`,["2","3","4"]],
   [`let hp = 7;\nhp = Math.min(10, hp + 6);\nconsole.log(hp);`,["10","13","7"]],
@@ -41644,74 +41677,81 @@ const COURSE_GAME={id:"game",name:"Build a Game",blurb:"Make real games in JavaS
  ]},
 {id:"g2",title:"The game loop",sub:"turns, rounds and game over",steps:[
  {type:"talk",title:"Loop until game over",
-  body:`<p>Games run in a <b>loop</b>: take a turn, update the state, check if the game is over, repeat. A ${C("while")} loop with a game-over condition is the heart of every game.</p>`,
-  demo:`let monsterHp = 10;\nlet turn = 0;\nwhile (monsterHp > 0) {\n  turn++;\n  monsterHp -= 3;\n  console.log("Turn " + turn + ": monster has " + Math.max(0, monsterHp) + " hp");\n}\nconsole.log("You win in " + turn + " turns!");`,
-  say:"4 turns: 7, 4, 1, 0. Then you win."},
- {type:"talk",title:"Moves from a list",mood:"think",
-  body:`<p>Our games can't read the keyboard, so we give the player's moves as a list and loop through them. That also makes a game easy to replay and test.</p>`,
+  body:`<p>Games run in a <b>loop</b>: take a turn, update things, check if the game is over, repeat. A ${C("while")} loop is perfect: it keeps going while the monster still has health.</p>`,
+  demo:`let monsterHp = 10;\nwhile (monsterHp > 0) {\n  monsterHp -= 3;\n  console.log("💥 Bonk! Monster has " + Math.max(0, monsterHp) + " hp");\n}\nconsole.log("🏆 You win!");`,
+  say:"Four bonks and the monster is done. You win!"},
+ {type:"talk",title:"Counting turns",mood:"think",
+  body:`<p>Add a counter to know how long the fight took. Make it before the loop and add 1 each turn.</p>`,
+  demo:`let monsterHp = 10;\nlet turns = 0;\nwhile (monsterHp > 0) {\n  monsterHp -= 3;\n  turns++;\n}\nconsole.log("Won in " + turns + " turns!");`,
+  say:"Won in 4 turns!"},
+ {type:"talk",title:"Moves from a list",
+  body:`<p>Our games can't read the keyboard, so the player's moves come from a list. A ${C("for...of")} loop goes through them one by one.</p>`,
   demo:`const moves = ["attack", "attack", "heal", "attack"];\nlet hp = 6, foe = 9;\nfor (const m of moves) {\n  if (m === "attack") foe -= 3;\n  if (m === "heal") hp += 2;\n  console.log(m + " -> you " + hp + ", foe " + foe);\n}`,
-  say:"Each move changes the state, then we print it."},
- {type:"talk",title:"Stopping early",
-  body:`<p>When someone wins, the game should end even if there are moves left. Use ${C("break")}, or check a ${C("gameOver")} flag.</p>`,
-  demo:`const rolls = [4, 6, 5, 3, 6];\nlet pos = 0;\nconst goal = 15;\nfor (const r of rolls) {\n  pos += r;\n  console.log("Rolled " + r + ", now at " + pos);\n  if (pos >= goal) {\n    console.log("Reached the finish!");\n    break;\n  }\n}`,
+  say:"Each move changes something, then we print it."},
+ {type:"talk",title:"Stopping early",mood:"cheer",
+  body:`<p>When someone wins, the game should end right away, even if there are moves left. ${C("break")} jumps out of the loop.</p>`,
+  demo:`const rolls = [4, 6, 5, 3, 6];\nlet pos = 0;\nfor (const r of rolls) {\n  pos += r;\n  console.log("Rolled " + r + ", now at " + pos);\n  if (pos >= 15) {\n    console.log("🏁 Reached the finish!");\n    break;\n  }\n}`,
   say:"After 3 rolls you're at 15, so the last two rolls are never used."},
  {type:"quiz",q:"What does this print?",code:`let hp = 5;\nlet turns = 0;\nwhile (hp > 0) {\n  hp -= 2;\n  turns++;\n}\nconsole.log(turns);`,opts:["3","2","5"],a:0,mono:true,why:"5 → 3 → 1 → -1. Three turns."},
  {type:"quiz",q:"What does this print?",code:`let score = 0;\nfor (const pts of [10, 20, 30]) {\n  score += pts;\n  if (score > 25) break;\n}\nconsole.log(score);`,opts:["30","60","10"],a:0,mono:true,why:"10, then 30 (more than 25), so it stops."},
- {type:"fill",title:"Game over check",body:`<p>Keep looping while both are still standing.</p>`,code:`let you = 5, foe = 7;\nwhile (you > 0 [0] foe > 0) {\n  foe -= 3;\n  you -= 1;\n}\nconsole.log(you + " " + foe);`,blanks:["&&"],tokens:["&&","||","!"],why:"The fight goes on only while BOTH have hp left."},
- {type:"code",title:"Race to the finish",body:`<p>Add each roll to ${C("pos")}. Stop as soon as pos reaches ${C("goal")} or more and print ${C("Finished in N rolls!")}. If the rolls run out first, print ${C("Out of rolls at P")}.</p>`,start:`const rolls = [3, 5, 2, 6, 4];\nconst goal = 15;\nlet pos = 0;\nlet count = 0;\n// your loop here\n`,
-  use:[[/for\s*\(|while\s*\(/,"Loop over the rolls."]],out:["Finished in 4 rolls!"],variants:[[/goal = 15/,"goal = 30",["Out of rolls at 20"]],[/goal = 15/,"goal = 3",["Finished in 1 rolls!"]]],
-  hint:`const rolls = [3, 5, 2, 6, 4];\nconst goal = 15;\nlet pos = 0;\nlet count = 0;\nlet done = false;\nfor (const r of rolls) {\n  pos += r;\n  count++;\n  if (pos >= goal) {\n    done = true;\n    break;\n  }\n}\nif (done) console.log("Finished in " + count + " rolls!");\nelse console.log("Out of rolls at " + pos);`},
- {type:"code",title:"Turn-based fight",body:`<p>Each round you hit the foe for ${C("yourPower")}; if the foe is still alive, it hits you for ${C("foePower")}. Loop until someone hits 0, then print ${C("You win!")} or ${C("You lose!")}.</p>`,start:`let you = 10, foe = 12;\nconst yourPower = 4, foePower = 3;\n// fight here\n`,
-  use:[[/while\s*\(/,"Use a while loop for the rounds."]],out:["You win!"],variants:[[/foePower = 3/,"foePower = 5",["You lose!"]]],
-  hint:`let you = 10, foe = 12;\nconst yourPower = 4, foePower = 3;\nwhile (you > 0 && foe > 0) {\n  foe -= yourPower;\n  if (foe > 0) you -= foePower;\n}\nconsole.log(you > 0 ? "You win!" : "You lose!");`},
+ {type:"fill",title:"Keep fighting",body:`<p>Keep looping while the monster has hp.</p>`,code:`let monster = 7;\n[0] (monster > 0) {\n  monster -= 2;\n}\nconsole.log(monster);`,blanks:["while"],tokens:["while","if","for"],why:"while keeps going as long as the condition is true."},
+ {type:"code",title:"Monster fight",body:`<p>Each turn, hit the monster for 4. Print ${C("Bonk! Monster has N hp")} each turn (never below 0), then ${C("You win!")} at the end.</p>`,start:`let monster = 10;\n// your loop here\n`,
+  use:[[/while\s*\(/,"Use a while loop."]],out:["Bonk! Monster has 6 hp","Bonk! Monster has 2 hp","Bonk! Monster has 0 hp","You win!"],variants:[[/monster = 10/,"monster = 5",["Bonk! Monster has 1 hp","Bonk! Monster has 0 hp","You win!"]]],
+  hint:`let monster = 10;\nwhile (monster > 0) {\n  monster -= 4;\n  console.log("Bonk! Monster has " + Math.max(0, monster) + " hp");\n}\nconsole.log("You win!");`},
+ {type:"code",title:"Race to the finish",body:`<p>Add each roll to ${C("pos")} and count the rolls. As soon as pos reaches ${C("goal")} or more, print ${C("Finished in N rolls!")} and stop with ${C("break")}.</p>`,start:`const rolls = [3, 5, 2, 6, 4];\nconst goal = 15;\nlet pos = 0;\nlet count = 0;\nfor (const r of rolls) {\n  // your code here\n}\n`,
+  use:[[/\bbreak\b/,"Stop the loop with break once you finish."]],out:["Finished in 4 rolls!"],variants:[[/goal = 15/,"goal = 8",["Finished in 2 rolls!"]]],
+  hint:`const rolls = [3, 5, 2, 6, 4];\nconst goal = 15;\nlet pos = 0;\nlet count = 0;\nfor (const r of rolls) {\n  pos += r;\n  count++;\n  if (pos >= goal) {\n    console.log("Finished in " + count + " rolls!");\n    break;\n  }\n}`},
  {type:"game"},{type:"done"}],
  pool:[
   [`let n = 0;\nwhile (n < 10) n += 4;\nconsole.log(n);`,["12","10","8"]],
   [`let t = 0;\nfor (const m of ["a", "b", "c"]) t++;\nconsole.log(t);`,["3","2","abc"]],
   [`let hp = 3;\nwhile (hp > 0) hp--;\nconsole.log(hp);`,["0","-1","1"]],
   [`let s = 0;\nfor (const r of [2, 9, 4]) {\n  if (r > 5) break;\n  s += r;\n}\nconsole.log(s);`,["2","15","6"]],
-  [`let over = false, i = 0;\nwhile (!over) {\n  i += 5;\n  if (i >= 12) over = true;\n}\nconsole.log(i);`,["15","12","10"]]
+  [`let i = 0;\nwhile (i < 12) i += 5;\nconsole.log(i);`,["15","12","10"]]
  ]},
-{id:"g3",title:"Dice & randomness",sub:"Math.random and seeded random",steps:[
- {type:"talk",title:"Rolling a die",
-  body:`<p>${C("Math.random()")} gives a number from 0 up to (not including) 1. Multiply, round down, and add 1 to get a die roll from 1 to 6. Run it a few times: it changes!</p>`,
-  demo:`function rollDie() {\n  return Math.floor(Math.random() * 6) + 1;\n}\nconsole.log(rollDie(), rollDie(), rollDie());`,
-  say:"Every press of Run gives different rolls."},
- {type:"talk",title:"Random you can replay",mood:"think",
-  body:`<p>Real games often use a <b>seed</b>: a starting number that makes the same \"random\" sequence every time. Minecraft worlds work this way! Here's a tiny seeded generator. Same seed, same rolls.</p>`,
-  demo:RAND_FN+`\nconst rand = makeRandom(42);\nconst rolls = [];\nfor (let i = 0; i < 5; i++) {\n  rolls.push(Math.floor(rand() * 6) + 1);\n}\nconsole.log(rolls.join(" "));`,
-  say:"Seed 42 always rolls 6 5 6 5 4. Change the seed for a new sequence."},
- {type:"talk",title:"Random picks and chances",mood:"cheer",
-  body:`<p>To pick a random item, roll a random position. For a chance, like a 25% critical hit, check ${C("rand() < 0.25")}.</p>`,
-  demo:RAND_FN+`\nconst rand = makeRandom(7);\nconst loot = ["sword", "shield", "potion", "banana"];\nfor (let i = 0; i < 3; i++) {\n  const item = loot[Math.floor(rand() * loot.length)];\n  const crit = rand() < 0.25;\n  console.log(item + (crit ? " (shiny!)" : ""));\n}`,
-  say:"Seed 7 always gives the same three drops."},
+{id:"g3",title:"Rolling dice",sub:"random numbers that games can replay",steps:[
+ {type:"talk",title:"A real random roll",
+  body:`<p>${C("Math.random()")} gives a random number between 0 and 1. This line turns it into a die roll from 1 to 6. Press Run a few times: it changes!</p>`,
+  demo:`const r = Math.floor(Math.random() * 6) + 1;\nconsole.log("🎲 You rolled " + r);`,
+  say:"Every Run gives a different roll."},
+ {type:"talk",title:"TypeMonkey's dice",mood:"think",
+  body:`<p>Real games often use a <b>seed</b>: a starting number that makes the same \"random\" rolls every time. (Minecraft worlds work like this!) So TypeMonkey can check your answers, the challenges give you a ready-made ${C("roll()")} at the bottom. You just call it.</p>`,
+  demo:`let seed = 42;\nconsole.log(roll(), roll(), roll());\n\n`+DICE,
+  say:"Seed 42 always rolls 6 5 6. Change the seed for different rolls."},
+ {type:"talk",title:"Doing things with rolls",mood:"cheer",
+  body:`<p>Store a roll in a variable to use it more than once, add rolls up, or check for a lucky number.</p>`,
+  demo:`let seed = 7;\nconst a = roll();\nconst b = roll();\nconsole.log("🎲 " + a + " + 🎲 " + b + " = " + (a + b));\nif (a + b >= 7) console.log("Lucky!");\nelse console.log("Try again");\n\n`+DICE,
+  say:"3 + 4 = 7, Lucky!"},
  {type:"quiz",q:"What range does Math.floor(Math.random() * 6) + 1 give?",opts:["1 to 6","0 to 6","0 to 5"],a:0,mono:true,why:"random()*6 is 0 up to 5.99, floor makes 0–5, and +1 makes 1–6."},
- {type:"quiz",q:"Why do games use a seed?",opts:["So the same random sequence can be made again","To make the game run faster","So random numbers are bigger"],a:0,why:"Same seed, same world. Handy for sharing levels and testing."},
+ {type:"quiz",q:"Why do games use a seed?",opts:["So the same random rolls can be made again","To make the game faster","So the numbers are bigger"],a:0,why:"Same seed, same world. Handy for sharing levels and testing."},
  {type:"fill",title:"Roll a d20",body:`<p>Make a function that rolls a 20-sided die (1 to 20).</p>`,code:`function d20() {\n  return Math.[0](Math.random() * 20) + [1];\n}\nconst r = d20();\nconsole.log(r >= 1 && r <= 20);`,blanks:["floor","1"],tokens:["floor","1","round","0","20"],why:"floor then +1 gives 1 to 20."},
- {type:"code",title:"Seeded dice",body:`<p>Use ${C("makeRandom(99)")} to roll a six-sided die 4 times and print the rolls joined by spaces, then the total like ${C("Total: 7")}.</p>`,start:RAND_FN+`\n// make rand with seed 99, roll 4 times\n`,
-  use:[[/makeRandom\s*\(\s*99\s*\)/,"Use makeRandom(99)."],[/Math\.floor/,"Turn rand() into 1–6 with Math.floor(rand() * 6) + 1."]],out:["1 3 2 1","Total: 7"],variants:[[/makeRandom\(99\)/,"makeRandom(42)",["6 5 6 5","Total: 22"]]],
-  hint:RAND_FN+`\nconst rand = makeRandom(99);\nconst rolls = [];\nfor (let i = 0; i < 4; i++) {\n  rolls.push(Math.floor(rand() * 6) + 1);\n}\nconsole.log(rolls.join(" "));\nconsole.log("Total: " + rolls.reduce((a, b) => a + b, 0));`},
+ {type:"code",title:"Roll two dice",body:`<p>Call ${C("roll()")} twice and save the results in ${C("a")} and ${C("b")}. Print ${C("You rolled 6 and 5")}, then ${C("Total: 11")}.</p>`,start:`let seed = 42;\n// roll twice, then print\n\n`+DICE,
+  use:[[/roll\s*\(\s*\)[\s\S]*roll\s*\(\s*\)/,"Call roll() twice."]],out:["You rolled 6 and 5","Total: 11"],variants:[[/seed = 42/,"seed = 99",["You rolled 1 and 3","Total: 4"]]],
+  hint:`let seed = 42;\nconst a = roll();\nconst b = roll();\nconsole.log("You rolled " + a + " and " + b);\nconsole.log("Total: " + (a + b));\n\n`+DICE},
+ {type:"code",title:"Wait for a six",body:`<p>Keep rolling until you get a 6, counting the rolls. Then print ${C("Got a 6 after N rolls!")}.</p>`,start:`let seed = 3;\nlet rolls = 0;\n// your loop here\n\n`+DICE,
+  use:[[/while|for/,"Keep rolling in a loop."]],out:["Got a 6 after 3 rolls!"],variants:[[/seed = 3/,"seed = 99",["Got a 6 after 11 rolls!"]]],
+  hint:`let seed = 3;\nlet rolls = 0;\nlet r = 0;\nwhile (r !== 6) {\n  r = roll();\n  rolls++;\n}\nconsole.log("Got a 6 after " + rolls + " rolls!");\n\n`+DICE},
  {type:"game"},{type:"done"}],
  pool:[
   [`console.log(Math.floor(5.9));`,["5","6","5.9"]],
   [`console.log(Math.floor(0.5 * 6) + 1);`,["4","3","6"]],
+  [`const a = 3, b = 4;\nconsole.log(a + b >= 7 ? "Lucky!" : "Try again");`,["Lucky!","Try again","7"]],
   [`const loot = ["a", "b", "c"];\nconsole.log(loot[Math.floor(0.7 * loot.length)]);`,["c","b","a"]],
-  [`const r = 0.1;\nconsole.log(r < 0.25 ? "crit" : "hit");`,["crit","hit","0.1"]],
   [`console.log(Math.floor(0.99 * 6) + 1);`,["6","7","5"]]
  ]},
 {id:"g4",title:"Project: Dice Duel",sub:"your first complete game",project:true,steps:[
  {type:"talk",title:"Dice Duel",mood:"cheer",
-  body:`<p>Two players, Mo and Kiki, each start with 20 hp. Every round both roll a die; the lower roll loses hp equal to the difference. First to 0 loses. You'll build it in three steps.</p>`,
-  say:"Your first full game, start to finish!"},
- {type:"code",title:"Step 1: one round",body:`<p>Finish ${C("playRound")}: roll for each player, then lower the loser's hp by the difference. On a tie nothing happens. Print the round like ${C("Mo 4 vs Kiki 2 -> Kiki loses 2")} or ${C("Mo 3 vs Kiki 3 -> tie")}.</p>`,start:RAND_FN+`\nconst rand = makeRandom(1);\nconst roll = () => Math.floor(rand() * 6) + 1;\nconst mo = { name: "Mo", hp: 20 };\nconst kiki = { name: "Kiki", hp: 20 };\n\nfunction playRound(a, b) {\n  const ra = roll();\n  const rb = roll();\n  // your code here\n}\n\nplayRound(mo, kiki);\nplayRound(mo, kiki);\nconsole.log(mo.hp + " " + kiki.hp);\n`,
-  use:[[/hp\s*-=/,"Lower the loser's hp with -=."]],out:["Mo 2 vs Kiki 4 -> Mo loses 2","Mo 3 vs Kiki 6 -> Mo loses 3","15 20"],
-  hint:RAND_FN+`\nconst rand = makeRandom(1);\nconst roll = () => Math.floor(rand() * 6) + 1;\nconst mo = { name: "Mo", hp: 20 };\nconst kiki = { name: "Kiki", hp: 20 };\n\nfunction playRound(a, b) {\n  const ra = roll();\n  const rb = roll();\n  let msg = a.name + " " + ra + " vs " + b.name + " " + rb + " -> ";\n  if (ra > rb) {\n    b.hp -= ra - rb;\n    msg += b.name + " loses " + (ra - rb);\n  } else if (rb > ra) {\n    a.hp -= rb - ra;\n    msg += a.name + " loses " + (rb - ra);\n  } else {\n    msg += "tie";\n  }\n  console.log(msg);\n}\n\nplayRound(mo, kiki);\nplayRound(mo, kiki);\nconsole.log(mo.hp + " " + kiki.hp);`},
- {type:"code",title:"Step 2: play to the end",body:`<p>Now loop rounds until someone's hp is 0 or less, then print the winner like ${C("Kiki wins after 9 rounds!")}. (The rounds print quietly this time: ${C("playRound")} just returns.)</p>`,start:RAND_FN+`\nconst rand = makeRandom(1);\nconst roll = () => Math.floor(rand() * 6) + 1;\nconst mo = { name: "Mo", hp: 20 };\nconst kiki = { name: "Kiki", hp: 20 };\n\nfunction playRound(a, b) {\n  const ra = roll(), rb = roll();\n  if (ra > rb) b.hp -= ra - rb;\n  if (rb > ra) a.hp -= rb - ra;\n}\n\nlet rounds = 0;\n// loop here, then print the winner\n`,
-  use:[[/while\s*\(/,"Keep playing with a while loop."]],out:["Kiki wins after 18 rounds!"],variants:[[/makeRandom\(1\)/,"makeRandom(2024)",["Kiki wins after 25 rounds!"]]],
-  hint:RAND_FN+`\nconst rand = makeRandom(1);\nconst roll = () => Math.floor(rand() * 6) + 1;\nconst mo = { name: "Mo", hp: 20 };\nconst kiki = { name: "Kiki", hp: 20 };\n\nfunction playRound(a, b) {\n  const ra = roll(), rb = roll();\n  if (ra > rb) b.hp -= ra - rb;\n  if (rb > ra) a.hp -= rb - ra;\n}\n\nlet rounds = 0;\nwhile (mo.hp > 0 && kiki.hp > 0) {\n  playRound(mo, kiki);\n  rounds++;\n}\nconst winner = mo.hp > 0 ? mo : kiki;\nconsole.log(winner.name + " wins after " + rounds + " rounds!");`},
- {type:"code",title:"Step 3: best of 5",body:`<p>Play 5 whole duels (reset hp to 20 each time) with one ${C("rand")}, count the wins, and print like ${C("Mo 2 - 3 Kiki")}.</p>`,start:RAND_FN+`\nconst rand = makeRandom(1);\nconst roll = () => Math.floor(rand() * 6) + 1;\n\nfunction duel() {\n  let a = 20, b = 20;\n  while (a > 0 && b > 0) {\n    const ra = roll(), rb = roll();\n    if (ra > rb) b -= ra - rb;\n    if (rb > ra) a -= rb - ra;\n  }\n  return a > 0 ? "Mo" : "Kiki";\n}\n\n// play 5 duels and print the score\n`,
-  use:[[/for\s*\(|while\s*\(/,"Loop 5 times."],[/duel\s*\(\s*\)/,"Call duel() each time."]],out:["Mo 0 - 5 Kiki"],variants:[[/makeRandom\(1\)/,"makeRandom(7)",["Mo 2 - 3 Kiki"]]],
-  hint:RAND_FN+`\nconst rand = makeRandom(1);\nconst roll = () => Math.floor(rand() * 6) + 1;\n\nfunction duel() {\n  let a = 20, b = 20;\n  while (a > 0 && b > 0) {\n    const ra = roll(), rb = roll();\n    if (ra > rb) b -= ra - rb;\n    if (rb > ra) a -= rb - ra;\n  }\n  return a > 0 ? "Mo" : "Kiki";\n}\n\nlet mo = 0, kiki = 0;\nfor (let i = 0; i < 5; i++) {\n  if (duel() === "Mo") mo++;\n  else kiki++;\n}\nconsole.log("Mo " + mo + " - " + kiki + " Kiki");`},
+  body:`<p>Mo and Kiki are having a dice duel! You'll build it in three small steps: one round, then best of five, then a full battle with health.</p>`,
+  say:"Your first full game. Let's go!"},
+ {type:"code",title:"Step 1: one round",body:`<p>Roll once for Mo and once for Kiki. Print ${C("Mo rolled 2, Kiki rolled 4")}. Then print who wins the round: ${C("Mo wins the round!")}, ${C("Kiki wins the round!")} or ${C("It's a tie!")}.</p>`,start:`let seed = 1;\nconst mo = roll();\nconst kiki = roll();\n// print the rolls, then the winner\n\n`+DICE,
+  use:[[/if\s*\(/,"Compare the rolls with if."]],out:["Mo rolled 2, Kiki rolled 4","Kiki wins the round!"],variants:[[/seed = 1/,"seed = 3",["Mo rolled 2, Kiki rolled 2","It's a tie!"]],[/seed = 1/,"seed = 2024",["Mo rolled 6, Kiki rolled 4","Mo wins the round!"]]],
+  hint:`let seed = 1;\nconst mo = roll();\nconst kiki = roll();\nconsole.log("Mo rolled " + mo + ", Kiki rolled " + kiki);\nif (mo > kiki) console.log("Mo wins the round!");\nelse if (kiki > mo) console.log("Kiki wins the round!");\nelse console.log("It's a tie!");\n\n`+DICE},
+ {type:"code",title:"Step 2: best of five",body:`<p>Play 5 rounds. Each round, whoever rolls higher gets a point (ties don't count). Print the score like ${C("Mo 3 - 2 Kiki")}, then the winner like ${C("Mo wins the duel! 🏆")}.</p>`,start:`let seed = 1;\nlet moWins = 0;\nlet kikiWins = 0;\nfor (let i = 0; i < 5; i++) {\n  const mo = roll();\n  const kiki = roll();\n  // give a point to the winner\n}\n// print the score and the winner\n\n`+DICE,
+  use:[[/moWins\s*\+\+|moWins\s*\+=/,"Give Mo a point with moWins++."]],out:["Mo 3 - 2 Kiki","Mo wins the duel! 🏆"],variants:[[/seed = 1/,"seed = 7",["Mo 1 - 4 Kiki","Kiki wins the duel! 🏆"]]],
+  hint:`let seed = 1;\nlet moWins = 0;\nlet kikiWins = 0;\nfor (let i = 0; i < 5; i++) {\n  const mo = roll();\n  const kiki = roll();\n  if (mo > kiki) moWins++;\n  if (kiki > mo) kikiWins++;\n}\nconsole.log("Mo " + moWins + " - " + kikiWins + " Kiki");\nif (moWins > kikiWins) console.log("Mo wins the duel! 🏆");\nelse if (kikiWins > moWins) console.log("Kiki wins the duel! 🏆");\nelse console.log("It's a draw!");\n\n`+DICE},
+ {type:"code",title:"Step 3: health battle",body:`<p>Now both start with 20 hp. Each round, the lower roll loses hp equal to the difference (a tie does nothing). The loop is ready: fill in the damage, then the winner prints itself.</p>`,start:`let seed = 1;\nlet moHp = 20;\nlet kikiHp = 20;\nlet rounds = 0;\nwhile (moHp > 0 && kikiHp > 0) {\n  const mo = roll();\n  const kiki = roll();\n  // the lower roll loses hp\n  rounds++;\n}\nconst winner = moHp > 0 ? "Mo" : "Kiki";\nconsole.log(winner + " wins after " + rounds + " rounds!");\n\n`+DICE,
+  use:[[/Hp\s*-=/,"Lower the loser's hp with -=."]],out:["Kiki wins after 18 rounds!"],variants:[[/seed = 1/,"seed = 2024",["Kiki wins after 25 rounds!"]]],
+  hint:`let seed = 1;\nlet moHp = 20;\nlet kikiHp = 20;\nlet rounds = 0;\nwhile (moHp > 0 && kikiHp > 0) {\n  const mo = roll();\n  const kiki = roll();\n  if (mo > kiki) kikiHp -= mo - kiki;\n  if (kiki > mo) moHp -= kiki - mo;\n  rounds++;\n}\nconst winner = moHp > 0 ? "Mo" : "Kiki";\nconsole.log(winner + " wins after " + rounds + " rounds!");\n\n`+DICE},
  {type:"done"}]}
 ]},
 {name:"Grids & maps",lessons:[

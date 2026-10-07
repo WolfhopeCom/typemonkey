@@ -137,15 +137,12 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 .arcade-win{background:#FFC83D;color:#2A1300}.arcade-lose{background:#3A2350;color:#FFB4C2}
 @keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
 @media (prefers-reduced-motion:reduce){.arcade-win,.arcade-lose{animation:none}}
-/* TypeMonkey Jr. card on the home screen: sunny yellow so the kids' section stands out */
-.course.kids{background:#FFE58A;border-color:#F2C230;color:#2A1F00}
-.course.kids .tag,.course.kids .meta{color:#6B5300}
-.course.kids .mini{background:#F7D35A}
+/* TypeMonkey Jr. card on the home screen: the same banana yellow as the Unlock button, so the kids' section stands out */
+.course.kids{background:var(--banana);border-color:var(--banana);color:#2A1300}
+.course.kids .tag,.course.kids .meta{color:#5A3B00}
+.course.kids .mini{background:#00000018}
+.course.kids .mini span{background:#2A1300}
 .course.kids .pill{background:#FFFFFF;color:#7A4E00}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .course.kids{background:#4A3B0E;border-color:#B88F1E;color:#FFF3C9}:root:not([data-theme="light"]) .course.kids .tag,:root:not([data-theme="light"]) .course.kids .meta{color:#E8D08A}:root:not([data-theme="light"]) .course.kids .mini{background:#6A5414}}
-:root[data-theme="dark"] .course.kids{background:#4A3B0E;border-color:#B88F1E;color:#FFF3C9}
-:root[data-theme="dark"] .course.kids .tag,:root[data-theme="dark"] .course.kids .meta{color:#E8D08A}
-:root[data-theme="dark"] .course.kids .mini{background:#6A5414}
 .console .dim{color:#5E7E70}
 
 .opts{display:flex;flex-direction:column;gap:8px}
