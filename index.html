@@ -125,6 +125,8 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 .editor .head span{margin-right:auto}
 .editor textarea{display:block;width:100%;min-height:150px;resize:vertical;background:transparent;color:var(--code-fg);border:0;outline:0;padding:12px 14px;font-family:var(--mono);font-size:.92rem;line-height:1.6;tab-size:2;white-space:pre;overflow-x:auto}
 .editor pre{margin:0;padding:12px 14px;color:var(--code-fg);font-family:var(--mono);font-size:.92rem;line-height:1.6;overflow-x:auto}
+/* phones: wrap long code lines instead of scrolling sideways (the start of lines was disappearing) */
+@media (max-width:560px){.editor textarea,.editor pre{white-space:pre-wrap;overflow-wrap:anywhere;overflow-x:hidden;font-size:.86rem}}
 .run{background:var(--leaf);color:#fff;border:0;border-radius:8px;padding:5px 12px;font-weight:800;font-family:var(--body)}
 .run[disabled]{opacity:.4;cursor:not-allowed}
 .console{background:var(--console);color:#B8F5D3;font-family:var(--mono);font-size:.88rem;padding:10px 14px;min-height:44px;white-space:pre-wrap;word-break:break-word;border-top:1px solid #ffffff14}
@@ -52838,7 +52840,7 @@ function checkOut(st,out){
   for(const [re,msg] of st.outRe||[])if(!logs.some(l=>re.test(l)))return [false,msg];
   return [true];
 }
-async function grade(st,code,kind="js"){
+async function grade(st,code,kind="js"){code=fixSmart(code);
   const run=RUNNERS[kind];
   for(const [re,msg] of st.use||[])if(!re.test(code))return [false,msg];
   if(st.tests){
@@ -53045,12 +53047,15 @@ const inputBox=(id,val)=>`<details class="stdin" ${val?"open":""}><summary>⌨�
 function editorBlock(id,code,runnable,file,input){
   const wantsIn=runnable&&runnable!=="web"&&runnable!=="sql"&&(input||/\b(input|ReadLine|Scanner|readLine|prompt|cin)\b/.test(code));
   return `<div class="editor"><div class="head"><span>${file}</span>${runnable?`<button class="run" id="run-${id}">${runnable==="web"?"▶ Show page":"▶ Run"}</button>`:""}</div>
-    ${runnable?`<textarea id="code-${id}" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="Code editor" rows="${Math.min(14,Math.max(5,code.split("\n").length+1))}">${esc(code)}</textarea>
+    ${runnable?`<textarea id="code-${id}" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" aria-label="Code editor" rows="${Math.min(14,Math.max(5,code.split("\n").length+1))}">${esc(code)}</textarea>
     ${wantsIn?inputBox(id,input):""}
     ${runnable==="web"?`<div class="webview" id="out-${id}" aria-label="Page preview"></div>`:(cur&&cur.c&&cur.c.id==="game"?`<div class="console arcade" id="out-${id}"><div class="arcade-top"><span>🎮 GAME SCREEN</span></div><span class="dim">Press ▶ Run to play</span></div>`:`<div class="console" id="out-${id}"><span class="dim">Console output appears here</span></div>`)}`:`<pre>${esc(code)}</pre>`}</div>`;
 }
+/* Phones love "smart" punctuation: curly quotes and … break code, so turn them back into plain ' " and ... */
+const fixSmart=t=>String(t).replace(/[\u2018\u2019\u201A\u2032]/g,"'").replace(/[\u201C\u201D\u201E\u2033]/g,'"').replace(/\u2026/g,"...").replace(/\u00A0/g," ");
 function wireEditor(id,after,kind){
   const ta=$("#code-"+id);if(!ta)return;
+  ta.addEventListener("input",()=>{const v=ta.value,n=fixSmart(v);if(n!==v){const p=ta.selectionStart+(n.length-v.length);ta.value=n;try{ta.selectionStart=ta.selectionEnd=Math.max(0,p)}catch(e){}}});
   ta.addEventListener("keydown",e=>{if(e.key==="Tab"){e.preventDefault();const s=ta.selectionStart;ta.value=ta.value.slice(0,s)+"  "+ta.value.slice(ta.selectionEnd);ta.selectionStart=ta.selectionEnd=s+2}});
   const out=$("#out-"+id),web=out.classList.contains("webview");
   if(web)renderWeb(out,ta.value);
