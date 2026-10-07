@@ -51,11 +51,11 @@ EXTRA_CS = [  # (code, expected output)
 def run_tmc(items):
     script = (ROOT / "src" / "engines" / "clike.js").read_text() + """
 const I=JSON.parse(require('fs').readFileSync(0,'utf8'));
-console.log(JSON.stringify(I.map(([c,l,i])=>TMC.run(c,l,i))));"""
+console.log(JSON.stringify(I.map(([c,l,i,q])=>TMC.run(c,l,i,q))));"""
     tmp = ROOT / "tests" / ".clike.js"
     tmp.write_text(script)
     try:
-        r = subprocess.run(["node", str(tmp)], input=json.dumps([list(x) + [INPUTS.get(x[0])] for x in items]), capture_output=True, text=True)
+        r = subprocess.run(["node", str(tmp)], input=json.dumps([list(x) + [INPUTS.get(x[0]), x[0] in QUIET] for x in items]), capture_output=True, text=True)
         if r.returncode:
             print(r.stderr[-2000:])
             sys.exit(1)
@@ -65,6 +65,22 @@ console.log(JSON.stringify(I.map(([c,l,i])=>TMC.run(c,l,i))));"""
 
 
 INPUTS = {}  # demo code -> what the learner types in the Input box
+QUIET = set()  # code-challenge hints: run without echoing the typed input, like the grader does
+
+
+def run_cpp_input(code, stdin):
+    """Like run_cpp, but feeds `stdin` to the program (for cin-based challenges)."""
+    import os, tempfile
+    from verify_compiled import CPP_HEAD
+    prog = CPP_HEAD + code if "int main" in code else CPP_HEAD + "int main() {\n" + code + "\n}"
+    with tempfile.TemporaryDirectory() as d:
+        src, exe = os.path.join(d, "t.cpp"), os.path.join(d, "t")
+        pathlib.Path(src).write_text(prog)
+        c = subprocess.run(["g++", "-std=c++17", "-w", src, "-o", exe], capture_output=True, text=True)
+        if c.returncode:
+            return False, "compile error"
+        r = subprocess.run([exe], capture_output=True, text=True, timeout=5, input=stdin)
+        return True, r.stdout
 
 
 def snippets(course):
@@ -76,6 +92,7 @@ def snippets(course):
                 if s["type"] == "talk" and s.get("demo"):
                     if s.get("input"):
                         INPUTS[s["demo"]] = s["input"]
+                        QUIET.add(s["demo"])
                     yield l["id"], f"step {i} demo", s["demo"], None
                 if s["type"] == "quiz" and s.get("code"):
                     yield l["id"], f"step {i} quiz", s["code"], s["opts"][s["a"]] if "print" in s["q"] else None
@@ -84,7 +101,15 @@ def snippets(course):
                 if s["type"] == "order":
                     yield l["id"], f"step {i} order", "\n".join(s["lines"]), s.get("out")
                 if s["type"] == "code":
-                    yield l["id"], f"step {i} hint", s["hint"], None
+                    tests = s.get("tests") or ([{"input": s["input"], "out": s.get("out")}] if s.get("input") else [])
+                    if tests:  # input-reading challenges: run the hint with every test's typed input
+                        for j, t in enumerate(tests):
+                            code = s["hint"] + "\n" * (j + 1)  # unique key per test input
+                            INPUTS[code] = t["input"]
+                            QUIET.add(code)
+                            yield l["id"], f"step {i} hint test {j}", code, "\n".join(t["out"]) if t.get("out") is not None else None
+                    else:
+                        yield l["id"], f"step {i} hint", s["hint"], None
 
 
 def main():
@@ -96,7 +121,7 @@ def main():
     ours = run_tmc([[c, "cpp"] for _, _, c, _ in cpp])
     compared = 0
     for (lid, what, code, exp), mine in zip(cpp, ours):
-        ok, real = run_cpp(code)
+        ok, real = run_cpp_input(code, INPUTS[code]) if code in QUIET else run_cpp(code)
         if not ok:
             continue  # fragments that need context (g++ can't compile them alone either)
         compared += 1

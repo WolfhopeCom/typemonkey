@@ -486,7 +486,7 @@ const TMC=(()=>{
       if(!t)return null;if(t.ptr)return null;if(t.arr)return null;
       if(INT_T.has(t.name))return 0;if(DBL_T.has(t.name))return new D(0);if(t.name==="bool")return false;if(t.name==="char")return new Ch(0);
       if(t.name==="string")return lang==="cpp"?"":null;
-      if(lang==="cpp"){if(t.name==="vector")return new Arr("vector",[],t.args[0]);if(classes[t.name])return construct(classes[t.name],[],0)}
+      if(lang==="cpp"){if(t.name==="vector")return new Arr("vector",[],t.args[0]);if(t.name==="map"||t.name==="unordered_map"){const d=new Dict();d.kt=t.args[0];d.vt=t.args[1];d.sorted=t.name==="map";return d}if(classes[t.name])return construct(classes[t.name],[],0)}
       if(classes[t.name]&&classes[t.name].isStruct)return construct(classes[t.name],[],0);
       return null;
     }
@@ -496,6 +496,8 @@ const TMC=(()=>{
       if(t.arr){if(v instanceof InitList)return new Arr("array",v.items.map(x=>coerce(x,{...t,arr:t.arr-1},line)),{...t,arr:t.arr-1});return v}
       if(v instanceof InitList){
         if(t.name==="vector"||t.name==="List"||t.name==="HashSet")return new Arr(t.name==="vector"?"vector":"list",v.items.map(x=>coerce(x,t.args[0],line)),t.args[0]);
+        if(lang==="cpp"&&(t.name==="map"||t.name==="unordered_map")){const d=new Dict();d.kt=t.args[0];d.vt=t.args[1];d.sorted=t.name==="map";
+          for(const it of v.items){if(!(it instanceof InitList)||it.items.length!==2)fail(`line ${line}: each map entry needs a key and a value, like {"banana", 2}`,"CompileError");const k=coerce(it.items[0],t.args[0],line);d.m.set(dkey(k),[k,coerce(it.items[1],t.args[1],line)])}return d}
         if(classes[t.name])return lang==="cpp"&&classes[t.name].ctors.length?construct(classes[t.name],v.items,line):aggregate(classes[t.name],v.items,line);
         if(v.items.length===1)return coerce(v.items[0],t,line);
         if(!v.items.length)return defaultFor(t);
@@ -537,7 +539,7 @@ const TMC=(()=>{
     function copy(v){  // C++ value semantics
       if(v instanceof Obj){const o=new Obj(v.cls);for(const k in v.f)o.f[k]=copy(v.f[k]);return o}
       if(v instanceof Arr&&(v.kind==="vector"||v.kind==="array"))return new Arr(v.kind,v.items.map(copy),v.elem);
-      if(v instanceof Dict&&lang==="cpp"){const d=new Dict();for(const [k,x] of v.m)d.m.set(k,[x[0],copy(x[1])]);return d}
+      if(v instanceof Dict&&lang==="cpp"){const d=new Dict();d.kt=v.kt;d.vt=v.vt;d.sorted=v.sorted;for(const [k,x] of v.m)d.m.set(k,[x[0],copy(x[1])]);return d}
       return v;
     }
     const JPARENT={Throwable:null,Exception:"Throwable",Error:"Throwable",RuntimeException:"Exception",StackOverflowError:"Error",
@@ -739,9 +741,9 @@ const TMC=(()=>{
         if(lang==="java"&&!(base instanceof Arr&&base.kind==="array")){if(base===null)fail(`line ${e.line}: Cannot load from array because it is null`,"NullPointerException");fail(`line ${e.line}: array required, but ${jtype(base)} found. ${base instanceof Arr?"Use .get(i) on a List.":base instanceof Dict?"Use .get(key) on a Map.":typeof base==="string"?"Use .charAt(i) on a String.":""}`,"CompileError")}
         if(lang==="java"&&!(typeof i==="number"||i instanceof Ch))fail(`line ${e.line}: incompatible types: ${jtype(i)} cannot be converted to int`,"CompileError");
         if(base instanceof Arr){const idx=nv(i);checkIdx(base,idx,e.line);return new LV(()=>base.items[idx],v=>{base.items[idx]=v})}
-        if(base instanceof Dict){const k=dkey(i);return new LV(()=>{if(!base.m.has(k))return lang==="cpp"?(base.m.set(k,[i,0]),0):dictMissing(i,e.line);return base.m.get(k)[1]},v=>base.m.set(k,[i,v]))}
+        if(base instanceof Dict){const k=dkey(i);return new LV(()=>{if(!base.m.has(k)){if(lang==="cpp"){const d0=base.vt?defaultFor(base.vt):0;base.m.set(k,[i,d0]);return d0}return dictMissing(i,e.line)}return base.m.get(k)[1]},v=>base.m.set(k,[i,v]))}
         if(typeof base==="string"){if(lang==="cs")fail(`line ${e.line}: strings can't be changed in C#. Build a new string instead.`,"CompileError");
-          const c=lval(e.e,env);const idx=nv(i);return new LV(()=>new Ch(c.get().codePointAt(idx)),v=>{const s=c.get();c.set(s.slice(0,idx)+str(v)+s.slice(idx+1))})}
+          const c=lval(e.e,env);const idx=nv(i);return new LV(()=>new Ch(c.get().codePointAt(idx)),v=>{const s=c.get();c.set(s.slice(0,idx)+(typeof v==="number"?String.fromCodePoint(v):str(v))+s.slice(idx+1))})}
         if(base instanceof Ptr)fail(`line ${e.line}: pointer arithmetic isn't supported in TypeMonkey's runner yet`,"NotSupported");
         fail(`line ${e.line}: can't use [ ] here`,"CompileError");
       }
@@ -870,7 +872,7 @@ const TMC=(()=>{
           if(lang==="java"&&classes[t.name]&&v instanceof Obj&&!isA(v.cls,t.name))fail(`line ${e.line||"?"}: class ${v.cls.name} cannot be cast to class ${t.name}`,"ClassCastException");return v}
         case "addr":{const lv=lval(e.e,env);if(!lv)fail(`line ${e.line}: & needs a variable to take the address of`,"CompileError");return new Ptr(lv)}
         case "deref":{const pv=ev(e.e,env);if(pv===null)fail(`line ${e.line}: crash! You used * on a null pointer (nullptr). Always check a pointer before using it.`,"RuntimeError");if(!(pv instanceof Ptr))fail(`line ${e.line}: * needs a pointer`,"CompileError");if(!pv.ref)fail(`line ${e.line}: crash! You used * on a null pointer (nullptr). Always check a pointer before using it.`,"RuntimeError");return pv.ref.get()}
-        case "index":{const lv=lval(e,env);return lv.get()}
+        case "index":{if(lang==="cs"&&(e.e.k==="name"||e.e.k==="member")){const b0=ev(e.e,env);if(typeof b0==="string"){const i=nv(ev(e.i,env));if(i<0||i>=b0.length)fail(`line ${e.line}: Index was outside the bounds of the array.`,"IndexOutOfRangeException");return new Ch(b0.charCodeAt(i))}}const lv=lval(e,env);return lv.get()}
         case "member":return memberGet(e,env);
         case "call":return call(e,env);
         case "new":return newE(e,env);
@@ -938,7 +940,7 @@ const TMC=(()=>{
       if(t.name==="List"||t.name==="HashSet"||t.name==="vector"){const a=new Arr(t.name==="vector"?"vector":"list",[],t.args[0]);
         if(e.args.length===1&&!(isNum(ev(e.args[0],env))))a.items=[...iterate(ev(e.args[0],env),e.line)];
         if(e.init)for(const it of e.init)a.items.push(coerce(ev(it.val,env),t.args[0],e.line));if(t.name==="HashSet")a.items=a.items.filter((x,i)=>a.items.findIndex(y=>equal(x,y))===i);return a}
-      if(t.name==="Dictionary"||t.name==="map"||t.name==="unordered_map"){const d=new Dict();d.kt=t.args[0];d.vt=t.args[1];if(e.init)for(const it of e.init){if(!it.key)fail(`line ${e.line}: use ["key"] = value or { "key", value } in a dictionary initializer`,"SyntaxError");const k=ev(it.key,env);d.m.set(dkey(k),[k,coerce(ev(it.val,env),t.args[1],e.line)])}return d}
+      if(t.name==="Dictionary"||t.name==="map"||t.name==="unordered_map"){const d=new Dict();d.kt=t.args[0];d.vt=t.args[1];d.sorted=lang==="cpp"&&t.name==="map";if(e.init)for(const it of e.init){if(!it.key)fail(`line ${e.line}: use ["key"] = value or { "key", value } in a dictionary initializer`,"SyntaxError");const k=ev(it.key,env);d.m.set(dkey(k),[k,coerce(ev(it.val,env),t.args[1],e.line)])}return d}
       if(t.name==="Random")return {random:true};
       if(t.name==="Exception")return new Obj({name:"Exception",fields:[],methods:{},ctors:[]}).f?Object.assign(new Obj({name:"Exception",fields:[],methods:Object.create(null),ctors:[]}),{msg:e.args.length?str(ev(e.args[0],env)):"Exception of type 'System.Exception' was thrown."}):null;
       if(t.name==="string")return e.args.length===2?str(ev(e.args[1],env)).repeat(nv(ev(e.args[0],env))):"";
@@ -950,7 +952,7 @@ const TMC=(()=>{
         if(v instanceof Dict){if(v.isSet){yield* jkeys(v);return}fail(`line ${line}: for-each not applicable to a Map. Loop over map.keySet(), map.values() or map.entrySet()`,"CompileError")}
         if(typeof v==="string")fail(`line ${line}: for-each not applicable to a String. Use s.toCharArray()`,"CompileError")}
       if(v instanceof Arr){for(let i=0;i<v.items.length;i++)yield v.items[i];return}
-      if(v instanceof Dict){for(const [,x] of v.m)yield new KV(x[0],x[1]);return}
+      if(v instanceof Dict){const es=[...v.m.values()];if(v.sorted)es.sort((x,y)=>cmpVals(x[0],y[0]));for(const x of es)yield new KV(x[0],x[1]);return}
       if(typeof v==="string"){for(const ch of v)yield new Ch(ch.codePointAt(0));return}
       if(v&&v.keysOf){yield* v.keysOf;return}
       fail(`line ${line}: you can only loop over a list, array, vector, dictionary or string`,"CompileError");
@@ -976,8 +978,8 @@ const TMC=(()=>{
       }
       if(base instanceof Arr){
         if(n==="Length"&&base.kind==="array")return base.items.length;
-        if(n==="Count"&&base.kind==="list")return base.items.length;
-        if((n==="Length"||n==="Count")&&lang==="cs")fail(`line ${e.line}: ${base.kind==="array"?"arrays use .Length":"Lists use .Count"}, not .${n}`,"CompileError");
+        if(n==="Count"&&base.kind==="list"&&!e.isCall)return base.items.length;
+        if((n==="Length"||n==="Count")&&lang==="cs"&&!e.isCall)fail(`line ${e.line}: ${base.kind==="array"?"arrays use .Length":"Lists use .Count"}, not .${n}`,"CompileError");
       }
       if(base instanceof Dict){if(n==="Count")return base.m.size;if(n==="Keys")return new Arr("list",[...base.m.values()].map(x=>x[0]),base.kt);if(n==="Values")return new Arr("list",[...base.m.values()].map(x=>x[1]),base.vt)}
       if(base instanceof KV){if(n==="Key"||n==="first")return base.k;if(n==="Value"||n==="second")return base.v}
@@ -1099,14 +1101,15 @@ const TMC=(()=>{
           case "ToArray":return new Arr("array",[...it],T);
           case "ToList":return new Arr("list",[...it],T);
           case "Sum":return it.reduce((s,x)=>arith("+",s,a[0]?invoke(a[0],[x],line):x,line),0);
-          case "Max":return it.reduce((m,x)=>compare(">",x,m,line)?x:m);
-          case "Min":return it.reduce((m,x)=>compare("<",x,m,line)?x:m);
-          case "Average":return new D(it.reduce((s,x)=>s+nv(x),0)/it.length);
+          case "Max":case "Min":case "Average":{const xs=a[0]&&lang==="cs"?it.map(x=>invoke(a[0],[x],line)):it;if(!xs.length&&lang==="cs")fail(`line ${line}: Sequence contains no elements`,"InvalidOperationException");
+            if(n==="Average")return new D(xs.reduce((s,x)=>s+nv(x),0)/xs.length);return xs.reduce((m,x)=>compare(n==="Max"?">":"<",x,m,line)?x:m)}
           case "Count":if(a[0])return it.filter(x=>truth(invoke(a[0],[x],line))).length;return it.length;
           case "Exists":case "Any":return a[0]?it.some(x=>truth(invoke(a[0],[x],line))):it.length>0;
           case "Find":{const r=it.find(x=>truth(invoke(a[0],[x],line)));return r===undefined?defaultFor(T):r}
           case "FindAll":case "Where":return new Arr("list",it.filter(x=>truth(invoke(a[0],[x],line))),T);
           case "ForEach":it.forEach(x=>invoke(a[0],[x],line));return null;
+          case "OrderBy":case "OrderByDescending":{const key=x=>a[0]?invoke(a[0],[x],line):x;const sg=n==="OrderBy"?1:-1;const r=[...it].sort((x,y)=>sg*cmpVals(key(x),key(y)));return new Arr("list",r,T)}
+          case "First":case "Last":{const r=a[0]?it.filter(x=>truth(invoke(a[0],[x],line))):it;if(!r.length)fail(`line ${line}: Sequence contains no matching element`,"InvalidOperationException");return n==="First"?r[0]:r[r.length-1]}
           case "Select":case "ConvertAll":return new Arr("list",it.map(x=>invoke(a[0],[x],line)),null);
           case "begin":return {iter:base,pos:0};case "end":return {iter:base,pos:it.length};
           case "resize":{const k=nv(a[0]);while(it.length<k)it.push(a.length>1?a[1]:defaultFor(T));it.length=k;return null}
