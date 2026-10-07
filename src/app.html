@@ -106,7 +106,7 @@ button{font:inherit;cursor:pointer}
 .progress{height:12px;background:var(--surface2);border-radius:999px;overflow:hidden;flex:1}
 .progress span{display:block;height:100%;background:var(--leaf);border-radius:999px;transition:width .4s}
 .lessonbar{display:flex;align-items:center;gap:12px}
-.x{background:none;border:0;color:var(--muted);font-size:1.6rem;line-height:1;padding:0 4px}
+.x{background:none;border:0;color:var(--muted);font-size:1.6rem;line-height:1;min-width:44px;min-height:44px;padding:0 4px}
 
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
 .card h2{font-size:1.55rem}
@@ -273,6 +273,7 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 .vcode{margin:0;background:var(--code-bg);color:var(--code-fg);border-radius:12px;padding:10px 12px;font-size:.95rem;line-height:1.5;min-height:46px;overflow-x:auto}.vcode .new{color:#FFD25C}
 .blk.vop{background:#FFD25C;font-size:1.3rem}.blk.vop span{font-size:1.4rem}.blk.vop:disabled{opacity:.5}
 .langtag{display:inline-flex;align-items:center;gap:4px;margin-left:6px;padding:2px 10px;border-radius:999px;background:#3776AB;color:#fff;font-size:.78rem;letter-spacing:.02em;text-transform:none;font-weight:800;vertical-align:middle}.langtag.big{font-size:.9rem;padding:4px 12px}
+.kidrow{position:sticky;bottom:0;z-index:5;background:var(--bg);padding-block:10px calc(10px + env(safe-area-inset-bottom,0px));margin-inline:-4px;padding-inline:4px;box-shadow:0 -8px 12px -8px #0003}
 .kcode{margin-top:10px;text-align:left}.kcode small{display:block;font-weight:700;margin-bottom:4px}.kcode pre{margin:0;background:var(--code-bg);color:var(--code-fg);border-radius:10px;padding:10px 12px;font-size:.92rem;line-height:1.45;overflow-x:auto}
 .mk{position:absolute;width:calc(100% / var(--w));height:calc(100% / var(--h));display:grid;place-items:center;transition:left .32s ease,top .32s ease,transform .25s ease;pointer-events:none}
 .mface{width:82%;height:82%;display:grid;place-items:center}.mface svg{width:100%;height:100%;filter:drop-shadow(0 2px 2px #0004)}
@@ -320,12 +321,12 @@ span.repn{display:inline-block}
 .mc.stop{box-shadow:inset 0 0 0 4px var(--leaf)}
 .mc{position:relative}
 .qchip{display:grid;place-items:center;width:46px;height:46px;border-radius:14px;border:3px dashed #7C5CFF;font-size:1.4rem;font-weight:900;color:#7C5CFF}
-.bgrid{display:grid;grid-template-columns:repeat(var(--w),1fr);width:min(100%,360px);aspect-ratio:var(--w) / var(--h);align-self:center;border-radius:14px;overflow:hidden;gap:2px;background:#5FAE5A;padding:2px}
-.bcell{position:relative;display:grid;place-items:center;border:0;padding:0;border-radius:6px;background:#F3DFA8;font-size:clamp(1.2rem,7vw,2rem);color:inherit}
+.bgrid{display:grid;grid-template-columns:repeat(var(--w),1fr);grid-template-rows:repeat(var(--h),1fr);width:min(100%,360px);aspect-ratio:var(--w) / var(--h);align-self:center;border-radius:14px;overflow:hidden;gap:2px;background:#5FAE5A;padding:2px}
+.bcell{min-height:0;position:relative;display:grid;place-items:center;border:0;padding:0;border-radius:6px;background:#F3DFA8;font-size:clamp(1.2rem,7vw,2rem);color:inherit}
 .bcell.tree{background:#5FAE5A}
 .bcell .bmk{width:80%;height:80%;display:grid;place-items:center}.bcell .bmk svg{width:100%;height:100%}
 .bcell .arr{position:absolute;right:2px;bottom:2px;width:42%;height:42%}
-.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.btools{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .tool-b{display:flex;flex-direction:column;align-items:center;gap:2px;border:3px solid transparent;border-radius:14px;background:var(--surface2);color:var(--fg);font-weight:800;padding:8px 4px;font-size:.85rem}
 .tool-b span{font-size:1.6rem;line-height:1.1}
 .tool-b[aria-pressed="true"]{border-color:var(--banana);background:color-mix(in srgb,var(--banana) 30%,var(--surface))}
@@ -593,8 +594,8 @@ const SFX=(()=>{
     correct:(c,o,t)=>{note(c,o,784,t,.16,{type:"triangle",vol:.1});note(c,o,1175,t+.09,.3,{type:"sine",vol:.1})},
     wrong:(c,o,t)=>note(c,o,300,t,.28,{type:"sine",vol:.12,attack:.02,to:220}),
     complete:(c,o,t)=>{[523,659,784].forEach((f,i)=>note(c,o,f,t+i*.11,.18,{type:"triangle",vol:.09}));note(c,o,1047,t+.33,.55,{type:"triangle",vol:.1});note(c,o,784,t+.33,.55,{type:"sine",vol:.05})},
-    badge:(c,o,t)=>[1568,2093,2637,3136,2637].forEach((f,i)=>note(c,o,f,t+i*.06,.22,{type:"sine",vol:.045})),
-    coins:(c,o,t)=>{note(c,o,988,t,.08,{type:"square",vol:.025});note(c,o,1319,t+.07,.25,{type:"square",vol:.025})},
+    badge:(c,o,t)=>[784,1047,1319,1568,1319].forEach((f,i)=>note(c,o,f,t+i*.07,.24,{type:"sine",vol:.07})),
+    coins:(c,o,t)=>{note(c,o,988,t,.08,{type:"triangle",vol:.07});note(c,o,1319,t+.07,.25,{type:"triangle",vol:.07})},
     step:(c,o,t)=>note(c,o,500+Math.random()*120,t,.09,{type:"triangle",vol:.05}),
     success:(c,o,t)=>[523,659,784,1047].forEach((f,i)=>note(c,o,f,t+i*.08,i===3?.4:.14,{type:"triangle",vol:.09})),
     oops:(c,o,t)=>{note(c,o,440,t,.15,{type:"sine",vol:.09,attack:.015});note(c,o,349,t+.15,.26,{type:"sine",vol:.09,attack:.015})},
@@ -623,9 +624,10 @@ const SFX=(()=>{
   play.names=Object.keys(R);
   play.state=()=>ctx?ctx.state:"none";
   /* Self-test: render every sound into a silent offline buffer; returns {name:"ok"|error} */
-  play.test=async()=>{const out={};const OAC=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+  play.test=async(detail)=>{const out={};const OAC=window.OfflineAudioContext||window.webkitOfflineAudioContext;
     for(const n of Object.keys(R)){try{if(!OAC){out[n]="ok";continue}const oc=new OAC(1,44100,44100);R[n](oc,oc.destination,0);const buf=await oc.startRendering();
-      const d=buf.getChannelData(0);let peak=0;for(let i=0;i<d.length;i++)peak=Math.max(peak,Math.abs(d[i]));out[n]=peak>0&&peak<.5?"ok":"peak "+peak.toFixed(3)}catch(e){out[n]=String(e)}}
+      const d=buf.getChannelData(0);let peak=0,end=0,jump=0;for(let i=0;i<d.length;i++){const v=Math.abs(d[i]);peak=Math.max(peak,v);if(v>1e-3)end=i;if(i)jump=Math.max(jump,Math.abs(d[i]-d[i-1]))}
+      out[n]=peak>0&&peak<.5?"ok":"peak "+peak.toFixed(3);if(detail)out[n]={ok:out[n],peak:+peak.toFixed(3),ms:Math.round(end/44.1),jump:+jump.toFixed(3),tail:+Math.abs(d[d.length-1]).toFixed(5)}}catch(e){out[n]=String(e)}}
     return out};
   return play;
 })();
@@ -1032,7 +1034,7 @@ function shell(inner){
   $("#foot").innerHTML="";window.scrollTo(0,0);
 }
 function next(){cur.step++;renderStep()}
-const inputBox=(id,val)=>`<details class="stdin" ${val?"open":""}><summary>⌨️ Input <span>(answers for input(), ReadLine, Scanner…)</span></summary><textarea id="in-${id}" rows="2" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="Type what the user would type, one answer per line" aria-label="Program input">${esc(val||"")}</textarea></details>`;
+const inputBox=(id,val)=>`<details class="stdin" ${val?"open":""}><summary>⌨️ Input <span>(what the player types)</span></summary><textarea id="in-${id}" rows="2" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="Type what the user would type, one answer per line" aria-label="Program input">${esc(val||"")}</textarea></details>`;
 function editorBlock(id,code,runnable,file,input){
   const wantsIn=runnable&&runnable!=="web"&&runnable!=="sql"&&(input||/\b(input|ReadLine|Scanner|readLine|prompt|cin)\b/.test(code));
   return `<div class="editor"><div class="head"><span>${file}</span>${runnable?`<button class="run" id="run-${id}">${runnable==="web"?"▶ Show page":"▶ Run"}</button>`:""}</div>
@@ -1236,14 +1238,14 @@ function dance(s){
     <div class="stage" id="stage"><span class="spot l"></span><span class="spot r"></span><span class="ball">🪩</span>
       <div class="floor">${Array.from({length:16},(_,k)=>`<i style="--c:${["#FF8FC0","#FFD25C","#6EC6FF","#7EDC9A"][k%4]}"></i>`).join("")}</div>
       <div class="shadow" id="dsh"></div><div class="dancer" id="dz">${monkey("happy")}</div><div class="dlab" id="dlab" aria-live="polite"></div><div class="beat" id="beat"></div></div>
-    <div class="label">The dance to copy <button class="linkbtn" id="watch">👀 Watch it</button></div>
+    <div class="label">The dance to copy <button class="btn ghost sm" id="watch">👀 Watch it</button></div>
     <div class="dtarget" id="tg">${s.target.map((m,i)=>dchip(m,`data-i="${i}"`)).join("")}</div>
     <div class="label">Your dance program</div>
     ${loop?`<div class="dloop"><span>🔁 Repeat</span><button class="btn ghost sm" id="tm" aria-label="Fewer times">−</button><b id="tv">${times}</b><button class="btn ghost sm" id="tp" aria-label="More times">+</button><span>times:</span></div>`:""}
     <div class="dprog ${loop?"inloop":""}" id="dp"></div>
     <div class="palette">${s.moves.map(m=>`<button class="blk dm" style="--mc:${DMOVES[m].c}" data-m="${m}"><span>${DMOVES[m].icon}</span>${DMOVES[m].label}</button>`).join("")}</div><div id="fb"></div></div>
     <div id="bud">${buddy(s.say||(loop?"Find the part that repeats! Build it once, then set the repeat number.":"Watch the dance, then tap the moves in the same order."),"think")}</div>
-    <div class="row"><button class="btn banana" id="run">▶ Dance!</button><button class="btn ghost" id="undo">Undo</button><button class="btn ghost" id="hint" hidden>💡 Show me a hint</button><button class="btn ghost" id="ans" hidden>Show me the answer</button><button class="btn" id="go" hidden>Continue</button></div>`);
+    <div class="row kidrow"><button class="btn banana" id="run">▶ Dance!</button><button class="btn ghost" id="undo">Undo</button><button class="btn ghost" id="hint" hidden>💡 Show me a hint</button><button class="btn ghost" id="ans" hidden>Show me the answer</button><button class="btn" id="go" hidden>Continue</button></div>`);
   const draw=()=>{$("#dp").innerHTML=prog.length?prog.map((m,i)=>dchip(m,`data-i="${i}" aria-label="Remove ${DMOVES[m].label}"`,"button")).join(""):'<span class="empty">Tap moves below to add them here</span>';
     $$("#tg .dchip").forEach(c=>c.classList.remove("good","bad"));
     $$("#dp .dchip").forEach((c,i)=>{c.classList.toggle("oops",i===mark);c.classList.toggle("glow",!!glow&&glow.chip===i);c.onclick=()=>{if(busy||won)return;prog.splice(+c.dataset.i,1);edit()}});
@@ -1354,7 +1356,7 @@ function boxGame(s){
     else $("#fb").innerHTML="";
     if(tries>=2&&s.solution)$("#hint").hidden=false;if(tries>=4&&s.solution)$("#ans").hidden=false};
   const bump2=()=>bump("boxes");
-  $$(".vop").forEach(b=>b.onclick=()=>{if(won)return;if(s.max&&ops.length>=s.max)return;ops.push(b.dataset.o);sfx("step");draw(true)});
+  $$(".vop").forEach(b=>b.onclick=()=>{if(won)return;if(s.max&&ops.length>=s.max)return;ops.push(b.dataset.o);draw(true)});
   $("#undo").onclick=()=>{if(won)return;ops.pop();draw()};
   $("#clr").onclick=()=>{if(won)return;ops=[];draw()};
   /* Hint: glow the next good button (or Start over), not the whole answer */
@@ -1506,7 +1508,7 @@ function maze(s){
     <div class="palette">${s.blocks.map(b=>`<button class="blk b-${b}" data-b="${b}"><span>${BLOCKS[b].icon}</span>${BLOCKS[b].label}</button>`).join("")}</div>
     <div id="fb"></div></div>
     <div id="bud">${buddy(s.say||"Tap the blocks to build a program, then press Go!","think")}</div>
-    <div class="row"><button class="btn banana" id="run">▶ Go!</button><button class="btn ghost" id="undo">Undo</button><button class="btn ghost" id="clr">Clear</button><button class="btn ghost" id="hint" hidden>💡 Show me a hint</button><button class="btn ghost" id="walk" hidden>👣 Show me step by step</button>${s.sandbox?`<button class="btn ghost" id="edit">✏️ Change my puzzle</button>`:""}<button class="btn" id="go" hidden>Continue</button></div>`);
+    <div class="row kidrow"><button class="btn banana" id="run">▶ Go!</button><button class="btn ghost" id="undo">Undo</button><button class="btn ghost" id="clr">Clear</button><button class="btn ghost" id="hint" hidden>💡 Show me a hint</button><button class="btn ghost" id="walk" hidden>👣 Show me step by step</button>${s.sandbox?`<button class="btn ghost" id="edit">✏️ Change my puzzle</button>`:""}<button class="btn" id="go" hidden>Continue</button></div>`);
   const place=(x,y,d,bump)=>mkPlace(m,x,y,d,bump);
   const reset=()=>{place(m.start[0],m.start[1],s.dir);m.goals.forEach(([gx,gy])=>{const c=document.querySelector(`.mc[data-xy="${gx},${gy}"]`);if(c)c.textContent="🍌"})};
   const hit=(o,i,j,f)=>!!o&&o.i===i&&o.j===j&&o.f===f;
@@ -1601,7 +1603,7 @@ function predict(s){
       const steps=path.slice(1).filter((p,i)=>p[0]!==path[i][0]||p[1]!==path[i][1]).length,turns=path.slice(1).filter((p,i)=>p[2]!==path[i][2]).length;
       const how=`I walked ${steps} step${steps===1?"":"s"}${turns?` and turned ${turns} time${turns===1?"":"s"}`:""}.`;
       if(ok){done=true;if(tries===1)award(10,1);jsnd("success");$("#mface").innerHTML=monkey("cheer");$("#fb").innerHTML=`<div class="feedback good">🎉 You guessed it! ${how} You can read code like a pro!</div>`;jrBud(pick(KID_WINS),"cheer");bananaBurst();$("#run").hidden=true;$("#again").hidden=true;$("#go").hidden=false}
-      else{jsnd("oops");$("#mface").innerHTML=monkey("happy");const msg=`Good guess! I stopped on the green square. ${how} Follow the blocks one by one with your finger.`;$("#fb").innerHTML=`<div class="feedback oops">${msg}</div>`;
+      else{jsnd("oops");$("#mface").innerHTML=monkey("happy");const msg=`Nice try! I stopped on the green square. ${how} Follow the blocks one by one with your finger.`;$("#fb").innerHTML=`<div class="feedback oops">${msg}</div>`;
         jrBud(tries>=2?"Now you know! Tap Continue when you're ready.":"Want to try again? Tap “Guess again”.","happy",msg);$("#run").hidden=true;$("#again").hidden=tries>=2;$("#go").hidden=false;if(tries>=2)done=true}};
     setTimeout(tick,200)};
   $("#again").onclick=()=>{if(busy)return;reset();guess=null;$$(".mc.guess").forEach(g=>g.classList.remove("guess"));$("#fb").innerHTML="";$("#again").hidden=true;$("#run").hidden=false;$("#run").disabled=true;jrBud("Read the blocks again, then tap a square.","think")};
@@ -1627,7 +1629,7 @@ function predictDance(s){
     if(!dz.isConnected)return;dz.className="dancer";lab.classList.remove("on");st.classList.remove("live");done=true;busy=false;
     $("#q").outerHTML=dchip(ans,'id="q"');const q=$("#q");q.classList.add(ok?"good":"glow");
     if(ok){award(10,1);jsnd("success");dz.innerHTML=monkey("cheer");$("#fb").innerHTML=`<div class="feedback good">🎉 Yes! ${DMOVES[ans].icon} ${DMOVES[ans].label} comes next. You read the loop like a real coder!</div>`;jrBud(pick(KID_WINS),"cheer");bananaBurst()}
-    else{jsnd("oops");dz.innerHTML=monkey("happy");const msg=`Good guess! The next move is ${DMOVES[ans].icon} ${DMOVES[ans].label}. The loop does ${s.dance.pattern.map(m=>DMOVES[m].icon).join(" ")} again and again.`;
+    else{jsnd("oops");dz.innerHTML=monkey("happy");const msg=`Nice try! The next move is ${DMOVES[ans].icon} ${DMOVES[ans].label}. The loop does ${s.dance.pattern.map(m=>DMOVES[m].icon).join(" ")} again and again.`;
       $("#fb").innerHTML=`<div class="feedback oops">${msg}</div>`;jrBud("Loops repeat the same moves in the same order. Now you know!","happy",msg)}
     $("#go").hidden=false});
   $("#go").onclick=next;wireGoal();
@@ -1659,7 +1661,7 @@ function builder(s){
   const TOOLS=[["monkey","🐵","Monkey"],["banana","🍌","Banana"],["tree","🌴","Tree"],["erase","🧽","Erase"]];
   shell(`<div class="card"><div class="label">🛠️ Puzzle maker · free play</div><h2>${s.title}</h2>${jrGoal(s)}
     <p>1. Pick a thing. 2. Tap a square. 3. Press <b>▶ Play it!</b></p>
-    <div class="tools" role="group" aria-label="What to put down">${TOOLS.map(([k,i,l])=>`<button class="tool-b" data-t="${k}" aria-pressed="${k===tool}"><span>${i}</span>${l}</button>`).join("")}</div>
+    <div class="btools" role="group" aria-label="What to put down">${TOOLS.map(([k,i,l])=>`<button class="tool-b" data-t="${k}" aria-pressed="${k===tool}"><span>${i}</span>${l}</button>`).join("")}</div>
     <div class="bgrid" id="bg" style="--w:${BUILD_W};--h:${BUILD_H}"></div>
     <div class="row"><button class="btn ghost sm" id="turn">↻ Turn the monkey</button><button class="btn ghost sm" id="wipe">🧹 Empty grid</button></div><div id="fb"></div></div>
     <div id="bud">${buddy(s.say||"Pick a thing, then tap a square to put it there.","think")}</div>
