@@ -176,9 +176,9 @@ const TMSwift=(()=>{
     function funcDecl(mods){
       const line=peek().line;let name;
       if(accept("init")){name="init";if(accept("?"))fail(`line ${line}: failable initializers (init?) aren't supported in TypeMonkey's runner yet`,"NotSupported")}
-      else{p++;name=peek().k==="op"?peek().v:ident();if(peek(-1).k==="op")p++;}
+      else{p++;if(peek().k==="op"){name=peek().v;p++}else name=ident()}
       skipGenerics();
-      const params=paramList();
+      const params=paramList();if(!/^[A-Za-z_]/.test(name))params.forEach(q=>q.label=null);  // operators take their values without labels
       let throws=false;if(accept("throws")||accept("rethrows"))throws=true;
       let ret=null;if(accept("->"))ret=parseType();
       skipWhere();
@@ -249,9 +249,9 @@ const TMSwift=(()=>{
     function condList(){
       noTrailing++;const conds=[];
       do{
-        if(is("let")||is("var")){p++;
+        if(is("let")||is("var")){const isVar=is("var");p++;
           const pat=pattern();let init=null;if(accept("="))init=expr();else if(pat.k==="name")init={k:"name",v:pat.name,line:peek().line};
-          conds.push({k:"bind",pat,init})}
+          conds.push({k:"bind",pat,init,isVar})}
         else if(is("case")){p++;const pat=casePattern();expect("=");conds.push({k:"case",pat,e:expr()})}
         else conds.push({k:"bool",e:expr()});
       }while(accept(","));
@@ -399,6 +399,7 @@ const TMSwift=(()=>{
         try{const ty=parseType();
           if(accept(":")){const v=parseType();if(accept("]")&&is("(")&&is(")",1)){p+=2;noTrailing=sv;return {k:"emptyof",type:{k:"dict",key:ty,val:v}}}}
           else if(accept("]")&&is("(")&&is(")",1)){p+=2;noTrailing=sv;return {k:"emptyof",type:{k:"arr",el:ty}}}
+          else if(is("(")&&peek(-1).v==="]"&&tokens[p-1]&&tokens[p-1].k==="op"){noTrailing=sv;return {k:"name",v:"Array",line:t.line}}
         }catch(e){}
         p=save;
         const first=expr();
@@ -422,6 +423,9 @@ const TMSwift=(()=>{
 
   /* ---------- runtime ---------- */
   function run(code,input,quiet){
+      // Foundation (or UIKit/SwiftUI) adds String(format:), sqrt, pow, .components(separatedBy:) and more
+      const foundation=/^\s*import\s+(Foundation|UIKit|SwiftUI|Cocoa|AppKit)\b/m.test(code),mathOK=foundation||/^\s*import\s+(Darwin|Glibc)\b/m.test(code);
+      const needF=(line,what)=>{if(!foundation)fail(`line ${line}: ${what} comes from Foundation. Add import Foundation at the top of your program to use it`)};
     let out="",steps=0,depth=0;const IN=input==null?"":String(input).replace(/\r/g,"");let inPos=0;
     const W=s=>{out+=s;if(out.length>200000)fail("Your program printed too much, so I stopped it.","Timeout")};
     const tick=()=>{if(++steps>400000)fail("Your program ran too long, so I stopped it. Check for a loop that never ends.","Timeout")};
@@ -747,8 +751,8 @@ const TMSwift=(()=>{
       if(a instanceof Tup&&b instanceof Tup)return a.items.length===b.items.length&&a.items.every((x,i)=>equal(x,b.items[i]));
       if(a instanceof ECase&&b instanceof ECase)return a.type===b.type&&a.name===b.name&&(!a.vals||a.vals.every((x,i)=>equal(x,b.vals[i])));
       if(a instanceof Obj&&b instanceof Obj){
-        const m=findMethod(a.type,"==");if(m)return truth(callFn({decl:m,selfType:a.type},[{v:a},{v:b}],0));
-        if(a.type.kind==="struct"&&conformsAny(a.type,["Equatable","Hashable"]))return a.type===b.type&&storedAll(a.type).every(s=>equal(a.f[s.name],b.f[s.name]));
+        const m=findOp(a.type,"==");if(m)return truth(callFn({decl:m,selfType:a.type},[{v:a},{v:b}],0));
+        if(a.type.kind==="struct"&&conformsAny(a.type,["Equatable","Hashable","Comparable"]))return a.type===b.type&&storedAll(a.type).every(s=>equal(a.f[s.name],b.f[s.name]));
         fail(`binary operator '==' cannot be applied to two '${a.type.name}' operands (add : Equatable to the type)`);
       }
       return a===b;
@@ -759,7 +763,7 @@ const TMSwift=(()=>{
       if(a instanceof Chr&&b instanceof Chr)return a.s<b.s?-1:a.s>b.s?1:0;
       if(a instanceof Tup&&b instanceof Tup){for(let i=0;i<a.items.length;i++){const c=cmp(a.items[i],b.items[i],line);if(c)return c}return 0}
       if(a instanceof ECase&&b instanceof ECase&&a.type===b.type)return a.type.cases.findIndex(c=>c.name===a.name)-a.type.cases.findIndex(c=>c.name===b.name);
-      if(a instanceof Obj&&b instanceof Obj){const m=findMethod(a.type,"<");if(m)return truth(callFn({decl:m,selfType:a.type},[{v:a},{v:b}],line))?-1:truth(callFn({decl:m,selfType:a.type},[{v:b},{v:a}],line))?1:0}
+      if(a instanceof Obj&&b instanceof Obj){const m=findOp(a.type,"<");if(m)return truth(callFn({decl:m,selfType:a.type},[{v:a},{v:b}],line))?-1:truth(callFn({decl:m,selfType:a.type},[{v:b},{v:a}],line))?1:0}
       if(a instanceof Some||b instanceof Some)fail(`line ${line}: value of optional type '${typeOfV(a instanceof Some?a:b)}' must be unwrapped before comparing`);
       fail(`line ${line}: binary operator '<' cannot be applied to operands of type '${typeOfV(a)}' and '${typeOfV(b)}'`);
     }
@@ -943,7 +947,9 @@ const TMSwift=(()=>{
     // .circle(radius: 2): checks the values against the case's types (so 2 becomes 2.0 for a Double)
     function caseMaker(ty,cd){return new Fn({builtin:(vals,args,line)=>{if(vals.length!==cd.assoc.length)fail(`line ${line}: ${ty.name}.${cd.name} takes ${cd.assoc.length} value(s) but got ${vals.length}`);
       return new ECase(ty,cd.name,args.map((a,i)=>conform(copy(a.v),cd.assoc[i].type,line,a.lit,"convert value")))}})}
+    const CHARSETS=["whitespaces","whitespacesAndNewlines","newlines","punctuationCharacters","decimalDigits","letters"];
     function implicitMember(name,line){
+      if(CHARSETS.includes(name)&&!Object.values(types).some(t=>t.kind==="enum"&&t.cases.some(c=>c.name===name)))return {charset:name};
       const hits=Object.values(types).filter(t=>t.kind==="enum"&&t.caseVals&&t.caseVals.some(c=>c.name===name));
       if(hits.length){const ty=hits[0];const c=ty.caseVals.find(c=>c.name===name);const cd=ty.cases.find(x=>x.name===name);if(cd.assoc)return caseMaker(ty,cd);return c}
       fail(`line ${line}: cannot infer the type for '.${name}'. Write the type name in front, like Direction.${name}`);
@@ -963,7 +969,17 @@ const TMSwift=(()=>{
       if(e.op==="&&"){const l=ev(e.l,env);if(typeof l!=="boolean")fail(`line ${e.line}: && needs true/false values on both sides`);if(!l)return false;const r=ev(e.r,env);if(typeof r!=="boolean")fail(`line ${e.line}: && needs true/false values on both sides`);return r}
       if(e.op==="||"){const l=ev(e.l,env);if(typeof l!=="boolean")fail(`line ${e.line}: || needs true/false values on both sides`);if(l)return true;const r=ev(e.r,env);if(typeof r!=="boolean")fail(`line ${e.line}: || needs true/false values on both sides`);return r}
       if(e.op==="??"){const l=ev(e.l,env);if(!(l instanceof Some||l===NIL))return l;if(l instanceof Some)return l.v;const r=ev(e.r,env);if(typeof r==="number"&&isLitE(e.r)){}return r}
-      return binv(e.op,ev(e.l,env),ev(e.r,env),e,e.line);
+      const l=ev(e.l,env),r=ev(e.r,env);
+      if(l instanceof Obj||l instanceof ECase||r instanceof Obj||r instanceof ECase){const u=userOp(e.op,l,r,env,e.line);if(u!==undefined)return u}
+      return binv(e.op,l,r,e,e.line);
+    }
+    // operators you write yourself: static func + (a: Vec, b: Vec) -> Vec, or a global func +
+    function findOp(ty,op){for(let t=ty;t;t=t.sup){const m=t.staticMethods[op]||t.methods[op];if(m)return m}return findMethod(ty,op)}
+    function userOp(op,l,r,env,line){
+      const ty=l instanceof Obj||l instanceof ECase?l.type:r.type;
+      if(!["==","!=","<",">","<=",">="].includes(op)){const m=findOp(ty,op)||(r&&r.type&&r.type!==ty?findOp(r.type,op):null);if(m)return callFn({decl:m,selfType:m.owner},[{v:l},{v:r}],line)}
+      const c=env.find(op);if(c&&c.fn)return callFn(c.fn,[{v:l},{v:r}],line);
+      return undefined;
     }
     function binv(op,l,r,e,line){
       switch(op){
@@ -997,7 +1013,7 @@ const TMSwift=(()=>{
       if(env.selfType&&env.selfType.kind==="builtin"&&env.self!=null){const sv=env.selfRef?env.selfRef.get():env.self;
         try{return memberOf(sv,e.v,{k:"member",e:{k:"self",line:e.line},name:e.v,line:e.line},env)}catch(x){if(!(x instanceof SErr&&/has no member/.test(x.message)))throw x}}
       if(types[e.v])return {isType:true,ty:types[e.v]};
-      const b=BUILTINS[e.v];if(b!==undefined)return b;
+      const b=BUILTINS[e.v];if(b!==undefined){if(MATHF.has(e.v)&&!mathOK)fail(`line ${e.line}: cannot find '${e.v}' in scope. Add import Foundation at the top of your program to use it`);return b}
       notFound(e.v,e.line);
     }
     function memberGet(e,env){
@@ -1052,7 +1068,8 @@ const TMSwift=(()=>{
     function argList(e,env){
       return e.args.map(a=>{
         if(a.e.k==="inout"){const lv=lval(a.e.e,env);checkMutable(lv,e.line);const ref={get v(){return lv.get()},set v(x){lv.set(x)},isLet:false};return {label:a.label,v:lv.get(),ref,lit:false}}
-        return {label:a.label,v:ev(a.e,env),lit:isLitE(a.e)||a.e.k==="lit"};
+        const v=ev(a.e,env);
+        return {label:a.label,v:e.args.length>1&&(v instanceof Arr||v instanceof Dict||v instanceof SetV||v instanceof Obj&&v.type.kind==="struct")?copy(v):v,lit:isLitE(a.e)||a.e.k==="lit"};
       });
     }
     function call(e,env){
@@ -1077,6 +1094,7 @@ const TMSwift=(()=>{
       // optional call: f?(1, 2)
       if(f.k==="optchain"){const fv=ev(f,env);if(fv===NIL)return NIL;if(!(fv instanceof Fn))fail(`line ${e.line}: cannot call value of non-function type '${typeOfV(fv)}'`);
         const r=callFn(fv,argList(e,env),e.line);return r===undefined?new Some(new Tup([])):r instanceof Some||r===NIL?r:new Some(r)}
+      if(f.k==="member"&&f.name==="count"&&e.args.length===1&&e.args[0].label==="where"){const b=ev(f.e,env);const fn=ev(e.args[0].e,env);let n=0;for(const x of iterate(b,e.line))if(truth(callFn(fn,[{v:x}],e.line)))n++;return n}
       // first(where:) and last(where:), also with a trailing closure
       if(f.k==="member"&&(f.name==="first"||f.name==="last")&&e.args.length===1&&(e.args[0].label==="where"||!e.args[0].label&&e.args[0].e.k==="closure")){
         const b=ev(f.e,env);const fn=ev(e.args[0].e,env);const items=[...iterate(b,e.line)];if(f.name==="last")items.reverse();
@@ -1183,7 +1201,7 @@ const TMSwift=(()=>{
         const v=ev(c.init,env);
         if(!(v instanceof Some||v===NIL))fail(`line ${line}: initializer for conditional binding must have Optional type, not '${typeOfV(v)}'`);
         if(v===NIL)return false;
-        bindPattern(c.pat,copy(v.v),env,true,line,isGuard);
+        bindPattern(c.pat,copy(v.v),env,!c.isVar,line,isGuard);
       }
       return true;
     }
@@ -1274,7 +1292,8 @@ const TMSwift=(()=>{
       if(s.op!=="="){
         const cur=lv.get();
         if(s.op==="+="&&cur instanceof Arr){if(!(r instanceof Arr))fail(`line ${s.line}: use .append(x) to add one item, or += [x]`);checkMutable(lv,s.line);for(const x of r.items)cur.items.push(conform(copy(x),cur.et,s.line,r.lit,"append value"));return}
-        r=arith(s.op[0],cur,r,{l:{k:"x"},r:s.r},s.line);
+        const u=cur instanceof Obj||cur instanceof ECase?userOp(s.op[0],cur,r,env,s.line):undefined;
+        r=u!==undefined?u:arith(s.op[0],cur,r,{l:{k:"x"},r:s.r},s.line);
         if(lv.cell&&lv.cell.type&&lv.cell.type.k==="name"&&lv.cell.type.name==="Int"&&r instanceof D)fail(`line ${s.line}: cannot assign a Double to an Int variable`);
       }
       r=copy(r);
@@ -1303,7 +1322,7 @@ const TMSwift=(()=>{
       String:(args,line)=>{
         if(!args.length)return "";const a=args[0];
         if(a.label==="repeating"){const c=args.find(x=>x.label==="count").v;return desc(a.v).repeat(c)}
-        if(a.label==="format")return cformat(a.v,args.slice(1).map(x=>x.v),line);
+        if(a.label==="format"){needF(line,"String(format:)");return cformat(a.v,args.slice(1).map(x=>x.v),line)}
         if(a.label==="describing")return desc(a.v);
         if(a.v instanceof Arr)return a.v.items.map(x=>x instanceof Chr?x.s:desc(x)).join("");
         if(a.v instanceof Some||a.v===NIL)fail(`line ${line}: value of optional type '${typeOfV(a.v)}' must be unwrapped before turning it into a String (or use String(describing:))`);
@@ -1335,6 +1354,7 @@ const TMSwift=(()=>{
       else if(k==="x"||k==="X"){s=num(v).toString(16);if(k==="X")s=s.toUpperCase()}else if(k==="o")s=num(v).toString(8);else if(k==="c")s=String.fromCharCode(num(v));else if(k==="@"||k==="s")s=desc(v);else s=String(Math.trunc(num(v)));
       if(plus&&/^[0-9]/.test(s))s="+"+s;
       if(w){const n=+w;s=left?s.padEnd(n):zero?s.padStart(n,"0"):s.padStart(n)}return s})}
+    const MATHF=new Set(["sqrt","pow","floor","ceil","round","log","log2","log10","exp","sin","cos","tan","atan","asin","acos","atan2","hypot","trunc"]);
     const BUILTINS={
       print:B((vals,args)=>{W(printArgs(vals,args));return undefined}),
       debugPrint:B((vals,args)=>{W(printArgs(vals,args,true));return undefined}),
@@ -1342,6 +1362,9 @@ const TMSwift=(()=>{
       min:B((vs,args,line)=>vs.reduce((a,b)=>cmp(b,a,line)<0?b:a)),
       max:B((vs,args,line)=>vs.reduce((a,b)=>cmp(b,a,line)>0?b:a)),
       sqrt:B(([x])=>new D(Math.sqrt(num(x)))),pow:B(([x,y])=>new D(Math.pow(num(x),num(y)))),
+      log:B(([x])=>new D(Math.log(num(x)))),log2:B(([x])=>new D(Math.log2(num(x)))),log10:B(([x])=>new D(Math.log10(num(x)))),exp:B(([x])=>new D(Math.exp(num(x)))),
+      sin:B(([x])=>new D(Math.sin(num(x)))),cos:B(([x])=>new D(Math.cos(num(x)))),tan:B(([x])=>new D(Math.tan(num(x)))),atan:B(([x])=>new D(Math.atan(num(x)))),asin:B(([x])=>new D(Math.asin(num(x)))),acos:B(([x])=>new D(Math.acos(num(x)))),
+      atan2:B(([y,x])=>new D(Math.atan2(num(y),num(x)))),hypot:B(([x,y])=>new D(Math.hypot(num(x),num(y)))),trunc:B(([x])=>new D(Math.trunc(num(x)))),
       floor:B(([x])=>new D(Math.floor(num(x)))),ceil:B(([x])=>new D(Math.ceil(num(x)))),round:B(([x])=>new D(swiftRound(num(x)))),
       stride:B((vals,args,line)=>{const g=n=>args.find(a=>a.label===n);const from=g("from").v,by=g("by").v;const to=g("to"),through=g("through");const end=(to||through).v;
         if(num(by)===0)fatal("Stride size must not be zero");
@@ -1386,7 +1409,7 @@ const TMSwift=(()=>{
           case "distance":return M(([x])=>x-b);
           case "signum":return M(()=>Math.sign(b));
           case "quotientAndRemainder":return M(([x])=>new Tup([Math.trunc(b/x),b%x],["quotient","remainder"]));
-          case "formatted":return M(()=>b instanceof D?String(b.v):String(b).replace(/\B(?=(\d{3})+(?!\d))/g,","));
+          case "formatted":needF(line,".formatted()");return M(()=>b instanceof D?String(b.v):String(b).replace(/\B(?=(\d{3})+(?!\d))/g,","));
         }
         fail(`line ${line}: value of type '${typeOfV(b)}' has no member '${n}'`);
       }
@@ -1434,7 +1457,8 @@ const TMSwift=(()=>{
       switch(n){
         case "count":return cs.length;case "isEmpty":return s.length===0;
         case "uppercased":return M(()=>s.toUpperCase());case "lowercased":return M(()=>s.toLowerCase());
-        case "capitalized":return s.replace(/\b\p{L}/gu,x=>x.toUpperCase());
+        case "capitalized":needF(line,".capitalized");return s.toLowerCase().replace(/(^|[^\p{L}\p{N}'])(\p{L})/gu,(m,a,x)=>a+x.toUpperCase());
+        case "range":needF(line,".range(of:)");return M(([x])=>{const k=s.indexOf(x instanceof Chr?x.s:x);return k<0?NIL:new Some(new Range([...s.slice(0,k)].length,[...s.slice(0,k)].length+[...(x instanceof Chr?x.s:x)].length,false))});
         case "first":return cs.length?new Some(new Chr(cs[0])):NIL;case "last":return cs.length?new Some(new Chr(cs[cs.length-1])):NIL;
         case "hasPrefix":return M(([x])=>s.startsWith(x));case "hasSuffix":return M(([x])=>s.endsWith(x));
         case "contains":return M(([x],args)=>{if(args[0].label==="where"){const f=x;return cs.some(c=>truth(callFn(f,[{v:new Chr(c)}],line)))}return s.includes(x instanceof Chr?x.s:x)});
@@ -1452,9 +1476,9 @@ const TMSwift=(()=>{
           if(done)cur=cs.slice(i).join("");
           if(cur!==""||!omit)parts.push(cur);
           return new Arr(parts,{k:"name",name:"String"})});
-        case "components":return M((vals,args)=>{const sep=args[0].v;return new Arr(s.split(sep instanceof Chr?sep.s:sep),{k:"name",name:"String"})});
-        case "replacingOccurrences":return M((vals,args)=>{const of=args.find(a=>a.label==="of").v,w=args.find(a=>a.label==="with").v;return s.split(of).join(w)});
-        case "trimmingCharacters":return M(()=>s.trim());
+        case "components":needF(line,".components(separatedBy:)");return M((vals,args)=>{const sep=args[0].v;return new Arr(s.split(sep instanceof Chr?sep.s:sep),{k:"name",name:"String"})});
+        case "replacingOccurrences":needF(line,".replacingOccurrences(of:with:)");return M((vals,args)=>{const of=args.find(a=>a.label==="of").v,w=args.find(a=>a.label==="with").v;return s.split(of).join(w)});
+        case "trimmingCharacters":needF(line,".trimmingCharacters(in:)");return M(([cs2])=>{const k=cs2&&cs2.charset;const re=k==="whitespaces"?/^[ \t]+|[ \t]+$/g:k==="newlines"?/^\n+|\n+$/g:k==="punctuationCharacters"?/^\p{P}+|\p{P}+$/gu:/^\s+|\s+$/g;return s.replace(re,"")});
         case "prefix":return M(([k])=>{if(k instanceof Fn)fail("prefix(while:) isn't supported yet","NotSupported");return cs.slice(0,k).join("")});
         case "suffix":return M(([k])=>cs.slice(Math.max(0,cs.length-k)).join(""));
         case "dropFirst":return M(([k])=>cs.slice(k===undefined?1:k).join(""));
@@ -1493,7 +1517,7 @@ const TMSwift=(()=>{
         case "removeLast":return M(()=>{const lv=mut();const arr=lv.get();if(!arr.items.length)fatal("Can't remove last element from an empty collection");return arr.items.pop()});
         case "removeFirst":return M(()=>{const lv=mut();const arr=lv.get();if(!arr.items.length)fatal("Can't remove first element from an empty collection");return arr.items.shift()});
         case "popLast":return M(()=>{const lv=mut();const arr=lv.get();return arr.items.length?new Some(arr.items.pop()):NIL});
-        case "removeAll":return M((vals,args)=>{const lv=mut();const arr=lv.get();if(args.length&&args[0].label==="where"){const f=args[0].v;arr.items=arr.items.filter(x=>!truth(callFn(f,[{v:x}],line)))}else arr.items=[];return undefined});
+        case "removeAll":return M((vals,args)=>{const lv=mut();const arr=lv.get();if(args.length&&(args[0].label==="where"||args[0].v instanceof Fn)){const f=args[0].v;arr.items=arr.items.filter(x=>!truth(callFn(f,[{v:x}],line)))}else arr.items=[];return undefined});
         case "contains":return M((vals,args)=>{if(args[0].label==="where"||args[0].v instanceof Fn){const f=args[0].v;return it.some(x=>truth(callFn(f,[{v:x}],line)))}return it.some(x=>equal(x,args[0].v))});
         case "allSatisfy":return M((vals,args)=>{const f=fnArg(args);return it.every(x=>truth(callFn(f,[{v:x}],line)))});
         case "firstIndex":return M((vals,args)=>{let i;if(args[0].label==="where"||args[0].v instanceof Fn){const f=args[0].v;i=it.findIndex(x=>truth(callFn(f,[{v:x}],line)))}else i=it.findIndex(x=>equal(x,args[0].v));return i<0?NIL:new Some(i+(a.off||0))});
