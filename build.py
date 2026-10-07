@@ -16,7 +16,7 @@ COURSE_FILES = [  # order matters: later files can reference earlier ones
     "csharp-units-2-4.js",
     "csharp.js",
     "cpp-units-2-4.js",
-    "cpp.js", "java-units-1-3.js", "java-units-4-6.js", "game.js",
+    "cpp.js", "java-units-1-3.js", "java-units-4-6.js", "game.js", "swift.js",
     "python-units-1-3.js",
     "python-units-4-6.js",
     "sql.js",
@@ -28,7 +28,7 @@ COURSE_FILES = [  # order matters: later files can reference earlier ones
     "more-web-sql-cs-cpp.js",  # HTML & CSS, SQL, C#, C++ Unit 5
 ]
 
-ENGINE_FILES = ["sql.js", "clike.js"]  # in-house SQL engine and C#/C++ runner; Python is Brython (src/vendor)
+ENGINE_FILES = ["sql.js", "clike.js", "swift.js"]  # in-house SQL engine and C#/C++ runner; Python is Brython (src/vendor)
 
 HEAD = """<!doctype html>
 <html lang="en">

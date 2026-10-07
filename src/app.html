@@ -561,6 +561,7 @@ const RUNNERS={
   cs:c=>Promise.resolve(linesOf(TMC.run(c,"cs"))),
   cpp:c=>Promise.resolve(linesOf(TMC.run(c,"cpp"))),
   java:c=>Promise.resolve(linesOf(TMC.run(c,"java"))),
+  swift:c=>Promise.resolve(linesOf(TMSwift.run(c))),
   sql:c=>{const r=TMSQL.run(c,ZOO_TABLES);if(!r.ok)return Promise.resolve([["err",r.error]]);const o=TMSQL.text(r).split("\n").map(l=>["log",l]);o.table=r;return Promise.resolve(o)}
 };
 const kindOf=c=>c.runnable===true?"js":c.runnable;
@@ -572,7 +573,7 @@ function paintConsole(el,out,hint){
   }
   el.innerHTML=out.length?out.map(([k,v])=>`<div class="${k==="err"?"err":""}">${k==="err"?"✖ ":"› "}${esc(v)}</div>`).join(""):`<span class="dim">(nothing printed${hint?". "+hint:""})</span>`;
 }
-const PRINT_HINT={js:"Try console.log",py:"Try print()",cs:"Try Console.WriteLine",cpp:"Try std::cout <<",java:"Try System.out.println",sql:"Try a SELECT"};
+const PRINT_HINT={js:"Try console.log",py:"Try print()",cs:"Try Console.WriteLine",cpp:"Try std::cout <<",java:"Try System.out.println",swift:"Try print()",sql:"Try a SELECT"};
 
 /* ---------- Grading code challenges ---------- */
 const norm=l=>{l=String(l).trim();return /^[\[{]/.test(l)?l.replace(/\s+/g,""):l};
@@ -651,6 +652,7 @@ const COURSES=[
   {...COURSE_CS,tag:'Console.WriteLine("hi");',runnable:"cs",lang:"Program.cs"},
   {...COURSE_CPP,tag:'std::cout << "hi";',runnable:"cpp",lang:"main.cpp"},
   {...COURSE_JAVA,tag:'System.out.println("hi");',runnable:"java",lang:"Main.java"},
+  {...COURSE_SWIFT,tag:'print("hi")',runnable:"swift",lang:"main.swift"},
   {...COURSE_JR,tag:"puzzles for ages 7–12",kids:true,lang:"TypeMonkey moves"}
 ];
 const courseById=id=>COURSES.find(c=>c.id===id);
@@ -1319,6 +1321,7 @@ const PLAY={
   sql:{name:"SQL",file:"query.sql",run:"sql",start:`-- The TypeMonkey Zoo database has 3 tables: animals, keepers, snacks\nSELECT a.name, k.name AS keeper\nFROM animals a\nLEFT JOIN keepers k ON a.keeper_id = k.id\nORDER BY a.name;\n`},
   cs:{name:"C#",file:"Program.cs",run:"cs",start:`using System;\n\nclass Program {\n  static void Main() {\n    for (int i = 1; i <= 3; i++) {\n      Console.WriteLine($"TypeMonkey says ook #{i}");\n    }\n  }\n}\n`},
   java:{name:"Java",file:"Main.java",run:"java",start:`public class Main {\n  public static void main(String[] args) {\n    for (int i = 1; i <= 3; i++) {\n      System.out.println("TypeMonkey says ook #" + i);\n    }\n  }\n}\n`},
+  swift:{name:"Swift",file:"main.swift",run:"swift",start:`let name = "TypeMonkey"\nfor i in 1...3 {\n    print("\\(name) says ook #\\(i)")\n}\n`},
   cpp:{name:"C++",file:"main.cpp",run:"cpp",start:`#include <iostream>\n\nint main() {\n  for (int i = 1; i <= 3; i++) {\n    std::cout << "TypeMonkey says ook #" << i << "\\n";\n  }\n  return 0;\n}\n`}
 };
 function playground(lang="js"){
