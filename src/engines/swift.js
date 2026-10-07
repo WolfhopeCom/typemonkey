@@ -1097,7 +1097,10 @@ const TMSwift=(()=>{
     }
     function boolL(e,env){const l=ev(e.l,env);if(typeof l!=="boolean")fail(`line ${e.line}: ${e.op} needs true/false values on both sides`);return l}
     function logicR(e,env,known){if(known!==null)return known;const r=ev(e.r,env);if(typeof r!=="boolean")fail(`line ${e.line}: ${e.op} needs true/false values on both sides`);return r}
-    function coalesce(l,e,env){if(!(l instanceof Some||l===NIL))return l;if(l instanceof Some)return l.v;return ev(e.r,env)}
+    function coalesce(l,e,env){if(!(l instanceof Some||l===NIL))return l;if(l instanceof Some)return l.v;const r=ev(e.r,env);
+      // y ?? 0 with y: Double? reads the 0 as 0.0
+      if(typeof r==="number"&&isLitE(e.r)&&e.l.k==="name"){const c=env.find(e.l.v);const t=c&&c.type;if(t&&t.k==="opt"&&t.of.k==="name"&&["Double","Float"].includes(t.of.name))return t.of.name==="Float"?F32(r):new D(r)}
+      return r}
     function binop2(l,r,e,env){
       if(l instanceof Obj||l instanceof ECase||r instanceof Obj||r instanceof ECase){const u=userOp(e.op,l,r,env,e.line);if(u!==undefined)return u}
       return binv(e.op,l,r,e,e.line);
