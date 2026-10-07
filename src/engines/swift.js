@@ -183,7 +183,7 @@ const TMSwift=(()=>{
       else{p++;if(peek().k==="op"){name=peek().v;p++}else name=ident()}
       skipGenerics();
       const params=paramList();if(!/^[A-Za-z_]/.test(name))params.forEach(q=>q.label=null);  // operators take their values without labels
-      let throws=false;if(accept("throws")||accept("rethrows"))throws=true;
+      let throws=false;if(accept("throws"))throws=true;else accept("rethrows");
       let ret=null;if(accept("->"))ret=parseType();
       skipWhere();
       let body=null;if(is("{"))body=block();
@@ -436,7 +436,7 @@ const TMSwift=(()=>{
       // Foundation (or UIKit/SwiftUI) adds String(format:), sqrt, pow, .components(separatedBy:) and more
       const foundation=/^\s*import\s+(Foundation|UIKit|SwiftUI|Cocoa|AppKit)\b/m.test(code),mathOK=foundation||/^\s*import\s+(Darwin|Glibc)\b/m.test(code);
       const needF=(line,what)=>{if(!foundation)fail(`line ${line}: ${what} comes from Foundation. Add import Foundation at the top of your program to use it`)};
-    let out="",steps=0,depth=0;const IN=input==null?"":String(input).replace(/\r/g,"");let inPos=0;
+    let out="",steps=0,depth=0,tryDepth=0;const IN=input==null?"":String(input).replace(/\r/g,"");let inPos=0;
     const W=s=>{out+=s;if(out.length>200000)fail("Your program printed too much, so I stopped it.","Timeout")};
     const t0=Date.now();  // a loop that never ends is stopped after about 3 seconds (or 20 million steps)
     const tick=()=>{if(++steps>20000000||(steps&8191)===0&&Date.now()-t0>3000)fail("Your program ran too long, so I stopped it. Check for a loop that never ends.","Timeout")};
@@ -607,6 +607,28 @@ const TMSwift=(()=>{
         else fail(`line ${m.line||"?"}: only properties, methods and initializers can go inside a type here`);
       }
     }
+    // checks Swift's compiler makes on a type before anything runs
+    function checkType(ty){
+      if(ty.kind==="class")for(const n in ty.methods){const fs=ty.methods[n].overloads||[ty.methods[n]];for(const f of fs){
+        const parent=ty.sup&&findMethod(ty.sup,n);const has=parent&&parent.owner&&parent.owner.kind==="class";
+        if(has&&!f.mods.includes("override"))fail(`line ${f.line}: overriding declaration requires an 'override' keyword (write override func ${n})`);
+        if(!has&&f.mods.includes("override"))fail(`line ${f.line}: method does not override any method from its superclass`)}}
+      if(ty.kind==="struct"||ty.kind==="enum")for(const n in ty.methods)for(const f of ty.methods[n].overloads||[ty.methods[n]]){
+        if(f.mutating||f.isStatic||!f.body)continue;
+        const props=new Set(ty.stored.map(x=>x.name));const locals=new Set(f.params.map(q=>q.name));
+        const bad=findSelfAssign(f.body,props,locals);
+        if(bad)fail(`line ${bad}: cannot assign to property: 'self' is immutable. Mark the method 'mutating' (mutating func ${n})`)}
+    }
+    function findSelfAssign(list,props,locals){
+      for(const st of list)if(st.k==="var")for(const d of st.decls){const walk=p2=>{if(p2.k==="name")locals.add(p2.name);else if(p2.k==="tuple")p2.items.forEach(walk)};walk(d.pat)}
+      for(const st of list){
+        if(st.k==="assign"){let l=st.l;while(l.k==="member"||l.k==="index"||l.k==="paren")l=l.e;
+          if(l.k==="self"||l.k==="name"&&props.has(l.v)&&!locals.has(l.v))return st.line}
+        const subs=[st.body,st.els,...(st.cases||[]).map(c=>c.body),...(st.catches||[]).map(c=>c.body)].filter(Array.isArray);
+        for(const b of subs){const r=findSelfAssign(b,props,new Set(locals));if(r)return r}
+      }
+      return 0;
+    }
     function linkTypes(){
       for(const ty of Object.values(types)){
         if(ty.kind==="class"&&!ty.inits.length&&ty.stored.some(s=>!s.init&&!s.lazy&&!(s.type&&s.type.k==="opt")))fail(`line ${ty.line}: class '${ty.name}' has no initializers. Give every property a starting value, or write an init`);
@@ -618,6 +640,7 @@ const TMSwift=(()=>{
             const v=new ECase(ty,c.name,null);v.raw=raw;return v});
         }
       }
+      for(const ty of Object.values(types))checkType(ty);
     }
     function findMethod(ty,n){for(let t=ty;t;t=t.sup){if(t.methods[n])return t.methods[n]}
       for(let t=ty;t;t=t.sup)for(const pn of t.inherits){const pd=protoDefaults[pn];if(pd&&pd[n])return pd[n];const pt=types[pn];if(pt&&pt.kind==="protocol"){const r=protoInherit(pt,n);if(r)return r}}
@@ -740,16 +763,25 @@ const TMSwift=(()=>{
         for(let i=0;i<args.length;i++)e.vars.set("$"+i,args[i].ref||cell(args[i].v,null,true));
       }
       if(++depth>MAXDEPTH)tooDeep();
-      try{return runBody(f.body,e,true)}finally{depth--}
+      // no try/finally here (it would make the frame bigger): code that catches a thrown error puts depth and tryDepth back
+      const td=tryDepth;tryDepth=0;
+      const r=runBody(f.body,e,true);depth--;tryDepth=td;return r;
     }
+    // callDecl, binop, exec and ev keep few local variables: their JavaScript frames stay small, so a learner's
+    // recursive function can go thousands of calls deep
     function callDecl(f,args,line,self,selfType){
-      const fn=f.decl;const sf=f.self!==undefined?f.self:self;
+      const fn=f.decl,e=declEnv(f,fn,args,line,self,selfType),td=tryDepth;
+      tryDepth=0;
+      const r=finishCall(fn,runBody(fn.body,e,true,fn.ret===null));depth--;tryDepth=td;return r;
+    }
+    function declEnv(f,fn,args,line,self,selfType){
+      if(fn.throws&&!tryDepth)fail(`line ${line}: call can throw but is not marked with 'try'. Write try in front of the call (inside do { } catch { })`);const sf=f.self!==undefined?f.self:self;
       const e=new Env(f.env||globals);e.self=sf;e.selfType=f.selfType||selfType||null;e.mutSelf=!!(fn.mutating&&f.mutable)||(sf instanceof Obj&&sf.type.kind==="class");
       if(f.selfRef)e.selfRef=f.selfRef;
       if(f.selfType&&(f.selfType.kind==="struct"||f.selfType.kind==="builtin")&&!fn.mutating)e.mutSelf=false;
       bindArgs(fn,args,e,line);
       if(++depth>MAXDEPTH)tooDeep();
-      try{return finishCall(fn,runBody(fn.body,e,true,fn.ret===null))}finally{depth--}
+      return e;
     }
     function finishCall(fn,r){
       if(fn.ret){if(r===undefined)fail(`line ${fn.line}: missing return in a function expected to return '${tname(fn.ret)}'`);return conform(r,fn.ret,fn.line,false,"convert return expression")}
@@ -768,10 +800,13 @@ const TMSwift=(()=>{
     function runBody(body,env,implicit,voidFn){
       // a single expression is returned automatically (closures, functions, getters)
       try{
-        if(implicit&&body.length===1&&body[0].k==="expr"&&!voidFn)return ev(body[0].e,env);
-        if(implicit&&body.length===1&&!voidFn&&(body[0].k==="if"||body[0].k==="switch")&&exprBranches(body[0]))return body[0].k==="if"?exprIf(body[0],env):exprSwitch(body[0],env);
-        if(implicit&&body.length===1&&body[0].k==="expr"&&voidFn){ev(body[0].e,env);return undefined}
-        execList(body,env);return undefined;
+        if(implicit&&body.length===1){const st=body[0];
+          if(st.k==="expr"){const v=ev(st.e,env);return voidFn?undefined:v}
+          if(!voidFn&&(st.k==="if"||st.k==="switch")&&exprBranches(st))return st.k==="if"?exprIf(st,env):exprSwitch(st,env)}
+        if(body.plain===undefined)body.plain=isPlain(body);
+        if(!body.plain){execListFull(body,env);return undefined}
+        for(let i=0;i<body.length;i++)exec(body[i],env);
+        return undefined;
       }catch(x){if(x instanceof Ret)return x.v;throw x}
     }
 
@@ -838,6 +873,7 @@ const TMSwift=(()=>{
         case "<<":return b>=64?0:Number(BigInt.asIntN(64,BigInt(a)<<BigInt(b)));case ">>":return Number(BigInt(a)>>BigInt(Math.min(b,64)));
       }
       // Int is 64-bit: going past Int.max crashes (JavaScript numbers are inexact up there, so Int.max itself is 2^63)
+      if((r>=9223372036854775807||r<-9223372036854775808)&&e&&isLitE(e.l)&&isLitE(e.r))fail(`line ${line}: arithmetic operation '${a} ${op} ${b}' (on type 'Int') results in an overflow`);
       if(r>=9223372036854775807&&!(r===a&&b===0)&&!(r===b&&(a===0||op==="*"&&a===1))&&!(op==="*"&&b===1)||r<-9223372036854775808)fatal("arithmetic overflow");
       if(!Number.isSafeInteger(r)&&Number.isSafeInteger(a)&&Number.isSafeInteger(b)){const R=op==="+"?BigInt(a)+BigInt(b):op==="-"?BigInt(a)-BigInt(b):op==="*"?BigInt(a)*BigInt(b):null;if(R!==null&&(R>9223372036854775807n||R< -9223372036854775808n))fatal("arithmetic overflow")}
       return r;
@@ -987,15 +1023,20 @@ const TMSwift=(()=>{
         case "switchx":return exprSwitch(e.s,env);
         case "ifx":return exprIf(e.s,env);
         case "implicit":return implicitMember(e.name,e.line);
-        case "try":{
-          if(e.mode==="try?"){try{const v=ev(e.e,env);return v instanceof Some||v===NIL?v:new Some(v)}catch(x){if(x instanceof Thrown)return NIL;throw x}}
-          if(e.mode==="try!"){try{return ev(e.e,env)}catch(x){if(x instanceof Thrown)fatal(`'try!' expression unexpectedly raised an error: main.${desc(x.v.type?x.v.type.name:"Error")}.${desc(x.v)}`);throw x}}
-          return ev(e.e,env)}
+        case "try":return evTry(e,env);
         case "opfn":return new Fn({builtin:([a,b],args,line)=>{const fake={k:"bin",op:e.op,l:{k:"x"},r:{k:"x"},line};return binv(e.op,a,b,fake,line)}});
         case "inout":fail(`line ${e.line||"?"}: & only goes in front of an inout argument`);
       }
       fail(`unsupported expression (${e.k})`,"NotSupported");
     }
+    function evTry(e,env){
+      const d0=depth,t0=tryDepth;tryDepth++;
+      try{return evTry2(e,env)}finally{depth=d0;tryDepth=t0}
+    }
+    function evTry2(e,env){
+          if(e.mode==="try?"){try{const v=ev(e.e,env);return v instanceof Some||v===NIL?v:new Some(v)}catch(x){if(x instanceof Thrown)return NIL;throw x}}
+          if(e.mode==="try!"){try{return ev(e.e,env)}catch(x){if(x instanceof Thrown)fatal(`'try!' expression unexpectedly raised an error: main.${desc(x.v.type?x.v.type.name:"Error")}.${desc(x.v)}`);throw x}}
+          return ev(e.e,env)}
     // .circle(radius: 2): checks the values against the case's types (so 2 becomes 2.0 for a Double)
     function caseMaker(ty,cd){return new Fn({builtin:(vals,args,line)=>{if(vals.length!==cd.assoc.length)fail(`line ${line}: ${ty.name}.${cd.name} takes ${cd.assoc.length} value(s) but got ${vals.length}`);
       return new ECase(ty,cd.name,args.map((a,i)=>conform(copy(a.v),cd.assoc[i].type,line,a.lit,"convert value")))}})}
@@ -1019,10 +1060,15 @@ const TMSwift=(()=>{
       return false;
     }
     function binop(e,env){
-      if(e.op==="&&"){const l=ev(e.l,env);if(typeof l!=="boolean")fail(`line ${e.line}: && needs true/false values on both sides`);if(!l)return false;const r=ev(e.r,env);if(typeof r!=="boolean")fail(`line ${e.line}: && needs true/false values on both sides`);return r}
-      if(e.op==="||"){const l=ev(e.l,env);if(typeof l!=="boolean")fail(`line ${e.line}: || needs true/false values on both sides`);if(l)return true;const r=ev(e.r,env);if(typeof r!=="boolean")fail(`line ${e.line}: || needs true/false values on both sides`);return r}
-      if(e.op==="??"){const l=ev(e.l,env);if(!(l instanceof Some||l===NIL))return l;if(l instanceof Some)return l.v;const r=ev(e.r,env);if(typeof r==="number"&&isLitE(e.r)){}return r}
-      const l=ev(e.l,env),r=ev(e.r,env);
+      if(e.op==="&&")return logicR(e,env,boolL(e,env)?null:false);
+      if(e.op==="||")return logicR(e,env,boolL(e,env)?true:null);
+      if(e.op==="??")return coalesce(ev(e.l,env),e,env);
+      return binop2(ev(e.l,env),e.r.k==="call"?call(e.r,env):ev(e.r,env),e,env);
+    }
+    function boolL(e,env){const l=ev(e.l,env);if(typeof l!=="boolean")fail(`line ${e.line}: ${e.op} needs true/false values on both sides`);return l}
+    function logicR(e,env,known){if(known!==null)return known;const r=ev(e.r,env);if(typeof r!=="boolean")fail(`line ${e.line}: ${e.op} needs true/false values on both sides`);return r}
+    function coalesce(l,e,env){if(!(l instanceof Some||l===NIL))return l;if(l instanceof Some)return l.v;return ev(e.r,env)}
+    function binop2(l,r,e,env){
       if(l instanceof Obj||l instanceof ECase||r instanceof Obj||r instanceof ECase){const u=userOp(e.op,l,r,env,e.line);if(u!==undefined)return u}
       return binv(e.op,l,r,e,e.line);
     }
@@ -1131,11 +1177,19 @@ const TMSwift=(()=>{
       // fast path: calling a function or closure stored under a name
       const f=e.f;
       if(f.k==="name"){const c=env.find(f.v);const fv=c&&(c.fn||!c.computed&&c.v);
-        if(fv instanceof Fn&&fv.decl&&!fv.decl.overloads&&!fv.superInit){tick();return callDecl(fv,argList(e,env),e.line)}
+        if(fv instanceof Fn&&fv.decl&&!fv.decl.overloads&&!fv.superInit){tick();
+          const fn=fv.decl,e2=declEnv(fv,fn,argList(e,env),e.line),td=tryDepth;tryDepth=0;
+          const r=finishCall(fn,runBody(fn.body,e2,true,fn.ret===null));depth--;tryDepth=td;return r}
         if(fv instanceof Fn&&fv.closure){tick();return callClosure(fv,argList(e,env),e.line)}}
-      return callMore(e,env);
+      const r=callSpecial(e,env);
+      return r!==NOSPECIAL?r:callValue(e,env);
     }
     function callMore(e,env){
+      const r=callSpecial(e,env);
+      return r!==NOSPECIAL?r:callValue(e,env);
+    }
+    const NOSPECIAL={};
+    function callSpecial(e,env){
       const f=e.f;
       // super.init(...)
       if(f.k==="member"&&f.e.k==="super"&&f.name==="init"){
@@ -1160,24 +1214,30 @@ const TMSwift=(()=>{
         const conv=CONV[f.v];if(conv)return conv(argList(e,env),e.line,e);
       }
       if(f.k==="member"&&f.e.k==="name"&&types[f.e.v]&&f.name==="init"&&!env.find(f.e.v))return construct(types[f.e.v],argList(e,env),e.line);
-      const fv=ev(f,env);
-      const args=argList(e,env);
+      return NOSPECIAL;
+    }
+    function callValue(e,env){
+      const fv=ev(e.f,env),args=argList(e,env);
+      if(fv instanceof Fn&&fv.decl&&!fv.decl.overloads&&!fv.superInit&&!fv.optWrap){tick();
+        const fn=fv.decl,e2=declEnv(fv,fn,args,e.line),td=tryDepth;tryDepth=0;
+        const r=finishCall(fn,runBody(fn.body,e2,true,fn.ret===null));depth--;tryDepth=td;return r}
+      return callValue2(fv,args,e);
+    }
+    function callValue2(fv,args,e){
       if(fv&&fv.isType)return construct(fv.ty,args,e.line);
       if(!(fv instanceof Fn))fail(`line ${e.line}: cannot call value of non-function type '${typeOfV(fv)}'`);
       if(fv.superInit)return callInit(fv.self,pickFn(allInits(fv.ty),args,e.line),args,e.line);
       let fn=fv;
       if(fv.decl&&fv.decl.overloads)fn=Object.assign(new Fn(fv),{decl:pickFn([fv.decl],args,e.line)});
-      if(fv.decl){const d=fn.decl;if(d.throws&&!inTry(e))tryCheck(e,d);}
       const r=callFn(fn,args,e.line);
       if(fv.optWrap)return r===undefined?new Some(new Tup([])):r instanceof Some||r===NIL?r:new Some(r);
       return r;
     }
-    function inTry(){return true}
-    function tryCheck(){}
 
     /* ----- statements ----- */
+    const isPlain=list=>!list.some(s=>s.k==="func"||s.k==="defer");
     function execList(list,env){
-      if(list.plain===undefined)list.plain=!list.some(s=>s.k==="func"||s.k==="defer");
+      if(list.plain===undefined)list.plain=isPlain(list);
       if(list.plain){for(let i=0;i<list.length;i++)exec(list[i],env);return}
       execListFull(list,env);
     }
@@ -1193,11 +1253,11 @@ const TMSwift=(()=>{
       tick();
       switch(s.k){
         case "empty":case "func":case "type":case "defer":return;
-        case "expr":return execExpr(s,env);
+        case "expr":if(s.e.k==="call"){call(s.e,env);return}return execExpr(s,env);
         case "var":return declVar(s,env);
         case "assign":return assign(s,env);
         case "if":return execIf(s,env);
-        case "return":throw new Ret(s.e?ev(s.e,env):undefined);
+        case "return":throw new Ret(s.e?(s.e.k==="bin"?binop(s.e,env):ev(s.e,env)):undefined);
         case "switch":return doSwitch(s,env);
       }
       return execMore(s,env);
@@ -1210,7 +1270,13 @@ const TMSwift=(()=>{
       }
       if(v instanceof Fn&&e.k!=="call")fail(`line ${s.line}: function is unused. Did you forget the () to call it?`);
     }
-    function execIf(s,env){const e2=new Env(env);if(conds(s.conds,e2,s.line))return execList(s.body,e2);if(s.els)execList(s.els,new Env(env))}
+    function execIf(s,env){
+      const e2=new Env(env),b=conds(s.conds,e2,s.line)?s.body:s.els;if(!b)return;
+      const en=b===s.body?e2:new Env(env);
+      if(b.plain===undefined)b.plain=isPlain(b);
+      if(!b.plain)return execListFull(b,en);
+      for(let i=0;i<b.length;i++)exec(b[i],en);
+    }
     function execMore(s,env){
       switch(s.k){
         case "guard":{const e2=new Env(env);if(conds(s.conds,env,s.line,true))return;
@@ -1228,10 +1294,11 @@ const TMSwift=(()=>{
         case "continue":throw s.label?{cont:s.label}:CNT;
         case "fallthrough":throw {fallthrough:true};
         case "throw":{const v=ev(s.e,env);if(!(v instanceof ECase&&conformsAny(v.type,["Error","LocalizedError"]))&&!(v instanceof Obj&&conformsAny(v.type,["Error","LocalizedError"])))fail(`line ${s.line}: thrown expression type '${typeOfV(v)}' does not conform to 'Error'`);throw new Thrown(v)}
-        case "do":{
+        case "do":{const d0=depth,t0=tryDepth;
           try{execList(s.body,new Env(env))}
           catch(x){
             if(!(x instanceof Thrown))throw x;
+            depth=d0;tryDepth=t0;
             for(const c of s.catches){
               const ce=new Env(env);const p=c.pat;
               if(!p)ce.vars.set("error",cell(x.v,null,true));
@@ -1614,14 +1681,14 @@ const TMSwift=(()=>{
           // reduce(into:) hands the closure an inout accumulator
           if(args[0].label==="into"){const c=cell(copy(acc),null,false);for(const x of it)callFn(f,[{v:c.v,ref:c},{v:x}],line);return c.v}
           // reduce(0) { $0 + $1.price }: Swift reads the 0 as 0.0 when the closure works with Doubles
-          if(typeof acc==="number"&&args[0].lit&&it.length){try{acc=callFn(f,[{v:acc},{v:it[0]}],line)}catch(x){if(!(x instanceof SErr&&x.kind==="CompileError"&&/'Int' and 'Double'|'Double' and 'Int'/.test(x.message)))throw x;acc=callFn(f,[{v:new D(acc)},{v:it[0]}],line)}
+          if(typeof acc==="number"&&args[0].lit&&it.length){const d0=depth,t0=tryDepth;try{acc=callFn(f,[{v:acc},{v:it[0]}],line)}catch(x){if(!(x instanceof SErr&&x.kind==="CompileError"&&/'Int' and 'Double'|'Double' and 'Int'/.test(x.message)))throw x;depth=d0;tryDepth=t0;acc=callFn(f,[{v:new D(acc)},{v:it[0]}],line)}
             for(let i=1;i<it.length;i++)acc=callFn(f,[{v:acc},{v:it[i]}],line);return acc}
           for(const x of it){acc=callFn(f,[{v:acc},{v:x}],line)}return acc});
         case "forEach":return M((vals,args)=>{const f=fnArg(args);for(const x of it)callFn(f,[{v:x}],line);return undefined});
         case "enumerated":return M(()=>new Arr(it.map((x,i)=>new Tup([i,x],["offset","element"])),null));
         case "min":return M((vals,args)=>{if(!it.length)return NIL;const c=sortCmp(args.length?args[0].v:null,line);return new Some(it.reduce((m,x)=>c(x,m)<0?x:m))});
         case "max":return M((vals,args)=>{if(!it.length)return NIL;const c=sortCmp(args.length?args[0].v:null,line);return new Some(it.reduce((m,x)=>c(x,m)>0?x:m))});
-        case "joined":return M((vals,args)=>{const sep=args.length?args[0].v:"";
+        case "joined":return M((vals,args)=>{if(args.length&&args[0].label!=="separator")fail(`line ${line}: missing argument label 'separator:' in call`);const sep=args.length?args[0].v:"";
           if(it.length&&it.every(x=>x instanceof Arr)){const r=[];it.forEach((x,i)=>{if(i&&sep instanceof Arr)r.push(...sep.items);r.push(...x.items)});return new Arr(r,it[0].et)}
           return it.map(x=>x instanceof Chr?x.s:typeof x==="string"?x:fail(`line ${line}: joined() only works on an array of Strings. Use .map { String($0) } first`)).join(sep instanceof Chr?sep.s:sep)});
         case "swapAt":return M(([i,j])=>{const lv=mut();const r=lv.get().items;if(i<0||j<0||i>=r.length||j>=r.length)fatal("Index out of range");[r[i],r[j]]=[r[j],r[i]];return undefined});
