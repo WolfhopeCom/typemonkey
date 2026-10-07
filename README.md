@@ -32,7 +32,7 @@ Also included:
 - **Playground:** free coding in every language, with an input box for programs that ask questions.
 - **Review:** missed questions come back with spaced repetition.
 - **Shop & badges:** spend bananas on outfits for TypeMonkey; earn badges.
-- **Sounds:** soft synthesized effects (no audio files), with an on/off switch in the top bar and in Settings.
+- **Sounds & music:** soft synthesized effects (no audio files): each dance move has its own sound, the monkey goes "nom" on bananas and "bonk" on trees, banana boxes plop higher as they fill. Jr. puzzles play a dance beat or a calm jungle tune. Sounds switch in the top bar and Settings; Music has its own switch in Settings.
 - **Backup code:** Settings → Back up my progress makes a `TM1-` code (or a file) you can paste on another device to restore lessons, bananas and outfits. Codes are checked before anything is replaced.
 - **Progress:** XP, bananas, daily streak and resume-where-you-left-off, saved on the device.
 - **Business model:** Unit 1 of each course is free; a one-time $4.99 unlock opens everything (currently a demo button behind a grown-up check).

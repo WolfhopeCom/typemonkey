@@ -52510,7 +52510,7 @@ const WINS=["Nailed it!","Clean code. Love it.","Ook ook! That's right!","You're
 
 /* ---------- State ---------- */
 const KEY="typemonkey-v1";
-const freshState=()=>({xp:0,bananas:0,streak:0,lastDay:null,done:[],progress:{},pro:false,look:{...DEFAULT_LOOK},owned:{fur:["orange"],hat:["none"],eyes:["round","none"],neck:["none"],pet:["none"]},review:{},settings:{theme:"system",text:"normal",calm:false,sound:true},stats:{},badges:{}});
+const freshState=()=>({xp:0,bananas:0,streak:0,lastDay:null,done:[],progress:{},pro:false,look:{...DEFAULT_LOOK},owned:{fur:["orange"],hat:["none"],eyes:["round","none"],neck:["none"],pet:["none"]},review:{},settings:{theme:"system",text:"normal",calm:false,sound:true,music:true},stats:{},badges:{}});
 /* Fill in anything missing (older saves, restored backups) so the rest of the app can rely on the shape */
 function normState(raw){
   const S={...freshState(),...(raw&&typeof raw==="object"?raw:{})};
@@ -52521,7 +52521,7 @@ function normState(raw){
   if(!S.owned.pet.includes("none"))S.owned.pet.push("none");
   ["orange"].forEach(x=>S.owned.fur.includes(x)||S.owned.fur.push(x));["none"].forEach(x=>S.owned.hat.includes(x)||S.owned.hat.push(x));
   ["round","none"].forEach(x=>S.owned.eyes.includes(x)||S.owned.eyes.push(x));["none"].forEach(x=>S.owned.neck.includes(x)||S.owned.neck.push(x));S.review=S.review||{};
-  S.settings={theme:"system",text:"normal",calm:false,sound:true,...(S.settings||{})};delete S.tester;
+  S.settings={theme:"system",text:"normal",calm:false,sound:true,music:true,...(S.settings||{})};delete S.tester;
   S.stats=S.stats||{};S.badges=S.badges||{};
   return S;
 }
@@ -52545,7 +52545,26 @@ const SFX=(()=>{
     g.gain.setValueAtTime(.0001,at);g.gain.linearRampToValueAtTime(vol,at+a);g.gain.exponentialRampToValueAtTime(.0001,at+dur);
     osc.connect(g);g.connect(out);osc.start(at);osc.stop(at+dur+.03);
   };
+  // filtered noise burst: claps, shakers, whooshes, thuds
+  let NB=null;const nbuf=ctx=>{if(NB&&NB.sampleRate===ctx.sampleRate)return NB;const n=ctx.sampleRate;const b=ctx.createBuffer(1,n,n);const d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;NB=b;return b};
+  const noise=(ctx,out,at,dur,o={})=>{const src=ctx.createBufferSource();src.buffer=nbuf(ctx);const f=ctx.createBiquadFilter();f.type=o.ftype||"bandpass";f.frequency.setValueAtTime(o.f||1500,at);if(o.fto)f.frequency.exponentialRampToValueAtTime(o.fto,at+dur);f.Q.value=o.q||1;
+    const g=ctx.createGain();const vol=o.vol||.08;g.gain.setValueAtTime(.0001,at);g.gain.linearRampToValueAtTime(vol,at+(o.attack||.004));g.gain.exponentialRampToValueAtTime(.0001,at+dur);
+    src.connect(f);f.connect(g);g.connect(out);src.start(at,Math.random()*.5);src.stop(at+dur+.03)};
+  const SCALE=[523,587,659,784,880,1047,1175,1319,1568,1760,2093];  // C major pentatonic, climbing
+  const mar=(c,o,f,t,v=.07)=>{note(c,o,f,t,.35,{type:"sine",vol:v,attack:.003});note(c,o,f*4,t,.08,{type:"sine",vol:v*.25,attack:.002})};  // marimba-ish
   const R={
+    m_clap:(c,o,t)=>{noise(c,o,t,.07,{f:1400,q:.8,vol:.16});noise(c,o,t+.025,.09,{f:1200,q:.8,vol:.14});noise(c,o,t+.05,.16,{f:1000,q:.7,vol:.12})},
+    m_jump:(c,o,t)=>{note(c,o,260,t,.32,{type:"sine",vol:.12,to:780});note(c,o,520,t,.24,{type:"triangle",vol:.04,to:1560})},
+    m_spin:(c,o,t)=>{noise(c,o,t,.42,{f:400,fto:3500,q:2,vol:.12,attack:.08});note(c,o,330,t,.4,{type:"sine",vol:.05,to:990,attack:.05})},
+    m_wave:(c,o,t)=>[1319,1568,2093].forEach((f,i)=>note(c,o,f,t+i*.07,.4,{type:"sine",vol:.06})),
+    m_wiggle:(c,o,t)=>[0,1,2,3,4,5].forEach(i=>note(c,o,i%2?494:392,t+i*.06,.07,{type:"triangle",vol:.08})),
+    walk:(c,o,t,n=0)=>mar(c,o,SCALE[n%8],t,.06),
+    nom:(c,o,t)=>{note(c,o,330,t,.08,{type:"triangle",vol:.11,to:250});note(c,o,392,t+.11,.12,{type:"triangle",vol:.11,to:300});note(c,o,1568,t+.2,.25,{type:"sine",vol:.05})},
+    bonk:(c,o,t)=>{note(c,o,190,t,.22,{type:"sine",vol:.16,to:85});noise(c,o,t,.08,{f:300,q:.7,vol:.1})},
+    plop:(c,o,t,n=0)=>{const f=SCALE[Math.max(0,Math.min(10,n))];note(c,o,f*1.5,t,.12,{type:"sine",vol:.11,to:f*.7});note(c,o,f,t+.05,.2,{type:"sine",vol:.04})},
+    zap:(c,o,t)=>{note(c,o,300,t,.25,{type:"triangle",vol:.08,to:1400});note(c,o,450,t+.04,.25,{type:"sine",vol:.05,to:2100})},
+    ding:(c,o,t,n=0)=>{const f=SCALE[n%9];note(c,o,f,t,.4,{type:"sine",vol:.09});note(c,o,f*2,t,.15,{type:"sine",vol:.03})},
+    tada:(c,o,t)=>{[523,659,784].forEach((f,i)=>mar(c,o,f,t+i*.1,.08));[1047,1319,1568].forEach(f=>note(c,o,f,t+.32,.7,{type:"triangle",vol:.05}));noise(c,o,t+.32,.5,{f:6000,ftype:"highpass",vol:.03})},
     tap:(c,o,t)=>note(c,o,880,t,.05,{type:"triangle",vol:.035,attack:.004}),
     correct:(c,o,t)=>{note(c,o,784,t,.16,{type:"triangle",vol:.1});note(c,o,1175,t+.09,.3,{type:"sine",vol:.1})},
     wrong:(c,o,t)=>note(c,o,300,t,.28,{type:"sine",vol:.12,attack:.02,to:220}),
@@ -52557,7 +52576,7 @@ const SFX=(()=>{
     oops:(c,o,t)=>{note(c,o,440,t,.15,{type:"sine",vol:.09,attack:.015});note(c,o,349,t+.15,.26,{type:"sine",vol:.09,attack:.015})},
     hint:(c,o,t)=>{note(c,o,660,t,.12,{type:"sine",vol:.06});note(c,o,990,t+.08,.2,{type:"sine",vol:.05})}
   };
-  const GAP={tap:60,step:90,coins:150};const last={};let ctx=null,master=null,gestured=false,lastBig=0;
+  const GAP={tap:60,step:90,coins:150,walk:90,ding:70,plop:70,zap:120,nom:120,bonk:150};const last={};let ctx=null,master=null,gestured=false,lastBig=0;
   const AC=typeof window!=="undefined"&&(window.AudioContext||window.webkitAudioContext);
   const on=()=>{try{return !(S&&S.settings&&S.settings.sound===false)}catch(e){return true}};
   function wake(){ // called from inside a real user gesture
@@ -52566,7 +52585,7 @@ const SFX=(()=>{
       if(ctx.state!=="running")ctx.resume().catch(()=>{})}catch(e){ctx=null}
   }
   if(typeof document!=="undefined")["pointerdown","touchend","keydown"].forEach(ev=>document.addEventListener(ev,wake,{capture:true,passive:true}));
-  function play(name){
+  function play(name,arg){
     try{
       const r=R[name];if(!r||!on()||!gestured||!AC)return false;
       if(!ctx)wake();if(!ctx)return false;
@@ -52574,9 +52593,40 @@ const SFX=(()=>{
       if(name==="tap"&&now-lastBig<150)return false;  // don't click over a chime
       last[name]=now;if(name!=="tap"&&name!=="step")lastBig=now;
       if(ctx.state!=="running")ctx.resume().catch(()=>{});
-      r(ctx,master,ctx.currentTime+.01);return true;
+      r(ctx,master,ctx.currentTime+.01,arg);return true;
     }catch(e){return false}
   }
+  /* ---- Music: tiny looping tunes for TypeMonkey Jr. (dance beat, calm jungle). Scheduled a little ahead, fades in and out. ---- */
+  const SONGS={
+    dance:{beat:.31,len:32,vol:.55,step:(c,o,t,i)=>{  // 8th notes; moves land on every other 8th (0.62s)
+      const bar=Math.floor(i/8)%4,k=i%8,ROOT=[131,110,87,98][bar],CH=[[523,659,784],[440,523,659],[349,440,523],[392,494,587]][bar];
+      if(k%2===0)note(c,o,60,t,.18,{type:"sine",vol:.22,to:40,attack:.002});                 // kick
+      if(k===2||k===6)noise(c,o,t,.12,{f:1500,q:.8,vol:.07});                                  // clap
+      if(k%2===1)noise(c,o,t,.04,{f:8000,ftype:"highpass",vol:.035});                          // hat
+      note(c,o,k%2?ROOT*2:ROOT,t,.22,{type:"triangle",vol:.09,attack:.005});                    // bass
+      const mel=[[0,null,1,2,null,1,0,null],[1,null,2,null,1,0,null,0],[2,1,null,0,null,1,null,null],[0,null,1,null,2,null,1,2]][bar][k];
+      if(mel!==null)note(c,o,CH[mel]*(bar===3&&k>5?2:1),t,.2,{type:"square",vol:.022,attack:.005});
+    }},
+    jungle:{beat:.36,len:32,vol:.4,step:(c,o,t,i)=>{
+      const bar=Math.floor(i/8)%4,k=i%8,ARP=[[523,659,784,1047],[440,523,659,880],[349,440,523,698],[392,494,587,784]][bar];
+      if(k%2===0)mar(c,o,ARP[(k/2)%4],t,.05);
+      if(k===3||k===7)mar(c,o,ARP[(k+1)%4]*2,t,.025);
+      noise(c,o,t,.05,{f:7000,ftype:"highpass",vol:k%2?.012:.02});                              // shaker
+      if(k===0)note(c,o,ARP[0]/4,t,1.2,{type:"sine",vol:.07,attack:.05});                       // soft bass hum
+    }}};
+  let song=null,mGain=null,timer=null,nextT=0,idx=0;
+  const musicOn=()=>on()&&!(S&&S.settings&&S.settings.music===false);
+  play.music=(name)=>{try{
+    if(!SONGS[name]||!AC||!musicOn()||!gestured){play.stopMusic();return false}
+    if(song===name&&timer)return true;play.stopMusic(true);
+    if(!ctx)wake();if(!ctx)return false;if(ctx.state!=="running")ctx.resume().catch(()=>{});
+    song=name;const S2=SONGS[name];mGain=ctx.createGain();mGain.gain.setValueAtTime(.0001,ctx.currentTime);mGain.gain.exponentialRampToValueAtTime(S2.vol,ctx.currentTime+1.2);mGain.connect(master);
+    nextT=ctx.currentTime+.1;idx=0;const g=mGain;
+    timer=setInterval(()=>{if(!ctx||g!==mGain)return;while(nextT<ctx.currentTime+.25){S2.step(ctx,g,nextT,idx);nextT+=S2.beat;idx=(idx+1)%S2.len}},60);return true}catch(e){return false}};
+  play.stopMusic=(quick)=>{try{if(timer){clearInterval(timer);timer=null}song=null;if(mGain&&ctx){const g=mGain;mGain=null;const t=ctx.currentTime;g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(Math.max(g.gain.value,.0001),t);g.gain.exponentialRampToValueAtTime(.0001,t+(quick?.15:.6));setTimeout(()=>{try{g.disconnect()}catch(e){}},quick?300:900)}}catch(e){}};
+  play.musicBoost=(up)=>{try{if(mGain&&ctx&&song){const t=ctx.currentTime;mGain.gain.cancelScheduledValues(t);mGain.gain.setValueAtTime(Math.max(mGain.gain.value,.0001),t);mGain.gain.linearRampToValueAtTime(SONGS[song].vol*(up?1.3:1),t+.3)}}catch(e){}};
+  play.song=()=>song;
+  if(typeof document!=="undefined")document.addEventListener("visibilitychange",()=>{if(document.hidden)play.stopMusic(true)});
   play.names=Object.keys(R);
   play.state=()=>ctx?ctx.state:"none";
   /* Self-test: render every sound into a silent offline buffer; returns {name:"ok"|error} */
@@ -52588,7 +52638,7 @@ const SFX=(()=>{
   return play;
 })();
 window.tmSound=SFX;
-const sfx=n=>SFX(n);
+const sfx=(n,a)=>SFX(n,a);
 /* soft tap on every enabled button */
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("button");if(b&&!b.disabled)sfx("tap")},true);
 function renderStats(){$("#sStreak").textContent=S.streak;$("#sBan").textContent=S.bananas;$("#sXp").textContent=S.xp;$("#brandMonkey").innerHTML=monkey();renderSnd()}
@@ -52887,7 +52937,7 @@ function nextUp(c){const L=flat(c);return L.find(x=>S.progress[x.l.id])||L.find(
 
 /* ---------- Home ---------- */
 function home(){
-  rerender=home;setMode(false);
+  SFX.stopMusic();rerender=home;setMode(false);
   const lc=courseById(S.lastCourse);const js=lc&&lc.units&&nextUp(lc)?lc:COURSES[0];const nu=nextUp(js);const resume=nu&&S.progress[nu.l.id];
   const inC=js===COURSES[0]?"":` in ${js.name}`;
   const nextPro=!nu&&flat(js).find(x=>x.l.steps&&status(js,x)==="pro");
@@ -52938,6 +52988,7 @@ function setMode(){}
 
 /* ---------- Course page ---------- */
 function coursePage(cid){
+  SFX.stopMusic();
   rerender=()=>coursePage(cid);
   const c=courseById(cid);setMode(c.kids);const L=flat(c);const [d,n]=countLessons(c);
   const nu=nextUp(c);const nuId=nu&&status(c,nu)!=="pro"?nu.l.id:null;
@@ -53012,6 +53063,7 @@ function renderStep(){
   const s=cur.l.steps[cur.step];const R=cur.c.runnable;
   if(s._course)cur.c=s._course;
   if(s.type!=="done"&&!cur.review&&!cur.daily)saveSpot();
+  jrMusic(s);
   const T={talk,code:codeStep,bug:codeStep,quiz,fill,order,maze,dance,sort:sorter,box:boxGame,predict,build:builder,game:gameIntro,done:finish}[s.type];T(s,R);
 }
 /* For TypeMonkey Jr.: read the card out loud for kids who are still learning to read */
@@ -53160,7 +53212,10 @@ function fill(s){
 /* ---------- TypeMonkey Jr. mini-games ---------- */
 /* Every Jr. puzzle shows one big goal line ("🍌 Get the monkey to the banana!") with a 🔊 button that reads it
    out loud for kids who can't read yet. 🗣️ On makes every puzzle (and TypeMonkey's tips) read itself. */
-const jsnd=n=>{try{window.tmSound&&window.tmSound(n)}catch(e){}};
+const jsnd=(n,a)=>{try{window.tmSound&&window.tmSound(n,a)}catch(e){}};
+/* Jr. background music: a dance beat on dance steps, a calm jungle tune on the other puzzles */
+const JR_SONG={dance:"dance",predictDance:"dance",maze:"jungle",box:"jungle",sort:"jungle",predict:"jungle",build:"jungle"};
+function jrMusic(s){try{const want=cur&&cur.c&&cur.c.kids&&s&&(s.type==="predict"&&s.dance?"dance":JR_SONG[s.type]);if(want)SFX.music(want);else SFX.stopMusic()}catch(e){}}
 const jrVoice=()=>canSpeak&&!!S.jrVoice;
 function jrSpeak(t){if(!canSpeak)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(String(t).replace(/<[^>]*>/g," ").replace(/\p{Extended_Pictographic}|️|‍/gu,"").replace(/\s+/g," ").trim());u.rate=.9;u.pitch=1.15;speechSynthesis.speak(u)}catch(e){}}
 function jrAim(s){
@@ -53210,16 +53265,16 @@ function dance(s){
     $("#run").classList.toggle("ready",!!prog.length&&!won&&!busy)};
   const edit=()=>{mark=-1;glow=null;draw()};
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-  const perform=async(list,mark)=>{busy=true;const dz=$("#dz"),st=$("#stage"),lab=$("#dlab"),sh=$("#dsh");
+  const perform=async(list,mark)=>{busy=true;SFX.musicBoost(true);const dz=$("#dz"),st=$("#stage"),lab=$("#dlab"),sh=$("#dsh");
     $$("#tg .dchip").forEach(c=>c.classList.remove("good","bad"));st.classList.add("live");$("#run").classList.remove("ready");
     $("#beat").innerHTML=list.map(()=>"<i></i>").join("");
-    for(let i=0;i<list.length;i++){const m=list[i];if(!dz.isConnected)return;dz.className="dancer";void dz.offsetWidth;dz.classList.add("d-"+m);jsnd("step");
+    for(let i=0;i<list.length;i++){const m=list[i];if(!dz.isConnected)return;dz.className="dancer";void dz.offsetWidth;dz.classList.add("d-"+m);jsnd("m_"+m);
       lab.textContent=DMOVES[m].icon+" "+DMOVES[m].label+"!";lab.classList.add("on");sh.style.transform=m==="jump"?"scale(.6)":"";setTimeout(()=>{if(sh)sh.style.transform=""},300);
       $$("#beat i").forEach((b,k)=>b.classList.toggle("on",k<=i));
       const n=document.createElement("span");n.className="note";n.textContent=["🎵","🎶","✨","🍌"][i%4];n.style.left=(20+Math.random()*60)+"%";st.appendChild(n);setTimeout(()=>n.remove(),1100);
       $$("#tg .dchip").forEach(c=>{const k=+c.dataset.i;c.classList.toggle("now",k===i&&(mark||k<s.target.length));if(!mark&&k===i)c.classList.add(m===s.target[k]?"good":"bad")});
       await sleep(620)}
-    dz.className="dancer";lab.classList.remove("on");st.classList.remove("live");$$("#tg .dchip").forEach(c=>c.classList.remove("now"));busy=false};
+    dz.className="dancer";lab.classList.remove("on");st.classList.remove("live");$$("#tg .dchip").forEach(c=>c.classList.remove("now"));SFX.musicBoost(false);busy=false};
   $$(".dm").forEach(b=>b.onclick=()=>{if(busy||won)return;if(prog.length>=12)return;prog.push(b.dataset.m);edit()});
   if(loop){$("#tm").onclick=()=>{if(!won&&times>1){times--;edit()}};$("#tp").onclick=()=>{if(!won&&times<6){times++;edit()}}}
   $("#undo").onclick=()=>{if(busy||won)return;prog.pop();edit()};
@@ -53238,7 +53293,7 @@ function dance(s){
     const flatP=loop?Array.from({length:times},()=>prog).flat():prog;mark=-1;glow=null;draw();
     await perform(flatP,false);if(!$("#dz"))return;
     const ok=flatP.length===s.target.length&&flatP.every((m,i)=>m===s.target[i]);
-    if(ok){const first=!everWon;won=everWon=true;if(first){award(15,3);bump("dances")}jsnd("success");$("#dz").innerHTML=monkey("cheer");
+    if(ok){const first=!everWon;won=everWon=true;if(first){award(15,3);bump("dances")}jsnd("tada");$("#dz").innerHTML=monkey("cheer");
       const more=loop&&prog.length>s.solution.pattern.length;
       $("#fb").innerHTML=`<div class="feedback good">🎉 ${esc(s.win||"Perfect dance!")}<div class="kcode"><small>🧑‍💻 Your dance, written as code:</small><pre>${esc(danceCode(prog,times,loop))}</pre></div>
         ${more?`<div class="nudge">🌟 You did it! Can you do it with fewer moves? Put just the part that repeats inside the 🔁 loop. <button class="btn ghost sm" id="fewer">Try with fewer</button></div>`:""}</div>`;
@@ -53269,10 +53324,10 @@ function sorter(s){
   $$(".bin").forEach(b=>b.onclick=()=>{if(i>=s.items.length)return;const k=+b.dataset.k,it=s.items[i];
     if(k===it.bin){counts[k]++;$("#bc"+k).textContent=counts[k];b.classList.remove("ok");void b.offsetWidth;b.classList.add("ok");i++;missHere=0;$$(".bin").forEach(x=>x.classList.remove("glow"));
       $("#fb").innerHTML="";
-      if(i>=s.items.length){award(miss?10:15,3);bump("sorted");jsnd("success");$("#item").innerHTML="✨";$("#left").textContent="All sorted!";
+      if(i>=s.items.length){award(miss?10:15,3);bump("sorted");jsnd("tada");$("#item").innerHTML="✨";$("#left").textContent="All sorted!";
         $("#fb").innerHTML=`<div class="feedback good">🎉 ${esc(s.win||"Everything is sorted!")}${s.code?`<div class="kcode"><small>🧑‍💻 The rule, written as code:</small><pre>${esc(s.code)}</pre></div>`:""}</div>`;
         jrBud(pick(KID_WINS),"cheer");bananaBurst();$("#go").hidden=false;return}
-      jsnd("step");$("#bud").innerHTML=buddy(pick(["Yes!","Good one!","That's right!","Sorted!","You're fast!"]),"happy");show()}
+      jsnd("ding",i);$("#bud").innerHTML=buddy(pick(["Yes!","Good one!","That's right!","Sorted!","You're fast!"]),"happy");show()}
     else{miss++;missHere++;jsnd("oops");const el=$("#item");el.classList.remove("shake");void el.offsetWidth;el.classList.add("shake");
       const why=it.why||"Not that one. Read the rule again!";
       $("#fb").innerHTML=`<div class="feedback oops">${esc(why)}</div>`;
@@ -53299,10 +53354,10 @@ function boxGame(s){
   const oops=(msg,tip)=>{$("#fb").innerHTML=`<div class="feedback oops">${msg}</div>`;tries++;jsnd("oops");jrBud(tries>=2?"Need help? Tap “💡 Show me a hint”.":tip||"Every coder tries again. You can do it!","oops",msg)};
   const draw=(bump)=>{val=calc();$("#vn").textContent=val;$$(".vop,#clr").forEach(b=>b.classList.remove("glow"));
     $("#vin").innerHTML=val>0&&val<=24?"🍌".repeat(val):val>24?"🍌×"+val:"";
-    if(bump){const b=$("#vb");b.classList.remove("hop");void b.offsetWidth;b.classList.add("hop");jsnd("step")}
+    if(bump){const b=$("#vb");b.classList.remove("hop");void b.offsetWidth;b.classList.add("hop");jsnd(ops[ops.length-1]==="x2"?"zap":"plop",Math.max(0,Math.min(10,val)))}
     $("#vc").innerHTML=[`${esc(name)} = ${s.startVal||0}`,...ops.map(o=>esc(opCode(name,o)))].map((l,k)=>`<span class="${k===ops.length&&ops.length?"new":""}">${l}</span>`).join("\n");
     if(won)return;
-    if(val===s.goal&&(!s.max||ops.length<=s.max)){won=true;award(tries?10:15,3);bump2();jsnd("success");
+    if(val===s.goal&&(!s.max||ops.length<=s.max)){won=true;award(tries?10:15,3);bump2();jsnd("tada");
       const more=!s.max&&s.solution&&ops.length>s.solution.length;
       $("#fb").innerHTML=`<div class="feedback good">🎉 ${esc(name)} is ${s.goal}! ${esc(s.win||"You changed a variable like a real coder.")}${more?`<div class="nudge">🌟 You did it! Can you do it with fewer taps? A bigger button could help.</div>`:""}</div>`;
       jrBud(pick(KID_WINS),"cheer");bananaBurst();["undo","clr","hint","ans"].forEach(i=>$("#"+i).hidden=true);$$(".vop").forEach(b=>b.disabled=true);$("#go").hidden=false;return}
@@ -53516,10 +53571,10 @@ function maze(s){
     const {path,result,failAt,left}=simulate(s.grid,s.dir,prog,fn);let k=1;
     const tick=()=>{
       if(!$("#mk"))return;
-      if(k<path.length){const [x,y,d,bump,ate]=path[k];place(x,y,d,bump);jsnd(bump?"oops":ate?"coins":"step");if(ate){const c=document.querySelector(`.mc[data-xy="${ate}"]`);if(c)setTimeout(()=>{c.textContent="✨"},250)}k++;return setTimeout(tick,path.length>40?220:380)}
+      if(k<path.length){const [x,y,d,bump,ate]=path[k];place(x,y,d,bump);jsnd(bump?"bonk":ate?"nom":"walk",k);if(ate){const c=document.querySelector(`.mc[data-xy="${ate}"]`);if(c)setTimeout(()=>{c.textContent="✨"},250)}k++;return setTimeout(tick,path.length>40?220:380)}
       running=false;
       const tooMany=s.max&&total()>s.max;
-      if(result==="win"&&!tooMany){const first=!everWon;won=everWon=true;if(first&&!s.sandbox){award(15,3);bump("mazes");if(s.start)bump("bugsFixed")}jsnd("success");$("#mface").innerHTML=monkey("cheer");
+      if(result==="win"&&!tooMany){const first=!everWon;won=everWon=true;if(first&&!s.sandbox){award(15,3);bump("mazes");if(s.start)bump("bugsFixed")}jsnd("tada");$("#mface").innerHTML=monkey("cheer");
         const more=best&&total()>best;
         $("#fb").innerHTML=`<div class="feedback good">🍌 ${nB>1?"All bananas collected!":"Banana reached!"} ${esc(s.win||pick(WINS))}<div class="kcode"><small>🧑‍💻 Your blocks, written as code:</small><pre>${esc(kidCode(prog,s.func?fn:null))}</pre></div>
           ${more?`<div class="nudge">🌟 You did it! Can you do it with fewer blocks?${loopy?" A loop 🔁 could help.":""} <button class="btn ghost sm" id="fewer">Try with ${best} blocks</button></div>`:""}</div>`;
@@ -53554,11 +53609,11 @@ function predict(s){
   const reset=()=>{mkPlace(m,m.start[0],m.start[1],s.dir);m.goals.forEach(([gx,gy])=>{const c=document.querySelector(`.mc[data-xy="${gx},${gy}"]`);if(c)c.textContent="🍌"});$$(".mc").forEach(c=>c.classList.remove("stop"))};
   $$(".mc.pick").forEach(c=>c.onclick=()=>{if(busy||done)return;$$(".mc.guess").forEach(g=>g.classList.remove("guess"));c.classList.add("guess");guess=c.dataset.xy.split(",").map(Number);$("#run").disabled=false;$("#run").classList.add("ready");jsnd("step")});
   $("#run").onclick=()=>{if(busy||done||!guess)return;busy=true;$("#run").classList.remove("ready");reset();let k=1;
-    const tick=()=>{if(!$("#mk"))return;if(k<path.length){const [x,y,d,bump,ate]=path[k];mkPlace(m,x,y,d,bump);jsnd("step");if(ate){const c=document.querySelector(`.mc[data-xy="${ate}"]`);if(c)setTimeout(()=>{c.textContent="✨"},250)}k++;return setTimeout(tick,420)}
+    const tick=()=>{if(!$("#mk"))return;if(k<path.length){const [x,y,d,bump,ate]=path[k];mkPlace(m,x,y,d,bump);jsnd(ate?"nom":"walk",k);if(ate){const c=document.querySelector(`.mc[data-xy="${ate}"]`);if(c)setTimeout(()=>{c.textContent="✨"},250)}k++;return setTimeout(tick,420)}
       busy=false;tries++;const ok=guess[0]===E.x&&guess[1]===E.y;const stop=document.querySelector(`.mc[data-xy="${E.x},${E.y}"]`);if(stop)stop.classList.add("stop");
       const steps=path.slice(1).filter((p,i)=>p[0]!==path[i][0]||p[1]!==path[i][1]).length,turns=path.slice(1).filter((p,i)=>p[2]!==path[i][2]).length;
       const how=`I walked ${steps} step${steps===1?"":"s"}${turns?` and turned ${turns} time${turns===1?"":"s"}`:""}.`;
-      if(ok){done=true;if(tries===1)award(10,1);jsnd("success");$("#mface").innerHTML=monkey("cheer");$("#fb").innerHTML=`<div class="feedback good">🎉 You guessed it! ${how} You can read code like a pro!</div>`;jrBud(pick(KID_WINS),"cheer");bananaBurst();$("#run").hidden=true;$("#again").hidden=true;$("#go").hidden=false}
+      if(ok){done=true;if(tries===1)award(10,1);jsnd("tada");$("#mface").innerHTML=monkey("cheer");$("#fb").innerHTML=`<div class="feedback good">🎉 You guessed it! ${how} You can read code like a pro!</div>`;jrBud(pick(KID_WINS),"cheer");bananaBurst();$("#run").hidden=true;$("#again").hidden=true;$("#go").hidden=false}
       else{jsnd("oops");$("#mface").innerHTML=monkey("happy");const msg=`Nice try! I stopped on the green square. ${how} Follow the blocks one by one with your finger.`;$("#fb").innerHTML=`<div class="feedback oops">${msg}</div>`;
         jrBud(tries>=2?"Now you know! Tap Continue when you're ready.":"Want to try again? Tap “Guess again”.","happy",msg);$("#run").hidden=true;$("#again").hidden=tries>=2;$("#go").hidden=false;if(tries>=2)done=true}};
     setTimeout(tick,200)};
@@ -53581,10 +53636,10 @@ function predictDance(s){
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   $$(".dm").forEach(b=>b.onclick=async()=>{if(done||busy)return;busy=true;const pickM=b.dataset.m,ok=pickM===ans;$$(".dm").forEach(x=>x.disabled=true);
     const dz=$("#dz"),lab=$("#dlab"),st=$("#stage");st.classList.add("live");
-    for(const mv of seq.slice(0,s.ask+1)){if(!dz.isConnected)return;dz.className="dancer";void dz.offsetWidth;dz.classList.add("d-"+mv);jsnd("step");lab.textContent=DMOVES[mv].icon+" "+DMOVES[mv].label+"!";lab.classList.add("on");await sleep(620)}
+    for(const mv of seq.slice(0,s.ask+1)){if(!dz.isConnected)return;dz.className="dancer";void dz.offsetWidth;dz.classList.add("d-"+mv);jsnd("m_"+mv);lab.textContent=DMOVES[mv].icon+" "+DMOVES[mv].label+"!";lab.classList.add("on");await sleep(620)}
     if(!dz.isConnected)return;dz.className="dancer";lab.classList.remove("on");st.classList.remove("live");done=true;busy=false;
     $("#q").outerHTML=dchip(ans,'id="q"');const q=$("#q");q.classList.add(ok?"good":"glow");
-    if(ok){award(10,1);jsnd("success");dz.innerHTML=monkey("cheer");$("#fb").innerHTML=`<div class="feedback good">🎉 Yes! ${DMOVES[ans].icon} ${DMOVES[ans].label} comes next. You read the loop like a real coder!</div>`;jrBud(pick(KID_WINS),"cheer");bananaBurst()}
+    if(ok){award(10,1);jsnd("tada");dz.innerHTML=monkey("cheer");$("#fb").innerHTML=`<div class="feedback good">🎉 Yes! ${DMOVES[ans].icon} ${DMOVES[ans].label} comes next. You read the loop like a real coder!</div>`;jrBud(pick(KID_WINS),"cheer");bananaBurst()}
     else{jsnd("oops");dz.innerHTML=monkey("happy");const msg=`Nice try! The next move is ${DMOVES[ans].icon} ${DMOVES[ans].label}. The loop does ${s.dance.pattern.map(m=>DMOVES[m].icon).join(" ")} again and again.`;
       $("#fb").innerHTML=`<div class="feedback oops">${msg}</div>`;jrBud("Loops repeat the same moves in the same order. Now you know!","happy",msg)}
     $("#go").hidden=false});
@@ -53641,7 +53696,7 @@ function builder(s){
     if(!count("B")){$("#fb").innerHTML=`<div class="feedback oops">Add at least one 🍌 banana first!</div>`;return say("I need a banana to walk to!","oops")}
     const sol=jrSolve(grid,dir);
     if(!sol){$("#fb").innerHTML=`<div class="feedback oops">Uh oh, trees are blocking a banana! Take away a 🌴 so I can get there.</div>`;return say("I can't reach every banana. Make a path for me!","oops")}
-    S.jrBuild={grid,dir};save();jsnd("success");
+    S.jrBuild={grid,dir};save();jsnd("tada");
     maze({type:"maze",title:"Your own puzzle!",aim:"🍌 Now solve your own puzzle!",grid,dir,blocks:["fwd","left","right","rep"],solution:sol,sandbox:()=>builder(s),say:"You made it, now solve it! Build a program and press Go."})};
   draw();wireGoal();
 }
@@ -53777,7 +53832,7 @@ function showBadge(){
   document.body.appendChild(g);sfx("badge");
   g.querySelector("#cel-ok").onclick=()=>{g.remove();showBadge()};
 }
-function badgesPage(){
+function badgesPage(){SFX.stopMusic();
   const back=rerender===badgesPage?home:rerender;rerender=badgesPage;setMode(false);
   const list=badgeList();const got=list.filter(b=>S.badges[b.id]).length;
   $("#screen").innerHTML=`<div class="stack"><div class="row"><button class="btn ghost sm" id="back">← Back</button></div>
@@ -53813,7 +53868,7 @@ function reviewStep(key,r){
   const st=f.l.steps[r.i];if(!st||!["quiz","fill","order"].includes(st.type))return null;
   return {...st,_rv:key,_course:f.c,_from:f.l.title};
 }
-function startReview(){
+function startReview(){SFX.stopMusic();
   const due=Object.entries(S.review||{}).filter(([,r])=>r.due<=Date.now()).sort((a,b)=>a[1].due-b[1].due);
   const steps=[];for(const [k,r] of due){const st=reviewStep(k,r);if(st)steps.push(st);else delete S.review[k];if(steps.length>=10)break}
   if(!steps.length){
@@ -53863,7 +53918,7 @@ function dailySteps(){
     return {...pk.l.steps[pk.i],_course:pk.c,_from:pk.l.title,_src:{key:pk.l.id+"#"+pk.i,item:{kind:"step",lid:pk.l.id,i:pk.i}}};
   });
 }
-function startDaily(){
+function startDaily(){SFX.stopMusic();
   if(dailyDoneToday()){toast("You already did today's challenge. A new one unlocks tomorrow!");return}
   const steps=dailySteps();if(!steps.length)return toast("Play a lesson first, then the daily challenge unlocks!");
   cur={c:steps[0]._course,l:{id:null,title:"Daily challenge",steps:[...steps,{type:"done"}]},item:null,step:0,earned:{xp:0,ban:0,right:0,total:0},daily:true};
@@ -53884,7 +53939,7 @@ function dailyDone(){
 
 /* ---------- TypeMonkey shop ---------- */
 const SHOP=[["fur","Fur",FURS],["hat","Hats",HATS],["eyes","Glasses",EYES],["neck","Neckwear",NECKS],["pet","Pets",PETS]];
-function shop(tab="hat",preview){
+function shop(tab="hat",preview){SFX.stopMusic();
   rerender=()=>shop(tab);setMode(false);
   const look=preview||S.look;const [slot,label,items]=SHOP.find(x=>x[0]===tab);
   $("#screen").innerHTML=`<div class="stack">
@@ -53915,7 +53970,7 @@ function shop(tab="hat",preview){
 
 /* ---------- Settings ---------- */
 const APP_VERSION="0.9 (prototype)";
-function settingsPage(){
+function settingsPage(){SFX.stopMusic();
   const back=rerender===settingsPage?home:rerender;rerender=settingsPage;setMode(false);
   const st=S.settings;
   const seg=(id,val,opts)=>`<div class="seg" role="radiogroup" id="${id}">${opts.map(([v,l])=>`<button role="radio" aria-checked="${val===v}" data-v="${v}">${l}</button>`).join("")}</div>`;
@@ -53927,6 +53982,7 @@ function settingsPage(){
       <div class="setrow"><div><b>Theme</b><span>Light, dark, or match your device</span></div>${seg("theme",st.theme,[["system","Device"],["light","Light"],["dark","Dark"]])}</div>
       <div class="setrow"><div><b>Text size</b><span>Make lessons easier to read</span></div>${seg("text",st.text,[["normal","Normal"],["large","Large"]])}</div>
       <div class="setrow"><div><b>Sounds</b><span>Little chimes and boops when you tap and answer</span></div>${seg("sound",st.sound===false?"off":"on",[["on","On"],["off","Off"]])}</div>
+      <div class="setrow"><div><b>Music</b><span>Dance beats and jungle tunes in TypeMonkey Jr. puzzles</span></div>${seg("music",st.music===false?"off":"on",[["on","On"],["off","Off"]])}</div>
       <div class="setrow"><div><b>Calm mode</b><span>Turn off bouncing and moving effects</span></div>${seg("calm",st.calm?"on":"off",[["off","Off"],["on","On"]])}</div>
     </div>
     <div class="card setlist">
@@ -53952,7 +54008,7 @@ function settingsPage(){
   </div>`;
   $("#back").onclick=()=>back();
   const bindSeg=(id,fn)=>$$(`#${id} button`).forEach(b=>b.onclick=()=>{fn(b.dataset.v);save();applySettings();settingsPage()});
-  bindSeg("theme",v=>st.theme=v);bindSeg("text",v=>st.text=v);bindSeg("calm",v=>st.calm=v==="on");bindSeg("sound",v=>{st.sound=v==="on";if(st.sound)setTimeout(()=>sfx("correct"),40)});
+  bindSeg("theme",v=>st.theme=v);bindSeg("text",v=>st.text=v);bindSeg("calm",v=>st.calm=v==="on");bindSeg("sound",v=>{st.sound=v==="on";if(st.sound)setTimeout(()=>sfx("correct"),40);else SFX.stopMusic(true)});bindSeg("music",v=>{st.music=v==="on";if(!st.music)SFX.stopMusic(true)});
   if($("#sbuy"))$("#sbuy").onclick=()=>unlockFull(settingsPage);
   $("#restore").onclick=()=>toast(S.pro?"Your purchase is already active.":"In the real app this checks the App Store / Google Play for your purchase. Nothing to restore in the demo.");
   $("#sbackup").onclick=backupPage;
@@ -54000,7 +54056,7 @@ async function copyText(text,ta){
   try{if(ta){ta.focus();ta.select();ta.setSelectionRange(0,text.length)}if(document.execCommand&&document.execCommand("copy"))return true}catch(e){}
   return false;
 }
-function backupPage(){
+function backupPage(){SFX.stopMusic();
   const back=rerender===backupPage?home:rerender;rerender=backupPage;setMode(false);
   const ls=n=>`${n} lesson${n===1?"":"s"}`,bs=n=>`${n} banana${n===1?"":"s"}`;
   $("#screen").innerHTML=`<div class="stack">
@@ -54079,7 +54135,7 @@ const PLAY={
   swift:{name:"Swift",file:"main.swift",run:"swift",start:`let name = "TypeMonkey"\nfor i in 1...3 {\n    print("\\(name) says ook #\\(i)")\n}\n`},
   cpp:{name:"C++",file:"main.cpp",run:"cpp",start:`#include <iostream>\n\nint main() {\n  for (int i = 1; i <= 3; i++) {\n    std::cout << "TypeMonkey says ook #" << i << "\\n";\n  }\n  return 0;\n}\n`}
 };
-function playground(lang="js"){
+function playground(lang="js"){SFX.stopMusic();
   rerender=()=>playground(lang);setMode(false);
   const P=PLAY[lang];
   let saved;try{saved=(S.play||{})[lang]}catch(e){}
@@ -54108,7 +54164,7 @@ function playground(lang="js"){
 }
 
 $("#homeBtn").onclick=home;$("#gearBtn").onclick=settingsPage;
-$("#sndBtn").onclick=()=>{S.settings.sound=S.settings.sound===false;save();toast(S.settings.sound?"Sounds on 🔊":"Sounds off 🔇");if(S.settings.sound)setTimeout(()=>sfx("correct"),40);if(rerender===settingsPage)settingsPage()};
+$("#sndBtn").onclick=()=>{S.settings.sound=S.settings.sound===false;save();if(!S.settings.sound)SFX.stopMusic(true);else if(cur&&cur.l&&$(".lessonbar"))setTimeout(()=>jrMusic(cur.l.steps[cur.step]),60);toast(S.settings.sound?"Sounds on 🔊":"Sounds off 🔇");if(S.settings.sound)setTimeout(()=>sfx("correct"),40);if(rerender===settingsPage)settingsPage()};
 try{addWarmups()}catch(e){console.warn(e)}
 renderStats();home();
 </script>
