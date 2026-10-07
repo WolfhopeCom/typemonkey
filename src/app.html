@@ -129,6 +129,8 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 .burst{position:fixed;left:50%;top:55%;pointer-events:none;z-index:60}
 .burst span{position:absolute;font-size:1.6rem;animation:burst 1.3s cubic-bezier(.2,.7,.3,1) forwards}
 @keyframes burst{0%{transform:translate(0,0) rotate(0) scale(.4);opacity:1}70%{opacity:1}100%{transform:translate(var(--x),calc(var(--y) + 260px)) rotate(var(--r)) scale(1);opacity:0}}
+.peek p{margin:4px 0}.peek.explain{border-style:solid;border-color:var(--accent)}
+.testnote{color:var(--muted);font-size:.88rem;margin:4px 0 0}
 .peek{margin-top:12px;background:var(--surface2);border:1px dashed var(--line);border-radius:12px;padding:10px 14px}
 .peek ul{margin:6px 0 0;padding-left:20px}.peek li.ok{color:var(--leaf)}
 .peek pre{margin:6px 0 0;font-family:var(--mono);font-size:.85rem;white-space:pre-wrap;overflow-x:auto}
@@ -518,10 +520,10 @@ function inputFeeder(input){
   const lines=input==null||input===""?[]:String(input).replace(/\r/g,"").split("\n");if(lines.length&&lines[lines.length-1]==="")lines.pop();let i=0;
   return ()=>i<lines.length?lines[i++]:null;
 }
-function runCode(code,input){
+function runCode(code,input,quiet){
   const out=[];const con=makeConsole(out);
   const nextIn=inputFeeder(input);
-  window.__tmPrompt=(msg="")=>{const v=nextIn();con.log(String(msg)+(v===null?"":" "+v));return v};
+  window.__tmPrompt=(msg="")=>{const v=nextIn();if(!quiet)con.log(String(msg)+(v===null?"":" "+v));return v};
   const body="const prompt=window.__tmPrompt;let __tmN=0;const __tmG=()=>{if(++__tmN>100000)throw new Error('Your loop ran 100,000 times, so I stopped it. Check that it can end.');return true};\n"+guardLoops(code);
   if(!evalBlocked){
     let fn=null;
@@ -566,7 +568,8 @@ def input(prompt=""):
     __tm_v = __tm_in.pop(0) if __tm_in else None
     if __tm_v is None:
         raise EOFError("there's no more input. Type your answers in the ⌨️ Input box under the code, one per line.")
-    print(str(prompt) + __tm_v)
+    if __tm_echo:
+        print(str(prompt) + __tm_v)
     return __tm_v
 `;
 function splitOneLineLoop(line){
@@ -595,7 +598,7 @@ function guardPy(code){
   }
   return out.join("\n");
 }
-function runPython(code,input){
+function runPython(code,input,quiet){
   const B=globalThis.__BRYTHON__;
   const inLines=input==null||input===""?[]:String(input).replace(/\r/g,"").split("\n");if(inLines.length&&inLines[inLines.length-1]==="")inLines.pop();
   if(!B||!B.runPythonSource)return Promise.resolve([["err","The Python engine didn't load. Try reopening the app."]]);
@@ -604,7 +607,7 @@ function runPython(code,input){
   let buf="";const ol=console.log,oe=console.error,ow=console.warn;
   console.log=(...a)=>{if(a.length===1&&typeof a[0]==="string")buf+=a[0]};console.error=()=>{};console.warn=()=>{};
   let err=null;
-  try{B.runPythonSource("__tm_in = "+JSON.stringify(inLines)+"\n"+PY_PRELUDE+guardPy(code),{})}
+  try{B.runPythonSource("__tm_in = "+JSON.stringify(inLines)+"\n__tm_echo = "+(quiet?"False":"True")+"\n"+PY_PRELUDE+guardPy(code),{})}
   catch(e){
     let name="Error",msg="";
     try{name=B.class_name?B.class_name(e):(e.__class__&&e.__class__.__name__)||"Error"}catch(_){}
@@ -621,12 +624,12 @@ function runPython(code,input){
 /* ---------- run any language ---------- */
 function linesOf(r){const lines=r.out.split("\n");if(lines[lines.length-1]==="")lines.pop();const o=lines.map(l=>["log",l]);if(r.error)o.push(["err",r.error]);return o}
 const RUNNERS={
-  js:(c,inp)=>runCode(c,inp),
-  py:(c,inp)=>runPython(c,inp),
-  cs:(c,inp)=>Promise.resolve(linesOf(TMC.run(c,"cs",inp))),
-  cpp:(c,inp)=>Promise.resolve(linesOf(TMC.run(c,"cpp",inp))),
-  java:(c,inp)=>Promise.resolve(linesOf(TMC.run(c,"java",inp))),
-  swift:(c,inp)=>Promise.resolve(linesOf(TMSwift.run(c,inp))),
+  js:(c,inp,q)=>runCode(c,inp,q),
+  py:(c,inp,q)=>runPython(c,inp,q),
+  cs:(c,inp,q)=>Promise.resolve(linesOf(TMC.run(c,"cs",inp,q))),
+  cpp:(c,inp,q)=>Promise.resolve(linesOf(TMC.run(c,"cpp",inp,q))),
+  java:(c,inp,q)=>Promise.resolve(linesOf(TMC.run(c,"java",inp,q))),
+  swift:(c,inp,q)=>Promise.resolve(linesOf(TMSwift.run(c,inp,q))),
   sql:c=>{const r=TMSQL.run(c,ZOO_TABLES);if(!r.ok)return Promise.resolve([["err",r.error]]);const o=TMSQL.text(r).split("\n").map(l=>["log",l]);o.table=r;return Promise.resolve(o)}
 };
 const kindOf=c=>c.runnable===true?"js":c.runnable;
@@ -673,10 +676,18 @@ function checkOut(st,out){
 async function grade(st,code,kind="js"){
   const run=RUNNERS[kind];
   for(const [re,msg] of st.use||[])if(!re.test(code))return [false,msg];
-  const r=checkOut(st,await run(code));if(!r[0])return r;
+  if(st.tests){
+    for(const t of st.tests){
+      const r=checkOut({out:t.out},await run(code,t.input,true));
+      if(!r[0]){const typed=String(t.input||"").split("\n").filter(Boolean).join(", ");
+        return [false,r[1]==="Close! The output doesn't match yet."?`Close! When the player types ${typed?typed:"nothing"}, the game doesn't print the right thing yet.`:r[1],r[2]]}
+    }
+    return [true,st.win||pick(WINS)];
+  }
+  const r=checkOut(st,await run(code,st.input,true));if(!r[0])return r;
   for(const [find,rep,lines] of st.variants||[]){
     if(!find.test(code))continue;
-    const r2=checkOut({out:lines},await run(code.replace(find,rep)));
+    const r2=checkOut({out:lines},await run(code.replace(find,rep),st.input,true));
     if(!r2[0])return [false,`Works for this example, but I changed the starting value (${rep}) and it broke. Make sure your code uses the variables instead of fixed answers.`,r2[2]];
   }
   return [true,st.win||pick(WINS)];
@@ -735,7 +746,9 @@ const COURSES=[
   {...COURSE_CPP,tag:'std::cout << "hi";',runnable:"cpp",lang:"main.cpp"},
   {...COURSE_JAVA,tag:'System.out.println("hi");',runnable:"java",lang:"Main.java"},
   {...COURSE_SWIFT,tag:'print("hi")',runnable:"swift",lang:"main.swift"},
-  {...COURSE_JR,tag:"puzzles for ages 7–12",kids:true,lang:"TypeMonkey moves"}
+  {...COURSE_JR,tag:"puzzles for ages 7–12",kids:true,lang:"TypeMonkey moves"},
+  {...COURSE_PROJECTS,tag:"build real programs",runnable:"py",lang:"main.py"},
+  {...COURSE_BUGLAB,tag:"fix broken code",runnable:"py",lang:"main.py"}
 ];
 const courseById=id=>COURSES.find(c=>c.id===id);
 function flat(c){const L=[];(c.units||[]).forEach((u,ui)=>u.lessons.forEach((l,li)=>L.push({l,u,ui,li,idx:L.length})));return L}
@@ -768,15 +781,17 @@ function home(){
     <div class="tools">
       <button class="tool" id="review"><b>🧠 Review${dueCount()?` <span class="due">${dueCount()}</span>`:""}</b><span>${dueCount()?"Questions you missed are ready to try again":reviewSize()?"All caught up! Missed questions come back here":"Questions you miss come back here later"}</span></button>
       <button class="tool" id="play"><b>›_ Playground</b><span>Write any code you want and run it</span></button>
+      <button class="tool" id="projects"><b>🏗️ Build Projects</b><span>Make real games and apps, one mission at a time</span></button>
+      <button class="tool" id="buglab"><b>🐛 Bug Lab</b><span>This code is broken. Can you fix it?</span></button>
     </div>
     <div class="label">Courses</div>
-    <div class="courses">${COURSES.map(c=>{
+    <div class="courses">${COURSES.filter(c=>!c.extra).map(c=>{
       if(c.soon)return `<button class="course locked" data-c="${c.id}"><span class="pill ${c.kids?"kid":""}">${c.kids?"Kids section":"Coming soon"}</span><h3>${c.name}</h3><span class="tag">${esc(c.tag)}</span></button>`;
       const [d,n,all]=countLessons(c);
       return `<button class="course ${c.id==="js"?"live":""} ${c.kids?"kids":""}" data-c="${c.id}"><span class="pill ${d===n&&n===all?"ok":c.kids&&!d?"kid":"go"}">${d===n&&n===all?"Complete":d?"In progress":c.id==="js"?"Start here":c.kids?"Kids section":"New"}</span>
         <h3>${c.name}</h3><span class="tag">${esc(c.tag)}</span><span class="meta">${c.units.length} units · ${n} lessons${all>n?" (more coming)":""}</span>
         <div class="mini"><span style="width:${n?d/n*100:0}%"></span></div></button>`}).join("")}</div>
-    ${S.pro?`<div class="unlocked">✓ Full version unlocked. Thanks for supporting TypeMonkey!</div>`:`<div class="paywall"><div><h3>Unlock the full version</h3><p>All ${COURSES.reduce((n,c)=>n+countLessons(c)[1],0)} lessons in all ${COURSES.length} courses, every project, and everything we add later. One-time purchase, no subscription.</p></div><button class="btn banana" id="homebuy">Unlock · $4.99</button></div>`}
+    ${S.pro?`<div class="unlocked">✓ Full version unlocked. Thanks for supporting TypeMonkey!</div>`:`<div class="paywall"><div><h3>Unlock the full version</h3><p>All ${COURSES.reduce((n,c)=>n+countLessons(c)[1],0)} lessons in all ${COURSES.filter(c=>!c.extra).length} courses, every Build Project and Bug Lab level, and everything we add later. One-time purchase, no subscription.</p></div><button class="btn banana" id="homebuy">Unlock · $4.99</button></div>`}
     <div class="label">Rewards</div>
     <div class="tools">
       <button class="tool" id="shop"><b>🛍️ Shop</b><span>Spend bananas on outfits for TypeMonkey</span></button>
@@ -786,7 +801,7 @@ function home(){
   if($("#cont"))$("#cont").onclick=()=>startLesson(nu.l.id);
   if($("#unl"))$("#unl").onclick=()=>coursePage("js");
   if($("#homebuy"))$("#homebuy").onclick=()=>unlockFull(home);
-  $("#play").onclick=()=>playground();$("#shop").onclick=()=>shop();$("#review").onclick=startReview;$("#badges").onclick=badgesPage;$("#daily").onclick=startDaily;
+  $("#play").onclick=()=>playground();$("#shop").onclick=()=>shop();$("#review").onclick=startReview;$("#badges").onclick=badgesPage;$("#daily").onclick=startDaily;$("#projects").onclick=()=>coursePage("projects");$("#buglab").onclick=()=>coursePage("buglab");
   $$(".course").forEach(b=>b.onclick=()=>{const c=courseById(b.dataset.c);
     if(c.soon)toast(c.kids?"TypeMonkey Jr. is on the roadmap!":c.name+" is coming soon.");else coursePage(c.id)});
   foot();window.scrollTo(0,0);
@@ -805,8 +820,8 @@ function coursePage(cid){
   rerender=()=>coursePage(cid);
   const c=courseById(cid);setMode(c.kids);const L=flat(c);const [d,n]=countLessons(c);
   $("#screen").innerHTML=`<div class="stack">
-    <div class="row"><button class="btn ghost sm" id="back">← Courses</button></div>
-    <section class="hero"><div class="label">Course</div><h1>${c.name}</h1><p>${c.blurb||""}</p>${c.kids?(()=>{const [g,t]=jrStars(c);return `<span class="jrstars">⭐ ${g} of ${t} stars</span>`})():""}</section>
+    <div class="row"><button class="btn ghost sm" id="back">← ${c.extra?"Home":"Courses"}</button></div>
+    <section class="hero"><div class="label">${c.extra?"Practice":"Course"}</div><h1>${c.name}</h1><p>${c.blurb||""}</p>${c.kids?(()=>{const [g,t]=jrStars(c);return `<span class="jrstars">⭐ ${g} of ${t} stars</span>`})():""}</section>
     <div class="row"><div class="progress"><span style="width:${n?d/n*100:0}%"></span></div><b style="font-variant-numeric:tabular-nums">${d}/${n}</b></div>
     ${c.units.map((u,ui)=>`<div class="unit"><div class="unit-head"><h3>${c.kids?WORLDS[ui%WORLDS.length].emoji+" ":""}Unit ${ui+1} · ${u.name}</h3><span class="label">${u.free?"Free":S.pro?"Unlocked":"Pro"}</span></div><div class="lessons">${
       L.filter(x=>x.ui===ui).map(x=>{const st=status(c,x);const res=S.progress[x.l.id]&&st!=="pro"&&st!=="soon";
@@ -871,7 +886,7 @@ function renderStep(){
   const s=cur.l.steps[cur.step];const R=cur.c.runnable;
   if(s._course)cur.c=s._course;
   if(s.type!=="done"&&!cur.review&&!cur.daily)saveSpot();
-  const T={talk,code:codeStep,quiz,fill,order,maze,game:gameIntro,done:finish}[s.type];T(s,R);
+  const T={talk,code:codeStep,bug:codeStep,quiz,fill,order,maze,game:gameIntro,done:finish}[s.type];T(s,R);
 }
 /* For TypeMonkey Jr.: read the card out loud for kids who are still learning to read */
 const canSpeak=typeof window!=="undefined"&&"speechSynthesis" in window&&typeof SpeechSynthesisUtterance!=="undefined";
@@ -923,15 +938,28 @@ function makeWarmup(s,kind){
 function addWarmups(){
   for(const c of COURSES){if(!c.units||c.kids||c.runnable==="web")continue;const kind=kindOf(c);
     for(const u of c.units)for(const l of u.lessons){if(!l.steps||l.__warm)continue;l.__warm=true;let added=0;
-      for(let i=0;i<l.steps.length&&added<2;i++){const s=l.steps[i];if(s.type!=="code")continue;const w=makeWarmup(s,kind);if(w){l.steps.splice(i,0,w);i++;added++}}}}
+      for(let i=0;i<l.steps.length&&added<2;i++){const s=l.steps[i];if(s.type!=="code"||s.final)continue;const w=makeWarmup(s,kind);if(w){l.steps.splice(i,0,w);i++;added++}}}}
 }
 function codeStep(s){
   let tries=0,solved=false;const k="c"+cur.step;
-  const H=helpPlan(s);let level=0;
-  shell(`<div class="card"><div class="label">${cur.l.project?"Project step":"Code challenge"} · +30 XP</div><h2>${s.title}</h2>${s.body}${editorBlock("c",draft(k)||s.start,cur.c.runnable||true,cur.c.lang)}<div id="fb"></div><div id="peek"></div></div>
-    <div id="bud">${buddy(cur.c.runnable==="web"?"Type your code, then tap ▶ Show page. I'll check what you built. Stuck? Tap 💡 Help and I'll give you one clue at a time.":"Write your code, then hit ▶ Run. Stuck? Tap 💡 Help and I'll give you one clue at a time.","think")}</div>
-    <div class="row"><button class="btn" id="go" disabled>Continue</button><button class="btn ghost" id="hint">💡 Help</button><button class="linkbtn" id="answer" hidden>Show the whole answer</button></div>`);
-  const showHelp=()=>{
+  const H=helpPlan(s);let level=0;const isBug=s.type==="bug";
+  const label=isBug?"🐛 Bug Lab · fix the code":s.final?"🏁 Final build":s.mission?"🏗️ "+esc(s.mission):cur.l.project?"Project step":"Code challenge";
+  const firstIn=s.input||(s.tests&&s.tests[0].input)||"";
+  shell(`<div class="card"><div class="label">${label} · +30 XP</div><h2>${s.title}</h2>${s.body}${s.tests&&s.tests.length>1?`<p class="testnote">TypeMonkey will test it ${s.tests.length} ways, typing different answers each time.</p>`:""}${editorBlock("c",draft(k)||s.start,cur.c.runnable||true,cur.c.lang,firstIn)}<div id="fb"></div><div id="peek"></div></div>
+    <div id="bud">${buddy(isBug?"This code is broken! Press ▶ Run to see what happens, then fix it. Tap 💡 Hint if you get stuck.":cur.c.runnable==="web"?"Type your code, then tap ▶ Show page. I'll check what you built. Stuck? Tap 💡 Help and I'll give you one clue at a time.":"Write your code, then hit ▶ Run. Stuck? Tap 💡 Help and I'll give you one clue at a time.","think")}</div>
+    <div class="row"><button class="btn" id="go" disabled>Continue</button><button class="btn ghost" id="hint">${isBug?"💡 Hint 1":"💡 Help"}</button><button class="linkbtn" id="answer" hidden>${isBug?"Show the fixed code":"Show the whole answer"}</button></div>`);
+  const showBugHelp=()=>{
+    const hs=s.hints||[];
+    if(level<hs.length){level++;
+      $("#peek").innerHTML=`<div class="peek">${hs.slice(0,level).map((h,i)=>`<p>💡 <b>Hint ${i+1}:</b> ${h}</p>`).join("")}</div>`;
+      $("#hint").textContent=level<hs.length?`💡 Hint ${level+1}`:"🔎 Show explanation";
+      $("#bud").innerHTML=buddy(level<hs.length?"Look where the hint points, then try again.":"Still stuck? The explanation tells you exactly what's wrong.","think");return}
+    level++;
+    $("#peek").innerHTML+=`<div class="peek explain"><b>🔎 What's wrong</b><p>${s.explain||""}</p></div>`;
+    $("#hint").hidden=true;$("#answer").hidden=false;
+    $("#bud").innerHTML=buddy("Now you know the bug. Fix it in the code and press ▶ Run!","happy");
+  };
+  const showHelp=()=>{if(isBug)return showBugHelp();
     const code=$("#code-c").value;
     if(level===0&&H.tips.length){level=1;
       $("#peek").innerHTML=`<div class="peek"><b>TypeMonkey's plan</b><ul>${H.tips.map(([re,m])=>`<li class="${re.test(code)?"ok":""}">${re.test(code)?"✓ ":""}${esc(m)}</li>`).join("")}</ul></div>`;
@@ -948,7 +976,8 @@ function codeStep(s){
   wireEditor("c",async(code)=>{
     tries++;const [ok,msg,detail]=cur.c.runnable==="web"?gradeWebNow(s,code):await grade(s,code,kindOf(cur.c));
     $("#fb").innerHTML=`<div class="feedback ${ok?"good":"bad"}">${ok?"✓ ":""}${esc(msg)}${detail?`<pre>${esc(detail)}</pre>`:""}</div>`;
-    $("#bud").innerHTML=buddy(ok?(level>1?"You did it! Using hints is how everyone learns. 🍌 +5":"Look at you go! 🍌 +5"):tries>=2&&level===0?"This one's tricky! Tap 💡 Help and I'll show you the plan.":tries>=2?"Getting closer! Tap 💡 for the next clue.":"Not quite yet. Read the message above, tweak it, and run it again.",ok?"cheer":"oops");
+    $("#bud").innerHTML=buddy(ok?(isBug?(level===0?"Bug squashed with no hints! You're a real debugger. 🐛🔨":"Bug squashed! 🐛🔨 Every programmer fixes bugs like this."):level>1?"You did it! Using hints is how everyone learns. 🍌 +5":s.final?"You built the whole thing yourself! 🏆":"Look at you go! 🍌 +5"):tries>=2&&level===0?(isBug?"Tricky bug! Tap 💡 Hint 1 for a clue.":"This one's tricky! Tap 💡 Help and I'll show you the plan."):tries>=2?"Getting closer! Tap 💡 for the next clue.":"Not quite yet. Read the message above, tweak it, and run it again.",ok?"cheer":"oops");
+    if(ok&&isBug)bump("bugsFixed");
     if(!ok&&tries===2&&level===0)$("#hint").classList.add("nudge");
     if(ok&&!solved){solved=true;$("#go").disabled=false;award(30,5);bump("challenges");if(tries===1)bump("firstTry")}
   });

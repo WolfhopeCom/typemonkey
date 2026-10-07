@@ -459,11 +459,11 @@ const TMC=(()=>{
   }
 
   /* ---------- runtime ---------- */
-  function run(code,lang,input){
+  function run(code,lang,input,quiet){
     let out="";let steps=0;
     /* typed input from TypeMonkey's ⌨️ Input box: read by lines or by words, echoed like a terminal would show it */
     const IN=input==null?"":String(input).replace(/\r/g,"");let inPos=0,echoed=0;const hasIn=input!=null&&IN.length>0;
-    const echoFrom=at=>{if(at>=echoed){const e=IN.indexOf("\n",at);const end=e<0?IN.length:e;W(IN.slice(at,end)+"\n");echoed=end+1}};
+    const echoFrom=at=>{if(quiet)return;if(at>=echoed){const e=IN.indexOf("\n",at);const end=e<0?IN.length:e;W(IN.slice(at,end)+"\n");echoed=end+1}};
     const readLineIn=()=>{if(inPos>=IN.length)return null;echoFrom(inPos);const e=IN.indexOf("\n",inPos);const end=e<0?IN.length:e;const line=IN.slice(inPos,end);inPos=end+1;return line};
     const readTok=()=>{while(inPos<IN.length&&/\s/.test(IN[inPos]))inPos++;if(inPos>=IN.length)return null;echoFrom(inPos);let j=inPos;while(j<IN.length&&!/\s/.test(IN[j]))j++;const t=IN.slice(inPos,j);inPos=j;return t};
     const peekTok=()=>{let k=inPos;while(k<IN.length&&/\s/.test(IN[k]))k++;if(k>=IN.length)return null;let j=k;while(j<IN.length&&!/\s/.test(IN[j]))j++;return IN.slice(k,j)};

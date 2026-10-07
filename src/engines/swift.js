@@ -411,7 +411,7 @@ const TMSwift=(()=>{
   }
 
   /* ---------- runtime ---------- */
-  function run(code,input){
+  function run(code,input,quiet){
     let out="",steps=0,depth=0;const IN=input==null?"":String(input).replace(/\r/g,"");let inPos=0;
     const W=s=>{out+=s;if(out.length>200000)fail("Your program printed too much, so I stopped it.","Timeout")};
     const tick=()=>{if(++steps>400000)fail("Your program ran too long, so I stopped it. Check for a loop that never ends.","Timeout")};
@@ -1208,7 +1208,7 @@ const TMSwift=(()=>{
         return {seq,stride:true}}),
       zip:B(([a,b],args,line)=>{const x=[...iterate(a,line)],y=[...iterate(b,line)];return new Arr(x.slice(0,Math.min(x.length,y.length)).map((v,i)=>new Tup([v,y[i]])),null)}),
       type:B(([v])=>({isTypeName:typeOfV(v)})),
-      readLine:B(()=>{if(inPos>=IN.length)return NIL;const e2=IN.indexOf("\n",inPos);const end=e2<0?IN.length:e2;const line=IN.slice(inPos,end);inPos=end+1;W(line+"\n");return new Some(line)}),
+      readLine:B(()=>{if(inPos>=IN.length)return NIL;const e2=IN.indexOf("\n",inPos);const end=e2<0?IN.length:e2;const line=IN.slice(inPos,end);inPos=end+1;if(!quiet)W(line+"\n");return new Some(line)}),
       fatalError:B(([m])=>fatal(m===undefined?"":desc(m))),
       precondition:B(([c,m])=>{if(!c)fatal(m===undefined?"Precondition failed":"Precondition failed: "+desc(m));return undefined}),
       assert:B(([c,m])=>{if(!c)fatal(m===undefined?"Assertion failed":"Assertion failed: "+desc(m));return undefined}),

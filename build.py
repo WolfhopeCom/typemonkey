@@ -16,7 +16,7 @@ COURSE_FILES = [  # order matters: later files can reference earlier ones
     "csharp-units-2-4.js",
     "csharp.js",
     "cpp-units-2-4.js",
-    "cpp.js", "java-units-1-3.js", "java-units-4-6.js", "game.js", "swift.js",
+    "cpp.js", "java-units-1-3.js", "java-units-4-6.js", "game.js", "swift.js", "extras.js",
     "python-units-1-3.js",
     "python-units-4-6.js",
     "sql.js",
