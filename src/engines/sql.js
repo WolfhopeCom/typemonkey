@@ -343,7 +343,10 @@ const TMSQL=(()=>{
       let groups;
       if(q.group){
         const m=new Map();
-        for(const r of rows){const key=q.group.map(g=>evalE(g,{...r,aliases:null},db));const k=JSON.stringify(key.map(v=>v instanceof Real?["r",v.x]:v));if(!m.has(k))m.set(k,{key,rows:[]});m.get(k).rows.push(r)}
+        const gexprs=q.group.map(g=>{if(g.col!==undefined&&!g.table){const it=q.items.find(it=>it.alias&&it.alias.toLowerCase()===g.col.toLowerCase());
+          if(it&&!(rows[0]&&rows[0].frames.some(f=>f.cols.some(c=>c.toLowerCase()===g.col.toLowerCase()))))return it.e}
+          if("lit" in g&&typeof g.lit==="number"&&q.items[g.lit-1]&&q.items[g.lit-1].e)return q.items[g.lit-1].e;return g});
+        for(const r of rows){const key=gexprs.map(g=>evalE(g,{...r,aliases:null},db));const k=JSON.stringify(key.map(v=>v instanceof Real?["r",v.x]:v));if(!m.has(k))m.set(k,{key,rows:[]});m.get(k).rows.push(r)}
         groups=[...m.values()];
         groups.sort((a,b)=>{for(let i=0;i<a.key.length;i++){const c=compare(a.key[i],b.key[i]);if(c)return c}return 0});
       }else groups=[{rows}];

@@ -24,6 +24,8 @@ COURSE_FILES = [  # order matters: later files can reference earlier ones
     "jr.js",
     "challenges.js",  # code challenges for Python, SQL, C#, C++ (attaches to lessons above)
     "pools-extra.js",  # extra Output Rush rounds (attaches to lessons above)
+    "more-js-py.js",  # JavaScript Unit 7, Python Unit 7
+    "more-web-sql-cs-cpp.js",  # HTML & CSS, SQL, C#, C++ Unit 5
 ]
 
 ENGINE_FILES = ["sql.js", "clike.js"]  # in-house SQL engine and C#/C++ runner; Python is Brython (src/vendor)

@@ -886,6 +886,10 @@ const TMC=(()=>{
       rand:B(()=>Math.floor(Math.random()*32768)),srand:B(()=>null),time:B(()=>0),
       printf:B((f,...a)=>{let i=0;W(str(f).replace(/%(-?\d*)(?:\.(\d+))?([dfsci%])/g,(m,w,pr,k)=>{if(k==="%")return "%";const v=a[i++];let s=k==="f"?nv(v).toFixed(pr?+pr:6):k==="c"?String.fromCodePoint(nv(v)):str(v);if(w){const n=+w;s=n<0?s.padEnd(-n):s.padStart(n)}return s}));return null}),
       npos:-1,
+      toupper:B(c=>String.fromCodePoint(nv(c)).toUpperCase().codePointAt(0)),tolower:B(c=>String.fromCodePoint(nv(c)).toLowerCase().codePointAt(0)),
+      isdigit:B(c=>/[0-9]/.test(String.fromCodePoint(nv(c)))?1:0),isalpha:B(c=>/[A-Za-z]/.test(String.fromCodePoint(nv(c)))?1:0),
+      isalnum:B(c=>/[A-Za-z0-9]/.test(String.fromCodePoint(nv(c)))?1:0),isupper:B(c=>/[A-Z]/.test(String.fromCodePoint(nv(c)))?1:0),
+      islower:B(c=>/[a-z]/.test(String.fromCodePoint(nv(c)))?1:0),isspace:B(c=>/\s/.test(String.fromCodePoint(nv(c)))?1:0),
       Exception:{isClass:true,cls:{name:"Exception",methods:Object.create(null),staticVals:{}}},
     };
 
