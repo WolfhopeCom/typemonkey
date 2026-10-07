@@ -163,6 +163,11 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;max-width:calc(100% - 32px);z-index:9}
 .foot{color:var(--muted);font-size:.8rem;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
 .foot .row{justify-content:center}
+.restbl{overflow-x:auto;margin-bottom:6px}
+.restbl table{border-collapse:collapse;font-family:var(--mono);font-size:.82rem;color:#B8F5D3}
+.restbl th{color:#7FA394;text-align:left;font-weight:600;border-bottom:1px solid #ffffff22}
+.restbl th,.restbl td{padding:4px 12px 4px 0;white-space:nowrap}
+.restbl td.null{color:#5E7E70;font-style:italic}
 /* web preview */
 .webview{border-top:1px solid #ffffff14;background:#fff;min-height:72px;max-height:340px;overflow:auto}
 /* SQL tables */
@@ -218,6 +223,9 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 </div>
 <div class="toast" id="toast" hidden></div>
 
+<script>globalThis.__BRYTHON__={brython_path:"https://typemonkey.app/"};
+try{new Intl.Locale(navigator.language)}catch(e){try{Object.defineProperty(Navigator.prototype,"language",{get:()=>"en-US"});Object.defineProperty(Navigator.prototype,"languages",{get:()=>["en-US"]})}catch(_){}}</script>
+<script>/*VENDOR*/</script>
 <script>
 /*COURSE_DATA*/
 </script>
@@ -331,15 +339,87 @@ function runCode(code){
     document.body.appendChild(s);s.remove();window.removeEventListener("error",onErr);res(out);
   });
 }
-function paintConsole(el,out){
-  el.innerHTML=out.length?out.map(([k,v])=>`<div class="${k==="err"?"err":""}">${k==="err"?"✖ ":"› "}${esc(v)}</div>`).join(""):'<span class="dim">(nothing printed. Try console.log)</span>';
+/* ---------- Python (Brython, bundled) ---------- */
+let pyReady=false;
+const PY_PRELUDE=`__tm_n = [0]
+def __tm_guard():
+    __tm_n[0] += 1
+    if __tm_n[0] > 100000:
+        raise RuntimeError("Your loop ran 100,000 times, so I stopped it. Check that it can end.")
+__tm_round = round
+def round(x, n=None):
+    if n is None:
+        return __tm_round(x)
+    if isinstance(x, float) and n >= 0:
+        return float(format(x, "." + str(n) + "f"))
+    if n < 0:
+        q = 10 ** (-n)
+        if isinstance(x, int):
+            d, r = divmod(x, q)
+            if r * 2 > q or (r * 2 == q and d % 2 == 1):
+                d += 1
+            return d * q
+        return float(__tm_round(x / q) * q)
+    return __tm_round(x, n)
+def input(prompt=""):
+    raise RuntimeError("input() can't read typing in TypeMonkey yet. Set the value in your code instead, like: name = 'Sam'")
+`;
+function guardPy(code){
+  const lines=code.split("\n");const out=[];
+  for(let i=0;i<lines.length;i++){
+    out.push(lines[i]);
+    if(/^\s*(while|for)\b.*:\s*(#.*)?$/.test(lines[i])){
+      let j=i+1;while(j<lines.length&&/^\s*(#.*)?$/.test(lines[j]))j++;
+      if(j<lines.length){const ind=lines[j].match(/^\s*/)[0];if(ind.length>lines[i].match(/^\s*/)[0].length)out.push(ind+"__tm_guard()")}
+    }
+  }
+  return out.join("\n");
 }
+function runPython(code){
+  const B=globalThis.__BRYTHON__;
+  if(!B||!B.runPythonSource)return Promise.resolve([["err","The Python engine didn't load. Try reopening the app."]]);
+  if(!pyReady){try{brython({debug:0,ids:[]})}catch(e){}pyReady=true}
+  let buf="";const ol=console.log,oe=console.error,ow=console.warn;
+  console.log=(...a)=>{if(a.length===1&&typeof a[0]==="string")buf+=a[0]};console.error=()=>{};console.warn=()=>{};
+  let err=null;
+  try{B.runPythonSource(PY_PRELUDE+guardPy(code),{})}
+  catch(e){
+    let name="Error",msg="";
+    try{name=B.class_name?B.class_name(e):(e.__class__&&e.__class__.__name__)||"Error"}catch(_){}
+    try{msg=B.builtins.str.$factory(e)}catch(_){msg=e&&e.args?String(e.args[0]):String(e)}
+    if(name==="SyntaxError"||name==="IndentationError")msg=msg.replace(/\s*\(.*line \d+\)$/,"");
+    err=`${name}: ${msg}`.replace(/: $/,"");
+    if(name==="RecursionError"||/Maximum call stack/.test(msg))err="RecursionError: a function kept calling itself. Check your stopping case.";
+  }finally{console.log=ol;console.error=oe;console.warn=ow}
+  const lines=buf.split("\n");if(lines[lines.length-1]==="")lines.pop();
+  const res=lines.map(l=>["log",l]);if(err)res.push(["err",err]);
+  return Promise.resolve(res);
+}
+/* ---------- run any language ---------- */
+function linesOf(r){const lines=r.out.split("\n");if(lines[lines.length-1]==="")lines.pop();const o=lines.map(l=>["log",l]);if(r.error)o.push(["err",r.error]);return o}
+const RUNNERS={
+  js:c=>runCode(c),
+  py:c=>runPython(c),
+  cs:c=>Promise.resolve(linesOf(TMC.run(c,"cs"))),
+  cpp:c=>Promise.resolve(linesOf(TMC.run(c,"cpp"))),
+  sql:c=>{const r=TMSQL.run(c,ZOO_TABLES);if(!r.ok)return Promise.resolve([["err",r.error]]);const o=TMSQL.text(r).split("\n").map(l=>["log",l]);o.table=r;return Promise.resolve(o)}
+};
+const kindOf=c=>c.runnable===true?"js":c.runnable;
+function paintConsole(el,out,hint){
+  if(out.table&&out.table.columns.length){
+    const r=out.table;
+    el.innerHTML=`<div class="restbl"><table><thead><tr>${r.columns.map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${r.rows.length?r.rows.map(row=>`<tr>${row.map(v=>`<td class="${v===null?"null":""}">${esc(TMSQL.show(v))}</td>`).join("")}</tr>`).join(""):`<tr><td colspan="${r.columns.length}" class="null">(no rows)</td></tr>`}</tbody></table></div><div class="dim">${r.rows.length} row${r.rows.length===1?"":"s"}</div>`;
+    return;
+  }
+  el.innerHTML=out.length?out.map(([k,v])=>`<div class="${k==="err"?"err":""}">${k==="err"?"✖ ":"› "}${esc(v)}</div>`).join(""):`<span class="dim">(nothing printed${hint?". "+hint:""})</span>`;
+}
+const PRINT_HINT={js:"Try console.log",py:"Try print()",cs:"Try Console.WriteLine",cpp:"Try std::cout <<",sql:"Try a SELECT"};
 
 /* ---------- Grading code challenges ---------- */
 const norm=l=>{l=String(l).trim();return /^[\[{]/.test(l)?l.replace(/\s+/g,""):l};
 function checkOut(st,out){
   const err=out.find(o=>o[0]==="err");
-  if(err)return [false,"Your code hit an error. Read the red line in the console. A missing quote, bracket or brace is the usual suspect."];
+  if(err)return [false,"Your code hit an error. Read the red line in the console: it says what went wrong and usually which line."];
   const logs=out.filter(o=>o[0]==="log").map(o=>o[1]);
   if(st.out){
     const ok=st.out.length===logs.length&&st.out.every((e,i)=>norm(e)===norm(logs[i]));
@@ -348,12 +428,13 @@ function checkOut(st,out){
   for(const [re,msg] of st.outRe||[])if(!logs.some(l=>re.test(l)))return [false,msg];
   return [true];
 }
-async function grade(st,code){
+async function grade(st,code,kind="js"){
+  const run=RUNNERS[kind];
   for(const [re,msg] of st.use||[])if(!re.test(code))return [false,msg];
-  const r=checkOut(st,await runCode(code));if(!r[0])return r;
+  const r=checkOut(st,await run(code));if(!r[0])return r;
   for(const [find,rep,lines] of st.variants||[]){
     if(!find.test(code))continue;
-    const r2=checkOut({out:lines},await runCode(code.replace(find,rep)));
+    const r2=checkOut({out:lines},await run(code.replace(find,rep)));
     if(!r2[0])return [false,`Works for this example, but I changed the starting value (${rep}) and it broke. Make sure your code uses the variables instead of fixed answers.`,r2[2]];
   }
   return [true,st.win||pick(WINS)];
@@ -404,11 +485,11 @@ function tableHTML(c,name){
 /* ---------- Courses ---------- */
 const COURSES=[
   {...COURSE_JS,tag:"console.log('hi')",runnable:true,lang:"script.js"},
-  {...COURSE_PY,tag:"print('hi')",lang:"main.py"},
+  {...COURSE_PY,tag:"print('hi')",runnable:"py",lang:"main.py"},
   {...COURSE_WEB,tag:"<h1>hi</h1>",runnable:"web",lang:"index.html"},
-  {...COURSE_SQL,tag:"SELECT 'hi';",lang:"query.sql",rushHint:"Each result row is on its own line, columns split by |."},
-  {...COURSE_CS,tag:'Console.WriteLine("hi");',lang:"Program.cs"},
-  {...COURSE_CPP,tag:'std::cout << "hi";',lang:"main.cpp"},
+  {...COURSE_SQL,tag:"SELECT 'hi';",runnable:"sql",lang:"query.sql",rushHint:"Each result row is on its own line, columns split by |."},
+  {...COURSE_CS,tag:'Console.WriteLine("hi");',runnable:"cs",lang:"Program.cs"},
+  {...COURSE_CPP,tag:'std::cout << "hi";',runnable:"cpp",lang:"main.cpp"},
   {...COURSE_JR,tag:"puzzles for ages 7–12",kids:true,lang:"TypeMonkey moves"}
 ];
 const courseById=id=>COURSES.find(c=>c.id===id);
@@ -520,13 +601,13 @@ function editorBlock(id,code,runnable,file){
     ${runnable?`<textarea id="code-${id}" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="Code editor" rows="${Math.min(14,Math.max(5,code.split("\n").length+1))}">${esc(code)}</textarea>
     ${runnable==="web"?`<div class="webview" id="out-${id}" aria-label="Page preview"></div>`:`<div class="console" id="out-${id}"><span class="dim">Console output appears here</span></div>`}`:`<pre>${esc(code)}</pre>`}</div>`;
 }
-function wireEditor(id,after){
+function wireEditor(id,after,kind){
   const ta=$("#code-"+id);if(!ta)return;
   ta.addEventListener("keydown",e=>{if(e.key==="Tab"){e.preventDefault();const s=ta.selectionStart;ta.value=ta.value.slice(0,s)+"  "+ta.value.slice(ta.selectionEnd);ta.selectionStart=ta.selectionEnd=s+2}});
   const out=$("#out-"+id),web=out.classList.contains("webview");
   if(web)renderWeb(out,ta.value);
   $("#run-"+id).onclick=async()=>{if(web){renderWeb(out,ta.value);after&&after(ta.value);return}
-    const res=await runCode(ta.value);paintConsole(out,res);after&&after(ta.value,res)};
+    const k=kind||(cur?kindOf(cur.c):"js");const res=await RUNNERS[k](ta.value);paintConsole(out,res,PRINT_HINT[k]);after&&after(ta.value,res)};
 }
 const award=(xp,ban=0)=>{cur.earned.xp+=xp;cur.earned.ban+=ban};
 
@@ -546,7 +627,7 @@ function codeStep(s){
     <div id="bud">${buddy(cur.c.runnable==="web"?"Type your code, then tap ▶ Show page. I'll check what you built.":"Write your code, then hit ▶ Run. I'll check it for you.","think")}</div>
     <div class="row"><button class="btn" id="go" disabled>Continue</button><button class="btn ghost" id="hint">Show me how</button></div>`);
   wireEditor("c",async(code)=>{
-    tries++;const [ok,msg,detail]=cur.c.runnable==="web"?gradeWebNow(s,code):await grade(s,code);
+    tries++;const [ok,msg,detail]=cur.c.runnable==="web"?gradeWebNow(s,code):await grade(s,code,kindOf(cur.c));
     $("#fb").innerHTML=`<div class="feedback ${ok?"good":"bad"}">${ok?"✓ ":""}${esc(msg)}${detail?`<pre>${esc(detail)}</pre>`:""}</div>`;
     $("#bud").innerHTML=buddy(ok?"Look at you go! 🍌 +5":tries>2?"Stuck? Tap “Show me how”. Peeking is part of learning.":"Not quite yet. You've got this.",ok?"cheer":"oops");
     if(ok&&!solved){solved=true;$("#go").disabled=false;award(30,5)}
@@ -772,11 +853,12 @@ function grownUpGate(onPass){
 
 /* ---------- Playground ---------- */
 const PLAY={
-  js:{name:"JavaScript",file:"script.js",run:true,start:`// Try anything! Press ▶ Run.\nconst name = "TypeMonkey";\nfor (let i = 1; i <= 3; i++) {\n  console.log(\`\${name} says ook #\${i}\`);\n}\n`},
+  js:{name:"JavaScript",file:"script.js",run:"js",start:`// Try anything! Press ▶ Run.\nconst name = "TypeMonkey";\nfor (let i = 1; i <= 3; i++) {\n  console.log(\`\${name} says ook #\${i}\`);\n}\n`},
   web:{name:"HTML & CSS",file:"index.html",web:true,start:`<style>\n  h1 { color: #FF7A1A; }\n  .card { background: #FFF4E5; padding: 12px; border-radius: 12px; }\n</style>\n\n<h1>TypeMonkey's page</h1>\n<div class="card">\n  <p>Change anything, then tap <b>Show page</b>!</p>\n</div>\n`},
-  py:{name:"Python",file:"main.py",start:`name = "TypeMonkey"\nfor i in range(1, 4):\n    print(f"{name} says ook #{i}")\n`},
-  cs:{name:"C#",file:"Program.cs",start:`using System;\n\nclass Program {\n  static void Main() {\n    for (int i = 1; i <= 3; i++) {\n      Console.WriteLine($"TypeMonkey says ook #{i}");\n    }\n  }\n}\n`},
-  cpp:{name:"C++",file:"main.cpp",start:`#include <iostream>\n\nint main() {\n  for (int i = 1; i <= 3; i++) {\n    std::cout << "TypeMonkey says ook #" << i << "\\n";\n  }\n  return 0;\n}\n`}
+  py:{name:"Python",file:"main.py",run:"py",start:`name = "TypeMonkey"\nfor i in range(1, 4):\n    print(f"{name} says ook #{i}")\n`},
+  sql:{name:"SQL",file:"query.sql",run:"sql",start:`-- The TypeMonkey Zoo database has 3 tables: animals, keepers, snacks\nSELECT a.name, k.name AS keeper\nFROM animals a\nLEFT JOIN keepers k ON a.keeper_id = k.id\nORDER BY a.name;\n`},
+  cs:{name:"C#",file:"Program.cs",run:"cs",start:`using System;\n\nclass Program {\n  static void Main() {\n    for (int i = 1; i <= 3; i++) {\n      Console.WriteLine($"TypeMonkey says ook #{i}");\n    }\n  }\n}\n`},
+  cpp:{name:"C++",file:"main.cpp",run:"cpp",start:`#include <iostream>\n\nint main() {\n  for (int i = 1; i <= 3; i++) {\n    std::cout << "TypeMonkey says ook #" << i << "\\n";\n  }\n  return 0;\n}\n`}
 };
 function playground(lang="js"){
   rerender=()=>playground(lang);
@@ -790,7 +872,8 @@ function playground(lang="js"){
     <div class="editor"><div class="head"><span>${P.file}</span><button class="linkbtn" id="clear" style="color:var(--code-dim)">Reset</button><button class="run" id="run-p" ${P.run||P.web?"":"disabled"}>${P.web?"▶ Show page":"▶ Run"}</button></div>
       <textarea id="code-p" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="Playground editor" rows="14">${esc(saved||P.start)}</textarea>
       ${P.web?`<div class="webview" id="out-p"></div>`:`<div class="console" id="out-p"><span class="dim">${P.run?"Output appears here":"Running "+P.name+" is coming in the full app"}</span></div>`}</div>
-    ${buddy(P.web?"Build any web page you like. The preview updates every time you tap Show page.":P.run?"Tip: console.log anything you're curious about. That's how pros explore code too.":"You can still practice typing "+P.name+" syntax here. Your code is saved.","happy")}
+    ${buddy(P.web?"Build any web page you like. The preview updates every time you tap Show page.":P.run==="sql"?"Ask the zoo database anything! Tap 📋 below to see its tables.":"Print anything you're curious about. That's how pros explore code too.","happy")}
+    ${P.run==="sql"?`<details class="drawer"><summary>📋 Show the zoo tables</summary>${Object.keys(ZOO_TABLES).map(t=>tableHTML({tables:ZOO_TABLES},t)).join("")}</details>`:""}
   </div>`;
   $("#back").onclick=home;
   $$(".lang").forEach(b=>b.onclick=()=>playground(b.dataset.k));
@@ -798,7 +881,7 @@ function playground(lang="js"){
   ta.addEventListener("input",()=>{S.play=S.play||{};S.play[lang]=ta.value;save()});
   ta.addEventListener("keydown",e=>{if(e.key==="Tab"){e.preventDefault();const s=ta.selectionStart;ta.value=ta.value.slice(0,s)+"  "+ta.value.slice(ta.selectionEnd);ta.selectionStart=ta.selectionEnd=s+2}});
   $("#clear").onclick=()=>{ta.value=P.start;S.play=S.play||{};delete S.play[lang];save()};
-  if(P.run)$("#run-p").onclick=async()=>paintConsole($("#out-p"),await runCode(ta.value));
+  if(P.run)$("#run-p").onclick=async()=>paintConsole($("#out-p"),await RUNNERS[P.run](ta.value),PRINT_HINT[P.run]);
   if(P.web){renderWeb($("#out-p"),ta.value);$("#run-p").onclick=()=>renderWeb($("#out-p"),ta.value)}
   foot();window.scrollTo(0,0);
 }

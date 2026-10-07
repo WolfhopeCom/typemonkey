@@ -24,6 +24,8 @@ COURSE_FILES = [  # order matters: later files can reference earlier ones
     "jr.js",
 ]
 
+ENGINE_FILES = ["sql.js", "clike.js"]  # in-house SQL engine and C#/C++ runner; Python is Brython (src/vendor)
+
 HEAD = """<!doctype html>
 <html lang="en">
 <head>
@@ -37,6 +39,10 @@ HEAD = """<!doctype html>
 def build(artifact: bool) -> pathlib.Path:
     app = (ROOT / "src" / "app.html").read_text()
     data = "\n".join((ROOT / "src" / "courses" / f).read_text() for f in COURSE_FILES) + "\n" + (ROOT / "src" / "legal.js").read_text()
+    data += "\n" + "\n".join((ROOT / "src" / "engines" / f).read_text() for f in ENGINE_FILES)
+    vendor = (ROOT / "src" / "vendor" / "brython.js").read_text().replace("</script", "<\\/script")
+    assert "/*VENDOR*/" in app, "vendor placeholder missing from src/app.html"
+    app = app.replace("/*VENDOR*/", vendor)
     assert "/*COURSE_DATA*/" in app, "placeholder missing from src/app.html"
     page = app.replace("/*COURSE_DATA*/", data)
     if artifact:

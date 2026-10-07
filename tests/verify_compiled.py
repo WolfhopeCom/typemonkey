@@ -22,9 +22,9 @@ from build import COURSE_FILES  # noqa: E402
 VERBOSE = "-v" in sys.argv
 
 
-def load_courses():
+def load_courses(extra=False):
     src = "\n".join((ROOT / "src" / "courses" / f).read_text() for f in COURSE_FILES)
-    js = src + "\nconsole.log(JSON.stringify({cpp: typeof COURSE_CPP!=='undefined'?COURSE_CPP:null, py: typeof COURSE_PY!=='undefined'?COURSE_PY:null, sql: typeof COURSE_SQL!=='undefined'?COURSE_SQL:null}));"
+    js = src + "\nconsole.log(JSON.stringify({cpp: typeof COURSE_CPP!=='undefined'?COURSE_CPP:null, py: typeof COURSE_PY!=='undefined'?COURSE_PY:null, sql: typeof COURSE_SQL!=='undefined'?COURSE_SQL:null, cs: typeof COURSE_CS!=='undefined'?COURSE_CS:null}));"
     out = subprocess.run(["node", "-"], input=js, capture_output=True, text=True, check=True).stdout
     return json.loads(out)
 
