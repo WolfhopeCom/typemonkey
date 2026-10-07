@@ -170,6 +170,40 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;max-width:calc(100% - 32px);z-index:9}
 .foot{color:var(--muted);font-size:.8rem;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
 .foot .row{justify-content:center}
+/* web preview */
+.webview{border-top:1px solid #ffffff14;background:#fff;min-height:72px;max-height:340px;overflow:auto}
+/* SQL tables */
+.tbl{display:flex;flex-direction:column;gap:4px;min-width:0}
+.tscroll{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+.tbl table{border-collapse:collapse;width:100%;font-family:var(--mono);font-size:.82rem;font-variant-numeric:tabular-nums}
+.tbl th{background:var(--surface2);text-align:left;font-weight:600;color:var(--muted)}
+.tbl th,.tbl td{padding:5px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl tr:last-child td{border-bottom:0}
+.tbl td.num,.tbl th.num{text-align:right}
+.tbl td.null{color:var(--muted);font-style:italic}
+.drawer{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.drawer summary{cursor:pointer;font-weight:800}
+.drawer[open]{display:flex;flex-direction:column;gap:12px}
+/* Jr. mazes */
+.maze{position:relative;display:grid;grid-template-columns:repeat(var(--w),1fr);width:min(100%,calc(var(--w) * 64px));aspect-ratio:var(--w) / var(--h);max-width:100%;align-self:center;border-radius:14px;overflow:hidden;background:#7FC77A}
+.mc{display:grid;place-items:center;font-size:clamp(1.1rem,5vw,1.9rem)}
+.mc.path{background:#F3DFA8;box-shadow:inset 0 0 0 1px #E5CC88}
+.mc.tree{background:#5FAE5A}
+.mk{position:absolute;width:calc(100% / var(--w));height:calc(100% / var(--h));display:grid;place-items:center;transition:left .32s ease,top .32s ease,transform .25s ease;pointer-events:none}
+.mface{width:82%;height:82%;display:grid;place-items:center}.mface svg{width:100%;height:100%;filter:drop-shadow(0 2px 2px #0004)}
+.arr{position:absolute;right:-2px;bottom:-2px;width:46%;height:46%;display:grid;place-items:center;background:#14201B;color:#FFD25C;border-radius:50%;font-size:clamp(.7rem,3vw,1rem);font-weight:900;transition:transform .25s ease}
+.prog{display:flex;flex-wrap:wrap;gap:6px;min-height:52px;background:var(--code-bg);border-radius:12px;padding:8px;align-items:center}
+.chip{font-size:1.25rem;width:44px;height:44px;border-radius:10px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:800}
+.repblk{display:flex;flex-wrap:wrap;gap:4px;align-items:center;border:2px solid var(--banana);border-radius:12px;padding:4px}
+.repblk.open{border-style:dashed}
+.repn,.repclose{border:0;border-radius:8px;background:var(--banana);color:var(--accent-ink);font-weight:800;padding:8px 10px}
+.repclose{background:var(--surface2);color:var(--fg)}
+.palette{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.blk{display:flex;align-items:center;gap:8px;justify-content:center;border:0;border-radius:14px;padding:12px;font-weight:800;font-size:1rem;color:var(--accent-ink);background:var(--banana);box-shadow:0 4px 0 color-mix(in srgb,var(--banana) 55%,#000)}
+.blk span{font-size:1.4rem}
+.blk.b-fwd{background:var(--accent);box-shadow:0 4px 0 color-mix(in srgb,var(--accent) 60%,#000)}
+.blk.b-rep{background:var(--leaf);color:#fff;box-shadow:0 4px 0 color-mix(in srgb,var(--leaf) 60%,#000)}
+.blk:active{transform:translateY(3px)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -902,10 +936,223 @@ const JS_UNIT6={name:"Objects",lessons:[
 ]};
 
 const COURSE_JS={id:"js",name:"JavaScript",units:[JS_UNIT1,JS_UNIT2,JS_UNIT3,JS_UNIT4,JS_UNIT5,JS_UNIT6]};
-
-/* C# and C++ courses · Unit 1 built, later units on the roadmap.
-   These languages need a compiler, so exercises are read-and-reason: quizzes, fill, order, output rush. */
 COURSE_JS.blurb="From your first console.log to building a game leaderboard. 25 lessons with real code you run yourself. Unit 1 is free.";
+
+/* C# Units 2–4. Snippets use C#'s top-level style: statements first, any class definitions below them. */
+const CS_UNIT2={name:"Loops & methods",lessons:[
+{id:"cs4",title:"for and while",sub:"repeating code in C#",steps:[
+ {type:"talk",title:"The for loop",
+  body:`<p>C#'s ${C("for")} loop has the same three parts as JavaScript: start, keep-going condition, and step. The counter needs a type, usually ${C("int")}.</p>`,
+  demo:`for (int i = 1; i <= 5; i++) {\n  Console.WriteLine(i);\n}`,
+  say:"Output: 1, 2, 3, 4, 5, each on its own line."},
+ {type:"talk",title:"while and do-while",mood:"think",
+  body:`<p>${C("while")} checks first, then runs. ${C("do { } while ( );")} runs once <b>before</b> checking, so it always runs at least one time.</p>`,
+  demo:`int fuel = 3;\nwhile (fuel > 0) {\n  Console.WriteLine($"Vroom {fuel}");\n  fuel--;\n}\n\nint tries = 10;\ndo {\n  Console.WriteLine("Ran once!");\n} while (tries < 5);`,
+  say:"The do-while prints once even though 10 < 5 is false."},
+ {type:"talk",title:"break and continue",
+  body:`<p>Same as JavaScript: ${C("continue")} skips to the next round, ${C("break")} leaves the loop.</p>`,
+  demo:`for (int i = 1; i <= 10; i++) {\n  if (i == 3) continue;\n  if (i == 6) break;\n  Console.Write(i + " ");\n}`,
+  say:"Output: 1 2 4 5"},
+ {type:"quiz",q:"How many times does this loop run?",code:`for (int i = 0; i < 4; i++) {\n  Console.WriteLine("ook");\n}`,opts:["4","3","5"],a:0,mono:true,why:"i is 0, 1, 2 and 3. Four rounds."},
+ {type:"fill",title:"Count up",body:`<p>Make this print 0, 1, 2.</p>`,
+  code:`for (int i = 0; i [0] 3; i[1]) {\n  Console.WriteLine(i);\n}`,blanks:["<","++"],tokens:["<","++","--",">"],why:"Keep going while i < 3, adding 1 each time."},
+ {type:"order",title:"Add it up",body:`<p>Arrange the lines so it prints ${C("6")}.</p>`,
+  lines:["int total = 0;","for (int i = 1; i <= 3; i++) {","  total += i;","}","Console.WriteLine(total);"],why:"Make the total, loop and add, then print once the loop is done."},
+ {type:"quiz",q:"What does this print?",code:`int x = 1;\nwhile (x < 20) {\n  x *= 3;\n}\nConsole.WriteLine(x);`,opts:["27","9","20"],a:0,mono:true,why:"1 → 3 → 9 → 27. 27 isn't below 20, so the loop stops."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`for (int i = 0; i < 3; i++) {\n  Console.Write(i);\n}`,["012","0 1 2","123"]],
+  [`for (int i = 3; i > 0; i--) {\n  Console.WriteLine(i);\n}`,["3 2 1","3 2 1 0","2 1 0"]],
+  [`int s = 0;\nfor (int i = 2; i <= 6; i += 2) {\n  s += i;\n}\nConsole.WriteLine(s);`,["12","6","20"]],
+  [`int n = 0;\nwhile (n < 5) {\n  n += 2;\n}\nConsole.WriteLine(n);`,["6","5","4"]],
+  [`for (int i = 1; i <= 5; i++) {\n  if (i == 3) continue;\n  Console.Write(i);\n}`,["1245","12345","12"]],
+  [`string s = "";\nfor (int i = 0; i < 3; i++) {\n  s += "ha";\n}\nConsole.WriteLine(s);`,["hahaha","ha","haha"]]
+ ]},
+{id:"cs5",title:"Methods",sub:"parameters, return types, void",steps:[
+ {type:"talk",title:"Methods are C#'s functions",
+  body:`<p>A <b>method</b> is a named, reusable chunk of code. You write the <b>return type</b> first. ${C("void")} means it gives nothing back.</p>`,
+  demo:`static void Greet(string name) {\n  Console.WriteLine($"Hey {name}!");\n}\n\nGreet("Ava");\nGreet("Leo");`,
+  say:"Output:\nHey Ava!\nHey Leo!"},
+ {type:"talk",title:"Returning values",mood:"think",
+  body:`<p>If a method returns something, its type replaces ${C("void")}. Every parameter needs a type too.</p>`,
+  demo:`static int Add(int a, int b) {\n  return a + b;\n}\n\nint total = Add(2, 3);\nConsole.WriteLine(total);\nConsole.WriteLine(Add(10, 20));`,
+  say:"Output: 5, then 30."},
+ {type:"talk",title:"The arrow shortcut",
+  body:`<p>One-line methods can use ${C("=&gt;")}, just like arrow functions in JavaScript.</p>`,
+  demo:`static int Square(int n) => n * n;\nstatic bool IsEven(int n) => n % 2 == 0;\n\nConsole.WriteLine(Square(4));\nConsole.WriteLine(IsEven(7));`,
+  say:"Output: 16, then False."},
+ {type:"quiz",q:"What does void mean on a method?",opts:["It doesn't return a value","It returns an empty string","It can't have parameters"],a:0,why:"void methods do a job but hand nothing back."},
+ {type:"fill",title:"Double it",body:`<p>Make a method that returns n times 2.</p>`,
+  code:`static [0] Double(int n) {\n  [1] n * 2;\n}`,blanks:["int","return"],tokens:["int","return","void","print"],why:"It returns an int, so the return type is int."},
+ {type:"quiz",q:"What does this print?",code:`static int F(int x) {\n  if (x > 0) return 1;\n  return -1;\n}\n\nConsole.WriteLine(F(-5));`,opts:["-1","1","-5"],a:0,mono:true,why:"-5 > 0 is false, so it skips to return -1."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`static int F(int a) => a + 1;\n\nConsole.WriteLine(F(F(1)));`,["3","2","11"]],
+  [`static string Shout(string s) => s.ToUpper() + "!";\n\nConsole.WriteLine(Shout("hi"));`,["HI!","hi!","HI"]],
+  [`static void Say() {\n  Console.Write("A");\n}\n\nSay();\nSay();`,["AA","A","A A"]],
+  [`static int Add(int a, int b) {\n  return a + b;\n}\n\nConsole.WriteLine(Add(2, 3) * 2);`,["10","8","7"]],
+  [`static bool IsEven(int n) => n % 2 == 0;\n\nConsole.WriteLine(IsEven(7));`,["False","True","false"]]
+ ]},
+{id:"cs6",title:"Project: Number Guesser",sub:"loops + methods + input",project:true,steps:[
+ {type:"talk",title:"Build a guessing game",mood:"cheer",
+  body:`<p>The computer picks a secret number from 1 to 10. The player guesses until they get it, and the game says "Higher!" or "Lower!" each time.</p><p>Two new tools: ${C("Random")} picks numbers, and ${C("Console.ReadLine()")} reads what the player types. ${C("int.Parse()")} turns that text into a number.</p>`,
+  say:"Let's build it piece by piece."},
+ {type:"fill",title:"Step 1: pick a secret",body:`<p>${C("Next(1, 11)")} gives a number from 1 up to (but not including) 11.</p>`,
+  code:`Random rng = new Random();\nint secret = rng.[0](1, 11);`,blanks:["Next"],tokens:["Next","Random","Parse","Read"],why:"rng.Next(min, max) picks a random int. max itself is never picked."},
+ {type:"fill",title:"Step 2: read a guess",body:`<p>Read a line of text and turn it into an int.</p>`,
+  code:`int guess = int.[0](Console.[1]());`,blanks:["Parse","ReadLine"],tokens:["Parse","ReadLine","WriteLine","Next"],why:"ReadLine gets the text; int.Parse turns \"7\" into 7."},
+ {type:"order",title:"Step 3: the game loop",body:`<p>Put the loop together.</p>`,
+  lines:["int guess = 0;","while (guess != secret) {","  guess = int.Parse(Console.ReadLine());","  if (guess < secret) Console.WriteLine(\"Higher!\");","  else if (guess > secret) Console.WriteLine(\"Lower!\");","}","Console.WriteLine(\"You got it!\");"],why:"Keep asking until the guess matches, giving a clue each time."},
+ {type:"quiz",q:"The secret is 7. The player types 4, then 9, then 7. What prints?",opts:["Higher! Lower! You got it!","Lower! Higher! You got it!","You got it!"],a:0,why:"4 is too low (Higher!), 9 is too high (Lower!), then 7 wins."},
+ {type:"talk",title:"The finished game",mood:"cheer",
+  body:`<p>Here's the whole thing, with a guess counter added. In the full app you can run it in the Playground and play it.</p>`,
+  demo:`Random rng = new Random();\nint secret = rng.Next(1, 11);\nint guess = 0;\nint tries = 0;\n\nConsole.WriteLine("I'm thinking of 1 to 10...");\nwhile (guess != secret) {\n  guess = int.Parse(Console.ReadLine());\n  tries++;\n  if (guess < secret) Console.WriteLine("Higher!");\n  else if (guess > secret) Console.WriteLine("Lower!");\n}\nConsole.WriteLine($"You got it in {tries} tries!");`,
+  say:"You just built a real console game. Nice work!"},
+ {type:"done"}]}
+]};
+
+const CS_UNIT3={name:"Classes & objects",lessons:[
+{id:"cs7",title:"Your first class",sub:"fields, constructors, new",steps:[
+ {type:"talk",title:"Blueprints",
+  body:`<p>A <b>class</b> is a blueprint. Each <b>object</b> you make with ${C("new")} is its own copy built from that blueprint, with its own values.</p>`,
+  demo:`Pet rex = new Pet();\nrex.Name = "Rex";\nrex.Hunger = 5;\nConsole.WriteLine(rex.Name);\n\nclass Pet {\n  public string Name;\n  public int Hunger;\n}`,
+  say:"public means code outside the class can use it."},
+ {type:"talk",title:"Constructors",mood:"think",
+  body:`<p>A <b>constructor</b> runs when you call ${C("new")}. It has the same name as the class and sets up starting values.</p>`,
+  demo:`Pet p = new Pet("Mo");\nConsole.WriteLine($"{p.Name}: {p.Hunger}");\n\nclass Pet {\n  public string Name;\n  public int Hunger;\n  public Pet(string name) {\n    Name = name;\n    Hunger = 5;\n  }\n}`,
+  say:"Output: Mo: 5"},
+ {type:"talk",title:"Objects are shared, not copied",mood:"oops",
+  body:`<p>Assigning one object variable to another doesn't copy the object. Both names point to the <b>same</b> object.</p>`,
+  demo:`Box a = new Box();\nBox b = a;\na.Size = 9;\nConsole.WriteLine(b.Size);\n\nclass Box {\n  public int Size = 3;\n}`,
+  say:"Output: 9. Changing a also changed b, because they're the same box."},
+ {type:"quiz",q:"Which keyword creates a new object?",opts:["new","class","make","create"],a:0,mono:true,why:"new Pet() builds an object from the Pet class."},
+ {type:"fill",title:"Make a pet",body:`<p>Create a Pet named Rex.</p>`,
+  code:`Pet p = [0] Pet("Rex");`,blanks:["new"],tokens:["new","class","make","Pet"],why:"new + the class name + constructor arguments."},
+ {type:"order",title:"Write the class",body:`<p>Put the Dog class together.</p>`,
+  lines:["class Dog {","  public string Name;","  public Dog(string name) {","    Name = name;","  }","}"],why:"Class, then a field, then the constructor that fills it in."},
+ {type:"quiz",q:"What does this print?",code:`Pet a = new Pet("A");\nPet b = new Pet("B");\na.Hunger = 1;\nConsole.WriteLine(b.Hunger);\n\nclass Pet {\n  public string Name;\n  public int Hunger = 5;\n  public Pet(string n) { Name = n; }\n}`,opts:["5","1","0"],a:0,mono:true,why:"a and b are two separate objects made with new, so changing a doesn't touch b."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`Box b = new Box();\nConsole.WriteLine(b.Size);\n\nclass Box {\n  public int Size = 3;\n}`,["3","0","Size"]],
+  [`Box a = new Box();\nBox b = new Box();\na.Size = 9;\nConsole.WriteLine(b.Size);\n\nclass Box {\n  public int Size = 3;\n}`,["3","9","0"]],
+  [`Box a = new Box();\nBox b = a;\na.Size = 9;\nConsole.WriteLine(b.Size);\n\nclass Box {\n  public int Size = 3;\n}`,["9","3","0"]],
+  [`Hero h = new Hero("Kai");\nConsole.WriteLine(h.Name.Length);\n\nclass Hero {\n  public string Name;\n  public Hero(string n) { Name = n; }\n}`,["3","Kai","4"]],
+  [`C c = new C();\nConsole.WriteLine(c.N);\n\nclass C {\n  public int N;\n}`,["0","null","Error"]]
+ ]},
+{id:"cs8",title:"Properties & methods",sub:"get, set, private, behavior",steps:[
+ {type:"talk",title:"Methods inside classes",
+  body:`<p>Objects can <b>do</b> things too. Methods inside a class can read and change that object's own values.</p>`,
+  demo:`Pet p = new Pet();\np.Feed();\np.Feed();\nConsole.WriteLine(p.Status());\n\nclass Pet {\n  public string Name = "Rex";\n  public int Hunger = 5;\n  public void Feed() { Hunger--; }\n  public string Status() => $"{Name} hunger: {Hunger}";\n}`,
+  say:"Output: Rex hunger: 3"},
+ {type:"talk",title:"Properties",mood:"think",
+  body:`<p>Pros use <b>properties</b> instead of public fields: ${C("{ get; set; }")}. A ${C("private set")} means anyone can read the value, but only the class can change it.</p>`,
+  demo:`Counter c = new Counter();\nc.Add();\nc.Add();\nConsole.WriteLine(c.Count);\n// c.Count = 100;  error: the setter is private\n\nclass Counter {\n  public int Count { get; private set; }\n  public void Add() { Count++; }\n}`,
+  say:"Output: 2. Nobody can cheat and set Count directly."},
+ {type:"talk",title:"Guarding your data",
+  body:`<p>${C("private")} hides things inside the class. Then a method can check values before accepting them.</p>`,
+  demo:`Bank b = new Bank();\nb.Deposit(-50);\nb.Deposit(20);\nConsole.WriteLine(b.Balance);\n\nclass Bank {\n  public int Balance { get; private set; }\n  public void Deposit(int amount) {\n    if (amount > 0) Balance += amount;\n  }\n}`,
+  say:"Output: 20. The sneaky -50 got rejected."},
+ {type:"quiz",q:"What does private mean?",opts:["Only code inside the class can use it","Nobody can read it, ever","It's hidden from the user's screen"],a:0,why:"private keeps a member inside its own class."},
+ {type:"fill",title:"A property",body:`<p>Make a property anyone can read and change.</p>`,
+  code:`public string Name { [0]; [1]; }`,blanks:["get","set"],tokens:["get","set","read","write"],why:"get reads the value, set changes it."},
+ {type:"quiz",q:"What does this print?",code:`Light l = new Light();\nl.Toggle();\nl.Toggle();\nl.Toggle();\nConsole.WriteLine(l.On);\n\nclass Light {\n  public bool On { get; set; }\n  public void Toggle() { On = !On; }\n}`,opts:["True","False","3"],a:0,mono:true,why:"It starts False, then flips three times: True, False, True."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`Counter c = new Counter();\nc.Add();\nc.Add();\nConsole.WriteLine(c.Count);\n\nclass Counter {\n  public int Count { get; private set; }\n  public void Add() { Count++; }\n}`,["2","0","1"]],
+  [`Light l = new Light();\nl.Toggle();\nConsole.WriteLine(l.On);\n\nclass Light {\n  public bool On { get; set; }\n  public void Toggle() { On = !On; }\n}`,["True","False","On"]],
+  [`Bank b = new Bank();\nb.Deposit(-5);\nb.Deposit(20);\nConsole.WriteLine(b.Balance);\n\nclass Bank {\n  public int Balance { get; private set; }\n  public void Deposit(int a) { if (a > 0) Balance += a; }\n}`,["20","15","-5"]],
+  [`Pet p = new Pet();\nConsole.WriteLine(p.Speak());\n\nclass Pet {\n  public string Speak() => "ook";\n}`,["ook","Speak","p.Speak()"]],
+  [`Pet p = new Pet();\np.Hunger -= 2;\nConsole.WriteLine(p.Hunger);\n\nclass Pet {\n  public int Hunger { get; set; } = 5;\n}`,["3","5","-2"]]
+ ]},
+{id:"cs9",title:"Project: Virtual Pet",sub:"a class with real behavior",project:true,steps:[
+ {type:"talk",title:"Raise a digital pet",mood:"cheer",
+  body:`<p>You'll build a ${C("VirtualPet")} class: it has a name and a hunger level, you can feed it and play with it, and it reports how it's feeling.</p>`,
+  say:"Feeding lowers hunger. Playing makes it hungrier."},
+ {type:"fill",title:"Step 1: the constructor",body:`<p>Store the name passed to the constructor.</p>`,
+  code:`class VirtualPet {\n  public string Name { get; }\n  public int Hunger { get; private set; } = 5;\n\n  public VirtualPet(string name) {\n    [0] = name;\n  }\n}`,blanks:["Name"],tokens:["Name","name","Hunger","this"],why:"The property Name gets the value of the parameter name."},
+ {type:"order",title:"Step 2: feeding",body:`<p>Feed lowers hunger by 2 but never below 0.</p>`,
+  lines:["public void Feed() {","  Hunger -= 2;","  if (Hunger < 0) Hunger = 0;","}"],why:"Subtract first, then fix it if it went too low."},
+ {type:"fill",title:"Step 3: playing",body:`<p>Playing makes the pet 1 hungrier.</p>`,
+  code:`public void Play() {\n  Hunger [0] 1;\n}`,blanks:["+="],tokens:["+=","-=","==","=>"],why:"+= 1 adds one to Hunger."},
+ {type:"quiz",q:"Hunger starts at 5. You call Feed, Feed, Feed, then Play. What's Hunger now?",opts:["1","0","-1"],a:0,why:"5 → 3 → 1 → 0 (it can't go below 0), then Play adds 1."},
+ {type:"talk",title:"The finished pet",mood:"cheer",
+  body:`<p>With a mood method added, here's the whole program.</p>`,
+  demo:`VirtualPet pet = new VirtualPet("Bitsy");\npet.Play();\nConsole.WriteLine(pet.Mood());\npet.Feed();\npet.Feed();\nConsole.WriteLine(pet.Mood());\n\nclass VirtualPet {\n  public string Name { get; }\n  public int Hunger { get; private set; } = 5;\n  public VirtualPet(string name) { Name = name; }\n  public void Feed() {\n    Hunger -= 2;\n    if (Hunger < 0) Hunger = 0;\n  }\n  public void Play() { Hunger += 1; }\n  public string Mood() =>\n    Hunger > 4 ? $"{Name} is HUNGRY" : $"{Name} is happy";\n}`,
+  say:"Output:\nBitsy is HUNGRY\nBitsy is happy\n\nThe ? : is a short if/else called the ternary operator."},
+ {type:"done"}]}
+]};
+
+const CS_UNIT4={name:"Collections",lessons:[
+{id:"cs10",title:"Arrays & Lists",sub:"[], List<T>, Add, Count, foreach",steps:[
+ {type:"talk",title:"Arrays",
+  body:`<p>An array holds a fixed number of values of one type. Indexes start at 0, and ${C(".Length")} tells you the size.</p>`,
+  demo:`int[] scores = { 90, 75, 82 };\nConsole.WriteLine(scores[0]);\nConsole.WriteLine(scores.Length);\nscores[1] = 80;\nConsole.WriteLine(scores[1]);`,
+  say:"Output: 90, 3, 80. An array can't grow, though."},
+ {type:"talk",title:"Lists grow",mood:"cheer",
+  body:`<p>A ${C("List&lt;T&gt;")} can grow and shrink. The ${C("T")} is the type it holds. Use ${C(".Add()")}, ${C(".Remove()")}, ${C(".Contains()")} and ${C(".Count")}.</p>`,
+  demo:`var pets = new List<string> { "cat", "dog" };\npets.Add("owl");\npets.Remove("cat");\nConsole.WriteLine(pets.Count);\nConsole.WriteLine(pets[0]);\nConsole.WriteLine(pets.Contains("owl"));`,
+  say:"Output: 2, dog, True"},
+ {type:"talk",title:"foreach",
+  body:`<p>${C("foreach")} visits every item. Note the word ${C("in")} (JavaScript says ${C("of")}).</p>`,
+  demo:`var pets = new List<string> { "cat", "dog", "owl" };\nforeach (string p in pets) {\n  Console.WriteLine($"I love my {p}");\n}`,
+  say:"Arrays use .Length, Lists use .Count. Easy to mix up!"},
+ {type:"quiz",q:"What's the big difference between an array and a List?",opts:["A List can grow and shrink","Arrays can hold text","Lists start counting at 1"],a:0,why:"Arrays have a fixed size. Lists resize as you add and remove."},
+ {type:"fill",title:"Loop the list",body:`<p>Print every pet.</p>`,
+  code:`foreach (var p [0] pets) {\n  Console.WriteLine(p);\n}`,blanks:["in"],tokens:["in","of","at","from"],why:"C# uses foreach (... in ...)."},
+ {type:"order",title:"Build a list",body:`<p>Arrange the lines so it prints ${C("2")}.</p>`,
+  lines:["var list = new List<int>();","list.Add(5);","list.Add(7);","Console.WriteLine(list.Count);"],why:"Make it, add two numbers, then count."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`int[] a = { 4, 8, 15 };\nConsole.WriteLine(a[1]);`,["8","4","15"]],
+  [`int[] a = { 4, 8, 15 };\nConsole.WriteLine(a.Length);`,["3","2","15"]],
+  [`var l = new List<string> { "a", "b" };\nl.Add("c");\nConsole.WriteLine(l.Count);`,["3","2","c"]],
+  [`var l = new List<int> { 1, 2, 3 };\nl.Remove(2);\nConsole.WriteLine(l[1]);`,["3","2","1"]],
+  [`int sum = 0;\nforeach (int n in new[] { 2, 3, 5 }) {\n  sum += n;\n}\nConsole.WriteLine(sum);`,["10","235","5"]],
+  [`var l = new List<string> { "x" };\nConsole.WriteLine(l.Contains("y"));`,["False","True","-1"]]
+ ]},
+{id:"cs11",title:"Dictionaries",sub:"look things up by key",steps:[
+ {type:"talk",title:"Key and value pairs",
+  body:`<p>A ${C("Dictionary&lt;TKey, TValue&gt;")} stores values you look up by a key, like a phone book. It's similar to a JavaScript object.</p>`,
+  demo:`var ages = new Dictionary<string, int>();\nages["Ava"] = 15;\nages["Leo"] = 17;\nConsole.WriteLine(ages["Leo"]);\nages["Ava"] = 16;\nConsole.WriteLine(ages["Ava"]);\nConsole.WriteLine(ages.Count);`,
+  say:"Output: 17, 16, 2. Setting an existing key replaces its value."},
+ {type:"talk",title:"Check before you look",mood:"oops",
+  body:`<p>Reading a key that doesn't exist crashes with a ${C("KeyNotFoundException")}. Check first with ${C(".ContainsKey()")}.</p>`,
+  demo:`var stock = new Dictionary<string, int> { ["banana"] = 12 };\nif (stock.ContainsKey("kiwi")) {\n  Console.WriteLine(stock["kiwi"]);\n} else {\n  Console.WriteLine("No kiwis!");\n}`,
+  say:"Output: No kiwis!"},
+ {type:"talk",title:"Looping through",
+  body:`<p>${C("foreach")} over a dictionary gives you pairs with ${C(".Key")} and ${C(".Value")}.</p>`,
+  demo:`var stock = new Dictionary<string, int> { ["banana"] = 12, ["mango"] = 3 };\nforeach (var item in stock) {\n  Console.WriteLine($"{item.Key}: {item.Value}");\n}`,
+  say:"Output:\nbanana: 12\nmango: 3"},
+ {type:"quiz",q:"What happens if you read a key that isn't in the dictionary?",opts:["The program crashes with an error","You get 0","You get null"],a:0,why:"That's why ContainsKey is your friend."},
+ {type:"fill",title:"Safe lookup",body:`<p>Only print if the key exists.</p>`,
+  code:`if (stock.[0]("kiwi")) {\n  Console.WriteLine(stock["kiwi"]);\n}`,blanks:["ContainsKey"],tokens:["ContainsKey","Contains","Has","Find"],why:"ContainsKey checks the keys of a dictionary."},
+ {type:"quiz",q:"What does this print?",code:`var d = new Dictionary<string, int>();\nd["x"] = 5;\nd["x"] = 9;\nConsole.WriteLine(d.Count);`,opts:["1","2","9"],a:0,mono:true,why:"Both lines use the key \"x\", so there's still only one entry."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`var d = new Dictionary<string, int> { ["a"] = 1, ["b"] = 2 };\nConsole.WriteLine(d["b"]);`,["2","1","b"]],
+  [`var d = new Dictionary<string, int>();\nd["x"] = 5;\nd["x"] = 9;\nConsole.WriteLine(d["x"]);`,["9","5","14"]],
+  [`var d = new Dictionary<string, int> { ["a"] = 1 };\nConsole.WriteLine(d.ContainsKey("z"));`,["False","True","0"]],
+  [`var d = new Dictionary<string, int> { ["a"] = 1 };\nforeach (var kv in d) {\n  Console.Write(kv.Key + kv.Value);\n}`,["a1","1a","a 1"]],
+  [`var d = new Dictionary<string, int> { ["hp"] = 10 };\nd["hp"] -= 3;\nConsole.WriteLine(d["hp"]);`,["7","10","13"]]
+ ]},
+{id:"cs12",title:"Project: Inventory System",sub:"a game backpack with a Dictionary",project:true,steps:[
+ {type:"talk",title:"Pack your bag",mood:"cheer",
+  body:`<p>Games track items in a backpack: <i>potion x3, key x1</i>. You'll build that with a ${C("Dictionary&lt;string, int&gt;")} and two methods: add items and use items.</p>`,
+  say:"Adding stacks items. Using one removes it when the count hits 0."},
+ {type:"fill",title:"Step 1: adding items",body:`<p>If the item is already in the bag, add to its count. Otherwise, create it.</p>`,
+  code:`static void AddItem(Dictionary<string, int> bag, string item, int qty) {\n  if (bag.[0](item)) {\n    bag[item] [1] qty;\n  } else {\n    bag[item] = qty;\n  }\n}`,blanks:["ContainsKey","+="],tokens:["ContainsKey","+=","=","Add"],why:"Existing items stack up with +=; new items start at qty."},
+ {type:"order",title:"Step 2: using items",body:`<p>Using an item returns false if you don't have it, otherwise takes one away.</p>`,
+  lines:["static bool UseItem(Dictionary<string, int> bag, string item) {","  if (!bag.ContainsKey(item)) return false;","  bag[item]--;","  if (bag[item] == 0) bag.Remove(item);","  return true;","}"],why:"Check, subtract, clean up empty items, report success."},
+ {type:"quiz",q:"The bag has potion x1. You call AddItem(bag, \"potion\", 2), then UseItem(bag, \"potion\") twice. How many potions are left?",opts:["1","0","3"],a:0,why:"1 + 2 = 3, then two uses leave 1."},
+ {type:"quiz",q:"The bag is empty. What does UseItem(bag, \"sword\") return?",opts:["False","True","An error"],a:0,why:"ContainsKey fails, so it returns false before touching anything."},
+ {type:"talk",title:"The finished backpack",mood:"cheer",
+  body:`<p>Here's the complete system with a method that prints the bag.</p>`,
+  demo:`var bag = new Dictionary<string, int>();\nAddItem(bag, "potion", 3);\nAddItem(bag, "key", 1);\nUseItem(bag, "key");\nUseItem(bag, "potion");\nShowBag(bag);\n\nstatic void AddItem(Dictionary<string, int> bag, string item, int qty) {\n  if (bag.ContainsKey(item)) bag[item] += qty;\n  else bag[item] = qty;\n}\n\nstatic bool UseItem(Dictionary<string, int> bag, string item) {\n  if (!bag.ContainsKey(item)) return false;\n  bag[item]--;\n  if (bag[item] == 0) bag.Remove(item);\n  return true;\n}\n\nstatic void ShowBag(Dictionary<string, int> bag) {\n  foreach (var kv in bag) Console.WriteLine($"{kv.Key} x{kv.Value}");\n}`,
+  say:"Output: potion x2. The key got used up and removed. You finished C#!"},
+ {type:"done"}]}
+]};
+
+/* C# course. Needs a compiler, so exercises are read-and-reason: quizzes, fill, order, output rush. Units 2–4 live in csharp-units-2-4.js */
 
 const COURSE_CS={id:"cs",name:"C#",blurb:"The language behind Unity games, Windows apps and tons of backend systems. Unit 1 is free.",units:[
 {name:"Hello, C#",free:true,lessons:[
@@ -987,20 +1234,217 @@ const COURSE_CS={id:"cs",name:"C#",blurb:"The language behind Unity games, Windo
   [`int x = 2 + 3 * 2;\nConsole.WriteLine(x);`,["8","10","7"]]
  ]}
 ]},
-{name:"Loops & methods",lessons:[
- {id:"cs4",title:"for and while",sub:"repeating code in C#"},
- {id:"cs5",title:"Methods",sub:"parameters, return types, void"},
- {id:"cs6",title:"Project: Number guesser",sub:"loops + methods together",project:true}]},
-{name:"Classes & objects",lessons:[
- {id:"cs7",title:"Your first class",sub:"fields, constructors, new"},
- {id:"cs8",title:"Properties & methods",sub:"get, set, and behavior"},
- {id:"cs9",title:"Project: Virtual pet",sub:"a class that lives and breathes",project:true}]},
-{name:"Collections",lessons:[
- {id:"cs10",title:"Arrays & Lists",sub:"List&lt;T&gt;, Add, Count, foreach"},
- {id:"cs11",title:"Dictionaries",sub:"key and value lookups"},
- {id:"cs12",title:"Project: Inventory system",sub:"like a game backpack",project:true}]}
+CS_UNIT2,CS_UNIT3,CS_UNIT4
 ]};
 
+
+/* C++ Units 2–4. Snippets without int main() are the inside of main; snippets that define functions or classes show the full program.
+   Optional `out` on fill/order steps is checked by tests/verify_compiled.py. */
+const CPP_UNIT2={name:"Loops & functions",lessons:[
+{id:"cpp4",title:"for and while",sub:"repeating code in C++",steps:[
+ {type:"talk",title:"The for loop",
+  body:`<p>C++ loops look just like C# and JavaScript. The counter needs a type, usually ${C("int")}.</p>`,
+  demo:`for (int i = 1; i <= 5; i++) {\n  std::cout << i << "\\n";\n}`,
+  say:"Output: 1 to 5, one per line."},
+ {type:"talk",title:"while and do-while",mood:"think",
+  body:`<p>${C("while")} checks before each round. ${C("do { } while ( );")} checks after, so the body always runs at least once.</p>`,
+  demo:`int fuel = 3;\nwhile (fuel > 0) {\n  std::cout << "Vroom " << fuel << "\\n";\n  fuel--;\n}\n\nint k = 10;\ndo {\n  std::cout << "Ran once!\\n";\n} while (k < 5);`,
+  say:"The do-while still prints once, even though 10 < 5 is false."},
+ {type:"talk",title:"break and continue",
+  body:`<p>${C("continue")} skips the rest of this round. ${C("break")} exits the loop.</p>`,
+  demo:`for (int i = 1; i <= 10; i++) {\n  if (i == 3) continue;\n  if (i == 6) break;\n  std::cout << i << " ";\n}`,
+  say:"Output: 1 2 4 5"},
+ {type:"quiz",q:"What's special about a do-while loop?",opts:["It always runs at least once","It never needs a condition","It can only count down"],a:0,why:"The condition is checked after the body, not before."},
+ {type:"fill",title:"Count down",body:`<p>Print 3, 2, 1.</p>`,
+  code:`for (int i = 3; i [0] 0; i[1]) {\n  std::cout << i << " ";\n}`,blanks:[">","--"],tokens:[">","--","<","++"],why:"Start at 3, keep going while i > 0, subtract 1 each time.",out:"3 2 1"},
+ {type:"order",title:"Add it up",body:`<p>Arrange the lines so it prints ${C("10")}.</p>`,
+  lines:["int total = 0;","for (int i = 1; i <= 4; i++) {","  total += i;","}","std::cout << total;"],why:"Make the total, add in the loop, print after.",out:"10"},
+ {type:"quiz",q:"What does this print?",code:`int n = 1;\nwhile (n < 50) {\n  n *= 2;\n}\nstd::cout << n;`,opts:["64","32","50"],a:0,mono:true,why:"1, 2, 4, 8, 16, 32, 64. The loop stops once n reaches 64."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`for (int i = 0; i < 3; i++) {\n  std::cout << i;\n}`,["012","0 1 2","123"]],
+  [`for (int i = 3; i > 0; i--) {\n  std::cout << i << " ";\n}`,["3 2 1","3 2 1 0","2 1 0"]],
+  [`int s = 0;\nfor (int i = 1; i <= 4; i++) {\n  s += i;\n}\nstd::cout << s;`,["10","4","24"]],
+  [`int k = 10;\ndo {\n  k++;\n} while (k < 5);\nstd::cout << k;`,["11","10","5"]],
+  [`for (int i = 1; i <= 5; i++) {\n  if (i % 2 == 0) continue;\n  std::cout << i;\n}`,["135","24","12345"]],
+  [`int x = 100;\nwhile (x > 10) {\n  x /= 2;\n}\nstd::cout << x;`,["6","12","10"]]
+ ]},
+{id:"cpp5",title:"Functions",sub:"return types, parameters, void",steps:[
+ {type:"talk",title:"Writing functions",
+  body:`<p>In C++ you write the return type first, then the name and typed parameters. Define functions <b>above</b> ${C("main")} so the compiler has seen them before they're used.</p>`,
+  demo:`#include <iostream>\n\nint add(int a, int b) {\n  return a + b;\n}\n\nint main() {\n  std::cout << add(2, 3) << "\\n";\n  std::cout << add(10, 20);\n}`,
+  say:"Output: 5, then 30."},
+ {type:"talk",title:"void and copies",mood:"think",
+  body:`<p>${C("void")} functions return nothing. Normal parameters are <b>copies</b>: changing one inside the function doesn't change the original.</p>`,
+  demo:`#include <iostream>\n\nvoid bump(int x) {\n  x++;\n  std::cout << "inside: " << x << "\\n";\n}\n\nint main() {\n  int a = 1;\n  bump(a);\n  std::cout << "outside: " << a;\n}`,
+  say:"Output: inside: 2, outside: 1. Remember this. Unit 3 shows how to change the original."},
+ {type:"quiz",q:"Why define a function above main?",opts:["The compiler reads top to bottom and must know it exists first","It runs faster","main can only have 10 lines"],a:0,why:"C++ needs to see a function (or its declaration) before you call it."},
+ {type:"fill",title:"Square it",body:`<p>Return n times n.</p>`,
+  code:`[0] square(int n) {\n  [1] n * n;\n}`,blanks:["int","return"],tokens:["int","return","void","cout"],why:"It hands back an int, so the return type is int."},
+ {type:"quiz",q:"What does this print?",code:`int f(int x) {\n  if (x > 10) return 1;\n  return 0;\n}\nint main() {\n  std::cout << f(20) << f(5);\n}`,opts:["10","1","01"],a:0,mono:true,why:"f(20) is 1 and f(5) is 0, printed side by side: 10."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`int sq(int n) {\n  return n * n;\n}\nint main() {\n  std::cout << sq(4);\n}`,["16","8","44"]],
+  [`void hi() {\n  std::cout << "hi";\n}\nint main() {\n  hi();\n  hi();\n}`,["hihi","hi","hi hi"]],
+  [`void bump(int x) {\n  x++;\n}\nint main() {\n  int a = 1;\n  bump(a);\n  std::cout << a;\n}`,["1","2","0"]],
+  [`double half(double d) {\n  return d / 2;\n}\nint main() {\n  std::cout << half(5);\n}`,["2.5","2","5"]],
+  [`int twice(int n) {\n  return n * 2;\n}\nint main() {\n  std::cout << twice(twice(3));\n}`,["12","6","9"]]
+ ]},
+{id:"cpp6",title:"Project: Times Table",sub:"loops inside loops",project:true,steps:[
+ {type:"talk",title:"Nested loops",mood:"cheer",
+  body:`<p>A loop inside a loop runs the inner loop completely for every round of the outer one. That's perfect for grids, like a times table.</p>`,
+  demo:`for (int row = 1; row <= 2; row++) {\n  for (int col = 1; col <= 3; col++) {\n    std::cout << "(" << row << "," << col << ") ";\n  }\n  std::cout << "\\n";\n}`,
+  say:"Output:\n(1,1) (1,2) (1,3)\n(2,1) (2,2) (2,3)"},
+ {type:"fill",title:"Step 1: one row",body:`<p>Print the 3 times table row: 3 6 9 12 15.</p>`,
+  code:`int n = 3;\nfor (int col = 1; col <= 5; col++) {\n  std::cout << n [0] col << " ";\n}`,blanks:["*"],tokens:["*","+","<<","%"],why:"Each entry is n times the column number.",out:"3 6 9 12 15"},
+ {type:"order",title:"Step 2: the whole grid",body:`<p>Build a 3 by 3 times table.</p>`,
+  lines:["for (int i = 1; i <= 3; i++) {","  for (int j = 1; j <= 3; j++) {","    std::cout << i * j << \" \";","  }","  std::cout << \"\\n\";","}"],why:"Outer loop picks the row, inner loop fills it, then a new line.",out:"1 2 3 \n2 4 6 \n3 6 9"},
+ {type:"quiz",q:"In that 3 by 3 table, what's the middle row?",opts:["2 4 6","1 2 3","3 6 9"],a:0,why:"Row i = 2 gives 2×1, 2×2, 2×3."},
+ {type:"fill",title:"Step 3: make it a function",body:`<p>Turn it into a function that prints any size table.</p>`,
+  code:`void table([0] size) {\n  for (int i = 1; i <= size; i++) {\n    for (int j = 1; j <= size; j++) {\n      std::cout << i * j << " ";\n    }\n    std::cout << "\\n";\n  }\n}`,blanks:["int"],tokens:["int","void","auto&","string"],why:"size is a whole number, so its type is int."},
+ {type:"talk",title:"The finished program",mood:"cheer",
+  body:`<p>Call ${C("table(5)")} and you get the full 5 by 5 grid.</p>`,
+  demo:`#include <iostream>\n\nvoid table(int size) {\n  for (int i = 1; i <= size; i++) {\n    for (int j = 1; j <= size; j++) {\n      std::cout << i * j << "\\t";\n    }\n    std::cout << "\\n";\n  }\n}\n\nint main() {\n  table(5);\n}`,
+  say:"\\t is a tab, which lines the columns up neatly. Nice work!"},
+ {type:"done"}]}
+]};
+
+const CPP_UNIT3={name:"Memory & pointers",lessons:[
+{id:"cpp7",title:"References",sub:"another name for the same box",steps:[
+ {type:"talk",title:"A second name",
+  body:`<p>A <b>reference</b>, written ${C("int&amp;")}, is another name for an existing variable. Change one and you change the other, because they're the same box.</p>`,
+  demo:`int score = 5;\nint& alias = score;\nalias = 10;\nstd::cout << score;`,
+  say:"Output: 10"},
+ {type:"talk",title:"Pass by reference",mood:"think",
+  body:`<p>Remember how ${C("bump(int x)")} only changed a copy? Make the parameter a reference and the function changes the original.</p>`,
+  demo:`#include <iostream>\n\nvoid bump(int& x) {\n  x++;\n}\n\nint main() {\n  int a = 1;\n  bump(a);\n  bump(a);\n  std::cout << a;\n}`,
+  say:"Output: 3. One little & makes all the difference."},
+ {type:"talk",title:"const references",
+  body:`<p>Copying big things like long strings is slow. ${C("const std::string&amp;")} passes the original without copying, and ${C("const")} promises not to change it.</p>`,
+  demo:`#include <iostream>\n#include <string>\n\nvoid shout(const std::string& msg) {\n  std::cout << msg << "!!!";\n}\n\nint main() {\n  shout("Banana time");\n}`,
+  say:"Output: Banana time!!! Pros do this all the time."},
+ {type:"quiz",q:"What does int& r = a; mean?",opts:["r is another name for a","r is a copy of a","r holds the address of a"],a:0,why:"A reference is an alias. There's only one box."},
+ {type:"fill",title:"Change the original",body:`<p>Make reset() actually set the caller's variable to 0.</p>`,
+  code:`void reset(int[0] x) {\n  x = 0;\n}`,blanks:["&"],tokens:["&","*","const","%"],why:"int& x refers to the caller's variable."},
+ {type:"quiz",q:"What does this print?",code:`int a = 2, b = 7;\nint& r = a;\nr = b;\nstd::cout << a;`,opts:["7","2","Error"],a:0,mono:true,why:"Tricky! r = b doesn't re-aim r. It copies b's value into a."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`int a = 1;\nint& r = a;\nr += 4;\nstd::cout << a;`,["5","1","4"]],
+  [`int a = 1;\nint b = a;\nb += 4;\nstd::cout << a;`,["1","5","4"]],
+  [`void dbl(int& x) {\n  x *= 2;\n}\nint main() {\n  int n = 3;\n  dbl(n);\n  std::cout << n;\n}`,["6","3","9"]],
+  [`void dbl(int x) {\n  x *= 2;\n}\nint main() {\n  int n = 3;\n  dbl(n);\n  std::cout << n;\n}`,["3","6","0"]],
+  [`int a = 2, b = 7;\nint& r = a;\nr = b;\nstd::cout << a;`,["7","2","9"]]
+ ]},
+{id:"cpp8",title:"Pointers",sub:"addresses, * and &",steps:[
+ {type:"talk",title:"Every box has an address",
+  body:`<p>Variables live at an address in memory. ${C("&amp;a")} gets a's address. A <b>pointer</b>, like ${C("int*")}, stores an address.</p>`,
+  demo:`int a = 4;\nint* p = &a;\nstd::cout << *p << "\\n";\n*p = 9;\nstd::cout << a;`,
+  say:"Output: 4, then 9. *p means 'the value at that address'."},
+ {type:"talk",title:"Pointers can move",mood:"think",
+  body:`<p>Unlike a reference, a pointer can be pointed somewhere else later. It can also point at nothing: ${C("nullptr")}.</p>`,
+  demo:`int a = 1, b = 2;\nint* p = &a;\np = &b;\n*p = 50;\nstd::cout << a << " " << b << "\\n";\n\nint* empty = nullptr;\nif (empty == nullptr) std::cout << "points at nothing";`,
+  say:"Output: 1 50, then points at nothing. Never use * on a nullptr: it crashes."},
+ {type:"talk",title:"References vs pointers",
+  body:`<p><b>Reference</b> ${C("int&amp;")}: always refers to the same thing, can't be empty, no special syntax to use.</p><p><b>Pointer</b> ${C("int*")}: can be re-aimed, can be ${C("nullptr")}, use ${C("*")} to reach the value.</p><p>Modern C++ prefers references, and smart pointers instead of raw ${C("new")}/${C("delete")}.</p>`,
+  say:"If you can use a reference, use a reference."},
+ {type:"quiz",q:"If p is a pointer, what does *p mean?",opts:["The value at the address p holds","The address of p","Multiply p"],a:0,why:"* follows the pointer to the value."},
+ {type:"fill",title:"Point at it",body:`<p>Make p point at score, then change score through p.</p>`,
+  code:`int score = 10;\nint* p = [0]score;\n[1]p = 99;\nstd::cout << score;`,blanks:["&","*"],tokens:["&","*","->","%"],why:"&score is the address; *p = 99 writes to it.",out:"99"},
+ {type:"quiz",q:"What does this print?",code:`int a = 3;\nint* p = &a;\nint* q = p;\n*q += 1;\nstd::cout << *p;`,opts:["4","3","An address"],a:0,mono:true,why:"p and q both point at a, so changing through q changes what p sees."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`int a = 4;\nint* p = &a;\nstd::cout << *p;`,["4","&a","0"]],
+  [`int a = 4;\nint* p = &a;\n*p = 9;\nstd::cout << a;`,["9","4","13"]],
+  [`int a = 1, b = 2;\nint* p = &a;\np = &b;\n*p = 5;\nstd::cout << a << b;`,["15","52","12"]],
+  [`int a = 3;\nint* p = &a;\nint* q = p;\n*q += 1;\nstd::cout << *p;`,["4","3","1"]],
+  [`int* p = nullptr;\nstd::cout << (p == nullptr);`,["1","0","nullptr"]]
+ ]},
+{id:"cpp9",title:"Project: Swap Machine",sub:"change values through pointers and references",project:true,steps:[
+ {type:"talk",title:"The swap problem",mood:"oops",
+  body:`<p>Swapping two variables is a classic. Here's a version that <b>doesn't</b> work, because it only swaps copies.</p>`,
+  demo:`#include <iostream>\n\nvoid badSwap(int a, int b) {\n  int t = a;\n  a = b;\n  b = t;\n}\n\nint main() {\n  int x = 1, y = 2;\n  badSwap(x, y);\n  std::cout << x << " " << y;\n}`,
+  say:"Output: 1 2. Nothing swapped! Let's fix it two ways."},
+ {type:"fill",title:"Fix 1: pointers",body:`<p>Swap through pointers.</p>`,
+  code:`void swapPtr(int* a, int* b) {\n  int t = [0]a;\n  *a = *b;\n  *b = t;\n}`,blanks:["*"],tokens:["*","&","->","t"],why:"*a reads the value a points to."},
+ {type:"fill",title:"Call it",body:`<p>Pass the addresses of x and y.</p>`,
+  code:`int x = 1, y = 2;\nswapPtr([0]x, [1]y);`,blanks:["&","&"],tokens:["&","&","*","*"],why:"swapPtr wants addresses, and & gives you an address.",noRun:true},
+ {type:"order",title:"Fix 2: references",body:`<p>Write the cleaner reference version.</p>`,
+  lines:["void swapRef(int& a, int& b) {","  int t = a;","  a = b;","  b = t;","}"],why:"Same logic as badSwap, but with & so it changes the originals."},
+ {type:"quiz",q:"Which version would most C++ pros write?",opts:["The reference version (or just std::swap)","The pointer version","badSwap"],a:0,why:"References are simpler and can't be null. The standard library even has std::swap(x, y)."},
+ {type:"talk",title:"All three side by side",mood:"cheer",
+  body:`<p>The finished program.</p>`,
+  demo:`#include <iostream>\n#include <utility>\n\nvoid swapPtr(int* a, int* b) { int t = *a; *a = *b; *b = t; }\nvoid swapRef(int& a, int& b) { int t = a; a = b; b = t; }\n\nint main() {\n  int x = 1, y = 2;\n  swapPtr(&x, &y);\n  std::cout << x << " " << y << "\\n";\n  swapRef(x, y);\n  std::cout << x << " " << y << "\\n";\n  std::swap(x, y);\n  std::cout << x << " " << y;\n}`,
+  say:"Output:\n2 1\n1 2\n2 1\n\nYou now understand memory better than most beginners ever do."},
+ {type:"done"}]}
+]};
+
+const CPP_UNIT4={name:"Vectors & classes",lessons:[
+{id:"cpp10",title:"std::vector",sub:"growable lists",steps:[
+ {type:"talk",title:"Lists that grow",
+  body:`<p>${C("std::vector")} (from ${C("#include &lt;vector&gt;")}) is C++'s go-to list. It grows with ${C(".push_back()")} and knows its ${C(".size()")}.</p>`,
+  demo:`std::vector<int> nums = {3, 1, 4};\nnums.push_back(1);\nstd::cout << nums.size() << "\\n";\nstd::cout << nums[0] << "\\n";\nstd::cout << nums.back();`,
+  say:"Output: 4, 3, 1. back() is the last item."},
+ {type:"talk",title:"Range-for",mood:"cheer",
+  body:`<p>${C("for (int n : nums)")} visits every item. Add ${C("&amp;")} to change items in place.</p>`,
+  demo:`std::vector<int> nums = {1, 2, 3};\nfor (int& n : nums) {\n  n *= 10;\n}\nfor (int n : nums) {\n  std::cout << n << " ";\n}`,
+  say:"Output: 10 20 30. Without the & you'd only change copies."},
+ {type:"quiz",q:"Which adds an item to the end of a vector?",opts:["push_back","add","append"],a:0,mono:true,why:"vector uses push_back. pop_back removes the last item."},
+ {type:"fill",title:"Grow the list",body:`<p>Add 7, then print the size.</p>`,
+  code:`std::vector<int> v = {5};\nv.[0](7);\nstd::cout << v.[1]();`,blanks:["push_back","size"],tokens:["push_back","size","length","add"],why:"push_back adds; size() counts.",out:"2"},
+ {type:"order",title:"Sum a vector",body:`<p>Arrange the lines so it prints ${C("6")}.</p>`,
+  lines:["std::vector<int> v = {1, 2, 3};","int sum = 0;","for (int n : v) {","  sum += n;","}","std::cout << sum;"],why:"Make the vector, start a total, loop and add, then print.",out:"6"},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`std::vector<int> v = {5, 6, 7};\nstd::cout << v[2];`,["7","6","3"]],
+  [`std::vector<int> v = {5, 6, 7};\nv.push_back(8);\nstd::cout << v.size();`,["4","3","8"]],
+  [`std::vector<int> v = {5, 6};\nv.pop_back();\nstd::cout << v.back();`,["5","6","0"]],
+  [`std::vector<int> v = {1, 2, 3};\nint s = 0;\nfor (int n : v) s += n;\nstd::cout << s;`,["6","123","3"]],
+  [`std::vector<std::string> v = {"a", "b"};\nfor (auto& s : v) s += "!";\nstd::cout << v[1];`,["b!","b","!"]],
+  [`std::vector<int> v;\nstd::cout << v.empty();`,["1","0","true"]]
+ ]},
+{id:"cpp11",title:"Your first class",sub:"members, constructors, private",steps:[
+ {type:"talk",title:"Classes in C++",
+  body:`<p>A class bundles data and functions. Members under ${C("public:")} can be used from outside. Don't forget the semicolon after the closing brace!</p>`,
+  demo:`#include <iostream>\n#include <string>\n\nclass Monster {\npublic:\n  std::string name;\n  int hp;\n  void hit(int dmg) { hp -= dmg; }\n};\n\nint main() {\n  Monster m;\n  m.name = "Grub";\n  m.hp = 30;\n  m.hit(12);\n  std::cout << m.name << " has " << m.hp << " hp";\n}`,
+  say:"Output: Grub has 18 hp"},
+ {type:"talk",title:"Constructors and private",mood:"think",
+  body:`<p>A constructor sets things up. The ${C(": name(n), hp(h)")} part is an <b>initializer list</b>. ${C("private:")} members can only be touched by the class's own functions.</p>`,
+  demo:`#include <iostream>\n#include <string>\n\nclass Monster {\npublic:\n  Monster(std::string n, int h) : name(n), hp(h) {}\n  void hit(int dmg) { hp -= dmg; }\n  bool alive() const { return hp > 0; }\nprivate:\n  std::string name;\n  int hp;\n};\n\nint main() {\n  Monster m("Grub", 10);\n  m.hit(12);\n  std::cout << m.alive();\n}`,
+  say:"Output: 0. Grub is defeated. const after alive() promises it won't change anything."},
+ {type:"talk",title:"Objects are copied",mood:"oops",
+  body:`<p>Here's a big difference from C#: in C++, ${C("Box b = a;")} makes a full <b>copy</b>. Changing a afterward doesn't affect b.</p>`,
+  demo:`#include <iostream>\n\nclass Box {\npublic:\n  int size = 3;\n};\n\nint main() {\n  Box a;\n  Box b = a;\n  a.size = 9;\n  std::cout << b.size;\n}`,
+  say:"Output: 3. Want sharing? Use a reference: Box& b = a;"},
+ {type:"quiz",q:"What's easy to forget at the end of a class definition?",opts:["The semicolon after }","The word end","A return 0"],a:0,why:"class Monster { ... }; needs that final semicolon."},
+ {type:"fill",title:"Make it usable",body:`<p>Let code outside the class read level.</p>`,
+  code:`class Hero {\n[0]:\n  int level = 1;\n};`,blanks:["public"],tokens:["public","private","static","void"],why:"Members after public: are visible outside the class."},
+ {type:"quiz",q:"What does this print?",code:`class C {\npublic:\n  int n = 0;\n  void add() { n += 5; }\n};\nint main() {\n  C c;\n  c.add();\n  c.add();\n  std::cout << c.n;\n}`,opts:["10","5","0"],a:0,mono:true,why:"add() runs twice, adding 5 each time."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`class Box {\npublic:\n  int size = 3;\n};\nint main() {\n  Box b;\n  std::cout << b.size;\n}`,["3","0","size"]],
+  [`class P {\npublic:\n  std::string name;\n  P(std::string n) : name(n) {}\n};\nint main() {\n  P p("Ivy");\n  std::cout << p.name;\n}`,["Ivy","n","name"]],
+  [`class Box {\npublic:\n  int size = 3;\n};\nint main() {\n  Box a;\n  Box b = a;\n  a.size = 9;\n  std::cout << b.size;\n}`,["3","9","12"]],
+  [`class Box {\npublic:\n  int size = 3;\n};\nint main() {\n  Box a;\n  Box& b = a;\n  a.size = 9;\n  std::cout << b.size;\n}`,["9","3","12"]],
+  [`struct Pt {\n  int x, y;\n};\nint main() {\n  Pt p{2, 5};\n  std::cout << p.x + p.y;\n}`,["7","25","2"]]
+ ]},
+{id:"cpp12",title:"Project: Monster Battle",sub:"classes fighting it out",project:true,steps:[
+ {type:"talk",title:"Battle time!",mood:"cheer",
+  body:`<p>Final project: a ${C("Fighter")} class. Fighters have a name, hp and power. They take turns attacking until one of them is down. Everything from this course comes together here.</p>`,
+  say:"TypeMonkey versus the Bug King. Let's code the fight."},
+ {type:"fill",title:"Step 1: the constructor",body:`<p>Fill in the initializer list.</p>`,
+  code:`class Fighter {\npublic:\n  std::string name;\n  int hp;\n  int power;\n  Fighter(std::string n, int h, int p) [0] name(n), hp(h), power(p) {}\n};`,blanks:[":"],tokens:[":","=","->","::"],why:"A colon starts the initializer list."},
+ {type:"order",title:"Step 2: attacking",body:`<p>attack() hurts the other fighter. It takes a reference, so the real opponent loses hp.</p>`,
+  lines:["void attack(Fighter& other) {","  other.hp -= power;","  std::cout << name << \" hits \" << other.name << \"\\n\";","}"],why:"Lower the opponent's hp, then announce it.",noRun:true},
+ {type:"quiz",q:"Why is the parameter Fighter& other instead of Fighter other?",opts:["So the real opponent loses hp, not a copy","Because classes can't be copied","It's required for strings"],a:0,why:"Without &, attack would damage a copy and the boss would never lose."},
+ {type:"quiz",q:"TypeMonkey has 30 hp and 8 power. The Bug King has 20 hp and 6 power. TypeMonkey attacks first and they take turns. How many hits does TypeMonkey need?",opts:["3","2","4"],a:0,why:"20 → 12 → 4 → -4. Three hits."},
+ {type:"talk",title:"The full battle",mood:"cheer",
+  body:`<p>Here's the complete program. ${C("? :")} is a one-line if/else.</p>`,
+  demo:`#include <iostream>\n#include <string>\n\nclass Fighter {\npublic:\n  std::string name;\n  int hp;\n  int power;\n  Fighter(std::string n, int h, int p) : name(n), hp(h), power(p) {}\n  void attack(Fighter& other) {\n    other.hp -= power;\n    std::cout << name << " hits " << other.name << "\\n";\n  }\n  bool alive() const { return hp > 0; }\n};\n\nint main() {\n  Fighter hero("TypeMonkey", 30, 8);\n  Fighter boss("Bug King", 20, 6);\n  while (hero.alive() && boss.alive()) {\n    hero.attack(boss);\n    if (boss.alive()) boss.attack(hero);\n  }\n  std::cout << (hero.alive() ? hero.name : boss.name) << " wins with " << hero.hp << " hp!";\n}`,
+  say:"Output:\nTypeMonkey hits Bug King\nBug King hits TypeMonkey\nTypeMonkey hits Bug King\nBug King hits TypeMonkey\nTypeMonkey hits Bug King\nTypeMonkey wins with 18 hp!\n\nYou finished C++!"},
+ {type:"done"}]}
+]};
+
+/* C++ course. Units 2–4 live in cpp-units-2-4.js */
 const COURSE_CPP={id:"cpp",name:"C++",blurb:"The speed-demon language behind game engines, browsers and robots. Unit 1 is free.",units:[
 {name:"Hello, C++",free:true,lessons:[
 {id:"cpp1",title:"Hello, C++",sub:"#include, main, std::cout",steps:[
@@ -1079,19 +1523,1003 @@ const COURSE_CPP={id:"cpp",name:"C++",blurb:"The speed-demon language behind gam
   [`std::cout << (4 == 4);`,["1","true","4"]]
  ]}
 ]},
-{name:"Loops & functions",lessons:[
- {id:"cpp4",title:"for and while",sub:"repeating code in C++"},
- {id:"cpp5",title:"Functions",sub:"return types, parameters, void"},
- {id:"cpp6",title:"Project: Times table",sub:"loops inside loops",project:true}]},
-{name:"Memory & pointers",lessons:[
- {id:"cpp7",title:"References",sub:"another name for the same box"},
- {id:"cpp8",title:"Pointers",sub:"addresses, * and &"},
- {id:"cpp9",title:"Project: Swap machine",sub:"change values through pointers",project:true}]},
-{name:"Classes & vectors",lessons:[
- {id:"cpp10",title:"std::vector",sub:"growable lists"},
- {id:"cpp11",title:"Your first class",sub:"members, constructors, methods"},
- {id:"cpp12",title:"Project: Monster battle",sub:"classes fighting it out",project:true}]}
+CPP_UNIT2,CPP_UNIT3,CPP_UNIT4
 ]};
+
+/* Python course, Units 1–3. Read-and-reason in the preview; every answer is checked with python3 (tests/verify_compiled.py py). */
+const PY_UNIT1={name:"Python basics",free:true,lessons:[
+{id:"py1",title:"Hello, Python",sub:"print and your first program",steps:[
+ {type:"talk",title:"Meet Python",mood:"cheer",
+  body:`<p>Python is famous for being readable. It's used for AI, data science, websites, automation and even NASA tools. No semicolons, no curly braces.</p>`,
+  say:"Python reads almost like English. You're going to like this one."},
+ {type:"talk",title:"print()",
+  body:`<p>${C("print()")} shows text on the screen. Text goes in quotes. You can print several things at once, separated by commas, and Python puts a space between them.</p>`,
+  demo:`print("Hello, world!")\nprint("I'm learning", "Python")\nprint(2 + 3)`,
+  say:"Output:\nHello, world!\nI'm learning Python\n5"},
+ {type:"talk",title:"Comments",mood:"think",
+  body:`<p>Anything after ${C("#")} is a comment. Python ignores it. It's a note for humans.</p>`,
+  demo:`# This line is ignored\nprint("Ook!")  # so is this part`,
+  say:"Output: Ook!"},
+ {type:"quiz",q:"What does this print?",code:`print("Type", "Monkey")`,opts:["Type Monkey","TypeMonkey","Type, Monkey"],a:0,mono:true,why:"Commas in print() add a space between the items."},
+ {type:"fill",title:"Say hi",body:`<p>Print the word hi.</p>`,code:`[0]("hi")`,blanks:["print"],tokens:["print","console.log","echo","say"],why:"print() is Python's way to show output."},
+ {type:"quiz",q:"What does this print?",code:`print("2" + "2")`,opts:["22","4","2 2"],a:0,mono:true,why:"Two strings joined with + stick together."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`print("Hi" + "!")`,["Hi!","Hi +!","Hi !"]],
+  [`print("a", "b", "c")`,["a b c","abc","a,b,c"]],
+  [`print(3 + 4)`,["7","34","3 + 4"]],
+  [`print("3" + "4")`,["34","7","3 + 4"]],
+  [`# print("hidden")\nprint("shown")`,["shown","hidden shown","hidden"]],
+  [`print("ook" * 3)`,["ookookook","ook3","ook ook ook"]]
+ ]},
+{id:"py2",title:"Variables & types",sub:"int, float, str, bool",steps:[
+ {type:"talk",title:"Name a value",
+  body:`<p>Make a variable by giving it a name and a value with ${C("=")}. No ${C("let")} or ${C("const")} needed.</p>`,
+  demo:`snack = "banana"\ncount = 3\nprint(snack)\ncount = count + 1\nprint(count)`,
+  say:"Output: banana, then 4."},
+ {type:"talk",title:"Types",mood:"think",
+  body:`<p>Python's basic types: ${C("int")} (whole numbers), ${C("float")} (decimals), ${C("str")} (text) and ${C("bool")} (${C("True")} or ${C("False")}, with capital letters). ${C("type()")} tells you which one you have.</p>`,
+  demo:`print(type(7))\nprint(type(3.5))\nprint(type("hi"))\nprint(type(True))`,
+  say:"Output: <class 'int'>, <class 'float'>, <class 'str'>, <class 'bool'>"},
+ {type:"talk",title:"Converting types",
+  body:`<p>${C("int()")}, ${C("float()")} and ${C("str()")} convert between types. You'll need this when gluing numbers into text.</p>`,
+  demo:`age = 15\nprint("I am " + str(age))\nprint(int("42") + 1)\nprint(float("2.5") * 2)`,
+  say:"Output:\nI am 15\n43\n5.0"},
+ {type:"quiz",q:"Which is the correct way to write true in Python?",opts:["True","true","TRUE"],a:0,mono:true,why:"Python booleans start with a capital letter."},
+ {type:"fill",title:"Glue a number",body:`<p>Turn the number into text so it can be joined.</p>`,code:`lives = 3\nprint("Lives: " + [0](lives))`,blanks:["str"],tokens:["str","int","float","text"],why:"str() turns 3 into \"3\".",out:"Lives: 3"},
+ {type:"quiz",q:"What does this print?",code:`x = 5\nx = x * 2\nprint(x)`,opts:["10","5","x * 2"],a:0,mono:true,why:"x becomes 5 * 2, which is 10."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`a = 2\na = a + 3\nprint(a)`,["5","2","23"]],
+  [`print(int("7") + 1)`,["8","71","Error"]],
+  [`print(str(7) + "1")`,["71","8","7 1"]],
+  [`print(type(4.0))`,["<class 'float'>","<class 'int'>","4.0"]],
+  [`x = 4\ny = x\nx = 9\nprint(y)`,["4","9","x"]],
+  [`print(float("1.5") + 1)`,["2.5","1.51","2"]]
+ ]},
+{id:"py3",title:"Strings & f-strings",sub:"len, methods, slicing, f\"…\"",steps:[
+ {type:"talk",title:"f-strings",mood:"cheer",
+  body:`<p>Put ${C("f")} before a string and drop variables inside ${C("{ }")}. It's the cleanest way to build text in Python.</p>`,
+  demo:`name = "Mo"\nage = 4\nprint(f"{name} is {age} years old")\nprint(f"Next year: {age + 1}")`,
+  say:"Output:\nMo is 4 years old\nNext year: 5"},
+ {type:"talk",title:"String tools",
+  body:`<p>${C("len()")} counts characters. Methods like ${C(".upper()")}, ${C(".lower()")} and ${C(".replace()")} make new strings. ${C("in")} checks if text is inside.</p>`,
+  demo:`word = "banana"\nprint(len(word))\nprint(word.upper())\nprint(word.replace("a", "o"))\nprint("nan" in word)`,
+  say:"Output: 6, BANANA, bonono, True"},
+ {type:"talk",title:"Slicing",mood:"think",
+  body:`<p>${C("word[0]")} is the first letter. ${C("word[-1]")} is the last. ${C("word[1:4]")} takes characters 1 up to (not including) 4.</p>`,
+  demo:`word = "monkey"\nprint(word[0])\nprint(word[-1])\nprint(word[1:4])\nprint(word[:3])`,
+  say:"Output: m, y, onk, mon"},
+ {type:"quiz",q:"What does this print?",code:`print("code"[-1])`,opts:["e","c","d"],a:0,mono:true,why:"-1 means the last character."},
+ {type:"fill",title:"Build a badge",body:`<p>Make an f-string.</p>`,code:`name = "Sam"\nprint([0]"Hi, {name}!")`,blanks:["f"],tokens:["f","$","`","s"],why:"The f prefix turns on {name} replacement.",out:"Hi, Sam!"},
+ {type:"quiz",q:"What does this print?",code:`print("python"[0:2])`,opts:["py","pyt","p"],a:0,mono:true,why:"Characters 0 and 1. The end number is not included."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`print(len("ape"))`,["3","2","ape"]],
+  [`print("Hi".upper())`,["HI","hi","Hi"]],
+  [`x = 3\nprint(f"x is {x}")`,["x is 3","x is {x}","f x is 3"]],
+  [`print("jump"[1])`,["u","j","m"]],
+  [`print("banana"[-2])`,["n","a","b"]],
+  [`print("cat".replace("c", "b"))`,["bat","cat","cbat"]],
+  [`print("ook" in "book")`,["True","False","ook"]]
+ ]},
+{id:"py4",title:"Numbers & math",sub:"/, //, %, **, round",steps:[
+ {type:"talk",title:"Two kinds of division",
+  body:`<p>${C("/")} always gives a decimal. ${C("//")} is <b>floor division</b>: it drops the decimal. ${C("%")} gives the remainder and ${C("**")} is power.</p>`,
+  demo:`print(7 / 2)\nprint(7 // 2)\nprint(7 % 2)\nprint(2 ** 3)`,
+  say:"Output: 3.5, 3, 1, 8"},
+ {type:"talk",title:"Handy number tools",mood:"think",
+  body:`<p>${C("round()")} rounds, ${C("abs()")} removes the minus sign, and ${C("max()")}/${C("min()")} pick the biggest or smallest.</p>`,
+  demo:`print(round(3.14159, 2))\nprint(abs(-8))\nprint(max(4, 9, 2))\nprint(min(4, 9, 2))`,
+  say:"Output: 3.14, 8, 9, 2"},
+ {type:"quiz",q:"What does this print?",code:`print(10 // 4)`,opts:["2","2.5","3"],a:0,mono:true,why:"// drops the decimal part."},
+ {type:"fill",title:"Leftover bananas",body:`<p>20 bananas shared between 6 monkeys. Print how many are left over.</p>`,code:`print(20 [0] 6)`,blanks:["%"],tokens:["%","//","/","**"],why:"% gives the remainder: 20 = 6×3 + 2.",out:"2"},
+ {type:"quiz",q:"What does this print?",code:`print(10 / 5)`,opts:["2.0","2","5"],a:0,mono:true,why:"/ always gives a float in Python, even when it divides evenly."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`print(9 // 2)`,["4","4.5","5"]],
+  [`print(9 / 2)`,["4.5","4","5"]],
+  [`print(9 % 2)`,["1","4","0"]],
+  [`print(3 ** 2)`,["9","6","32"]],
+  [`print(2 + 3 * 4)`,["14","20","9"]],
+  [`print(round(2.567, 1))`,["2.6","2.5","3"]],
+  [`print(max(3, 11, 7))`,["11","3","7"]]
+ ]}
+]};
+
+const PY_UNIT2={name:"Making decisions",lessons:[
+{id:"py5",title:"True or False",sub:"comparisons, and, or, not",steps:[
+ {type:"talk",title:"Comparisons",
+  body:`<p>${C("==")} (equal), ${C("!=")} (not equal), ${C("&gt;")}, ${C("&lt;")}, ${C("&gt;=")} and ${C("&lt;=")} all give ${C("True")} or ${C("False")}.</p>`,
+  demo:`print(5 > 3)\nprint(5 == 5)\nprint("hi" != "Hi")\nprint(4 <= 2)`,
+  say:"Output: True, True, True, False"},
+ {type:"talk",title:"and, or, not",mood:"think",
+  body:`<p>Python uses plain words: ${C("and")} (both true), ${C("or")} (at least one true) and ${C("not")} (flip it).</p>`,
+  demo:`has_ticket = True\nage = 15\nprint(has_ticket and age >= 13)\nprint(age < 12 or age > 65)\nprint(not has_ticket)`,
+  say:"Output: True, False, False"},
+ {type:"quiz",q:"What does this print?",code:`print(True and False)`,opts:["False","True","TrueFalse"],a:0,mono:true,why:"and needs both sides True."},
+ {type:"fill",title:"Both needed",body:`<p>Print True only if hungry and has a banana.</p>`,code:`hungry = True\nbanana = True\nprint(hungry [0] banana)`,blanks:["and"],tokens:["and","or","&&","not"],why:"Python spells it out: and.",out:"True"},
+ {type:"quiz",q:"What does this print?",code:`print(not 3 > 5)`,opts:["True","False","Error"],a:0,mono:true,why:"3 > 5 is False, and not flips it to True."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`print(3 == 3)`,["True","False","3"]],
+  [`print("3" == 3)`,["False","True","Error"]],
+  [`print(2 > 5)`,["False","True","2"]],
+  [`print(True or False)`,["True","False","Error"]],
+  [`print(not False)`,["True","False","not False"]],
+  [`print(5 > 3 and 2 > 4)`,["False","True","2"]]
+ ]},
+{id:"py6",title:"if, elif, else",sub:"indentation is the rule",steps:[
+ {type:"talk",title:"Indentation matters",
+  body:`<p>Python has no curly braces. A colon ${C(":")} starts a block, and the lines <b>indented</b> under it belong to it. Four spaces is the standard.</p>`,
+  demo:`hunger = 8\nif hunger > 5:\n    print("Banana time!")\n    print("Nom nom")\nprint("Done checking")`,
+  say:"Output: Banana time!, Nom nom, Done checking. The last line isn't indented, so it always runs."},
+ {type:"talk",title:"elif and else",mood:"think",
+  body:`<p>${C("elif")} is short for "else if". Python checks top to bottom and runs the first true block.</p>`,
+  demo:`score = 84\nif score >= 90:\n    print("A")\nelif score >= 80:\n    print("B")\nelif score >= 70:\n    print("C")\nelse:\n    print("Keep practicing")`,
+  say:"Output: B"},
+ {type:"quiz",q:"How does Python know which lines are inside an if?",opts:["They're indented under it","They're inside { }","They end with ;"],a:0,why:"Indentation is part of Python's grammar."},
+ {type:"order",title:"Build the check",body:`<p>Arrange the lines into a working program.</p>`,lines:["temp = 12","if temp > 20:","    print(\"Shorts\")","else:","    print(\"Jacket\")"],why:"Set the value, if with a colon, indented body, else, indented body.",out:"Jacket"},
+ {type:"fill",title:"Even or odd",body:`<p>Fill in the missing keyword.</p>`,code:`n = 7\nif n % 2 == 0:\n    print("even")\n[0]:\n    print("odd")`,blanks:["else"],tokens:["else","elif","otherwise","if"],why:"else catches everything the if didn't.",out:"odd"},
+ {type:"quiz",q:"What does this print?",code:`x = 15\nif x > 20:\n    print("A")\nelif x > 10:\n    print("B")\nelse:\n    print("C")`,opts:["B","A","C"],a:0,mono:true,why:"15 isn't over 20, but it is over 10."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`a = 10\nif a > 5:\n    print("yes")\nelse:\n    print("no")`,["yes","no","yes no"]],
+  [`b = 2\nif b == 3:\n    print("three")\nprint("end")`,["end","three end","three"]],
+  [`c = "cat"\nif c == "dog":\n    print("woof")\nelse:\n    print("meow")`,["meow","woof","cat"]],
+  [`x = 5\nif x > 1:\n    print("one")\nelif x > 3:\n    print("three")`,["one","three","one three"]],
+  [`t = 1\nif t > 0:\n    print("up")\nif t > 5:\n    print("way up")`,["up","up way up","way up"]]
+ ]},
+{id:"py7",title:"Project: Movie Night",sub:"ticket prices with decisions",project:true,steps:[
+ {type:"talk",title:"Run a movie theater",mood:"cheer",
+  body:`<p>Build the ticket booth logic: prices change by age, and Tuesdays are half price.</p><p>Kids under 12: $6 · Seniors 65+: $7 · Everyone else: $10.</p>`,
+  say:"Grab some popcorn. Let's code."},
+ {type:"order",title:"Step 1: base price",body:`<p>Arrange the price rules.</p>`,lines:["age = 70","if age < 12:","    price = 6","elif age >= 65:","    price = 7","else:","    price = 10","print(price)"],why:"Check kids first, then seniors, then everyone else.",out:"7"},
+ {type:"fill",title:"Step 2: Tuesday deal",body:`<p>Halve the price on Tuesdays.</p>`,code:`price = 10\nday = "Tuesday"\nif day [0] "Tuesday":\n    price = price [1] 2\nprint(price)`,blanks:["==","/"],tokens:["==","/","=","//"],why:"== compares; / halves it.",out:"5.0"},
+ {type:"quiz",q:"Why did that print 5.0 and not 5?",opts:["/ always makes a float","Prices are always decimals","== adds .0"],a:0,why:"Use // or int() if you want a whole number."},
+ {type:"talk",title:"The finished booth",mood:"cheer",
+  body:`<p>All together, with a nice f-string receipt.</p>`,
+  demo:`age = 8\nday = "Tuesday"\n\nif age < 12:\n    price = 6\nelif age >= 65:\n    price = 7\nelse:\n    price = 10\n\nif day == "Tuesday":\n    price = price / 2\n\nprint(f"Ticket for age {age} on {day}: \${price:.2f}")`,
+  say:"Output: Ticket for age 8 on Tuesday: $3.00\n\n:.2f shows exactly two decimal places."},
+ {type:"done"}]}
+]};
+
+const PY_UNIT3={name:"Loops",lessons:[
+{id:"py8",title:"for loops & range",sub:"repeat with range()",steps:[
+ {type:"talk",title:"for and range",
+  body:`<p>${C("range(5)")} gives 0, 1, 2, 3, 4. A ${C("for")} loop runs its indented block once for each number.</p>`,
+  demo:`for i in range(5):\n    print(i)`,
+  say:"Output: 0 to 4. range stops BEFORE the number you give it."},
+ {type:"talk",title:"Start, stop, step",mood:"think",
+  body:`<p>${C("range(start, stop, step)")} gives you full control. You can also loop straight over a string.</p>`,
+  demo:`for i in range(1, 4):\n    print(i)\nfor i in range(10, 0, -3):\n    print(i)\nfor letter in "ook":\n    print(letter)`,
+  say:"Output: 1 2 3, then 10 7 4 1, then o o k."},
+ {type:"quiz",q:"What numbers does range(3) give?",opts:["0, 1, 2","1, 2, 3","0, 1, 2, 3"],a:0,why:"It starts at 0 and stops before 3."},
+ {type:"fill",title:"Count to 5",body:`<p>Print 1, 2, 3, 4, 5.</p>`,code:`for i in range([0], [1]):\n    print(i)`,blanks:["1","6"],tokens:["1","6","5","0"],why:"Start at 1 and stop before 6.",out:"1 2 3 4 5"},
+ {type:"order",title:"Add them up",body:`<p>Arrange the lines so it prints ${C("10")}.</p>`,lines:["total = 0","for n in range(1, 5):","    total += n","print(total)"],why:"Start at 0, add 1 + 2 + 3 + 4, print after the loop.",out:"10"},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`for i in range(3):\n    print(i)`,["0 1 2","1 2 3","0 1 2 3"]],
+  [`for i in range(2, 5):\n    print(i)`,["2 3 4","2 3 4 5","3 4 5"]],
+  [`for i in range(0, 10, 4):\n    print(i)`,["0 4 8","0 4 8 12","4 8"]],
+  [`s = ""\nfor c in "abc":\n    s = c + s\nprint(s)`,["cba","abc","c"]],
+  [`total = 0\nfor i in range(4):\n    total += i\nprint(total)`,["6","10","4"]],
+  [`for i in range(3, 0, -1):\n    print(i)`,["3 2 1","3 2 1 0","2 1 0"]]
+ ]},
+{id:"py9",title:"while, break, continue",sub:"loop until something changes",steps:[
+ {type:"talk",title:"while loops",
+  body:`<p>${C("while")} repeats as long as its condition is True. Change something inside so it can stop.</p>`,
+  demo:`bananas = 3\nwhile bananas > 0:\n    print(f"Nom! {bananas} left")\n    bananas -= 1\nprint("All gone")`,
+  say:"Python has no ++. Use += 1 and -= 1."},
+ {type:"talk",title:"break and continue",mood:"think",
+  body:`<p>${C("continue")} skips to the next round. ${C("break")} exits the loop.</p>`,
+  demo:`for i in range(1, 11):\n    if i == 3:\n        continue\n    if i == 6:\n        break\n    print(i)`,
+  say:"Output: 1 2 4 5"},
+ {type:"quiz",q:"How do you add 1 to n in Python?",opts:["n += 1","n++","++n"],a:0,mono:true,why:"Python doesn't have ++."},
+ {type:"fill",title:"Double until 100",body:`<p>Keep doubling while money is under 100.</p>`,code:`money = 1\n[0] money < 100:\n    money *= 2\nprint(money)`,blanks:["while"],tokens:["while","for","if","until"],why:"while repeats as long as the condition holds.",out:"128"},
+ {type:"quiz",q:"What does this print?",code:`n = 10\nwhile n > 3:\n    n -= 4\nprint(n)`,opts:["2","6","3"],a:0,mono:true,why:"10 → 6 → 2. 2 isn't more than 3, so the loop stops."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`i = 0\nwhile i < 3:\n    i += 1\nprint(i)`,["3","2","0"]],
+  [`n = 5\nwhile n > 3:\n    print(n)\n    n -= 1`,["5 4","5 4 3","4 3"]],
+  [`x = 1\nwhile x < 10:\n    x *= 3\nprint(x)`,["27","9","10"]],
+  [`for i in range(5):\n    if i == 2:\n        break\n    print(i)`,["0 1","0 1 2","2"]],
+  [`for i in range(4):\n    if i % 2 == 0:\n        continue\n    print(i)`,["1 3","0 2","0 1 2 3"]]
+ ]},
+{id:"py10",title:"Project: FizzBuzz",sub:"the classic interview puzzle",project:true,steps:[
+ {type:"talk",title:"FizzBuzz, Python style",mood:"cheer",
+  body:`<p>Count from 1 to 15. Multiples of 3 print ${C("Fizz")}, multiples of 5 print ${C("Buzz")}, multiples of both print ${C("FizzBuzz")}, and everything else prints the number.</p>`,
+  say:"Check the FizzBuzz case first!"},
+ {type:"order",title:"Build FizzBuzz",body:`<p>Arrange the full solution.</p>`,lines:["for i in range(1, 16):","    if i % 15 == 0:","        print(\"FizzBuzz\")","    elif i % 3 == 0:","        print(\"Fizz\")","    elif i % 5 == 0:","        print(\"Buzz\")","    else:","        print(i)"],why:"Both-case first, then 3, then 5, otherwise the number.",out:"1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz 11 Fizz 13 14 FizzBuzz"},
+ {type:"quiz",q:"What would print for 30?",opts:["FizzBuzz","Fizz","Buzz"],a:0,why:"30 divides by both 3 and 5."},
+ {type:"quiz",q:"If you checked i % 3 == 0 FIRST, what would 15 print?",opts:["Fizz","FizzBuzz","15"],a:0,why:"The first true branch wins, so FizzBuzz would never be reached. Order matters!"},
+ {type:"talk",title:"A Pythonic twist",mood:"think",
+  body:`<p>Here's a clever version that builds the word piece by piece. ${C("or")} returns the right side when the left side is empty.</p>`,
+  demo:`for i in range(1, 16):\n    word = ""\n    if i % 3 == 0:\n        word += "Fizz"\n    if i % 5 == 0:\n        word += "Buzz"\n    print(word or i)`,
+  say:"Same output, fewer branches. Interviewers love seeing two solutions."},
+ {type:"done"}]}
+]};
+
+/* Python course, Units 4–6 and the course object. */
+const PY_UNIT4={name:"Functions",lessons:[
+{id:"py11",title:"def and return",sub:"your own reusable commands",steps:[
+ {type:"talk",title:"Defining functions",
+  body:`<p>${C("def")} makes a function. The indented block is its body. Call it with parentheses.</p>`,
+  demo:`def greet(name):\n    print(f"Hey {name}!")\n\ngreet("Ava")\ngreet("Leo")`,
+  say:"Output: Hey Ava!, Hey Leo!"},
+ {type:"talk",title:"Returning values",mood:"think",
+  body:`<p>${C("return")} hands a value back. A function with no return gives back ${C("None")}, Python's "nothing" value.</p>`,
+  demo:`def add(a, b):\n    return a + b\n\nresult = add(2, 3)\nprint(result)\nprint(add(10, 20))\n\ndef nothing():\n    pass\n\nprint(nothing())`,
+  say:"Output: 5, 30, None. pass means 'do nothing'."},
+ {type:"quiz",q:"Which keyword starts a function definition?",opts:["def","function","func"],a:0,mono:true,why:"Python uses def, short for define."},
+ {type:"fill",title:"Square it",body:`<p>Make square() hand back n times n.</p>`,code:`[0] square(n):\n    [1] n * n\n\nprint(square(4))`,blanks:["def","return"],tokens:["def","return","print","function"],why:"def defines it; return hands back the answer.",out:"16"},
+ {type:"quiz",q:"What does this print?",code:`def f(x):\n    if x > 0:\n        return "pos"\n    return "neg"\n\nprint(f(-2))`,opts:["neg","pos","None"],a:0,mono:true,why:"-2 > 0 is False, so it returns \"neg\"."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`def f(n):\n    return n * 3\n\nprint(f(2))`,["6","5","n * 3"]],
+  [`def f():\n    return 5\n\nprint(f() + f())`,["10","55","5"]],
+  [`def f(s):\n    return len(s)\n\nprint(f("monkey"))`,["6","monkey","5"]],
+  [`def f(x):\n    x = x + 1\n\nprint(f(3))`,["None","4","3"]],
+  [`def shout(w):\n    return w.upper() + "!"\n\nprint(shout("ook"))`,["OOK!","ook!","OOK"]]
+ ]},
+{id:"py12",title:"Defaults & scope",sub:"default values, keyword arguments, local variables",steps:[
+ {type:"talk",title:"Default values",
+  body:`<p>Give a parameter a default with ${C("=")}. If the caller skips it, the default is used. You can also name arguments when calling.</p>`,
+  demo:`def greet(name, greeting="Hey"):\n    print(f"{greeting}, {name}!")\n\ngreet("Ava")\ngreet("Leo", "Yo")\ngreet(greeting="Hi", name="Kai")`,
+  say:"Output: Hey, Ava! / Yo, Leo! / Hi, Kai!"},
+ {type:"talk",title:"Scope",mood:"think",
+  body:`<p>Variables created inside a function are <b>local</b>: they vanish when the function ends. Variables outside can be read from inside.</p>`,
+  demo:`planet = "Earth"\n\ndef visit():\n    moon = "Luna"\n    print(planet, moon)\n\nvisit()\nprint(planet)`,
+  say:"Output: Earth Luna, then Earth. Printing moon outside would be a NameError."},
+ {type:"quiz",q:"What does this print?",code:`def power(base, exp=2):\n    return base ** exp\n\nprint(power(3))`,opts:["9","3","27"],a:0,mono:true,why:"exp defaults to 2, so 3 ** 2 = 9."},
+ {type:"fill",title:"Add a default",body:`<p>Make times default to 1.</p>`,code:`def cheer(times[0]1):\n    print("Ook! " * times)\n\ncheer()`,blanks:["="],tokens:["=","==",":","->"],why:"times=1 sets the default value.",out:"Ook!"},
+ {type:"quiz",q:"What does this print?",code:`x = 1\n\ndef f():\n    x = 5\n\nf()\nprint(x)`,opts:["1","5","None"],a:0,mono:true,why:"The x inside f is a brand-new local variable. The outside x is untouched."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`def f(a, b=10):\n    return a + b\n\nprint(f(5))`,["15","5","510"]],
+  [`def f(a, b=10):\n    return a + b\n\nprint(f(5, 1))`,["6","15","51"]],
+  [`def f(a, b):\n    return a - b\n\nprint(f(b=1, a=9))`,["8","-8","Error"]],
+  [`x = 3\n\ndef f():\n    return x * 2\n\nprint(f())`,["6","3","Error"]],
+  [`def hi(n="you"):\n    return "hi " + n\n\nprint(hi())`,["hi you","hi n","hi"]]
+ ]},
+{id:"py13",title:"Project: Password Checker",sub:"functions that judge a password",project:true,steps:[
+ {type:"talk",title:"Is it strong?",mood:"cheer",
+  body:`<p>Build a function that rates a password. Rules: at least 8 characters, contains a number, and contains a capital letter.</p><p>New tools: ${C("ch.isdigit()")} and ${C("ch.isupper()")} check a single character, and ${C("any()")} is True if any item is True.</p>`,
+  say:"Real sign-up pages do exactly this."},
+ {type:"fill",title:"Step 1: long enough",body:`<p>Return True if the password has 8 or more characters.</p>`,code:`def long_enough(pw):\n    return [0](pw) >= 8\n\nprint(long_enough("banana12"))`,blanks:["len"],tokens:["len","size","count","str"],why:"len() counts the characters.",out:"True"},
+ {type:"order",title:"Step 2: has a number",body:`<p>Loop over each character and look for a digit.</p>`,lines:["def has_digit(pw):","    for ch in pw:","        if ch.isdigit():","            return True","    return False","print(has_digit(\"ook7\"))"],why:"Return True the moment you find one. Only return False after checking everything.",out:"True"},
+ {type:"quiz",q:"In has_digit, why is return False OUTSIDE the for loop?",opts:["So it only gives up after checking every character","Python requires it","It makes it faster"],a:0,why:"Inside the loop, it would give up after the very first character."},
+ {type:"talk",title:"The finished checker",mood:"cheer",
+  body:`<p>Combining everything, with ${C("any()")} as a shortcut.</p>`,
+  demo:`def rate(pw):\n    score = 0\n    if len(pw) >= 8:\n        score += 1\n    if any(ch.isdigit() for ch in pw):\n        score += 1\n    if any(ch.isupper() for ch in pw):\n        score += 1\n    return ["Weak", "Weak", "Okay", "Strong"][score]\n\nprint(rate("ook"))\nprint(rate("bananas1"))\nprint(rate("Bananas123"))`,
+  say:"Output: Weak, Okay, Strong. The list trick turns a score into a word."},
+ {type:"done"}]}
+]};
+
+const PY_UNIT5={name:"Lists & dictionaries",lessons:[
+{id:"py14",title:"Lists",sub:"append, remove, len, in",steps:[
+ {type:"talk",title:"Ordered collections",
+  body:`<p>A <b>list</b> holds items in order inside square brackets. Indexes start at 0, and ${C("-1")} is the last item.</p>`,
+  demo:`fruits = ["banana", "mango", "kiwi"]\nprint(fruits[0])\nprint(fruits[-1])\nprint(len(fruits))\nprint(fruits)`,
+  say:"Output: banana, kiwi, 3, ['banana', 'mango', 'kiwi']"},
+ {type:"talk",title:"Changing lists",mood:"think",
+  body:`<p>${C(".append()")} adds to the end, ${C(".remove()")} deletes a value, ${C(".pop()")} removes and returns the last item, and ${C("in")} checks membership.</p>`,
+  demo:`pets = ["cat", "dog"]\npets.append("owl")\npets.remove("cat")\nprint(pets)\nlast = pets.pop()\nprint(last, pets)\nprint("dog" in pets)`,
+  say:"Output: ['dog', 'owl'], then owl ['dog'], then True"},
+ {type:"talk",title:"Looping over lists",
+  body:`<p>${C("for item in my_list:")} visits each item. Need the position too? ${C("enumerate()")} gives you both.</p>`,
+  demo:`squad = ["Ava", "Leo", "Kai"]\nfor name in squad:\n    print(f"Hi, {name}!")\nfor i, name in enumerate(squad):\n    print(i, name)`,
+  say:"Output: three greetings, then 0 Ava, 1 Leo, 2 Kai"},
+ {type:"quiz",q:"Which adds an item to the end of a list?",opts:["append","push","add"],a:0,mono:true,why:"Python lists use .append(). JavaScript uses push."},
+ {type:"fill",title:"Grow the list",body:`<p>Add "eggs", then print how many items there are.</p>`,code:`groceries = ["milk"]\ngroceries.[0]("eggs")\nprint([1](groceries))`,blanks:["append","len"],tokens:["append","len","push","size"],why:"append adds, len counts.",out:"2"},
+ {type:"order",title:"Total the scores",body:`<p>Arrange the lines so it prints ${C("50")}.</p>`,lines:["scores = [12, 7, 30, 1]","total = 0","for s in scores:","    total += s","print(total)"],why:"Make the list, start the total, add each score, print.",out:"50"},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`a = ["x", "y", "z"]\nprint(a[1])`,["y","x","z"]],
+  [`a = [5, 6, 7, 8]\nprint(len(a))`,["4","3","8"]],
+  [`a = [1, 2, 3]\nprint(a[-1])`,["3","1","-1"]],
+  [`a = [1]\na.append(2)\nprint(a)`,["[1, 2]","[2, 1]","[1]"]],
+  [`a = [1, 2, 3]\nprint(a.pop())`,["3","1","[1, 2]"]],
+  [`a = ["x", "y"]\nprint("z" in a)`,["False","True","-1"]]
+ ]},
+{id:"py15",title:"Slicing & comprehensions",sub:"the Python superpowers",steps:[
+ {type:"talk",title:"Slicing lists",
+  body:`<p>Slices work on lists just like strings: ${C("nums[1:3]")}, ${C("nums[:2]")}, ${C("nums[::-1]")} (reversed).</p>`,
+  demo:`nums = [10, 20, 30, 40, 50]\nprint(nums[1:3])\nprint(nums[:2])\nprint(nums[-2:])\nprint(nums[::-1])`,
+  say:"Output: [20, 30], [10, 20], [40, 50], [50, 40, 30, 20, 10]"},
+ {type:"talk",title:"List comprehensions",mood:"cheer",
+  body:`<p>A <b>list comprehension</b> builds a new list in one line: ${C("[expression for item in list]")}. Add ${C("if")} at the end to filter.</p>`,
+  demo:`nums = [1, 2, 3, 4, 5, 6]\ndoubled = [n * 2 for n in nums]\nevens = [n for n in nums if n % 2 == 0]\nprint(doubled)\nprint(evens)`,
+  say:"Output: [2, 4, 6, 8, 10, 12], then [2, 4, 6]. This is very Pythonic."},
+ {type:"quiz",q:"What does this print?",code:`print([n * n for n in range(4)])`,opts:["[0, 1, 4, 9]","[1, 4, 9, 16]","[0, 1, 2, 3]"],a:0,mono:true,why:"range(4) is 0, 1, 2, 3, and each gets squared."},
+ {type:"fill",title:"Keep the big ones",body:`<p>Keep only prices over 5.</p>`,code:`prices = [2, 5, 8, 12]\nbig = [p for p in prices [0] p > 5]\nprint(big)`,blanks:["if"],tokens:["if","when","and","where"],why:"An if at the end of a comprehension filters items.",out:"[8, 12]"},
+ {type:"quiz",q:"What does this print?",code:`print("monkey"[::-1])`,opts:["yeknom","monkey","m"],a:0,mono:true,why:"A step of -1 walks backwards. It works on strings too!"},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`print([1, 2, 3, 4][1:3])`,["[2, 3]","[1, 2, 3]","[2, 3, 4]"]],
+  [`print([1, 2, 3][::-1])`,["[3, 2, 1]","[1, 2, 3]","[3]"]],
+  [`print([x + 1 for x in [1, 2]])`,["[2, 3]","[1, 2]","[3]"]],
+  [`print([x for x in range(6) if x > 3])`,["[4, 5]","[3, 4, 5]","[4, 5, 6]"]],
+  [`print(["a", "b"][-1:])`,["['b']","b","['a']"]],
+  [`print(len([c for c in "banana" if c == "a"]))`,["3","2","6"]]
+ ]},
+{id:"py16",title:"Dictionaries",sub:"look things up by key",steps:[
+ {type:"talk",title:"Key: value pairs",
+  body:`<p>A <b>dictionary</b> stores values under keys, inside curly braces. Read and write with square brackets.</p>`,
+  demo:`monkey = {"name": "Mo", "age": 4}\nprint(monkey["name"])\nmonkey["age"] = 5\nmonkey["likes"] = "bananas"\nprint(monkey)`,
+  say:"Output: Mo, then {'name': 'Mo', 'age': 5, 'likes': 'bananas'}"},
+ {type:"talk",title:"Safe lookups and loops",mood:"think",
+  body:`<p>A missing key raises a ${C("KeyError")}. ${C(".get(key, default)")} avoids that. ${C(".items()")} loops over keys and values together.</p>`,
+  demo:`stock = {"banana": 12, "mango": 3}\nprint(stock.get("kiwi", 0))\nprint("mango" in stock)\nfor fruit, qty in stock.items():\n    print(f"{fruit}: {qty}")`,
+  say:"Output: 0, True, banana: 12, mango: 3"},
+ {type:"quiz",q:"What does get() return here?",code:`d = {"a": 1}\nprint(d.get("z", "none"))`,opts:["none","Error","a"],a:0,mono:true,why:"The key is missing, so the default comes back. And yes, it prints."},
+ {type:"fill",title:"Count words",body:`<p>Add 1 to the count for each word.</p>`,code:`counts = {}\nfor w in ["ook", "eek", "ook"]:\n    counts[w] = counts.[0](w, 0) + 1\nprint(counts["ook"])`,blanks:["get"],tokens:["get","find","key","add"],why:"get(w, 0) starts unseen words at 0.",out:"2"},
+ {type:"quiz",q:"What does this print?",code:`d = {"x": 5}\nd["x"] = 9\nprint(len(d))`,opts:["1","2","9"],a:0,mono:true,why:"Same key, so it replaces the value. Still one entry."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`d = {"a": 1, "b": 2}\nprint(d["b"])`,["2","1","b"]],
+  [`d = {"a": 1}\nd["b"] = 2\nprint(len(d))`,["2","1","3"]],
+  [`d = {"a": 1}\nprint("b" in d)`,["False","True","None"]],
+  [`d = {"hp": 10}\nd["hp"] -= 3\nprint(d["hp"])`,["7","10","13"]],
+  [`d = {"a": 1, "b": 2}\nprint(list(d.keys()))`,["['a', 'b']","[1, 2]","a b"]],
+  [`d = {"x": 3}\nprint(d.get("y", 0) + d["x"])`,["3","0","Error"]]
+ ]},
+{id:"py17",title:"Project: Grade Book",sub:"lists + dicts + functions",project:true,steps:[
+ {type:"talk",title:"Teacher mode",mood:"cheer",
+  body:`<p>Build a grade book: store students' scores in a dictionary of lists, compute averages, and find the top student.</p>`,
+  demo:`grades = {\n    "Ava": [92, 88, 95],\n    "Leo": [74, 80, 69],\n    "Kai": [85, 91, 78],\n}\nprint(grades["Leo"])`,
+  say:"Each name maps to a list of scores. Output: [74, 80, 69]"},
+ {type:"fill",title:"Step 1: average",body:`<p>${C("sum()")} adds a list up.</p>`,code:`def average(scores):\n    return [0](scores) / [1](scores)\n\nprint(average([90, 80, 70]))`,blanks:["sum","len"],tokens:["sum","len","max","count"],why:"Total divided by how many.",out:"80.0"},
+ {type:"order",title:"Step 2: report card",body:`<p>Print each student's rounded average.</p>`,lines:["grades = {\"Ava\": [92, 88, 95], \"Leo\": [74, 80, 69]}","for name, scores in grades.items():","    avg = sum(scores) / len(scores)","    print(name, round(avg, 1))"],why:"Loop the pairs, compute, print.",out:"Ava 91.7 Leo 74.3"},
+ {type:"quiz",q:"How would you find the student with the highest average?",opts:["Track the best name and score while looping","Use grades.max()","Sort the dictionary keys alphabetically"],a:0,why:"Keep a 'best so far' and update it whenever you find a higher one. (max() with a key works too, as you'll see.)"},
+ {type:"talk",title:"The finished grade book",mood:"cheer",
+  body:`<p>All together. ${C("max(grades, key=...)")} picks the key with the biggest result.</p>`,
+  demo:`grades = {\n    "Ava": [92, 88, 95],\n    "Leo": [74, 80, 69],\n    "Kai": [85, 91, 78],\n}\n\ndef average(scores):\n    return sum(scores) / len(scores)\n\nfor name, scores in grades.items():\n    print(f"{name}: {average(scores):.1f}")\n\ntop = max(grades, key=lambda n: average(grades[n]))\nprint(f"Top student: {top}")`,
+  say:"Output:\nAva: 91.7\nLeo: 74.3\nKai: 84.7\nTop student: Ava\n\nlambda is a tiny one-line function."},
+ {type:"done"}]}
+]};
+
+const PY_UNIT6={name:"Real-world Python",lessons:[
+{id:"py18",title:"Classes",sub:"__init__, self, methods",steps:[
+ {type:"talk",title:"Make your own types",
+  body:`<p>A ${C("class")} is a blueprint. ${C("__init__")} runs when you create an object, and ${C("self")} means "this object".</p>`,
+  demo:`class Pet:\n    def __init__(self, name):\n        self.name = name\n        self.hunger = 5\n\n    def feed(self):\n        self.hunger -= 1\n\nrex = Pet("Rex")\nrex.feed()\nrex.feed()\nprint(rex.name, rex.hunger)`,
+  say:"Output: Rex 3"},
+ {type:"talk",title:"Each object is separate",mood:"think",
+  body:`<p>Every object gets its own copy of the attributes. Methods can also return values.</p>`,
+  demo:`class Counter:\n    def __init__(self):\n        self.count = 0\n\n    def add(self):\n        self.count += 1\n        return self.count\n\na = Counter()\nb = Counter()\na.add()\na.add()\nprint(a.count, b.count)\nprint(b.add())`,
+  say:"Output: 2 0, then 1"},
+ {type:"quiz",q:"What is self?",opts:["The object the method was called on","The class name","A reserved word you can't use"],a:0,why:"rex.feed() passes rex in as self."},
+ {type:"fill",title:"The constructor",body:`<p>Store the name on the object.</p>`,code:`class Hero:\n    def [0](self, name):\n        [1].name = name\n\nh = Hero("Kai")\nprint(h.name)`,blanks:["__init__","self"],tokens:["__init__","self","init","this"],why:"__init__ sets things up; self.name stores it on the object.",out:"Kai"},
+ {type:"quiz",q:"What does this print?",code:`class Box:\n    def __init__(self):\n        self.size = 3\n\na = Box()\nb = a\na.size = 9\nprint(b.size)`,opts:["9","3","Error"],a:0,mono:true,why:"b = a doesn't copy. Both names point to the same Box."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`class C:\n    def __init__(self):\n        self.n = 1\n\nc = C()\nc.n += 4\nprint(c.n)`,["5","1","4"]],
+  [`class P:\n    def __init__(self, x):\n        self.x = x\n\np = P(7)\nprint(p.x * 2)`,["14","7","x"]],
+  [`class D:\n    def speak(self):\n        return "ook"\n\nprint(D().speak())`,["ook","speak","None"]],
+  [`class B:\n    def __init__(self):\n        self.v = 0\n\na = B()\nb = B()\na.v = 5\nprint(b.v)`,["0","5","None"]],
+  [`class L:\n    def __init__(self):\n        self.on = False\n\n    def flip(self):\n        self.on = not self.on\n\nl = L()\nl.flip()\nprint(l.on)`,["True","False","None"]]
+ ]},
+{id:"py19",title:"Handling errors",sub:"try, except, finally",steps:[
+ {type:"talk",title:"Errors stop programs",mood:"oops",
+  body:`<p>When something goes wrong, Python raises an <b>exception</b>, like ${C("ValueError")} or ${C("ZeroDivisionError")}. Unhandled, it crashes your program.</p>`,
+  demo:`print(int("12"))\nprint(10 / 2)`,
+  say:"These work. But int(\"twelve\") or 10 / 0 would crash."},
+ {type:"talk",title:"try and except",
+  body:`<p>Wrap risky code in ${C("try")}. If it fails, the matching ${C("except")} block runs instead of crashing. ${C("finally")} always runs.</p>`,
+  demo:`def safe_divide(a, b):\n    try:\n        return a / b\n    except ZeroDivisionError:\n        return "Can't divide by zero!"\n\nprint(safe_divide(10, 2))\nprint(safe_divide(1, 0))\n\ntry:\n    n = int("twelve")\nexcept ValueError:\n    print("That's not a number")\nfinally:\n    print("Done")`,
+  say:"Output: 5.0, Can't divide by zero!, That's not a number, Done"},
+ {type:"quiz",q:"What error does int(\"hi\") raise?",opts:["ValueError","TypeError","ZeroDivisionError"],a:0,mono:true,why:"The type (str) is fine, but the value can't become a number."},
+ {type:"fill",title:"Catch it",body:`<p>Handle the bad input.</p>`,code:`[0]:\n    age = int("abc")\n[1] ValueError:\n    print("Please type a number")`,blanks:["try","except"],tokens:["try","except","catch","error"],why:"Python uses try / except (not try / catch).",out:"Please type a number"},
+ {type:"quiz",q:"What does this print?",code:`try:\n    print("A")\n    x = 1 / 0\n    print("B")\nexcept ZeroDivisionError:\n    print("C")`,opts:["A C","A B C","C"],a:0,mono:true,why:"A prints, then the error jumps straight to except. B never runs."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`try:\n    print(1 / 0)\nexcept ZeroDivisionError:\n    print("oops")`,["oops","0","inf"]],
+  [`try:\n    print(int("5") + 1)\nexcept ValueError:\n    print("bad")`,["6","bad","51"]],
+  [`try:\n    x = int("x")\nexcept ValueError:\n    x = 0\nprint(x)`,["0","x","None"]],
+  [`try:\n    pass\nfinally:\n    print("always")`,["always","nothing","pass always"]],
+  [`d = {}\ntry:\n    print(d["k"])\nexcept KeyError:\n    print("missing")`,["missing","None","k"]]
+ ]},
+{id:"py20",title:"Final Project: Word Counter",sub:"everything you've learned, in one tool",project:true,steps:[
+ {type:"talk",title:"Build a text analyzer",mood:"cheer",
+  body:`<p>Writers, students and search engines all count words. You'll build a tool that cleans up text, counts every word, and reports the most common ones.</p><p>New tools: ${C(".split()")} breaks text into a list of words, and ${C(".strip()")} removes characters from the ends.</p>`,
+  demo:`text = "Ook ook, eek!"\nprint(text.lower().split())`,
+  say:"Output: ['ook', 'ook,', 'eek!']. We need to clean off that punctuation."},
+ {type:"fill",title:"Step 1: clean each word",body:`<p>Strip punctuation off the ends and lowercase it.</p>`,code:`def clean(word):\n    return word.[0](".,!?").[1]()\n\nprint(clean("Ook,"))`,blanks:["strip","lower"],tokens:["strip","lower","split","upper"],why:"strip removes the comma, lower makes it lowercase.",out:"ook"},
+ {type:"order",title:"Step 2: count the words",body:`<p>Build the counting function.</p>`,lines:["def count_words(text):","    counts = {}","    for w in text.split():","        w = w.strip(\".,!?\").lower()","        counts[w] = counts.get(w, 0) + 1","    return counts","print(count_words(\"Ook ook, eek!\"))"],why:"Start empty, clean each word, add one to its count, return it.",out:"{'ook': 2, 'eek': 1}"},
+ {type:"quiz",q:"How do you sort words from most to least common?",opts:["sorted(counts.items(), key=lambda p: p[1], reverse=True)","counts.sort()","sorted(counts)"],a:0,why:"Sort the (word, count) pairs by the count, biggest first."},
+ {type:"talk",title:"The finished analyzer",mood:"cheer",
+  body:`<p>The complete tool, with error handling for empty text.</p>`,
+  demo:`def count_words(text):\n    counts = {}\n    for w in text.split():\n        w = w.strip(".,!?").lower()\n        if w:\n            counts[w] = counts.get(w, 0) + 1\n    return counts\n\ndef report(text, top=3):\n    counts = count_words(text)\n    if not counts:\n        print("No words found!")\n        return\n    ranked = sorted(counts.items(), key=lambda p: p[1], reverse=True)\n    print(f"{sum(counts.values())} words, {len(counts)} unique")\n    for word, n in ranked[:top]:\n        print(f"  {word}: {n}")\n\nreport("The monkey saw the banana. The banana saw the monkey!")\nreport("")`,
+  say:"Output:\n10 words, 4 unique\n  the: 4\n  monkey: 2\n  saw: 2\nNo words found!\n\nYou finished Python! 🐍"},
+ {type:"done"}]}
+]};
+
+const COURSE_PY={id:"py",name:"Python",blurb:"The friendliest language around, used for AI, data, automation and more. Unit 1 is free.",units:[PY_UNIT1,PY_UNIT2,PY_UNIT3,PY_UNIT4,PY_UNIT5,PY_UNIT6]};
+
+/* SQL course. All queries run against the TypeMonkey Zoo database below.
+   Answers are verified with SQLite (tests/verify_compiled.py sql). Results are written one row per line, columns joined with " | ". */
+const ZOO_TABLES={
+  animals:{cols:["id","name","species","age","keeper_id"],rows:[
+    [1,"Mo","monkey",4,1],[2,"Kiki","parrot",12,2],[3,"Bao","panda",7,1],
+    [4,"Zuri","giraffe",9,3],[5,"Pip","monkey",2,1],[6,"Odo","owl",5,null]]},
+  keepers:{cols:["id","name","shift"],rows:[[1,"Ava","morning"],[2,"Leo","night"],[3,"Kai","morning"],[4,"Mia","night"]]},
+  snacks:{cols:["id","animal_id","food","qty"],rows:[[1,1,"banana",6],[2,5,"banana",3],[3,3,"bamboo",20],[4,2,"seeds",4],[5,1,"mango",2],[6,4,"leaves",15]]}
+};
+
+const SQL_UNIT1={name:"Asking questions",free:true,lessons:[
+{id:"sql1",title:"SELECT",sub:"getting data out of a table",steps:[
+ {type:"talk",title:"Databases are everywhere",mood:"cheer",
+  body:`<p>Every app you use stores data in a <b>database</b>: tables with rows and columns, like spreadsheets. <b>SQL</b> is the language for asking them questions.</p><p>All through this course you'll explore the TypeMonkey Zoo database. Here's the ${C("animals")} table:</p>`,
+  show:["animals"],say:"Each row is one animal. Each column is one fact about it."},
+ {type:"talk",title:"SELECT * FROM",
+  body:`<p>${C("SELECT")} picks columns, ${C("FROM")} picks the table. ${C("*")} means "every column". Statements end with a semicolon.</p>`,
+  demo:`SELECT * FROM keepers;`,show:["keepers"],
+  say:"That query returns the whole keepers table, exactly as shown."},
+ {type:"talk",title:"Pick your columns",mood:"think",
+  body:`<p>List the columns you want, separated by commas. SQL keywords are usually written in CAPITALS, but that's just style.</p>`,
+  demo:`SELECT name, species FROM animals;`,
+  say:"Result: Mo | monkey, Kiki | parrot, Bao | panda, Zuri | giraffe, Pip | monkey, Odo | owl"},
+ {type:"quiz",q:"What does * mean in SELECT * FROM animals?",opts:["Every column","Multiply","Only the first row"],a:0,why:"* is shorthand for all columns."},
+ {type:"fill",title:"Get the names",body:`<p>Get just the name column of every keeper.</p>`,
+  code:`[0] name [1] keepers;`,blanks:["SELECT","FROM"],tokens:["SELECT","FROM","GET","TABLE"],why:"SELECT columns FROM table.",out:"Ava\nLeo\nKai\nMia"},
+ {type:"quiz",q:"What does this return?",code:`SELECT shift FROM keepers;`,opts:["morning\nnight\nmorning\nnight","Ava\nLeo\nKai\nMia","shift"],a:0,mono:true,why:"One value per keeper, from the shift column."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`SELECT name FROM keepers;`,["Ava\nLeo\nKai\nMia","1\n2\n3\n4","name"]],
+  [`SELECT food FROM snacks;`,["banana\nbanana\nbamboo\nseeds\nmango\nleaves","banana\nbamboo\nseeds\nmango\nleaves","6"]],
+  [`SELECT name, age FROM animals;`,["Mo | 4\nKiki | 12\nBao | 7\nZuri | 9\nPip | 2\nOdo | 5","Mo\nKiki\nBao\nZuri\nPip\nOdo","4\n12\n7\n9\n2\n5"]],
+  [`SELECT id, shift FROM keepers;`,["1 | morning\n2 | night\n3 | morning\n4 | night","morning\nnight\nmorning\nnight","1\n2\n3\n4"]]
+ ]},
+{id:"sql2",title:"WHERE",sub:"filtering rows",steps:[
+ {type:"talk",title:"Only the rows you want",
+  body:`<p>${C("WHERE")} keeps only rows that match a condition. Text values go in single quotes.</p>`,
+  demo:`SELECT name FROM animals WHERE species = 'monkey';`,show:["animals"],
+  say:"Result: Mo, Pip"},
+ {type:"talk",title:"Comparisons and logic",mood:"think",
+  body:`<p>Use ${C("=")}, ${C("&lt;&gt;")} (not equal), ${C("&gt;")}, ${C("&lt;")}, ${C("&gt;=")}, ${C("&lt;=")}. Combine conditions with ${C("AND")} and ${C("OR")}.</p>`,
+  demo:`SELECT name, age FROM animals WHERE age > 5 AND species <> 'parrot';`,
+  say:"Result: Bao | 7, Zuri | 9"},
+ {type:"quiz",q:"SQL uses which symbol for 'equals' in a WHERE?",opts:["=","==","==="],a:0,mono:true,why:"Just one = in SQL."},
+ {type:"fill",title:"Night owls",body:`<p>Find keepers who work the night shift.</p>`,
+  code:`SELECT name FROM keepers [0] shift = [1];`,blanks:["WHERE","'night'"],tokens:["WHERE","'night'","night","IF"],why:"WHERE filters; text needs quotes.",out:"Leo\nMia"},
+ {type:"quiz",q:"What does this return?",code:`SELECT name FROM animals WHERE age < 5 OR species = 'owl';`,opts:["Mo\nPip\nOdo","Mo\nPip","Odo"],a:0,mono:true,why:"Mo (4) and Pip (2) are under 5, and Odo is an owl."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`SELECT name FROM animals WHERE age = 12;`,["Kiki","Zuri","12"]],
+  [`SELECT name FROM animals WHERE age >= 9;`,["Kiki\nZuri","Kiki","Zuri"]],
+  [`SELECT food FROM snacks WHERE qty > 10;`,["bamboo\nleaves","bamboo","banana\nbamboo\nleaves"]],
+  [`SELECT name FROM keepers WHERE shift = 'morning' AND id > 1;`,["Kai","Ava\nKai","Leo"]],
+  [`SELECT name FROM animals WHERE species = 'cat';`,["(no rows)","NULL","cat"]]
+ ]},
+{id:"sql3",title:"ORDER BY & LIMIT",sub:"sorting and top-N lists",steps:[
+ {type:"talk",title:"Sorting",
+  body:`<p>${C("ORDER BY")} sorts the results. It's ascending (small to big, A to Z) by default. Add ${C("DESC")} for descending.</p>`,
+  demo:`SELECT name, age FROM animals ORDER BY age DESC;`,show:["animals"],
+  say:"Result: Kiki 12, Zuri 9, Bao 7, Odo 5, Mo 4, Pip 2"},
+ {type:"talk",title:"Top results",mood:"think",
+  body:`<p>${C("LIMIT")} keeps only the first few rows. Sorting plus limiting gives you leaderboards and "top 3" lists.</p>`,
+  demo:`SELECT name FROM animals ORDER BY age LIMIT 2;`,
+  say:"Result: Pip, Mo. The two youngest."},
+ {type:"quiz",q:"Which sorts from biggest to smallest?",opts:["ORDER BY age DESC","ORDER BY age","SORT age DOWN"],a:0,mono:true,why:"DESC means descending."},
+ {type:"fill",title:"Oldest animal",body:`<p>Get the single oldest animal.</p>`,
+  code:`SELECT name FROM animals ORDER BY age [0] [1] 1;`,blanks:["DESC","LIMIT"],tokens:["DESC","LIMIT","ASC","TOP"],why:"Sort oldest first, then keep one row.",out:"Kiki"},
+ {type:"order",title:"Write the query",body:`<p>Put the clauses in the order SQL requires.</p>`,
+  lines:["SELECT name","FROM animals","WHERE species = 'monkey'","ORDER BY age","LIMIT 1;"],why:"SELECT, FROM, WHERE, ORDER BY, LIMIT. Always in that order.",out:"Pip"},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`SELECT name FROM keepers ORDER BY name;`,["Ava\nKai\nLeo\nMia","Ava\nLeo\nKai\nMia","Mia\nLeo\nKai\nAva"]],
+  [`SELECT name FROM keepers ORDER BY name DESC LIMIT 1;`,["Mia","Ava","Leo"]],
+  [`SELECT food FROM snacks ORDER BY qty DESC LIMIT 2;`,["bamboo\nleaves","leaves\nbamboo","bamboo"]],
+  [`SELECT name FROM animals WHERE age > 4 ORDER BY age LIMIT 1;`,["Odo","Mo","Bao"]],
+  [`SELECT qty FROM snacks ORDER BY qty LIMIT 3;`,["2\n3\n4","20\n15\n6","2"]]
+ ]}
+]};
+
+const SQL_UNIT2={name:"Summarizing data",lessons:[
+{id:"sql4",title:"Counting & math",sub:"COUNT, SUM, AVG, MIN, MAX",steps:[
+ {type:"talk",title:"Aggregate functions",
+  body:`<p>Aggregates squash many rows into one answer: ${C("COUNT(*)")} counts rows, and ${C("SUM")}, ${C("AVG")}, ${C("MIN")} and ${C("MAX")} work on a column.</p>`,
+  demo:`SELECT COUNT(*), AVG(age), MAX(age) FROM animals;`,show:["animals"],
+  say:"Result: 6 | 6.5 | 12"},
+ {type:"talk",title:"Name your results",mood:"think",
+  body:`<p>${C("AS")} gives a result column a friendly name. Aggregates also work with ${C("WHERE")}.</p>`,
+  demo:`SELECT SUM(qty) AS bananas FROM snacks WHERE food = 'banana';`,show:["snacks"],
+  say:"Result: a column called bananas with the value 9"},
+ {type:"quiz",q:"What does COUNT(*) count?",opts:["Rows","Columns","Unique values"],a:0,why:"COUNT(*) counts every row that matches."},
+ {type:"fill",title:"Total snacks",body:`<p>Add up every qty.</p>`,code:`SELECT [0](qty) FROM snacks;`,blanks:["SUM"],tokens:["SUM","COUNT","ADD","TOTAL"],why:"SUM adds a column up.",out:"50"},
+ {type:"quiz",q:"What does this return?",code:`SELECT MIN(age) FROM animals WHERE species = 'monkey';`,opts:["2","4","Pip"],a:0,mono:true,why:"The monkeys are 4 and 2, and MIN returns the number, not the name."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`SELECT COUNT(*) FROM keepers;`,["4","3","Ava"]],
+  [`SELECT MAX(qty) FROM snacks;`,["20","6","bamboo"]],
+  [`SELECT COUNT(*) FROM animals WHERE age > 6;`,["3","4","2"]],
+  [`SELECT SUM(age) FROM animals WHERE species = 'monkey';`,["6","2","4"]],
+  [`SELECT AVG(qty) FROM snacks WHERE food = 'banana';`,["4.5","9","4"]]
+ ]},
+{id:"sql5",title:"GROUP BY & HAVING",sub:"totals for each group",steps:[
+ {type:"talk",title:"One answer per group",
+  body:`<p>${C("GROUP BY")} splits rows into groups and runs the aggregate once per group.</p>`,
+  demo:`SELECT species, COUNT(*) FROM animals GROUP BY species ORDER BY species;`,show:["animals"],
+  say:"Result: giraffe 1, monkey 2, owl 1, panda 1, parrot 1"},
+ {type:"talk",title:"Filtering groups",mood:"think",
+  body:`<p>${C("WHERE")} filters rows <b>before</b> grouping. ${C("HAVING")} filters groups <b>after</b>, so it can use aggregates.</p>`,
+  demo:`SELECT food, SUM(qty) FROM snacks GROUP BY food HAVING SUM(qty) > 8 ORDER BY food;`,show:["snacks"],
+  say:"Result: bamboo 20, banana 9, leaves 15"},
+ {type:"quiz",q:"Which can use COUNT() or SUM() in its condition?",opts:["HAVING","WHERE","FROM"],a:0,why:"HAVING runs after grouping, so the totals exist by then."},
+ {type:"fill",title:"Animals per keeper",body:`<p>Count how many animals each keeper looks after.</p>`,code:`SELECT keeper_id, COUNT(*) FROM animals WHERE keeper_id IS NOT NULL [0] keeper_id;`,blanks:["GROUP BY"],tokens:["GROUP BY","ORDER BY","HAVING","SPLIT"],why:"GROUP BY makes one row per keeper.",out:"1 | 3\n2 | 1\n3 | 1"},
+ {type:"quiz",q:"What does this return?",code:`SELECT species FROM animals GROUP BY species HAVING COUNT(*) > 1;`,opts:["monkey","monkey\npanda","2"],a:0,mono:true,why:"Only monkey has more than one animal."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`SELECT shift, COUNT(*) FROM keepers GROUP BY shift ORDER BY shift;`,["morning | 2\nnight | 2","morning | 1\nnight | 1","2\n2"]],
+  [`SELECT food, COUNT(*) FROM snacks GROUP BY food HAVING COUNT(*) > 1;`,["banana | 2","banana | 9","bamboo | 1"]],
+  [`SELECT animal_id, SUM(qty) FROM snacks WHERE animal_id = 1 GROUP BY animal_id;`,["1 | 8","1 | 6","1 | 2"]],
+  [`SELECT COUNT(*) FROM (SELECT species FROM animals GROUP BY species);`,["5","6","2"]]
+ ]},
+{id:"sql6",title:"Pattern matching & NULL",sub:"LIKE, IN, BETWEEN, IS NULL",steps:[
+ {type:"talk",title:"LIKE, IN, BETWEEN",
+  body:`<p>${C("LIKE")} matches patterns: ${C("%")} means "anything". ${C("IN")} checks a list of values. ${C("BETWEEN")} checks a range, including both ends.</p>`,
+  demo:`SELECT name FROM animals WHERE name LIKE 'K%';\nSELECT name FROM animals WHERE species IN ('owl', 'panda');\nSELECT name FROM animals WHERE age BETWEEN 4 AND 7;`,
+  say:"Results: Kiki · Bao, Odo · Mo, Bao, Odo",noRun:true},
+ {type:"talk",title:"NULL means unknown",mood:"oops",
+  body:`<p>Odo the owl has no keeper yet: his ${C("keeper_id")} is ${C("NULL")}. NULL isn't equal to anything, not even NULL! Use ${C("IS NULL")} and ${C("IS NOT NULL")}.</p>`,
+  demo:`SELECT name FROM animals WHERE keeper_id IS NULL;`,show:["animals"],
+  say:"Result: Odo. Writing = NULL would return nothing at all."},
+ {type:"quiz",q:"What does this return?",code:`SELECT name FROM animals WHERE keeper_id = NULL;`,opts:["(no rows)","Odo","NULL"],a:0,mono:true,why:"= NULL is never true. You need IS NULL."},
+ {type:"fill",title:"Names ending in o",body:`<p>Find animals whose name ends with o.</p>`,code:`SELECT name FROM animals WHERE name [0] '[1]o';`,blanks:["LIKE","%"],tokens:["LIKE","%","=","*"],why:"'%o' means anything, then an o at the end.",out:"Mo\nBao\nOdo"},
+ {type:"quiz",q:"What does this return?",code:`SELECT COUNT(*) FROM snacks WHERE food IN ('banana', 'mango');`,opts:["3","2","1"],a:0,mono:true,why:"Two banana rows plus one mango row."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`SELECT name FROM keepers WHERE name LIKE '%a';`,["Ava\nMia","Ava","Kai"]],
+  [`SELECT name FROM animals WHERE age BETWEEN 9 AND 12;`,["Kiki\nZuri","Zuri","Kiki"]],
+  [`SELECT COUNT(*) FROM animals WHERE keeper_id IS NOT NULL;`,["5","6","1"]],
+  [`SELECT food FROM snacks WHERE food LIKE 'b%' AND qty < 5;`,["banana","banana\nbamboo","bamboo"]],
+  [`SELECT name FROM animals WHERE species NOT IN ('monkey', 'owl', 'panda');`,["Kiki\nZuri","Zuri","Mo\nPip"]]
+ ]}
+]};
+
+const SQL_UNIT3={name:"Joining tables",lessons:[
+{id:"sql7",title:"INNER JOIN",sub:"combine matching rows",steps:[
+ {type:"talk",title:"Why split data up?",
+  body:`<p>${C("animals.keeper_id")} points at ${C("keepers.id")}. Storing each keeper once, then pointing at them, keeps data tidy. A <b>JOIN</b> brings the tables back together.</p>`,
+  show:["animals","keepers"],say:"Mo's keeper_id is 1, and keeper 1 is Ava."},
+ {type:"talk",title:"JOIN … ON",mood:"think",
+  body:`<p>${C("JOIN")} pairs rows where the ${C("ON")} condition matches. Write ${C("table.column")} so SQL knows which ${C("name")} you mean.</p>`,
+  demo:`SELECT animals.name, keepers.name\nFROM animals\nJOIN keepers ON animals.keeper_id = keepers.id\nORDER BY animals.id;`,
+  say:"Result: Mo | Ava, Kiki | Leo, Bao | Ava, Zuri | Kai, Pip | Ava. Odo has no keeper, so he's left out."},
+ {type:"talk",title:"Short names",
+  body:`<p>Give tables short aliases right after their names to save typing.</p>`,
+  demo:`SELECT a.name, s.food, s.qty\nFROM snacks s\nJOIN animals a ON s.animal_id = a.id\nWHERE a.species = 'monkey'\nORDER BY s.qty DESC;`,
+  say:"Result: Mo | banana | 6, Pip | banana | 3, Mo | mango | 2"},
+ {type:"quiz",q:"Why isn't Odo in the INNER JOIN results?",opts:["His keeper_id is NULL, so nothing matches","Owls are filtered out","JOIN only returns 5 rows"],a:0,why:"INNER JOIN only keeps rows that have a match in both tables."},
+ {type:"fill",title:"Who feeds whom?",body:`<p>Finish the join condition.</p>`,code:`SELECT k.name FROM keepers k\nJOIN animals a [0] a.keeper_id = k.[1]\nWHERE a.name = 'Zuri';`,blanks:["ON","id"],tokens:["ON","id","WHERE","name"],why:"Match animals.keeper_id to keepers.id.",out:"Kai"},
+ {type:"quiz",q:"What does this return?",code:`SELECT COUNT(*) FROM animals a\nJOIN keepers k ON a.keeper_id = k.id\nWHERE k.name = 'Ava';`,opts:["3","1","Ava"],a:0,mono:true,why:"Ava looks after Mo, Bao and Pip."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`SELECT k.name FROM animals a JOIN keepers k ON a.keeper_id = k.id WHERE a.name = 'Kiki';`,["Leo","Ava","2"]],
+  [`SELECT a.name FROM snacks s JOIN animals a ON s.animal_id = a.id WHERE s.food = 'bamboo';`,["Bao","Pip","3"]],
+  [`SELECT COUNT(*) FROM animals a JOIN keepers k ON a.keeper_id = k.id;`,["5","6","4"]],
+  [`SELECT DISTINCT k.name FROM animals a JOIN keepers k ON a.keeper_id = k.id WHERE k.shift = 'morning' ORDER BY k.name;`,["Ava\nKai","Ava\nAva\nAva\nKai","Kai"]]
+ ]},
+{id:"sql8",title:"LEFT JOIN",sub:"keep rows with no match",steps:[
+ {type:"talk",title:"Keep everyone",
+  body:`<p>${C("LEFT JOIN")} keeps every row from the left table, even with no match. The missing side becomes ${C("NULL")}.</p>`,
+  demo:`SELECT a.name, k.name\nFROM animals a\nLEFT JOIN keepers k ON a.keeper_id = k.id\nORDER BY a.id;`,
+  say:"Result: the same 5 pairs as before, plus Odo | NULL"},
+ {type:"talk",title:"Find what's missing",mood:"think",
+  body:`<p>A classic trick: LEFT JOIN, then keep rows where the right side ${C("IS NULL")}. That finds things with no match.</p>`,
+  demo:`SELECT k.name\nFROM keepers k\nLEFT JOIN animals a ON a.keeper_id = k.id\nWHERE a.id IS NULL;`,
+  say:"Result: Mia. She's the only keeper without an animal."},
+ {type:"quiz",q:"What does LEFT JOIN do with left-side rows that have no match?",opts:["Keeps them, with NULLs on the right","Drops them","Duplicates them"],a:0,why:"That's the whole difference from INNER JOIN."},
+ {type:"fill",title:"Snack-less animals",body:`<p>Find animals that never got a snack.</p>`,code:`SELECT a.name FROM animals a\n[0] JOIN snacks s ON s.animal_id = a.id\nWHERE s.id [1];`,blanks:["LEFT","IS NULL"],tokens:["LEFT","IS NULL","INNER","= NULL"],why:"LEFT JOIN keeps everyone; IS NULL finds the ones with no snack.",out:"Odo"},
+ {type:"quiz",q:"What does this return?",code:`SELECT COUNT(*) FROM keepers k\nLEFT JOIN animals a ON a.keeper_id = k.id;`,opts:["6","4","5"],a:0,mono:true,why:"Ava appears 3 times (one per animal), Leo once, Kai once, Mia once with NULL."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`SELECT COUNT(*) FROM animals a LEFT JOIN keepers k ON a.keeper_id = k.id;`,["6","5","4"]],
+  [`SELECT k.name FROM animals a LEFT JOIN keepers k ON a.keeper_id = k.id WHERE a.name = 'Odo';`,["NULL","(no rows)","Odo"]],
+  [`SELECT k.name, COUNT(a.id) FROM keepers k LEFT JOIN animals a ON a.keeper_id = k.id GROUP BY k.id ORDER BY k.id;`,["Ava | 3\nLeo | 1\nKai | 1\nMia | 0","Ava | 3\nLeo | 1\nKai | 1","Ava | 3\nLeo | 1\nKai | 1\nMia | 1"]],
+  [`SELECT COUNT(*) FROM animals a LEFT JOIN snacks s ON s.animal_id = a.id WHERE s.id IS NULL;`,["1","0","6"]]
+ ]},
+{id:"sql9",title:"Project: Zoo Report",sub:"joins + groups for a real report",project:true,steps:[
+ {type:"talk",title:"The manager wants a report",mood:"cheer",
+  body:`<p>The zoo manager asks: "For each keeper, how many animals do they look after and how many snacks did those animals eat?" You'll build that report one piece at a time.</p>`,
+  show:["keepers","animals","snacks"],say:"Real data analysts write queries like this every day."},
+ {type:"order",title:"Step 1: animals per keeper",body:`<p>Count each keeper's animals, including keepers with none.</p>`,
+  lines:["SELECT k.name, COUNT(a.id) AS animals","FROM keepers k","LEFT JOIN animals a ON a.keeper_id = k.id","GROUP BY k.id","ORDER BY animals DESC, k.name;"],why:"LEFT JOIN so Mia shows up with 0, then group per keeper.",out:"Ava | 3\nKai | 1\nLeo | 1\nMia | 0"},
+ {type:"fill",title:"Step 2: snacks per keeper",body:`<p>Join three tables and total the snacks.</p>`,
+  code:`SELECT k.name, SUM(s.qty) AS snacks\nFROM keepers k\nJOIN animals a ON a.keeper_id = k.id\nJOIN snacks s ON s.animal_id = [0]\nGROUP BY k.id\nORDER BY snacks [1];`,blanks:["a.id","DESC"],tokens:["a.id","DESC","k.id","ASC"],why:"Snacks belong to animals, so match s.animal_id to a.id.",out:"Ava | 31\nKai | 15\nLeo | 4"},
+ {type:"quiz",q:"Ava's animals ate how many snacks in total?",opts:["31","8","26"],a:0,why:"Mo 6 + 2, Pip 3, Bao 20: 31."},
+ {type:"talk",title:"The finished report",mood:"cheer",
+  body:`<p>One query, the whole report. ${C("COALESCE")} turns NULL into 0 for keepers with no snacks, and ${C("DISTINCT")} avoids counting an animal twice.</p>`,
+  demo:`SELECT k.name,\n       COUNT(DISTINCT a.id) AS animals,\n       COALESCE(SUM(s.qty), 0) AS snacks\nFROM keepers k\nLEFT JOIN animals a ON a.keeper_id = k.id\nLEFT JOIN snacks s ON s.animal_id = a.id\nGROUP BY k.id\nORDER BY snacks DESC;`,
+  say:"Result:\nAva | 3 | 31\nKai | 1 | 15\nLeo | 1 | 4\nMia | 0 | 0"},
+ {type:"done"}]}
+]};
+
+const SQL_UNIT4={name:"Changing data",lessons:[
+{id:"sql10",title:"INSERT",sub:"adding new rows",steps:[
+ {type:"talk",title:"Add a row",
+  body:`<p>${C("INSERT INTO")} adds rows. List the columns, then the ${C("VALUES")} in the same order.</p>`,
+  demo:`INSERT INTO keepers (id, name, shift) VALUES (5, 'Zed', 'night');\nSELECT name FROM keepers WHERE shift = 'night';`,
+  say:"Result: Leo, Mia, Zed. Zed is hired!"},
+ {type:"talk",title:"Several at once",mood:"think",
+  body:`<p>Add multiple rows by separating the value groups with commas.</p>`,
+  demo:`INSERT INTO animals (id, name, species, age, keeper_id) VALUES\n  (7, 'Lulu', 'lemur', 3, 4),\n  (8, 'Rafa', 'monkey', 6, 4);\nSELECT COUNT(*) FROM animals;`,
+  say:"Result: 8. Mia finally has animals to look after!"},
+ {type:"quiz",q:"What has to match in an INSERT?",opts:["The column list and the VALUES order","The table name and the first column","Nothing, SQL figures it out"],a:0,why:"Values are matched to columns by position."},
+ {type:"fill",title:"New snack",body:`<p>Give Odo (id 6) 5 mice.</p>`,code:`[0] snacks (id, animal_id, food, qty)\n[1] (7, 6, 'mice', 5);\nSELECT food FROM snacks WHERE animal_id = 6;`,blanks:["INSERT INTO","VALUES"],tokens:["INSERT INTO","VALUES","ADD","SET"],why:"INSERT INTO table (columns) VALUES (values).",out:"mice"},
+ {type:"quiz",q:"What does the final SELECT return?",code:`INSERT INTO keepers (id, name, shift) VALUES (5, 'Zed', 'night');\nSELECT COUNT(*) FROM keepers;`,opts:["5","4","1"],a:0,mono:true,why:"4 keepers plus Zed."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`INSERT INTO keepers (id, name, shift) VALUES (9, 'Ivy', 'morning');\nSELECT COUNT(*) FROM keepers WHERE shift = 'morning';`,["3","2","4"]],
+  [`INSERT INTO snacks (id, animal_id, food, qty) VALUES (8, 5, 'banana', 10);\nSELECT SUM(qty) FROM snacks WHERE food = 'banana';`,["19","10","9"]],
+  [`INSERT INTO animals (id, name, species, age, keeper_id) VALUES (9, 'Bo', 'owl', 1, NULL);\nSELECT COUNT(*) FROM animals WHERE keeper_id IS NULL;`,["2","1","0"]]
+ ]},
+{id:"sql11",title:"UPDATE & DELETE",sub:"changing and removing rows",steps:[
+ {type:"talk",title:"UPDATE … SET",
+  body:`<p>${C("UPDATE")} changes existing rows. ${C("SET")} says what to change, ${C("WHERE")} says which rows.</p>`,
+  demo:`UPDATE animals SET keeper_id = 4 WHERE name = 'Odo';\nSELECT name, keeper_id FROM animals WHERE name = 'Odo';`,
+  say:"Result: Odo | 4. Mia adopts the owl!"},
+ {type:"talk",title:"DELETE, carefully",mood:"oops",
+  body:`<p>${C("DELETE FROM")} removes rows. <b>Always</b> include a WHERE. Without one, it deletes every row in the table!</p>`,
+  demo:`DELETE FROM snacks WHERE qty < 5;\nSELECT COUNT(*) FROM snacks;`,
+  say:"Result: 3. The small snacks (3 bananas, 4 seeds and 2 mangoes) are gone."},
+ {type:"quiz",q:"What happens with DELETE FROM snacks; (no WHERE)?",opts:["Every snack row is deleted","Nothing happens","SQL asks you to confirm"],a:0,why:"No WHERE means no filter. Pros double-check with a SELECT first."},
+ {type:"fill",title:"Birthday time",body:`<p>Pip turns 3. Update his age.</p>`,code:`[0] animals [1] age = 3 WHERE name = 'Pip';\nSELECT age FROM animals WHERE name = 'Pip';`,blanks:["UPDATE","SET"],tokens:["UPDATE","SET","CHANGE","INTO"],why:"UPDATE table SET column = value WHERE ...",out:"3"},
+ {type:"quiz",q:"What does the SELECT return?",code:`UPDATE animals SET age = age + 1;\nSELECT MAX(age) FROM animals;`,opts:["13","12","1"],a:0,mono:true,why:"No WHERE, so every animal gets a year older. Kiki goes from 12 to 13."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`UPDATE snacks SET qty = qty * 2 WHERE food = 'mango';\nSELECT qty FROM snacks WHERE food = 'mango';`,["4","2","mango"]],
+  [`DELETE FROM keepers WHERE shift = 'night';\nSELECT COUNT(*) FROM keepers;`,["2","4","0"]],
+  [`UPDATE keepers SET shift = 'night';\nSELECT COUNT(*) FROM keepers WHERE shift = 'morning';`,["0","2","4"]],
+  [`DELETE FROM animals WHERE species = 'monkey';\nSELECT COUNT(*) FROM animals;`,["4","6","2"]]
+ ]},
+{id:"sql12",title:"Project: Build a Library",sub:"CREATE TABLE and design your own database",project:true,steps:[
+ {type:"talk",title:"Design your own database",mood:"cheer",
+  body:`<p>Final project: a library app. You'll create the tables yourself with ${C("CREATE TABLE")}, giving each column a type. ${C("PRIMARY KEY")} marks the unique id of each row.</p>`,
+  demo:`CREATE TABLE books (\n  id INTEGER PRIMARY KEY,\n  title TEXT NOT NULL,\n  author TEXT,\n  year INTEGER\n);\nINSERT INTO books VALUES (1, 'Hatchet', 'Gary Paulsen', 1987);\nSELECT title FROM books;`,
+  say:"Result: Hatchet. NOT NULL means that column must always have a value."},
+ {type:"fill",title:"Step 1: a members table",body:`<p>Create a table for library members.</p>`,
+  code:`[0] members (\n  id INTEGER [1],\n  name TEXT NOT NULL\n);\nINSERT INTO members VALUES (1, 'Ava');\nSELECT name FROM members;`,blanks:["CREATE TABLE","PRIMARY KEY"],tokens:["CREATE TABLE","PRIMARY KEY","NEW TABLE","UNIQUE ID"],why:"CREATE TABLE name (columns...). The id is the primary key.",out:"Ava"},
+ {type:"order",title:"Step 2: loans",body:`<p>A loans table links members to books.</p>`,
+  lines:["CREATE TABLE loans (","  member_id INTEGER,","  book_id INTEGER,","  due TEXT",");","INSERT INTO loans VALUES (1, 1, '2026-11-01');","SELECT COUNT(*) FROM loans;"],why:"Two ids pointing at other tables, plus a due date.",out:"1"},
+ {type:"quiz",q:"Why does loans store member_id instead of the member's name?",opts:["Names can repeat or change; ids are unique and stable","Numbers are prettier","SQL can't store text twice"],a:0,why:"Point at the id, then JOIN to get the name whenever you need it."},
+ {type:"talk",title:"The finished library",mood:"cheer",
+  body:`<p>Everything together, with a JOIN showing who borrowed what.</p>`,
+  demo:`CREATE TABLE books (id INTEGER PRIMARY KEY, title TEXT NOT NULL);\nCREATE TABLE members (id INTEGER PRIMARY KEY, name TEXT NOT NULL);\nCREATE TABLE loans (member_id INTEGER, book_id INTEGER, due TEXT);\nINSERT INTO books VALUES (1, 'Hatchet'), (2, 'Wonder'), (3, 'Holes');\nINSERT INTO members VALUES (1, 'Ava'), (2, 'Leo');\nINSERT INTO loans VALUES (1, 1, '2026-11-01'), (1, 3, '2026-11-05'), (2, 2, '2026-11-03');\nSELECT m.name, b.title, l.due\nFROM loans l\nJOIN members m ON m.id = l.member_id\nJOIN books b ON b.id = l.book_id\nORDER BY l.due;`,
+  say:"Result:\nAva | Hatchet | 2026-11-01\nLeo | Wonder | 2026-11-03\nAva | Holes | 2026-11-05\n\nYou designed a real database. You finished SQL! 🗄️"},
+ {type:"done"}]}
+]};
+
+const COURSE_SQL={id:"sql",name:"SQL",blurb:"The language every app uses to store and question data. Explore the TypeMonkey Zoo database. Unit 1 is free.",tables:ZOO_TABLES,
+  units:[SQL_UNIT1,SQL_UNIT2,SQL_UNIT3,SQL_UNIT4]};
+
+/* HTML & CSS course. Code renders live in the app. Challenges are checked by inspecting the page the learner built:
+   checks:[{sel, msg, text?:RegExp, count?:n, attr?:[name,RegExp], style?:{property:value|RegExp}}] */
+const WEB_UNIT1={name:"HTML basics",free:true,lessons:[
+{id:"web1",title:"Your first web page",sub:"tags, headings, paragraphs",steps:[
+ {type:"talk",title:"Every website is HTML",mood:"cheer",
+  body:`<p>HTML describes what's on a page: headings, text, images, buttons. It's made of <b>tags</b> in angle brackets. Most come in pairs: an opening ${C("&lt;p&gt;")} and a closing ${C("&lt;/p&gt;")}.</p>`,
+  demo:`<h1>Hello, web!</h1>\n<p>This is my very first web page.</p>`,
+  say:"Tap ▶ Show page. You just made a website! Change the words and show it again."},
+ {type:"talk",title:"Headings and paragraphs",mood:"think",
+  body:`<p>${C("&lt;h1&gt;")} is the biggest heading, down to ${C("&lt;h6&gt;")}, the smallest. ${C("&lt;p&gt;")} is a paragraph. ${C("&lt;br&gt;")} is a line break and doesn't need a closing tag.</p>`,
+  demo:`<h1>TypeMonkey Zoo</h1>\n<h2>Opening hours</h2>\n<p>Open every day.<br>Bananas served at noon.</p>\n<h3>Small print</h3>\n<p>Please don't feed the parrot.</p>`,
+  say:"Use h1 once for the page title, then h2, h3 for sections."},
+ {type:"quiz",q:"Which tag closes a paragraph?",opts:["</p>","<p/>","<close p>"],a:0,mono:true,why:"Closing tags have a slash right after the <."},
+ {type:"fill",title:"Make a heading",body:`<p>Create the biggest heading.</p>`,code:`<[0]>Welcome!</[1]>`,blanks:["h1","h1"],tokens:["h1","h1","p","title"],why:"Opening and closing tags must match."},
+ {type:"code",title:"Your turn: a mini page",
+  body:`<p>Make a page with an ${C("&lt;h1&gt;")} that says ${C("TypeMonkey")} and a ${C("&lt;p&gt;")} paragraph underneath with any sentence.</p>`,
+  start:`<!-- your HTML here -->\n`,
+  checks:[{sel:"h1",text:/TypeMonkey/i,msg:"Add an <h1> that says TypeMonkey."},{sel:"p",text:/\S/,msg:"Add a <p> paragraph with some text in it."}],
+  hint:`<h1>TypeMonkey</h1>\n<p>The coolest coding monkey around.</p>`},
+ {type:"quiz",q:"Which is the biggest heading?",opts:["<h1>","<h6>","<head>"],a:0,mono:true,why:"Smaller numbers mean bigger, more important headings."},
+ {type:"done"}]},
+{id:"web2",title:"Lists & text styles",sub:"ul, ol, li, strong, em",steps:[
+ {type:"talk",title:"Lists",
+  body:`<p>${C("&lt;ul&gt;")} is a bulleted list. ${C("&lt;ol&gt;")} is a numbered list. Each item goes in an ${C("&lt;li&gt;")}.</p>`,
+  demo:`<h2>Snacks</h2>\n<ul>\n  <li>Bananas</li>\n  <li>Mangoes</li>\n</ul>\n<h2>Morning routine</h2>\n<ol>\n  <li>Wake up</li>\n  <li>Eat a banana</li>\n  <li>Code</li>\n</ol>`,
+  say:"Tags can go inside other tags. That's called nesting."},
+ {type:"talk",title:"Bold and italic",mood:"think",
+  body:`<p>${C("&lt;strong&gt;")} marks important text (bold). ${C("&lt;em&gt;")} adds emphasis (italic). They go inside other text.</p>`,
+  demo:`<p>This is <strong>very important</strong>.</p>\n<p>I <em>really</em> love bananas.</p>`,
+  say:"Screen readers say strong and em text with extra emphasis too."},
+ {type:"quiz",q:"Which list shows numbers?",opts:["<ol>","<ul>","<li>"],a:0,mono:true,why:"ol means ordered list. ul means unordered (bullets)."},
+ {type:"order",title:"Build a list",body:`<p>Put the tags in the right order.</p>`,lines:["<ul>","  <li>Kiwi</li>","  <li>Papaya</li>","</ul>"],why:"Open the list, add items, close the list.",noRun:true},
+ {type:"code",title:"Top 3 list",
+  body:`<p>Make a <b>numbered</b> list with at least 3 of your favorite things.</p>`,
+  start:`<h2>My top 3</h2>\n`,
+  checks:[{sel:"ol",msg:"Use an <ol> for a numbered list."},{sel:"ol > li",count:3,msg:"Put at least 3 <li> items inside your <ol>."}],
+  hint:`<h2>My top 3</h2>\n<ol>\n  <li>Bananas</li>\n  <li>Coding</li>\n  <li>Naps</li>\n</ol>`},
+ {type:"done"}]},
+{id:"web3",title:"Links & images",sub:"a href, img src, alt",steps:[
+ {type:"talk",title:"Links",
+  body:`<p>${C("&lt;a&gt;")} makes a link. The ${C("href")} <b>attribute</b> says where it goes. Attributes go inside the opening tag.</p>`,
+  demo:`<p>Learn more on <a href="https://developer.mozilla.org">MDN</a>.</p>\n<p><a href="#top">Back to top</a></p>`,
+  say:"Attributes look like name=\"value\"."},
+ {type:"talk",title:"Images",mood:"think",
+  body:`<p>${C("&lt;img&gt;")} shows a picture. ${C("src")} is the image file and ${C("alt")} describes it for people who can't see it. It doesn't need a closing tag.</p>`,
+  demo:`<img src="monkey.png" alt="An orange monkey wearing glasses" width="120">\n<p>No image file here, so you see the alt text instead. That's exactly why alt matters!</p>`,
+  say:"Always write alt text. It helps blind users and shows when an image fails."},
+ {type:"quiz",q:"What does the alt attribute do?",opts:["Describes the image in words","Sets the image size","Links to another page"],a:0,why:"Screen readers read alt text aloud."},
+ {type:"fill",title:"Make a link",body:`<p>Link to example.com.</p>`,code:`<a [0]="https://example.com">Visit</[1]>`,blanks:["href","a"],tokens:["href","a","src","link"],why:"href holds the address; close with </a>."},
+ {type:"code",title:"Fan page",
+  body:`<p>Add an image with ${C("alt")} text, and a link (an ${C("&lt;a&gt;")} with an ${C("href")}).</p>`,
+  start:`<h1>Banana Fan Club</h1>\n`,
+  checks:[{sel:"img[alt]",attr:["alt",/\S/],msg:"Add an <img> with alt text describing it."},{sel:"a[href]",attr:["href",/\S/],msg:"Add a link: <a href=\"...\">text</a>"}],
+  hint:`<h1>Banana Fan Club</h1>\n<img src="banana.png" alt="A ripe yellow banana">\n<p><a href="https://example.com">Join the club</a></p>`},
+ {type:"done"}]}
+]};
+
+const WEB_UNIT2={name:"CSS basics",lessons:[
+{id:"web4",title:"Your first CSS",sub:"selectors, color, font-size",steps:[
+ {type:"talk",title:"Making it pretty",mood:"cheer",
+  body:`<p>HTML is what's on the page. <b>CSS</b> is how it looks. Put CSS inside a ${C("&lt;style&gt;")} tag. A rule is a <b>selector</b>, then properties in curly braces.</p>`,
+  demo:`<style>\n  h1 {\n    color: darkorange;\n    font-size: 40px;\n  }\n  p {\n    color: gray;\n  }\n</style>\n\n<h1>TypeMonkey</h1>\n<p>Now with style.</p>`,
+  say:"Try changing darkorange to purple, or 40px to 60px."},
+ {type:"talk",title:"Colors and text",mood:"think",
+  body:`<p>Colors can be names (${C("tomato")}), hex codes (${C("#FF7A1A")}) or ${C("rgb(255, 122, 26)")}. Text properties include ${C("font-family")}, ${C("font-weight")} and ${C("text-align")}.</p>`,
+  demo:`<style>\n  h2 { color: #FF7A1A; text-align: center; }\n  p { font-family: Georgia, serif; font-weight: bold; }\n</style>\n<h2>Centered and orange</h2>\n<p>Bold and fancy.</p>`,
+  say:"Every property ends with a semicolon."},
+ {type:"quiz",q:"In h1 { color: red; }, which part is the selector?",opts:["h1","color","red"],a:0,mono:true,why:"The selector picks which elements the rule styles."},
+ {type:"fill",title:"Blue paragraphs",body:`<p>Make every paragraph blue.</p>`,code:`<style>\n  [0] { [1]: blue; }\n</style>\n<p>Hi!</p>`,blanks:["p","color"],tokens:["p","color","text","paint"],why:"Select p, set color."},
+ {type:"code",title:"Style a heading",
+  body:`<p>Make the ${C("h1")} orange (use the color name ${C("orange")}) and give it a ${C("font-size")} of ${C("48px")}.</p>`,
+  start:`<style>\n  /* your CSS here */\n</style>\n\n<h1>Bananas!</h1>\n`,
+  checks:[{sel:"h1",style:{color:"orange"},msg:"Set the h1's color to orange."},{sel:"h1",style:{"font-size":"48px"},msg:"Set the h1's font-size to 48px."}],
+  hint:`<style>\n  h1 {\n    color: orange;\n    font-size: 48px;\n  }\n</style>\n\n<h1>Bananas!</h1>`},
+ {type:"done"}]},
+{id:"web5",title:"Classes & IDs",sub:"style just the elements you pick",steps:[
+ {type:"talk",title:"Classes",
+  body:`<p>Give elements a ${C("class")}, then select it in CSS with a dot: ${C(".name")}. Many elements can share a class.</p>`,
+  demo:`<style>\n  .tag {\n    background: gold;\n    padding: 4px 10px;\n    border-radius: 99px;\n  }\n</style>\n<p><span class="tag">new</span> Banana bread</p>\n<p><span class="tag">hot</span> Mango smoothie</p>`,
+  say:"<span> is an inline box you can style without starting a new line."},
+ {type:"talk",title:"IDs",mood:"think",
+  body:`<p>An ${C("id")} is unique: only one element per page should have it. Select it with ${C("#")}. Use classes for styling most of the time.</p>`,
+  demo:`<style>\n  #hero { color: white; background: darkgreen; padding: 16px; }\n</style>\n<div id="hero">Welcome to the jungle</div>`,
+  say:"<div> is a general-purpose block box. You'll use it constantly."},
+ {type:"quiz",q:"How do you select class=\"price\" in CSS?",opts:[".price","#price","price"],a:0,mono:true,why:"Dot for class, hash for id, plain name for a tag."},
+ {type:"fill",title:"Style the warning",body:`<p>Make the warning class red.</p>`,code:`<style>\n  [0]warning { color: red; }\n</style>\n<p class="[1]">Don't feed the parrot!</p>`,blanks:[".","warning"],tokens:[".","warning","#","alert"],why:".warning matches class=\"warning\"."},
+ {type:"code",title:"Highlight the deal",
+  body:`<p>Give the second paragraph the class ${C("deal")}, then make ${C(".deal")} have a ${C("background")} of ${C("yellow")}.</p>`,
+  start:`<style>\n</style>\n\n<p>Bananas $1</p>\n<p>Mangoes $2 (half price!)</p>\n<p>Kiwis $3</p>\n`,
+  checks:[{sel:"p.deal",text:/Mango/,msg:"Add class=\"deal\" to the mango paragraph."},{sel:".deal",style:{"background-color":"yellow"},msg:"Give .deal a yellow background."},{sel:"p:not(.deal)",count:2,msg:"Only the mango paragraph should have the deal class."}],
+  hint:`<style>\n  .deal { background: yellow; }\n</style>\n\n<p>Bananas $1</p>\n<p class="deal">Mangoes $2 (half price!)</p>\n<p>Kiwis $3</p>`},
+ {type:"done"}]},
+{id:"web6",title:"The box model",sub:"padding, border, margin",steps:[
+ {type:"talk",title:"Everything is a box",
+  body:`<p>Every element is a box with layers: <b>content</b>, then <b>padding</b> (space inside), <b>border</b>, and <b>margin</b> (space outside).</p>`,
+  demo:`<style>\n  .box {\n    background: #FFE3C7;\n    padding: 20px;\n    border: 4px solid #FF7A1A;\n    margin: 16px;\n  }\n</style>\n<div class="box">I'm a box!</div>\n<div class="box">Me too!</div>`,
+  say:"Padding is inside the border. Margin pushes other boxes away."},
+ {type:"talk",title:"Rounded corners and sizes",mood:"think",
+  body:`<p>${C("border-radius")} rounds the corners. ${C("width")} and ${C("max-width")} control size.</p>`,
+  demo:`<style>\n  .pill { background: teal; color: white; padding: 10px 20px; border-radius: 999px; width: fit-content; }\n  .card { max-width: 220px; padding: 16px; border: 2px solid #ddd; border-radius: 16px; }\n</style>\n<div class="pill">Pill button</div>\n<br>\n<div class="card">A card that never gets wider than 220px.</div>`,
+  say:"999px radius is a trick for perfectly round ends."},
+ {type:"quiz",q:"Which adds space INSIDE the border?",opts:["padding","margin","gap"],a:0,mono:true,why:"Padding is inside. Margin is outside."},
+ {type:"fill",title:"Round it",body:`<p>Round the corners by 12px.</p>`,code:`<style>\n  .card { [0]: 12px; }\n</style>`,blanks:["border-radius"],tokens:["border-radius","corner","round","radius"],why:"border-radius rounds the corners."},
+ {type:"code",title:"Make a card",
+  body:`<p>Style ${C(".card")} with ${C("padding: 16px")}, a ${C("border")} of ${C("2px solid orange")}, and ${C("border-radius: 12px")}.</p>`,
+  start:`<style>\n  .card {\n  }\n</style>\n\n<div class="card">\n  <h3>Mo</h3>\n  <p>Age 4 · loves bananas</p>\n</div>\n`,
+  checks:[{sel:".card",style:{"padding-top":"16px","padding-left":"16px"},msg:"Give the card padding: 16px."},{sel:".card",style:{"border-top-width":"2px","border-top-style":"solid","border-top-color":"orange"},msg:"Give the card border: 2px solid orange."},{sel:".card",style:{"border-top-left-radius":"12px"},msg:"Give the card border-radius: 12px."}],
+  hint:`<style>\n  .card {\n    padding: 16px;\n    border: 2px solid orange;\n    border-radius: 12px;\n  }\n</style>\n\n<div class="card">\n  <h3>Mo</h3>\n  <p>Age 4 · loves bananas</p>\n</div>`},
+ {type:"done"}]}
+]};
+
+const WEB_UNIT3={name:"Layout",lessons:[
+{id:"web7",title:"Flexbox",sub:"lining things up in a row",steps:[
+ {type:"talk",title:"display: flex",
+  body:`<p>Add ${C("display: flex")} to a container and its children line up in a row. ${C("gap")} adds space between them.</p>`,
+  demo:`<style>\n  .row { display: flex; gap: 10px; }\n  .row div { background: #FFD25C; padding: 12px; border-radius: 8px; }\n</style>\n<div class="row">\n  <div>One</div>\n  <div>Two</div>\n  <div>Three</div>\n</div>`,
+  say:"Flexbox is how most website navigation bars are built."},
+ {type:"talk",title:"Aligning",mood:"think",
+  body:`<p>${C("justify-content")} spreads items along the row (${C("center")}, ${C("space-between")}). ${C("align-items")} lines them up across it. ${C("flex-wrap: wrap")} lets them drop to a new line.</p>`,
+  demo:`<style>\n  .nav { display: flex; justify-content: space-between; align-items: center; background: #14201B; color: white; padding: 10px 14px; border-radius: 10px; }\n  .links { display: flex; gap: 12px; }\n</style>\n<div class="nav">\n  <b>🐒 TypeMonkey</b>\n  <div class="links"><span>Learn</span><span>Play</span></div>\n</div>`,
+  say:"A real nav bar in a few lines!"},
+ {type:"quiz",q:"Which property turns on flexbox?",opts:["display: flex","flex: on","position: flex"],a:0,mono:true,why:"It goes on the parent container."},
+ {type:"fill",title:"Center everything",body:`<p>Center the items in the row.</p>`,code:`<style>\n  .row { display: [0]; justify-content: [1]; }\n</style>`,blanks:["flex","center"],tokens:["flex","center","middle","block"],why:"display: flex, then justify-content: center."},
+ {type:"code",title:"Button row",
+  body:`<p>Make ${C(".buttons")} a flex row with a ${C("gap")} of ${C("8px")}.</p>`,
+  start:`<style>\n  .buttons {\n  }\n  button { padding: 8px 14px; }\n</style>\n\n<div class="buttons">\n  <button>Play</button>\n  <button>Learn</button>\n  <button>Shop</button>\n</div>\n`,
+  checks:[{sel:".buttons",style:{display:"flex"},msg:"Set display: flex on .buttons."},{sel:".buttons",style:{"column-gap":"8px"},msg:"Set gap: 8px on .buttons."}],
+  hint:`<style>\n  .buttons {\n    display: flex;\n    gap: 8px;\n  }\n  button { padding: 8px 14px; }\n</style>\n\n<div class="buttons">\n  <button>Play</button>\n  <button>Learn</button>\n  <button>Shop</button>\n</div>`},
+ {type:"done"}]},
+{id:"web8",title:"CSS Grid",sub:"rows and columns",steps:[
+ {type:"talk",title:"display: grid",
+  body:`<p>Grid lays things out in columns <b>and</b> rows. ${C("grid-template-columns: 1fr 1fr 1fr")} makes three equal columns. ${C("fr")} means "a fraction of the space".</p>`,
+  demo:`<style>\n  .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }\n  .grid div { background: #CDEFD9; padding: 14px; text-align: center; border-radius: 8px; }\n</style>\n<div class="grid">\n  <div>🐒</div><div>🦜</div><div>🐼</div>\n  <div>🦒</div><div>🦉</div><div>🍌</div>\n</div>`,
+  say:"Six items, three columns, so two rows appear automatically."},
+ {type:"talk",title:"repeat()",mood:"think",
+  body:`<p>${C("repeat(4, 1fr)")} is short for four equal columns. Columns can be different sizes too: ${C("2fr 1fr")}.</p>`,
+  demo:`<style>\n  .layout { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; }\n  .layout div { background: #E6E1FF; padding: 14px; border-radius: 8px; }\n</style>\n<div class="layout">\n  <div>Main content (2 parts)</div>\n  <div>Sidebar (1 part)</div>\n</div>`,
+  say:"Flexbox for one row, grid for two dimensions. That's the rule of thumb."},
+ {type:"quiz",q:"What does grid-template-columns: repeat(3, 1fr) make?",opts:["Three equal columns","Three rows","One column 3 times wider"],a:0,mono:true,why:"repeat(3, 1fr) = 1fr 1fr 1fr."},
+ {type:"fill",title:"Two columns",body:`<p>Make a two-column grid.</p>`,code:`<style>\n  .g { display: [0]; grid-template-columns: [1]; }\n</style>`,blanks:["grid","1fr 1fr"],tokens:["grid","1fr 1fr","flex","2fr"],why:"display: grid with two 1fr columns."},
+ {type:"code",title:"Photo wall",
+  body:`<p>Make ${C(".wall")} a grid with ${C("grid-template-columns: repeat(3, 1fr)")}.</p>`,
+  start:`<style>\n  .wall {\n  }\n  .wall div { background: #FFD25C; height: 60px; border-radius: 8px; }\n</style>\n\n<div class="wall">\n  <div></div><div></div><div></div>\n  <div></div><div></div><div></div>\n</div>\n`,
+  checks:[{sel:".wall",style:{display:"grid"},msg:"Set display: grid on .wall."},{sel:".wall",style:{"grid-template-columns":/^(\S+\s+){2}\S+$/},msg:"Give .wall three columns with repeat(3, 1fr)."}],
+  hint:`<style>\n  .wall {\n    display: grid;\n    grid-template-columns: repeat(3, 1fr);\n    gap: 8px;\n  }\n  .wall div { background: #FFD25C; height: 60px; border-radius: 8px; }\n</style>\n\n<div class="wall">\n  <div></div><div></div><div></div>\n  <div></div><div></div><div></div>\n</div>`},
+ {type:"done"}]},
+{id:"web9",title:"Project: Profile Card",sub:"HTML + CSS + flexbox",project:true,steps:[
+ {type:"talk",title:"Design a profile card",mood:"cheer",
+  body:`<p>Profile cards are everywhere: social apps, games, team pages. You'll build one with an avatar, a name, a bio and stats in a row.</p>`,
+  demo:`<style>\n  .profile { max-width: 260px; padding: 18px; border-radius: 18px; background: #FFF4E5; border: 2px solid #FFB36B; text-align: center; }\n  .avatar { font-size: 48px; }\n  .stats { display: flex; justify-content: space-around; margin-top: 10px; }\n</style>\n<div class="profile">\n  <div class="avatar">🐒</div>\n  <h2>TypeMonkey</h2>\n  <p>Coding buddy. Banana enthusiast.</p>\n  <div class="stats"><span>🔥 12</span><span>🍌 340</span><span>⭐ 9</span></div>\n</div>`,
+  say:"Here's the goal. Now you'll build your own."},
+ {type:"code",title:"Step 1: the HTML",
+  body:`<p>Inside the ${C(".profile")} div, add an ${C("&lt;h2&gt;")} with a name and a ${C("&lt;p&gt;")} bio.</p>`,
+  start:`<div class="profile">\n  <div class="avatar">🦊</div>\n  <!-- add an h2 and a p -->\n</div>\n`,
+  checks:[{sel:".profile h2",text:/\S/,msg:"Add an <h2> with a name inside .profile."},{sel:".profile p",text:/\S/,msg:"Add a <p> bio inside .profile."}],
+  hint:`<div class="profile">\n  <div class="avatar">🦊</div>\n  <h2>Fox</h2>\n  <p>Quick and clever.</p>\n</div>`},
+ {type:"code",title:"Step 2: card styles",
+  body:`<p>Give ${C(".profile")} ${C("padding: 18px")}, ${C("border-radius: 18px")} and ${C("text-align: center")}.</p>`,
+  start:`<style>\n  .profile {\n  }\n</style>\n\n<div class="profile">\n  <div class="avatar">🦊</div>\n  <h2>Fox</h2>\n  <p>Quick and clever.</p>\n</div>\n`,
+  checks:[{sel:".profile",style:{"padding-top":"18px"},msg:"Add padding: 18px."},{sel:".profile",style:{"border-top-left-radius":"18px"},msg:"Add border-radius: 18px."},{sel:".profile",style:{"text-align":"center"},msg:"Add text-align: center."}],
+  hint:`<style>\n  .profile {\n    padding: 18px;\n    border-radius: 18px;\n    text-align: center;\n    background: #FFF4E5;\n  }\n</style>\n\n<div class="profile">\n  <div class="avatar">🦊</div>\n  <h2>Fox</h2>\n  <p>Quick and clever.</p>\n</div>`},
+ {type:"code",title:"Step 3: the stats row",
+  body:`<p>Add a ${C(".stats")} div with at least 3 ${C("&lt;span&gt;")}s, and make it a flex row with ${C("justify-content: space-around")}.</p>`,
+  start:`<style>\n  .profile { padding: 18px; border-radius: 18px; text-align: center; background: #FFF4E5; }\n</style>\n\n<div class="profile">\n  <div class="avatar">🦊</div>\n  <h2>Fox</h2>\n  <p>Quick and clever.</p>\n  <!-- stats row here -->\n</div>\n`,
+  checks:[{sel:".stats span",count:3,msg:"Add a .stats div with 3 <span> items."},{sel:".stats",style:{display:"flex"},msg:"Make .stats display: flex."},{sel:".stats",style:{"justify-content":"space-around"},msg:"Add justify-content: space-around to .stats."}],
+  hint:`<style>\n  .profile { padding: 18px; border-radius: 18px; text-align: center; background: #FFF4E5; }\n  .stats { display: flex; justify-content: space-around; }\n</style>\n\n<div class="profile">\n  <div class="avatar">🦊</div>\n  <h2>Fox</h2>\n  <p>Quick and clever.</p>\n  <div class="stats"><span>🔥 5</span><span>⭐ 3</span><span>🏆 1</span></div>\n</div>`},
+ {type:"done"}]}
+]};
+
+const WEB_UNIT4={name:"Real web pages",lessons:[
+{id:"web10",title:"Forms & buttons",sub:"input, label, button, select",steps:[
+ {type:"talk",title:"Collecting input",
+  body:`<p>Forms collect information. ${C("&lt;label&gt;")} names a field, and ${C("&lt;input&gt;")} is the field. Connect them with ${C("for")} and ${C("id")}.</p>`,
+  demo:`<form>\n  <label for="name">Your name</label><br>\n  <input id="name" type="text" placeholder="Mo">\n  <br><br>\n  <label for="age">Age</label><br>\n  <input id="age" type="number" min="1">\n  <br><br>\n  <button type="button">Sign up</button>\n</form>`,
+  say:"Tap a label and the cursor jumps into its input. That's the for/id connection."},
+ {type:"talk",title:"More input types",mood:"think",
+  body:`<p>${C("type")} changes the input: ${C("email")}, ${C("password")}, ${C("checkbox")}, ${C("date")}. ${C("&lt;select&gt;")} makes a dropdown.</p>`,
+  demo:`<label><input type="checkbox"> I love bananas</label><br><br>\n<label for="fav">Favorite fruit</label>\n<select id="fav">\n  <option>Banana</option>\n  <option>Mango</option>\n</select><br><br>\n<input type="password" placeholder="Secret">`,
+  say:"Phones even show a different keyboard for email and number inputs."},
+ {type:"quiz",q:"How does a label connect to its input?",opts:["The label's for matches the input's id","They must be next to each other","The label goes after the input"],a:0,why:"for=\"name\" points at id=\"name\"."},
+ {type:"fill",title:"An email field",body:`<p>Make an email input.</p>`,code:`<input [0]="email" placeholder="you@example.com">`,blanks:["type"],tokens:["type","kind","format","id"],why:"type=\"email\" makes an email field."},
+ {type:"code",title:"Join the club form",
+  body:`<p>Build a form with a ${C("&lt;label&gt;")}, an ${C("&lt;input type=\"email\"&gt;")} and a ${C("&lt;button&gt;")}.</p>`,
+  start:`<h2>Join the Banana Club</h2>\n<form>\n</form>\n`,
+  checks:[{sel:"form label",msg:"Add a <label> inside the form."},{sel:"form input[type=email]",msg:"Add <input type=\"email\"> inside the form."},{sel:"form button",msg:"Add a <button> inside the form."}],
+  hint:`<h2>Join the Banana Club</h2>\n<form>\n  <label for="email">Email</label><br>\n  <input id="email" type="email"><br><br>\n  <button type="button">Join</button>\n</form>`},
+ {type:"done"}]},
+{id:"web11",title:"Semantic HTML",sub:"header, nav, main, footer, accessibility",steps:[
+ {type:"talk",title:"Tags with meaning",
+  body:`<p>Instead of ${C("&lt;div&gt;")} everywhere, <b>semantic</b> tags describe what a section is: ${C("&lt;header&gt;")}, ${C("&lt;nav&gt;")}, ${C("&lt;main&gt;")}, ${C("&lt;section&gt;")} and ${C("&lt;footer&gt;")}.</p>`,
+  demo:`<header>\n  <h1>TypeMonkey News</h1>\n  <nav><a href="#">Home</a> · <a href="#">Games</a></nav>\n</header>\n<main>\n  <section>\n    <h2>Monkey learns CSS</h2>\n    <p>Experts are amazed.</p>\n  </section>\n</main>\n<footer>© 2026 TypeMonkey</footer>`,
+  say:"It looks the same, but screen readers and search engines understand it much better."},
+ {type:"talk",title:"Accessibility",mood:"think",
+  body:`<p>Accessible pages work for everyone: alt text on images, labels on inputs, real ${C("&lt;button&gt;")}s for actions, and enough color contrast to read easily.</p>`,
+  demo:`<button type="button">✅ Good: a real button</button>\n<p style="color:#ccc">❌ Hard to read: light gray on white</p>\n<p style="color:#333">✅ Easy to read: dark text</p>`,
+  say:"About 1 in 4 adults has some kind of disability. Accessible design matters."},
+ {type:"quiz",q:"Which tag is for the main navigation links?",opts:["<nav>","<links>","<menu-bar>"],a:0,mono:true,why:"nav marks a group of navigation links."},
+ {type:"order",title:"Page outline",body:`<p>Put the page sections in order, top to bottom.</p>`,lines:["<header>…</header>","<main>…</main>","<footer>…</footer>"],why:"Header at the top, main content, footer at the bottom.",noRun:true},
+ {type:"code",title:"Make it semantic",
+  body:`<p>Build a page with a ${C("&lt;header&gt;")} containing an ${C("&lt;h1&gt;")}, a ${C("&lt;main&gt;")} with a paragraph, and a ${C("&lt;footer&gt;")}.</p>`,
+  start:`<!-- header, main, footer -->\n`,
+  checks:[{sel:"header h1",msg:"Put an <h1> inside a <header>."},{sel:"main p",msg:"Put a <p> inside <main>."},{sel:"footer",msg:"Add a <footer>."}],
+  hint:`<header>\n  <h1>My Site</h1>\n</header>\n<main>\n  <p>Welcome to my page.</p>\n</main>\n<footer>Made with 🍌</footer>`},
+ {type:"done"}]},
+{id:"web12",title:"Final Project: Landing Page",sub:"everything you've learned, in one page",project:true,steps:[
+ {type:"talk",title:"Build a real landing page",mood:"cheer",
+  body:`<p>Final project: a landing page for the TypeMonkey Fan Club. A header, a big hero message, a grid of features and a sign-up form. This is what real web developers build every day.</p>`,
+  say:"Let's make something you'd actually show your friends."},
+ {type:"code",title:"Step 1: header and hero",
+  body:`<p>Add a ${C("&lt;header&gt;")} with a ${C("&lt;nav&gt;")}, and a ${C("&lt;section class=\"hero\"&gt;")} with an ${C("&lt;h1&gt;")} and a ${C("&lt;p&gt;")}.</p>`,
+  start:`<!-- header with nav, then a hero section -->\n`,
+  checks:[{sel:"header nav",msg:"Put a <nav> inside a <header>."},{sel:"section.hero h1",msg:"Add <section class=\"hero\"> with an <h1>."},{sel:"section.hero p",msg:"Add a <p> to the hero section."}],
+  hint:`<header>\n  <nav><b>🐒 Fan Club</b> · <a href="#join">Join</a></nav>\n</header>\n<section class="hero">\n  <h1>Code with TypeMonkey</h1>\n  <p>Learn, play and earn bananas.</p>\n</section>`},
+ {type:"code",title:"Step 2: features grid",
+  body:`<p>Add a ${C(".features")} div with at least 3 child divs, and make it a ${C("grid")} with 3 columns.</p>`,
+  start:`<style>\n</style>\n\n<div class="features">\n</div>\n`,
+  checks:[{sel:".features > div",count:3,msg:"Put at least 3 divs inside .features."},{sel:".features",style:{display:"grid"},msg:"Make .features display: grid."},{sel:".features",style:{"grid-template-columns":/^(\S+\s+){2}\S+$/},msg:"Give .features 3 columns: repeat(3, 1fr)."}],
+  hint:`<style>\n  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }\n  .features div { background: #FFF4E5; padding: 12px; border-radius: 12px; }\n</style>\n\n<div class="features">\n  <div>📚 Lessons</div>\n  <div>🎮 Games</div>\n  <div>🍌 Rewards</div>\n</div>`},
+ {type:"code",title:"Step 3: the sign-up form",
+  body:`<p>Add a ${C("&lt;form id=\"join\"&gt;")} with a labeled email input and a button. Style the button with an orange ${C("background")}.</p>`,
+  start:`<style>\n</style>\n\n`,
+  checks:[{sel:"form#join input[type=email]",msg:"Add <form id=\"join\"> with an email input."},{sel:"form#join label",msg:"Give the input a <label>."},{sel:"form#join button",style:{"background-color":"orange"},msg:"Style the form's button with background: orange."}],
+  hint:`<style>\n  button { background: orange; border: 0; padding: 10px 16px; border-radius: 8px; font-weight: bold; }\n</style>\n\n<form id="join">\n  <label for="email">Email</label>\n  <input id="email" type="email">\n  <button type="button">Join the club</button>\n</form>`},
+ {type:"talk",title:"The finished page",mood:"cheer",
+  body:`<p>Here's everything together. Tap ▶ Show page, then try making it yours: change colors, add sections, swap the emoji.</p>`,
+  demo:`<style>\n  header nav { display: flex; justify-content: space-between; padding: 10px; background: #14201B; color: white; border-radius: 10px; }\n  header a { color: #FFD25C; }\n  .hero { text-align: center; padding: 26px 10px; }\n  .hero h1 { color: #FF7A1A; font-size: 34px; margin: 0; }\n  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }\n  .features div { background: #FFF4E5; padding: 12px; border-radius: 12px; text-align: center; }\n  form { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; }\n  button { background: orange; border: 0; padding: 10px 16px; border-radius: 8px; font-weight: bold; }\n  footer { text-align: center; color: gray; margin-top: 16px; }\n</style>\n<header><nav><b>🐒 Fan Club</b><a href="#join">Join</a></nav></header>\n<main>\n  <section class="hero">\n    <h1>Code with TypeMonkey</h1>\n    <p>Learn, play and earn bananas.</p>\n  </section>\n  <div class="features">\n    <div>📚<br>Lessons</div><div>🎮<br>Games</div><div>🍌<br>Rewards</div>\n  </div>\n  <form id="join">\n    <label for="email">Email</label>\n    <input id="email" type="email">\n    <button type="button">Join the club</button>\n  </form>\n</main>\n<footer>Made with HTML &amp; CSS · You finished the course! 🎉</footer>`,
+  say:"You built a real landing page. You finished HTML & CSS!"},
+ {type:"done"}]}
+]};
+
+const COURSE_WEB={id:"web",name:"HTML & CSS",blurb:"Build real web pages and watch them appear as you type. Unit 1 is free.",units:[WEB_UNIT1,WEB_UNIT2,WEB_UNIT3,WEB_UNIT4]};
+
+/* TypeMonkey Jr. · ages 7–12 · no typing. Maze steps: grid rows use # tree, . path, S start, B banana.
+   dir is the starting direction (N/E/S/W). blocks are the buttons offered. start pre-fills a (buggy) program.
+   solution must reach the banana within max blocks (checked by tests/verify_course.py). */
+const JF="fwd",JL="left",JRT="right",jrep=(n,...body)=>({rep:n,body});
+
+const JR_UNIT1={name:"Monkey moves",free:true,lessons:[
+{id:"jr1",title:"First steps",sub:"a program is a list of steps",steps:[
+ {type:"talk",title:"Hi, junior coder!",mood:"cheer",
+  body:`<p>I'm TypeMonkey, and I'm SO hungry. Can you help me get to my bananas? 🍌</p><p>You'll give me <b>instructions</b>, one block at a time. A list of instructions is called a <b>program</b>. I follow your program exactly, step by step!</p>`,
+  say:"Let's start easy. Tap Continue!"},
+ {type:"maze",title:"Walk to the banana",body:`<p>Tap <b>Forward</b> to add steps, then press <b>Go!</b></p>`,grid:["S..B"],dir:"E",blocks:[JF],solution:[JF,JF,JF],say:"Count the squares between me and the banana!"},
+ {type:"maze",title:"A longer walk",grid:["S....B"],dir:"E",blocks:[JF],solution:[JF,JF,JF,JF,JF],say:"How many steps this time?"},
+ {type:"quiz",q:"What is a program?",opts:["A list of steps for a computer to follow","A kind of banana","A TV show"],a:0,why:"Programs are instructions. Computers follow them exactly, in order."},
+ {type:"maze",title:"Going down",body:`<p>The little arrow shows which way I'm facing. Right now I'm facing down!</p>`,grid:["S","." ,".","B"],dir:"S",blocks:[JF],solution:[JF,JF,JF],say:"Forward always means the way my arrow points."},
+ {type:"done"}]},
+{id:"jr2",title:"Turning corners",sub:"turn left, turn right",steps:[
+ {type:"talk",title:"Turning",mood:"think",
+  body:`<p><b>Turn left</b> and <b>Turn right</b> spin me around without moving. Then <b>Forward</b> goes the new way.</p><p>Tip: turn the way <b>I</b> would turn, like you're walking in my shoes!</p>`,
+  say:"Watch my arrow change when I turn."},
+ {type:"maze",title:"Around the corner",grid:["S..#","##.#","##.B"],dir:"E",blocks:[JF,JL,JRT],solution:[JF,JF,JRT,JF,JF,JL,JF],say:"Walk, turn, walk, turn, walk!"},
+ {type:"quiz",q:"TypeMonkey faces right ➜ and turns LEFT. Which way is he facing now?",opts:["Up ⬆","Down ⬇","Left ⬅"],a:0,why:"If you face right and turn left, you end up facing up."},
+ {type:"maze",title:"Up the hill",grid:["##.B","##.#","S..#"],dir:"E",blocks:[JF,JL,JRT],solution:[JF,JF,JL,JF,JF,JRT,JF]},
+ {type:"maze",title:"Zig and zag",grid:["S.##","#..#","##.B"],dir:"E",blocks:[JF,JL,JRT],solution:[JF,JRT,JF,JL,JF,JRT,JF,JL,JF],say:"Lots of turns! Take it one step at a time."},
+ {type:"done"}]},
+{id:"jr3",title:"Bug hunt",sub:"finding and fixing mistakes",steps:[
+ {type:"talk",title:"What's a bug?",mood:"oops",
+  body:`<p>A <b>bug</b> is a mistake in a program. Even expert coders make them every day! Finding and fixing bugs is called <b>debugging</b>.</p><p>In these puzzles, someone already wrote a program, but it has a bug. Press Go to see what goes wrong, then fix it. Tap a block to remove it.</p>`,
+  say:"Let's squash some bugs! 🐛"},
+ {type:"maze",title:"Not far enough",grid:["S...B"],dir:"E",blocks:[JF],start:[JF,JF,JF],solution:[JF,JF,JF,JF],say:"This program has a bug. Press Go and watch what happens."},
+ {type:"maze",title:"Wrong turn",grid:["S..#","##.#","##.B"],dir:"E",blocks:[JF,JL,JRT],start:[JF,JF,JL,JF,JF,JL,JF],solution:[JF,JF,JRT,JF,JF,JL,JF],say:"Something turns the wrong way. Can you spot it?"},
+ {type:"quiz",q:"What's it called when you find and fix mistakes in a program?",opts:["Debugging","Bananaing","Restarting"],a:0,why:"Coders debug all the time. It's a superpower!"},
+ {type:"maze",title:"Bonk!",grid:["S.#","#.#","#.B"],dir:"E",blocks:[JF,JL,JRT],start:[JF,JF,JRT,JF,JF,JL,JF],solution:[JF,JRT,JF,JF,JL,JF],say:"Ouch, I keep hitting a tree! Fix the program."},
+ {type:"done"}]}
+]};
+
+const JR_UNIT2={name:"Loops",lessons:[
+{id:"jr4",title:"Repeat!",sub:"loops do things again and again",steps:[
+ {type:"talk",title:"The Repeat block",mood:"cheer",
+  body:`<p>Instead of Forward, Forward, Forward, Forward, Forward, you can say <b>Repeat 5 times: Forward</b>. That's called a <b>loop</b>!</p><p>Tap <b>Repeat</b>, add blocks inside it, then tap <b>done</b>. Tap the 🔁 number to change how many times it repeats.</p>`,
+  say:"Loops make programs shorter. Coders LOVE short programs."},
+ {type:"maze",title:"Use a loop",grid:["S....B"],dir:"E",blocks:[JF,"rep"],max:2,solution:[jrep(5,JF)],say:"Only 2 blocks allowed! Use Repeat."},
+ {type:"quiz",q:"Repeat 3 times: Forward. How many steps forward is that?",opts:["3","1","4"],a:0,why:"The block inside runs 3 times."},
+ {type:"maze",title:"The long way round",grid:["S....","####.","B...."],dir:"E",blocks:[JF,JL,JRT,"rep"],max:8,solution:[jrep(4,JF),JRT,jrep(2,JF),JRT,jrep(4,JF)],say:"You can use more than one Repeat!"},
+ {type:"maze",title:"Staircase",grid:["S.###","#..##","##..#","###.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(4,JF,JRT,JF,JL)],say:"Each stair is the same: forward, turn, forward, turn. Loop it!"},
+ {type:"done"}]},
+{id:"jr5",title:"Loop patterns",sub:"spot the part that repeats",steps:[
+ {type:"talk",title:"Find the pattern",mood:"think",
+  body:`<p>Before you build, look at the path. Do you see a shape that happens again and again? That's the part to put inside your Repeat.</p>`,
+  say:"Coders call this pattern-spotting. It's a big part of thinking like a programmer."},
+ {type:"quiz",q:"Which part repeats in: Forward, Turn, Forward, Turn, Forward, Turn?",opts:["Forward, Turn","Forward","Turn, Turn"],a:0,why:"Forward, Turn happens 3 times. So: Repeat 3 times: Forward, Turn."},
+ {type:"maze",title:"Climb up",grid:["###.B","##..#","#..##","S.###"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(4,JF,JL,JF,JRT)]},
+ {type:"maze",title:"Around the pond",grid:["S..","##.","B.."],dir:"E",blocks:[JF,JL,JRT,"rep"],max:4,solution:[jrep(3,JF,JF,JRT)],say:"Walk two, turn. Walk two, turn. See it?"},
+ {type:"maze",title:"Broken loop",grid:["S.####","#..###","##..##","###..#","####.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,start:[jrep(4,JF,JRT,JF,JL)],solution:[jrep(5,JF,JRT,JF,JL)],say:"This loop has a bug! It doesn't repeat enough times."},
+ {type:"done"}]},
+{id:"jr6",title:"Jungle adventure",sub:"bigger mazes, all your skills",project:true,steps:[
+ {type:"talk",title:"Into the jungle!",mood:"cheer",
+  body:`<p>These mazes are bigger. Use everything you know: Forward, turns, and Repeat. Plan first, then build!</p>`,
+  say:"I believe in you!"},
+ {type:"maze",title:"River bend",grid:["S...#","###.#","#B..#"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:8,solution:[jrep(3,JF),JRT,jrep(2,JF),JRT,jrep(2,JF)]},
+ {type:"maze",title:"Monkey bridge",grid:["S..#..","#.##.#","#....B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:7,solution:[JF,JRT,jrep(2,JF),JL,jrep(4,JF)]},
+ {type:"maze",title:"Giant stairs",grid:["S.####","#..###","##..##","###..#","####.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(5,JF,JRT,JF,JL)]},
+ {type:"done"}]}
+]};
+
+const JR_UNIT3={name:"Think like a coder",lessons:[
+{id:"jr7",title:"Step by step",sub:"why order matters",steps:[
+ {type:"talk",title:"Order matters",mood:"think",
+  body:`<p>Computers do things in the exact order you say. If you put on your shoes before your socks... uh oh! 🧦👟</p>`,
+  say:"Let's practice putting steps in order."},
+ {type:"order",title:"Banana sandwich",body:`<p>Put the steps in order.</p>`,lines:["Get two slices of bread","Spread peanut butter","Add banana slices","Put the slices together"],why:"First the bread, then the toppings, then close it up!"},
+ {type:"order",title:"Plant a seed",body:`<p>Put the steps in order.</p>`,lines:["Dig a hole","Drop in the seed","Cover it with soil","Water it"],why:"You can't cover the seed before it's in the hole!"},
+ {type:"quiz",q:"Why does order matter in a program?",opts:["The computer does steps exactly in the order you give","It doesn't matter at all","Computers like alphabetical order"],a:0,why:"Change the order and you change what happens."},
+ {type:"order",title:"Brush your teeth",body:`<p>One more!</p>`,lines:["Put toothpaste on the brush","Brush for two minutes","Spit","Rinse the brush"],why:"Nice sequencing! That's what coders call it."},
+ {type:"done"}]},
+{id:"jr8",title:"If this, then that",sub:"computers make choices",steps:[
+ {type:"talk",title:"Making choices",mood:"cheer",
+  body:`<p>Programs can make choices with <b>IF</b> and <b>THEN</b>. <b>IF</b> it's raining, <b>THEN</b> take an umbrella. <b>ELSE</b> (otherwise), wear sunglasses! 😎</p>`,
+  say:"Games use IF all the time: IF you touch a coin, THEN add a point."},
+ {type:"quiz",q:"IF the light is red, THEN…",opts:["Stop","Go","Dance"],a:0,why:"That's a rule drivers follow every day."},
+ {type:"quiz",q:"TypeMonkey's rule: IF hungry THEN eat a banana, ELSE play. He is NOT hungry. What does he do?",opts:["Play","Eat a banana","Sleep"],a:0,why:"The IF part is false, so the ELSE part happens."},
+ {type:"quiz",q:"In a game: IF you touch a star THEN you get a point. You touch 3 stars. How many points?",opts:["3","1","0"],a:0,why:"The rule happens every time you touch one."},
+ {type:"quiz",q:"Which one is an IF-THEN rule?",opts:["IF it's cold THEN wear a coat","Jump three times","Bananas are yellow"],a:0,why:"It has a condition (cold) and an action (coat)."},
+ {type:"done"}]},
+{id:"jr9",title:"Banana Quest",sub:"the final challenge",project:true,steps:[
+ {type:"talk",title:"The final quest!",mood:"cheer",
+  body:`<p>This is it: the Banana Quest! Three tricky mazes stand between me and the Golden Banana. Use sequences, loops and debugging. You've got this!</p>`,
+  say:"Ready? Let's go!"},
+ {type:"maze",title:"The canyon",grid:["S.#B","#.#.","#..."],dir:"E",blocks:[JF,JL,JRT,"rep"],max:10,solution:[JF,JRT,jrep(2,JF),JL,jrep(2,JF),JL,jrep(2,JF)]},
+ {type:"maze",title:"Buggy temple",grid:["S...","###.","###.","B..."],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,start:[jrep(3,JF,JF,JF,JL)],solution:[jrep(3,JF,JF,JF,JRT)],say:"The temple's program has a bug. Find it!"},
+ {type:"maze",title:"The Golden Banana",grid:["S.####","#..###","##..##","###..#","####.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(5,JF,JRT,JF,JL)],win:"You found the Golden Banana! You're a real coder now!"},
+ {type:"done"}]}
+]};
+
+const COURSE_JR={id:"jr",name:"TypeMonkey Jr.",blurb:"Puzzle adventures for ages 7–12. Snap blocks together to guide TypeMonkey to his bananas. No typing needed! Unit 1 is free.",units:[JR_UNIT1,JR_UNIT2,JR_UNIT3]};
 
 </script>
 <script>
@@ -1232,15 +2660,54 @@ async function grade(st,code){
   return [true,st.win||pick(WINS)];
 }
 
+/* ---------- Web preview (HTML & CSS course): renders into an isolated shadow root ---------- */
+const WEB_BASE='<style>:host{all:initial;display:block;background:#fff;color:#111;font:16px/1.45 system-ui,-apple-system,sans-serif;padding:12px;min-height:72px;overflow:auto}img{max-width:100%}</style>';
+function renderWeb(host,code){
+  const root=host.shadowRoot||host.attachShadow({mode:"open"});
+  root.innerHTML=WEB_BASE+code.replace(/<script[\s\S]*?<\/script>/gi,"");
+  return root;
+}
+let webScratch=null;
+function sameCss(root,prop,expected,actual){
+  const probe=document.createElement("span");probe.style.setProperty(prop,expected);root.appendChild(probe);
+  const want=getComputedStyle(probe).getPropertyValue(prop);probe.remove();
+  return want===actual||String(expected).trim()===String(actual).trim();
+}
+function gradeWebNow(st,code){
+  for(const [re,msg] of st.use||[])if(!re.test(code))return [false,msg];
+  if(!webScratch){webScratch=document.createElement("div");webScratch.style.cssText="position:absolute;left:-9999px;top:0;width:360px";document.body.appendChild(webScratch)}
+  const root=renderWeb(webScratch,code);
+  for(const ck of st.checks||[]){
+    const els=[...root.querySelectorAll(ck.sel)];
+    if(!els.length)return [false,ck.msg];
+    if(ck.count&&els.length<ck.count)return [false,ck.msg];
+    const el=els[0];
+    if(ck.text&&!els.some(e=>ck.text.test(e.textContent.trim())))return [false,ck.msg];
+    if(ck.attr&&!(el.getAttribute(ck.attr[0])||"").match(ck.attr[1]))return [false,ck.msg];
+    if(ck.style){const cs=getComputedStyle(el);for(const [p,v] of Object.entries(ck.style)){
+      const actual=cs.getPropertyValue(p);
+      const ok=v instanceof RegExp?v.test(actual):sameCss(root,p,v,actual);
+      if(!ok)return [false,ck.msg]}}
+  }
+  return [true,st.win||pick(WINS)];
+}
+
+/* ---------- SQL tables ---------- */
+function tableHTML(c,name){
+  const t=c.tables[name];const numCol=t.cols.map((x,i)=>t.rows.every(r=>typeof r[i]==="number"||r[i]===null));
+  return `<div class="tbl"><div class="label">${name}</div><div class="tscroll"><table><thead><tr>${t.cols.map((x,i)=>`<th class="${numCol[i]?"num":""}">${x}</th>`).join("")}</tr></thead><tbody>${
+    t.rows.map(r=>`<tr>${r.map(v=>`<td class="${typeof v==="number"?"num":v===null?"null":""}">${v===null?"NULL":esc(v)}</td>`).join("")}</tr>`).join("")}</tbody></table></div></div>`;
+}
+
 /* ---------- Courses ---------- */
 const COURSES=[
   {...COURSE_JS,tag:"console.log('hi')",runnable:true,lang:"script.js"},
+  {...COURSE_PY,tag:"print('hi')",lang:"main.py"},
+  {...COURSE_WEB,tag:"<h1>hi</h1>",runnable:"web",lang:"index.html"},
+  {...COURSE_SQL,tag:"SELECT 'hi';",lang:"query.sql",rushHint:"Each result row is on its own line, columns split by |."},
   {...COURSE_CS,tag:'Console.WriteLine("hi");',lang:"Program.cs"},
   {...COURSE_CPP,tag:'std::cout << "hi";',lang:"main.cpp"},
-  {id:"py",name:"Python",tag:"print('hi')",soon:true},
-  {id:"web",name:"HTML & CSS",tag:"<h1>hi</h1>",soon:true},
-  {id:"sql",name:"SQL",tag:"SELECT 'hi';",soon:true},
-  {id:"jr",name:"TypeMonkey Jr.",tag:"for ages 7–12",soon:true,kids:true}
+  {...COURSE_JR,tag:"puzzles for ages 7–12",kids:true,lang:"TypeMonkey moves"}
 ];
 const courseById=id=>COURSES.find(c=>c.id===id);
 function flat(c){const L=[];(c.units||[]).forEach((u,ui)=>u.lessons.forEach((l,li)=>L.push({l,u,ui,li,idx:L.length})));return L}
@@ -1276,7 +2743,7 @@ function home(){
     <div class="courses">${COURSES.map(c=>{
       if(c.soon)return `<button class="course locked" data-c="${c.id}"><span class="pill ${c.kids?"kid":""}">${c.kids?"Kids section":"Coming soon"}</span><h3>${c.name}</h3><span class="tag">${esc(c.tag)}</span></button>`;
       const [d,n,all]=countLessons(c);
-      return `<button class="course ${c.id==="js"?"live":""}" data-c="${c.id}"><span class="pill ${d===n&&n===all?"ok":"go"}">${d===n&&n===all?"Complete":d?"In progress":c.id==="js"?"Start here":"New"}</span>
+      return `<button class="course ${c.id==="js"?"live":""}" data-c="${c.id}"><span class="pill ${d===n&&n===all?"ok":c.kids&&!d?"kid":"go"}">${d===n&&n===all?"Complete":d?"In progress":c.id==="js"?"Start here":c.kids?"Kids section":"New"}</span>
         <h3>${c.name}</h3><span class="tag">${esc(c.tag)}</span><span class="meta">${c.units.length} units · ${n} lessons${all>n?" (more coming)":""}</span>
         <div class="mini"><span style="width:${n?d/n*100:0}%"></span></div></button>`}).join("")}</div>
   </div>`;
@@ -1339,40 +2806,43 @@ function shell(inner){
   const pct=Math.round(cur.step/(cur.l.steps.length-1)*100);
   $("#screen").innerHTML=`<div class="stack">
     <div class="lessonbar"><button class="x" id="quit" aria-label="Leave lesson">×</button><div class="progress"><span style="width:${pct}%"></span></div></div>
-    ${inner}</div>`;
+    ${inner}${cur.c.tables?`<details class="drawer"><summary>📋 Show the zoo tables</summary>${Object.keys(cur.c.tables).map(t=>tableHTML(cur.c,t)).join("")}</details>`:""}</div>`;
   $("#quit").onclick=()=>coursePage(cur.c.id);
   $("#foot").innerHTML="";window.scrollTo(0,0);
 }
 function next(){cur.step++;renderStep()}
 function editorBlock(id,code,runnable,file){
-  return `<div class="editor"><div class="head"><span>${file}</span>${runnable?`<button class="run" id="run-${id}">▶ Run</button>`:""}</div>
+  return `<div class="editor"><div class="head"><span>${file}</span>${runnable?`<button class="run" id="run-${id}">${runnable==="web"?"▶ Show page":"▶ Run"}</button>`:""}</div>
     ${runnable?`<textarea id="code-${id}" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="Code editor" rows="${Math.min(14,Math.max(5,code.split("\n").length+1))}">${esc(code)}</textarea>
-    <div class="console" id="out-${id}"><span class="dim">Console output appears here</span></div>`:`<pre>${esc(code)}</pre>`}</div>`;
+    ${runnable==="web"?`<div class="webview" id="out-${id}" aria-label="Page preview"></div>`:`<div class="console" id="out-${id}"><span class="dim">Console output appears here</span></div>`}`:`<pre>${esc(code)}</pre>`}</div>`;
 }
 function wireEditor(id,after){
   const ta=$("#code-"+id);if(!ta)return;
   ta.addEventListener("keydown",e=>{if(e.key==="Tab"){e.preventDefault();const s=ta.selectionStart;ta.value=ta.value.slice(0,s)+"  "+ta.value.slice(ta.selectionEnd);ta.selectionStart=ta.selectionEnd=s+2}});
-  $("#run-"+id).onclick=async()=>{const out=await runCode(ta.value);paintConsole($("#out-"+id),out);after&&after(ta.value,out)};
+  const out=$("#out-"+id),web=out.classList.contains("webview");
+  if(web)renderWeb(out,ta.value);
+  $("#run-"+id).onclick=async()=>{if(web){renderWeb(out,ta.value);after&&after(ta.value);return}
+    const res=await runCode(ta.value);paintConsole(out,res);after&&after(ta.value,res)};
 }
 const award=(xp,ban=0)=>{cur.earned.xp+=xp;cur.earned.ban+=ban};
 
 function renderStep(){
   const s=cur.l.steps[cur.step];const R=cur.c.runnable;
   if(s.type!=="done")saveSpot();
-  const T={talk,code:codeStep,quiz,fill,order,game:gameIntro,done:finish}[s.type];T(s,R);
+  const T={talk,code:codeStep,quiz,fill,order,maze,game:gameIntro,done:finish}[s.type];T(s,R);
 }
 function talk(s,R){
-  shell(`<div class="card"><h2>${s.title}</h2>${s.body}${s.demo?editorBlock("d",s.demo,R,cur.c.lang):""}</div>
+  shell(`<div class="card"><h2>${s.title}</h2>${s.body}${(s.show||[]).map(t=>tableHTML(cur.c,t)).join("")}${s.demo?editorBlock("d",s.demo,R,cur.c.lang):""}</div>
     ${buddy(s.say||"",s.mood||"happy")}<div class="row"><button class="btn" id="go">Continue</button></div>`);
   if(s.demo&&R)wireEditor("d");$("#go").onclick=next;
 }
 function codeStep(s){
   let tries=0,solved=false;const k="c"+cur.step;
-  shell(`<div class="card"><div class="label">${cur.l.project?"Project step":"Code challenge"} · +30 XP</div><h2>${s.title}</h2>${s.body}${editorBlock("c",draft(k)||s.start,true,cur.c.lang)}<div id="fb"></div></div>
-    <div id="bud">${buddy("Write your code, then hit ▶ Run. I'll check it for you.","think")}</div>
+  shell(`<div class="card"><div class="label">${cur.l.project?"Project step":"Code challenge"} · +30 XP</div><h2>${s.title}</h2>${s.body}${editorBlock("c",draft(k)||s.start,cur.c.runnable||true,cur.c.lang)}<div id="fb"></div></div>
+    <div id="bud">${buddy(cur.c.runnable==="web"?"Type your code, then tap ▶ Show page. I'll check what you built.":"Write your code, then hit ▶ Run. I'll check it for you.","think")}</div>
     <div class="row"><button class="btn" id="go" disabled>Continue</button><button class="btn ghost" id="hint">Show me how</button></div>`);
   wireEditor("c",async(code)=>{
-    tries++;const [ok,msg,detail]=await grade(s,code);
+    tries++;const [ok,msg,detail]=cur.c.runnable==="web"?gradeWebNow(s,code):await grade(s,code);
     $("#fb").innerHTML=`<div class="feedback ${ok?"good":"bad"}">${ok?"✓ ":""}${esc(msg)}${detail?`<pre>${esc(detail)}</pre>`:""}</div>`;
     $("#bud").innerHTML=buddy(ok?"Look at you go! 🍌 +5":tries>2?"Stuck? Tap “Show me how”. Peeking is part of learning.":"Not quite yet. You've got this.",ok?"cheer":"oops");
     if(ok&&!solved){solved=true;$("#go").disabled=false;award(30,5)}
@@ -1448,15 +2918,82 @@ function order(s){
   draw();$("#go").onclick=next;
 }
 
+/* ---------- TypeMonkey Jr.: maze puzzles ---------- */
+const DIRS={N:[0,-1],E:[1,0],S:[0,1],W:[-1,0]},LEFT={N:"W",W:"S",S:"E",E:"N"},RIGHT={N:"E",E:"S",S:"W",W:"N"},ROT={E:0,S:90,W:180,N:270};
+const BLOCKS={fwd:{icon:"👣",label:"Forward"},left:{icon:"↺",label:"Turn left"},right:{icon:"↻",label:"Turn right"},rep:{icon:"🔁",label:"Repeat"}};
+function mazeInfo(g){let start,goal;g.forEach((row,y)=>[...row].forEach((ch,x)=>{if(ch==="S")start=[x,y];if(ch==="B")goal=[x,y]}));return {start,goal,w:g[0].length,h:g.length}}
+function expandProg(prog){const out=[];for(const b of prog){if(typeof b==="object"){for(let i=0;i<b.rep;i++)out.push(...b.body)}else out.push(b)}return out}
+const blockCount=prog=>prog.reduce((n,b)=>n+(typeof b==="object"?1+b.body.length:1),0);
+function simulate(grid,dir,prog){
+  const m=mazeInfo(grid);let [x,y]=m.start,d=dir;const path=[[x,y,d]];
+  for(const t of expandProg(prog)){
+    if(t==="left")d=LEFT[d];else if(t==="right")d=RIGHT[d];
+    else{const [dx,dy]=DIRS[d];const nx=x+dx,ny=y+dy;const ch=(grid[ny]||"")[nx];
+      if(ch===undefined||ch==="#"){path.push([x,y,d,"bump"]);return {path,result:"wall"}}
+      x=nx;y=ny}
+    path.push([x,y,d]);
+    if(x===m.goal[0]&&y===m.goal[1])return {path,result:"win"};
+  }
+  return {path,result:"short"};
+}
+function maze(s){
+  const m=mazeInfo(s.grid);let prog=JSON.parse(JSON.stringify(s.start||[]));let open=null,running=false,fails=0,won=false;
+  const cell=ch=>ch==="#"?"🌴":ch==="B"?"🍌":"";
+  shell(`<div class="card"><div class="label">Monkey maze${s.max?` · use ${s.max} blocks or fewer`:""} · +15 XP</div><h2>${s.title}</h2>${s.body||""}
+    <div class="maze" style="--w:${m.w};--h:${m.h}" id="mz">${s.grid.map((row,y)=>[...row].map((ch,x)=>`<div class="mc ${ch==="#"?"tree":"path"}">${cell(ch)}</div>`).join("")).join("")}<div class="mk" id="mk"><div class="mface" id="mface">${monkey("happy")}</div><span class="arr" id="arr">➜</span></div></div>
+    <div class="label">Your program</div><div class="prog" id="prog"></div>
+    <div class="palette">${s.blocks.map(b=>`<button class="blk b-${b}" data-b="${b}"><span>${BLOCKS[b].icon}</span>${BLOCKS[b].label}</button>`).join("")}</div>
+    <div id="fb"></div></div>
+    <div id="bud">${buddy(s.say||"Tap the blocks to build a program, then press Go!","think")}</div>
+    <div class="row"><button class="btn banana" id="run">▶ Go!</button><button class="btn ghost" id="undo">Undo</button><button class="btn ghost" id="clr">Clear</button><button class="btn ghost" id="hint" hidden>Show me</button><button class="btn" id="go" hidden>Continue</button></div>`);
+  const place=(x,y,d,bump)=>{const k=$("#mk");k.style.left=`calc(${x} * 100% / ${m.w})`;k.style.top=`calc(${y} * 100% / ${m.h})`;k.style.transform=bump?"translateX(4px)":"none";$("#arr").style.transform=`rotate(${ROT[d]}deg)`};
+  const reset=()=>place(m.start[0],m.start[1],s.dir);
+  const draw=()=>{
+    const chip=(b,i,j)=>`<button class="chip" data-i="${i}" ${j!==undefined?`data-j="${j}"`:""} aria-label="Remove ${BLOCKS[b].label}">${BLOCKS[b].icon}</button>`;
+    $("#prog").innerHTML=prog.length?prog.map((b,i)=>typeof b==="object"?
+      `<span class="repblk ${open===i?"open":""}"><button class="repn" data-r="${i}" aria-label="Change repeat count">🔁 ×${b.rep}</button>${b.body.map((t,j)=>chip(t,i,j)).join("")}${open===i?`<button class="repclose" data-c="${i}">done</button>`:""}</span>`:chip(b,i)).join(""):'<span class="empty">Tap blocks below to add them here</span>';
+    $$("#prog .chip").forEach(c=>c.onclick=()=>{if(running||won)return;const i=+c.dataset.i;if(c.dataset.j!==undefined)prog[i].body.splice(+c.dataset.j,1);else{prog.splice(i,1);if(open!==null&&i<open)open--}draw()});
+    $$("#prog .repn").forEach(c=>c.onclick=()=>{if(running||won)return;const b=prog[+c.dataset.r];b.rep=b.rep>=5?2:b.rep+1;draw()});
+    $$("#prog .repclose").forEach(c=>c.onclick=()=>{open=null;draw()});
+  };
+  $$(".blk").forEach(b=>b.onclick=()=>{
+    if(running||won)return;const t=b.dataset.b;
+    if(t==="rep"){if(open!==null)return toast("Finish the repeat you're building first (tap done).");prog.push({rep:2,body:[]});open=prog.length-1}
+    else if(open!==null)prog[open].body.push(t);else prog.push(t);
+    draw();
+  });
+  $("#undo").onclick=()=>{if(running||won)return;if(open!==null&&prog[open].body.length)prog[open].body.pop();else{prog.pop();open=null}draw()};
+  $("#clr").onclick=()=>{if(running||won)return;prog=[];open=null;draw();reset()};
+  $("#hint").onclick=()=>{prog=JSON.parse(JSON.stringify(s.solution));open=null;draw();reset();$("#bud").innerHTML=buddy("Here's one way. Press Go to watch it work!","happy")};
+  $("#run").onclick=()=>{
+    if(running||won||!prog.length)return;running=true;open=null;draw();reset();
+    const {path,result}=simulate(s.grid,s.dir,prog);let k=1;
+    const tick=()=>{
+      if(k<path.length){const [x,y,d,bump]=path[k];place(x,y,d,bump);k++;return setTimeout(tick,380)}
+      running=false;
+      const tooMany=s.max&&blockCount(prog)>s.max;
+      if(result==="win"&&!tooMany){won=true;award(15,3);$("#mface").innerHTML=monkey("cheer");$("#fb").innerHTML=`<div class="feedback good">🍌 Banana reached! ${esc(s.win||pick(WINS))}</div>`;
+        $("#bud").innerHTML=buddy("YES! Your program worked!","cheer");["run","undo","clr","hint"].forEach(i=>$("#"+i).hidden=true);$("#go").hidden=false;return}
+      fails++;$("#mface").innerHTML=monkey("oops");setTimeout(()=>{const f=$("#mface");if(f)f.innerHTML=monkey("happy")},900);
+      const msg=result==="win"?`You got there, but used ${blockCount(prog)} blocks. Can you do it with ${s.max} or fewer? Try a Repeat block!`:result==="wall"?"Bonk! TypeMonkey bumped into a tree. Find the step that went wrong and fix it.":"So close! TypeMonkey stopped before reaching the banana. Add more steps.";
+      $("#fb").innerHTML=`<div class="feedback bad">${msg}</div>`;
+      $("#bud").innerHTML=buddy(fails>=3?"Want a peek? Tap “Show me”.":"Bugs are normal! Every coder fixes their programs.","oops");
+      if(fails>=2&&s.solution)$("#hint").hidden=false;
+    };
+    setTimeout(tick,200);
+  };
+  draw();reset();$("#go").onclick=next;
+}
+
 /* ---------- Mini-game: Output Rush ---------- */
 function gameIntro(){
   if(!cur.l.pool||!cur.l.pool.length)return next();
   shell(`<div class="card"><div class="label">Mini-game</div><h2>Output Rush</h2><p>45 seconds on the clock. Read each snippet and tap what it prints. Every right answer earns 2 bananas.</p></div>
     ${buddy("Speed round! Don't overthink it.","cheer")}<div class="row"><button class="btn banana" id="go">Start the clock</button><button class="btn ghost" id="skip">Skip</button></div>`);
-  $("#go").onclick=()=>rush(cur.l.pool,45,(score)=>{award(score*3,score*2);next()},()=>coursePage(cur.c.id),cur.c.lang);
+  $("#go").onclick=()=>rush(cur.l.pool.map(p=>[p[0],p[1],cur.c.lang,cur.c.rushHint]),45,(score)=>{award(score*3,score*2);next()},()=>coursePage(cur.c.id));
   $("#skip").onclick=next;
 }
-function rush(poolIn,secs,onEnd,onQuit,file){
+function rush(poolIn,secs,onEnd,onQuit){
   const pool=shuffle(poolIn);let i=0,score=0,left=secs,ended=false;
   const timer=setInterval(()=>{left--;const t=$("#tleft");if(t){t.textContent=left;$("#tbar").style.width=(left/secs*100)+"%"}if(left<=0)end()},1000);
   function end(){if(ended)return;ended=true;clearInterval(timer);
@@ -1466,10 +3003,10 @@ function rush(poolIn,secs,onEnd,onQuit,file){
     $("#fin").onclick=()=>onEnd(score);}
   function round(){
     if(i>=pool.length)return end();
-    const [code,opts]=pool[i];const ord=shuffle(opts.map((o,k)=>k));
+    const [code,opts,file="script.js",hint]=pool[i];const ord=shuffle(opts.map((o,k)=>k));
     $("#screen").innerHTML=`<div class="stack"><div class="game-hud"><button class="x" id="quitg" aria-label="Quit game">×</button><span>⏱ <span id="tleft">${left}</span>s</span><div class="timer"><span id="tbar" style="width:${left/secs*100}%"></span></div><span>🍌 ${score*2}</span></div>
       <div class="card"><div class="label">What prints? · ${i+1} of ${pool.length}</div><div class="editor"><div class="head"><span>${file}</span></div><pre>${esc(code)}</pre></div>
-      <p style="color:var(--muted);font-size:.85rem">Several lines of output are shown with spaces between them.</p>
+      <p style="color:var(--muted);font-size:.85rem">${hint||"Several lines of output are shown with spaces between them."}</p>
       <div class="opts">${ord.map(k=>`<button class="opt mono" data-k="${k}">${esc(opts[k])}</button>`).join("")}</div></div></div>`;
     $("#quitg").onclick=()=>{clearInterval(timer);ended=true;onQuit()};
     $$(".opt").forEach(b=>b.onclick=()=>{
@@ -1482,12 +3019,13 @@ function rush(poolIn,secs,onEnd,onQuit,file){
 }
 function practice(){
   rerender=home;
-  let pool=[];let file="script.js";
-  for(const c of COURSES)for(const x of flat(c))if(S.done.includes(x.l.id)&&x.l.pool)pool.push(...x.l.pool);
-  if(!pool.length){pool=[...COURSES[0].units[0].lessons[0].pool]}
+  let pool=[];
+  const add=(c,l)=>pool.push(...l.pool.map(p=>[p[0],p[1],c.lang,c.rushHint]));
+  for(const c of COURSES)for(const x of flat(c))if(S.done.includes(x.l.id)&&x.l.pool)add(c,x.l);
+  if(!pool.length)add(COURSES[0],COURSES[0].units[0].lessons[0]);
   pool=shuffle(pool).slice(0,12);
   $("#foot").innerHTML="";
-  rush(pool,60,(score)=>{S.xp+=score*3;S.bananas+=score*2;if(score)bumpStreak();save();home()},home,file);
+  rush(pool,60,(score)=>{S.xp+=score*3;S.bananas+=score*2;if(score)bumpStreak();save();home()},home);
 }
 
 /* ---------- Finish ---------- */
@@ -1510,6 +3048,7 @@ function finish(){
 /* ---------- Playground ---------- */
 const PLAY={
   js:{name:"JavaScript",file:"script.js",run:true,start:`// Try anything! Press ▶ Run.\nconst name = "TypeMonkey";\nfor (let i = 1; i <= 3; i++) {\n  console.log(\`\${name} says ook #\${i}\`);\n}\n`},
+  web:{name:"HTML & CSS",file:"index.html",web:true,start:`<style>\n  h1 { color: #FF7A1A; }\n  .card { background: #FFF4E5; padding: 12px; border-radius: 12px; }\n</style>\n\n<h1>TypeMonkey's page</h1>\n<div class="card">\n  <p>Change anything, then tap <b>Show page</b>!</p>\n</div>\n`},
   py:{name:"Python",file:"main.py",start:`name = "TypeMonkey"\nfor i in range(1, 4):\n    print(f"{name} says ook #{i}")\n`},
   cs:{name:"C#",file:"Program.cs",start:`using System;\n\nclass Program {\n  static void Main() {\n    for (int i = 1; i <= 3; i++) {\n      Console.WriteLine($"TypeMonkey says ook #{i}");\n    }\n  }\n}\n`},
   cpp:{name:"C++",file:"main.cpp",start:`#include <iostream>\n\nint main() {\n  for (int i = 1; i <= 3; i++) {\n    std::cout << "TypeMonkey says ook #" << i << "\\n";\n  }\n  return 0;\n}\n`}
@@ -1522,11 +3061,11 @@ function playground(lang="js"){
     <div class="row"><button class="btn ghost sm" id="back">← Home</button></div>
     <section class="hero"><div class="label">Playground</div><h1>Code anything.</h1><p>No lesson, no rules. Write code, run it, break it, fix it. Your code is saved as you type.</p></section>
     <div class="langs">${Object.entries(PLAY).map(([k,v])=>`<button class="lang" data-k="${k}" aria-pressed="${k===lang}">${v.name}</button>`).join("")}</div>
-    ${P.run?"":`<div class="note">${P.name} needs its compiler, which ships inside the full TypeMonkey app. In this preview only JavaScript runs, so you can write ${P.name} here but not run it yet.</div>`}
-    <div class="editor"><div class="head"><span>${P.file}</span><button class="linkbtn" id="clear" style="color:var(--code-dim)">Reset</button><button class="run" id="run-p" ${P.run?"":"disabled"}>▶ Run</button></div>
+    ${P.run||P.web?"":`<div class="note">${P.name} needs its compiler, which ships inside the full TypeMonkey app. In this preview only JavaScript runs, so you can write ${P.name} here but not run it yet.</div>`}
+    <div class="editor"><div class="head"><span>${P.file}</span><button class="linkbtn" id="clear" style="color:var(--code-dim)">Reset</button><button class="run" id="run-p" ${P.run||P.web?"":"disabled"}>${P.web?"▶ Show page":"▶ Run"}</button></div>
       <textarea id="code-p" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="Playground editor" rows="14">${esc(saved||P.start)}</textarea>
-      <div class="console" id="out-p"><span class="dim">${P.run?"Output appears here":"Running "+P.name+" is coming in the full app"}</span></div></div>
-    ${buddy(P.run?"Tip: console.log anything you're curious about. That's how pros explore code too.":"You can still practice typing "+P.name+" syntax here. Your code is saved.","happy")}
+      ${P.web?`<div class="webview" id="out-p"></div>`:`<div class="console" id="out-p"><span class="dim">${P.run?"Output appears here":"Running "+P.name+" is coming in the full app"}</span></div>`}</div>
+    ${buddy(P.web?"Build any web page you like. The preview updates every time you tap Show page.":P.run?"Tip: console.log anything you're curious about. That's how pros explore code too.":"You can still practice typing "+P.name+" syntax here. Your code is saved.","happy")}
   </div>`;
   $("#back").onclick=home;
   $$(".lang").forEach(b=>b.onclick=()=>playground(b.dataset.k));
@@ -1535,6 +3074,7 @@ function playground(lang="js"){
   ta.addEventListener("keydown",e=>{if(e.key==="Tab"){e.preventDefault();const s=ta.selectionStart;ta.value=ta.value.slice(0,s)+"  "+ta.value.slice(ta.selectionEnd);ta.selectionStart=ta.selectionEnd=s+2}});
   $("#clear").onclick=()=>{ta.value=P.start;S.play=S.play||{};delete S.play[lang];save()};
   if(P.run)$("#run-p").onclick=async()=>paintConsole($("#out-p"),await runCode(ta.value));
+  if(P.web){renderWeb($("#out-p"),ta.value);$("#run-p").onclick=()=>renderWeb($("#out-p"),ta.value)}
   foot();window.scrollTo(0,0);
 }
 

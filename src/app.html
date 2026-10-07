@@ -163,6 +163,40 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;max-width:calc(100% - 32px);z-index:9}
 .foot{color:var(--muted);font-size:.8rem;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
 .foot .row{justify-content:center}
+/* web preview */
+.webview{border-top:1px solid #ffffff14;background:#fff;min-height:72px;max-height:340px;overflow:auto}
+/* SQL tables */
+.tbl{display:flex;flex-direction:column;gap:4px;min-width:0}
+.tscroll{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+.tbl table{border-collapse:collapse;width:100%;font-family:var(--mono);font-size:.82rem;font-variant-numeric:tabular-nums}
+.tbl th{background:var(--surface2);text-align:left;font-weight:600;color:var(--muted)}
+.tbl th,.tbl td{padding:5px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl tr:last-child td{border-bottom:0}
+.tbl td.num,.tbl th.num{text-align:right}
+.tbl td.null{color:var(--muted);font-style:italic}
+.drawer{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.drawer summary{cursor:pointer;font-weight:800}
+.drawer[open]{display:flex;flex-direction:column;gap:12px}
+/* Jr. mazes */
+.maze{position:relative;display:grid;grid-template-columns:repeat(var(--w),1fr);width:min(100%,calc(var(--w) * 64px));aspect-ratio:var(--w) / var(--h);max-width:100%;align-self:center;border-radius:14px;overflow:hidden;background:#7FC77A}
+.mc{display:grid;place-items:center;font-size:clamp(1.1rem,5vw,1.9rem)}
+.mc.path{background:#F3DFA8;box-shadow:inset 0 0 0 1px #E5CC88}
+.mc.tree{background:#5FAE5A}
+.mk{position:absolute;width:calc(100% / var(--w));height:calc(100% / var(--h));display:grid;place-items:center;transition:left .32s ease,top .32s ease,transform .25s ease;pointer-events:none}
+.mface{width:82%;height:82%;display:grid;place-items:center}.mface svg{width:100%;height:100%;filter:drop-shadow(0 2px 2px #0004)}
+.arr{position:absolute;right:-2px;bottom:-2px;width:46%;height:46%;display:grid;place-items:center;background:#14201B;color:#FFD25C;border-radius:50%;font-size:clamp(.7rem,3vw,1rem);font-weight:900;transition:transform .25s ease}
+.prog{display:flex;flex-wrap:wrap;gap:6px;min-height:52px;background:var(--code-bg);border-radius:12px;padding:8px;align-items:center}
+.chip{font-size:1.25rem;width:44px;height:44px;border-radius:10px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:800}
+.repblk{display:flex;flex-wrap:wrap;gap:4px;align-items:center;border:2px solid var(--banana);border-radius:12px;padding:4px}
+.repblk.open{border-style:dashed}
+.repn,.repclose{border:0;border-radius:8px;background:var(--banana);color:var(--accent-ink);font-weight:800;padding:8px 10px}
+.repclose{background:var(--surface2);color:var(--fg)}
+.palette{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.blk{display:flex;align-items:center;gap:8px;justify-content:center;border:0;border-radius:14px;padding:12px;font-weight:800;font-size:1rem;color:var(--accent-ink);background:var(--banana);box-shadow:0 4px 0 color-mix(in srgb,var(--banana) 55%,#000)}
+.blk span{font-size:1.4rem}
+.blk.b-fwd{background:var(--accent);box-shadow:0 4px 0 color-mix(in srgb,var(--accent) 60%,#000)}
+.blk.b-rep{background:var(--leaf);color:#fff;box-shadow:0 4px 0 color-mix(in srgb,var(--leaf) 60%,#000)}
+.blk:active{transform:translateY(3px)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 
@@ -321,15 +355,54 @@ async function grade(st,code){
   return [true,st.win||pick(WINS)];
 }
 
+/* ---------- Web preview (HTML & CSS course): renders into an isolated shadow root ---------- */
+const WEB_BASE='<style>:host{all:initial;display:block;background:#fff;color:#111;font:16px/1.45 system-ui,-apple-system,sans-serif;padding:12px;min-height:72px;overflow:auto}img{max-width:100%}</style>';
+function renderWeb(host,code){
+  const root=host.shadowRoot||host.attachShadow({mode:"open"});
+  root.innerHTML=WEB_BASE+code.replace(/<script[\s\S]*?<\/script>/gi,"");
+  return root;
+}
+let webScratch=null;
+function sameCss(root,prop,expected,actual){
+  const probe=document.createElement("span");probe.style.setProperty(prop,expected);root.appendChild(probe);
+  const want=getComputedStyle(probe).getPropertyValue(prop);probe.remove();
+  return want===actual||String(expected).trim()===String(actual).trim();
+}
+function gradeWebNow(st,code){
+  for(const [re,msg] of st.use||[])if(!re.test(code))return [false,msg];
+  if(!webScratch){webScratch=document.createElement("div");webScratch.style.cssText="position:absolute;left:-9999px;top:0;width:360px";document.body.appendChild(webScratch)}
+  const root=renderWeb(webScratch,code);
+  for(const ck of st.checks||[]){
+    const els=[...root.querySelectorAll(ck.sel)];
+    if(!els.length)return [false,ck.msg];
+    if(ck.count&&els.length<ck.count)return [false,ck.msg];
+    const el=els[0];
+    if(ck.text&&!els.some(e=>ck.text.test(e.textContent.trim())))return [false,ck.msg];
+    if(ck.attr&&!(el.getAttribute(ck.attr[0])||"").match(ck.attr[1]))return [false,ck.msg];
+    if(ck.style){const cs=getComputedStyle(el);for(const [p,v] of Object.entries(ck.style)){
+      const actual=cs.getPropertyValue(p);
+      const ok=v instanceof RegExp?v.test(actual):sameCss(root,p,v,actual);
+      if(!ok)return [false,ck.msg]}}
+  }
+  return [true,st.win||pick(WINS)];
+}
+
+/* ---------- SQL tables ---------- */
+function tableHTML(c,name){
+  const t=c.tables[name];const numCol=t.cols.map((x,i)=>t.rows.every(r=>typeof r[i]==="number"||r[i]===null));
+  return `<div class="tbl"><div class="label">${name}</div><div class="tscroll"><table><thead><tr>${t.cols.map((x,i)=>`<th class="${numCol[i]?"num":""}">${x}</th>`).join("")}</tr></thead><tbody>${
+    t.rows.map(r=>`<tr>${r.map(v=>`<td class="${typeof v==="number"?"num":v===null?"null":""}">${v===null?"NULL":esc(v)}</td>`).join("")}</tr>`).join("")}</tbody></table></div></div>`;
+}
+
 /* ---------- Courses ---------- */
 const COURSES=[
   {...COURSE_JS,tag:"console.log('hi')",runnable:true,lang:"script.js"},
+  {...COURSE_PY,tag:"print('hi')",lang:"main.py"},
+  {...COURSE_WEB,tag:"<h1>hi</h1>",runnable:"web",lang:"index.html"},
+  {...COURSE_SQL,tag:"SELECT 'hi';",lang:"query.sql",rushHint:"Each result row is on its own line, columns split by |."},
   {...COURSE_CS,tag:'Console.WriteLine("hi");',lang:"Program.cs"},
   {...COURSE_CPP,tag:'std::cout << "hi";',lang:"main.cpp"},
-  {id:"py",name:"Python",tag:"print('hi')",soon:true},
-  {id:"web",name:"HTML & CSS",tag:"<h1>hi</h1>",soon:true},
-  {id:"sql",name:"SQL",tag:"SELECT 'hi';",soon:true},
-  {id:"jr",name:"TypeMonkey Jr.",tag:"for ages 7–12",soon:true,kids:true}
+  {...COURSE_JR,tag:"puzzles for ages 7–12",kids:true,lang:"TypeMonkey moves"}
 ];
 const courseById=id=>COURSES.find(c=>c.id===id);
 function flat(c){const L=[];(c.units||[]).forEach((u,ui)=>u.lessons.forEach((l,li)=>L.push({l,u,ui,li,idx:L.length})));return L}
@@ -365,7 +438,7 @@ function home(){
     <div class="courses">${COURSES.map(c=>{
       if(c.soon)return `<button class="course locked" data-c="${c.id}"><span class="pill ${c.kids?"kid":""}">${c.kids?"Kids section":"Coming soon"}</span><h3>${c.name}</h3><span class="tag">${esc(c.tag)}</span></button>`;
       const [d,n,all]=countLessons(c);
-      return `<button class="course ${c.id==="js"?"live":""}" data-c="${c.id}"><span class="pill ${d===n&&n===all?"ok":"go"}">${d===n&&n===all?"Complete":d?"In progress":c.id==="js"?"Start here":"New"}</span>
+      return `<button class="course ${c.id==="js"?"live":""}" data-c="${c.id}"><span class="pill ${d===n&&n===all?"ok":c.kids&&!d?"kid":"go"}">${d===n&&n===all?"Complete":d?"In progress":c.id==="js"?"Start here":c.kids?"Kids section":"New"}</span>
         <h3>${c.name}</h3><span class="tag">${esc(c.tag)}</span><span class="meta">${c.units.length} units · ${n} lessons${all>n?" (more coming)":""}</span>
         <div class="mini"><span style="width:${n?d/n*100:0}%"></span></div></button>`}).join("")}</div>
   </div>`;
@@ -428,40 +501,43 @@ function shell(inner){
   const pct=Math.round(cur.step/(cur.l.steps.length-1)*100);
   $("#screen").innerHTML=`<div class="stack">
     <div class="lessonbar"><button class="x" id="quit" aria-label="Leave lesson">×</button><div class="progress"><span style="width:${pct}%"></span></div></div>
-    ${inner}</div>`;
+    ${inner}${cur.c.tables?`<details class="drawer"><summary>📋 Show the zoo tables</summary>${Object.keys(cur.c.tables).map(t=>tableHTML(cur.c,t)).join("")}</details>`:""}</div>`;
   $("#quit").onclick=()=>coursePage(cur.c.id);
   $("#foot").innerHTML="";window.scrollTo(0,0);
 }
 function next(){cur.step++;renderStep()}
 function editorBlock(id,code,runnable,file){
-  return `<div class="editor"><div class="head"><span>${file}</span>${runnable?`<button class="run" id="run-${id}">▶ Run</button>`:""}</div>
+  return `<div class="editor"><div class="head"><span>${file}</span>${runnable?`<button class="run" id="run-${id}">${runnable==="web"?"▶ Show page":"▶ Run"}</button>`:""}</div>
     ${runnable?`<textarea id="code-${id}" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="Code editor" rows="${Math.min(14,Math.max(5,code.split("\n").length+1))}">${esc(code)}</textarea>
-    <div class="console" id="out-${id}"><span class="dim">Console output appears here</span></div>`:`<pre>${esc(code)}</pre>`}</div>`;
+    ${runnable==="web"?`<div class="webview" id="out-${id}" aria-label="Page preview"></div>`:`<div class="console" id="out-${id}"><span class="dim">Console output appears here</span></div>`}`:`<pre>${esc(code)}</pre>`}</div>`;
 }
 function wireEditor(id,after){
   const ta=$("#code-"+id);if(!ta)return;
   ta.addEventListener("keydown",e=>{if(e.key==="Tab"){e.preventDefault();const s=ta.selectionStart;ta.value=ta.value.slice(0,s)+"  "+ta.value.slice(ta.selectionEnd);ta.selectionStart=ta.selectionEnd=s+2}});
-  $("#run-"+id).onclick=async()=>{const out=await runCode(ta.value);paintConsole($("#out-"+id),out);after&&after(ta.value,out)};
+  const out=$("#out-"+id),web=out.classList.contains("webview");
+  if(web)renderWeb(out,ta.value);
+  $("#run-"+id).onclick=async()=>{if(web){renderWeb(out,ta.value);after&&after(ta.value);return}
+    const res=await runCode(ta.value);paintConsole(out,res);after&&after(ta.value,res)};
 }
 const award=(xp,ban=0)=>{cur.earned.xp+=xp;cur.earned.ban+=ban};
 
 function renderStep(){
   const s=cur.l.steps[cur.step];const R=cur.c.runnable;
   if(s.type!=="done")saveSpot();
-  const T={talk,code:codeStep,quiz,fill,order,game:gameIntro,done:finish}[s.type];T(s,R);
+  const T={talk,code:codeStep,quiz,fill,order,maze,game:gameIntro,done:finish}[s.type];T(s,R);
 }
 function talk(s,R){
-  shell(`<div class="card"><h2>${s.title}</h2>${s.body}${s.demo?editorBlock("d",s.demo,R,cur.c.lang):""}</div>
+  shell(`<div class="card"><h2>${s.title}</h2>${s.body}${(s.show||[]).map(t=>tableHTML(cur.c,t)).join("")}${s.demo?editorBlock("d",s.demo,R,cur.c.lang):""}</div>
     ${buddy(s.say||"",s.mood||"happy")}<div class="row"><button class="btn" id="go">Continue</button></div>`);
   if(s.demo&&R)wireEditor("d");$("#go").onclick=next;
 }
 function codeStep(s){
   let tries=0,solved=false;const k="c"+cur.step;
-  shell(`<div class="card"><div class="label">${cur.l.project?"Project step":"Code challenge"} · +30 XP</div><h2>${s.title}</h2>${s.body}${editorBlock("c",draft(k)||s.start,true,cur.c.lang)}<div id="fb"></div></div>
-    <div id="bud">${buddy("Write your code, then hit ▶ Run. I'll check it for you.","think")}</div>
+  shell(`<div class="card"><div class="label">${cur.l.project?"Project step":"Code challenge"} · +30 XP</div><h2>${s.title}</h2>${s.body}${editorBlock("c",draft(k)||s.start,cur.c.runnable||true,cur.c.lang)}<div id="fb"></div></div>
+    <div id="bud">${buddy(cur.c.runnable==="web"?"Type your code, then tap ▶ Show page. I'll check what you built.":"Write your code, then hit ▶ Run. I'll check it for you.","think")}</div>
     <div class="row"><button class="btn" id="go" disabled>Continue</button><button class="btn ghost" id="hint">Show me how</button></div>`);
   wireEditor("c",async(code)=>{
-    tries++;const [ok,msg,detail]=await grade(s,code);
+    tries++;const [ok,msg,detail]=cur.c.runnable==="web"?gradeWebNow(s,code):await grade(s,code);
     $("#fb").innerHTML=`<div class="feedback ${ok?"good":"bad"}">${ok?"✓ ":""}${esc(msg)}${detail?`<pre>${esc(detail)}</pre>`:""}</div>`;
     $("#bud").innerHTML=buddy(ok?"Look at you go! 🍌 +5":tries>2?"Stuck? Tap “Show me how”. Peeking is part of learning.":"Not quite yet. You've got this.",ok?"cheer":"oops");
     if(ok&&!solved){solved=true;$("#go").disabled=false;award(30,5)}
@@ -537,15 +613,82 @@ function order(s){
   draw();$("#go").onclick=next;
 }
 
+/* ---------- TypeMonkey Jr.: maze puzzles ---------- */
+const DIRS={N:[0,-1],E:[1,0],S:[0,1],W:[-1,0]},LEFT={N:"W",W:"S",S:"E",E:"N"},RIGHT={N:"E",E:"S",S:"W",W:"N"},ROT={E:0,S:90,W:180,N:270};
+const BLOCKS={fwd:{icon:"👣",label:"Forward"},left:{icon:"↺",label:"Turn left"},right:{icon:"↻",label:"Turn right"},rep:{icon:"🔁",label:"Repeat"}};
+function mazeInfo(g){let start,goal;g.forEach((row,y)=>[...row].forEach((ch,x)=>{if(ch==="S")start=[x,y];if(ch==="B")goal=[x,y]}));return {start,goal,w:g[0].length,h:g.length}}
+function expandProg(prog){const out=[];for(const b of prog){if(typeof b==="object"){for(let i=0;i<b.rep;i++)out.push(...b.body)}else out.push(b)}return out}
+const blockCount=prog=>prog.reduce((n,b)=>n+(typeof b==="object"?1+b.body.length:1),0);
+function simulate(grid,dir,prog){
+  const m=mazeInfo(grid);let [x,y]=m.start,d=dir;const path=[[x,y,d]];
+  for(const t of expandProg(prog)){
+    if(t==="left")d=LEFT[d];else if(t==="right")d=RIGHT[d];
+    else{const [dx,dy]=DIRS[d];const nx=x+dx,ny=y+dy;const ch=(grid[ny]||"")[nx];
+      if(ch===undefined||ch==="#"){path.push([x,y,d,"bump"]);return {path,result:"wall"}}
+      x=nx;y=ny}
+    path.push([x,y,d]);
+    if(x===m.goal[0]&&y===m.goal[1])return {path,result:"win"};
+  }
+  return {path,result:"short"};
+}
+function maze(s){
+  const m=mazeInfo(s.grid);let prog=JSON.parse(JSON.stringify(s.start||[]));let open=null,running=false,fails=0,won=false;
+  const cell=ch=>ch==="#"?"🌴":ch==="B"?"🍌":"";
+  shell(`<div class="card"><div class="label">Monkey maze${s.max?` · use ${s.max} blocks or fewer`:""} · +15 XP</div><h2>${s.title}</h2>${s.body||""}
+    <div class="maze" style="--w:${m.w};--h:${m.h}" id="mz">${s.grid.map((row,y)=>[...row].map((ch,x)=>`<div class="mc ${ch==="#"?"tree":"path"}">${cell(ch)}</div>`).join("")).join("")}<div class="mk" id="mk"><div class="mface" id="mface">${monkey("happy")}</div><span class="arr" id="arr">➜</span></div></div>
+    <div class="label">Your program</div><div class="prog" id="prog"></div>
+    <div class="palette">${s.blocks.map(b=>`<button class="blk b-${b}" data-b="${b}"><span>${BLOCKS[b].icon}</span>${BLOCKS[b].label}</button>`).join("")}</div>
+    <div id="fb"></div></div>
+    <div id="bud">${buddy(s.say||"Tap the blocks to build a program, then press Go!","think")}</div>
+    <div class="row"><button class="btn banana" id="run">▶ Go!</button><button class="btn ghost" id="undo">Undo</button><button class="btn ghost" id="clr">Clear</button><button class="btn ghost" id="hint" hidden>Show me</button><button class="btn" id="go" hidden>Continue</button></div>`);
+  const place=(x,y,d,bump)=>{const k=$("#mk");k.style.left=`calc(${x} * 100% / ${m.w})`;k.style.top=`calc(${y} * 100% / ${m.h})`;k.style.transform=bump?"translateX(4px)":"none";$("#arr").style.transform=`rotate(${ROT[d]}deg)`};
+  const reset=()=>place(m.start[0],m.start[1],s.dir);
+  const draw=()=>{
+    const chip=(b,i,j)=>`<button class="chip" data-i="${i}" ${j!==undefined?`data-j="${j}"`:""} aria-label="Remove ${BLOCKS[b].label}">${BLOCKS[b].icon}</button>`;
+    $("#prog").innerHTML=prog.length?prog.map((b,i)=>typeof b==="object"?
+      `<span class="repblk ${open===i?"open":""}"><button class="repn" data-r="${i}" aria-label="Change repeat count">🔁 ×${b.rep}</button>${b.body.map((t,j)=>chip(t,i,j)).join("")}${open===i?`<button class="repclose" data-c="${i}">done</button>`:""}</span>`:chip(b,i)).join(""):'<span class="empty">Tap blocks below to add them here</span>';
+    $$("#prog .chip").forEach(c=>c.onclick=()=>{if(running||won)return;const i=+c.dataset.i;if(c.dataset.j!==undefined)prog[i].body.splice(+c.dataset.j,1);else{prog.splice(i,1);if(open!==null&&i<open)open--}draw()});
+    $$("#prog .repn").forEach(c=>c.onclick=()=>{if(running||won)return;const b=prog[+c.dataset.r];b.rep=b.rep>=5?2:b.rep+1;draw()});
+    $$("#prog .repclose").forEach(c=>c.onclick=()=>{open=null;draw()});
+  };
+  $$(".blk").forEach(b=>b.onclick=()=>{
+    if(running||won)return;const t=b.dataset.b;
+    if(t==="rep"){if(open!==null)return toast("Finish the repeat you're building first (tap done).");prog.push({rep:2,body:[]});open=prog.length-1}
+    else if(open!==null)prog[open].body.push(t);else prog.push(t);
+    draw();
+  });
+  $("#undo").onclick=()=>{if(running||won)return;if(open!==null&&prog[open].body.length)prog[open].body.pop();else{prog.pop();open=null}draw()};
+  $("#clr").onclick=()=>{if(running||won)return;prog=[];open=null;draw();reset()};
+  $("#hint").onclick=()=>{prog=JSON.parse(JSON.stringify(s.solution));open=null;draw();reset();$("#bud").innerHTML=buddy("Here's one way. Press Go to watch it work!","happy")};
+  $("#run").onclick=()=>{
+    if(running||won||!prog.length)return;running=true;open=null;draw();reset();
+    const {path,result}=simulate(s.grid,s.dir,prog);let k=1;
+    const tick=()=>{
+      if(k<path.length){const [x,y,d,bump]=path[k];place(x,y,d,bump);k++;return setTimeout(tick,380)}
+      running=false;
+      const tooMany=s.max&&blockCount(prog)>s.max;
+      if(result==="win"&&!tooMany){won=true;award(15,3);$("#mface").innerHTML=monkey("cheer");$("#fb").innerHTML=`<div class="feedback good">🍌 Banana reached! ${esc(s.win||pick(WINS))}</div>`;
+        $("#bud").innerHTML=buddy("YES! Your program worked!","cheer");["run","undo","clr","hint"].forEach(i=>$("#"+i).hidden=true);$("#go").hidden=false;return}
+      fails++;$("#mface").innerHTML=monkey("oops");setTimeout(()=>{const f=$("#mface");if(f)f.innerHTML=monkey("happy")},900);
+      const msg=result==="win"?`You got there, but used ${blockCount(prog)} blocks. Can you do it with ${s.max} or fewer? Try a Repeat block!`:result==="wall"?"Bonk! TypeMonkey bumped into a tree. Find the step that went wrong and fix it.":"So close! TypeMonkey stopped before reaching the banana. Add more steps.";
+      $("#fb").innerHTML=`<div class="feedback bad">${msg}</div>`;
+      $("#bud").innerHTML=buddy(fails>=3?"Want a peek? Tap “Show me”.":"Bugs are normal! Every coder fixes their programs.","oops");
+      if(fails>=2&&s.solution)$("#hint").hidden=false;
+    };
+    setTimeout(tick,200);
+  };
+  draw();reset();$("#go").onclick=next;
+}
+
 /* ---------- Mini-game: Output Rush ---------- */
 function gameIntro(){
   if(!cur.l.pool||!cur.l.pool.length)return next();
   shell(`<div class="card"><div class="label">Mini-game</div><h2>Output Rush</h2><p>45 seconds on the clock. Read each snippet and tap what it prints. Every right answer earns 2 bananas.</p></div>
     ${buddy("Speed round! Don't overthink it.","cheer")}<div class="row"><button class="btn banana" id="go">Start the clock</button><button class="btn ghost" id="skip">Skip</button></div>`);
-  $("#go").onclick=()=>rush(cur.l.pool,45,(score)=>{award(score*3,score*2);next()},()=>coursePage(cur.c.id),cur.c.lang);
+  $("#go").onclick=()=>rush(cur.l.pool.map(p=>[p[0],p[1],cur.c.lang,cur.c.rushHint]),45,(score)=>{award(score*3,score*2);next()},()=>coursePage(cur.c.id));
   $("#skip").onclick=next;
 }
-function rush(poolIn,secs,onEnd,onQuit,file){
+function rush(poolIn,secs,onEnd,onQuit){
   const pool=shuffle(poolIn);let i=0,score=0,left=secs,ended=false;
   const timer=setInterval(()=>{left--;const t=$("#tleft");if(t){t.textContent=left;$("#tbar").style.width=(left/secs*100)+"%"}if(left<=0)end()},1000);
   function end(){if(ended)return;ended=true;clearInterval(timer);
@@ -555,10 +698,10 @@ function rush(poolIn,secs,onEnd,onQuit,file){
     $("#fin").onclick=()=>onEnd(score);}
   function round(){
     if(i>=pool.length)return end();
-    const [code,opts]=pool[i];const ord=shuffle(opts.map((o,k)=>k));
+    const [code,opts,file="script.js",hint]=pool[i];const ord=shuffle(opts.map((o,k)=>k));
     $("#screen").innerHTML=`<div class="stack"><div class="game-hud"><button class="x" id="quitg" aria-label="Quit game">×</button><span>⏱ <span id="tleft">${left}</span>s</span><div class="timer"><span id="tbar" style="width:${left/secs*100}%"></span></div><span>🍌 ${score*2}</span></div>
       <div class="card"><div class="label">What prints? · ${i+1} of ${pool.length}</div><div class="editor"><div class="head"><span>${file}</span></div><pre>${esc(code)}</pre></div>
-      <p style="color:var(--muted);font-size:.85rem">Several lines of output are shown with spaces between them.</p>
+      <p style="color:var(--muted);font-size:.85rem">${hint||"Several lines of output are shown with spaces between them."}</p>
       <div class="opts">${ord.map(k=>`<button class="opt mono" data-k="${k}">${esc(opts[k])}</button>`).join("")}</div></div></div>`;
     $("#quitg").onclick=()=>{clearInterval(timer);ended=true;onQuit()};
     $$(".opt").forEach(b=>b.onclick=()=>{
@@ -571,12 +714,13 @@ function rush(poolIn,secs,onEnd,onQuit,file){
 }
 function practice(){
   rerender=home;
-  let pool=[];let file="script.js";
-  for(const c of COURSES)for(const x of flat(c))if(S.done.includes(x.l.id)&&x.l.pool)pool.push(...x.l.pool);
-  if(!pool.length){pool=[...COURSES[0].units[0].lessons[0].pool]}
+  let pool=[];
+  const add=(c,l)=>pool.push(...l.pool.map(p=>[p[0],p[1],c.lang,c.rushHint]));
+  for(const c of COURSES)for(const x of flat(c))if(S.done.includes(x.l.id)&&x.l.pool)add(c,x.l);
+  if(!pool.length)add(COURSES[0],COURSES[0].units[0].lessons[0]);
   pool=shuffle(pool).slice(0,12);
   $("#foot").innerHTML="";
-  rush(pool,60,(score)=>{S.xp+=score*3;S.bananas+=score*2;if(score)bumpStreak();save();home()},home,file);
+  rush(pool,60,(score)=>{S.xp+=score*3;S.bananas+=score*2;if(score)bumpStreak();save();home()},home);
 }
 
 /* ---------- Finish ---------- */
@@ -599,6 +743,7 @@ function finish(){
 /* ---------- Playground ---------- */
 const PLAY={
   js:{name:"JavaScript",file:"script.js",run:true,start:`// Try anything! Press ▶ Run.\nconst name = "TypeMonkey";\nfor (let i = 1; i <= 3; i++) {\n  console.log(\`\${name} says ook #\${i}\`);\n}\n`},
+  web:{name:"HTML & CSS",file:"index.html",web:true,start:`<style>\n  h1 { color: #FF7A1A; }\n  .card { background: #FFF4E5; padding: 12px; border-radius: 12px; }\n</style>\n\n<h1>TypeMonkey's page</h1>\n<div class="card">\n  <p>Change anything, then tap <b>Show page</b>!</p>\n</div>\n`},
   py:{name:"Python",file:"main.py",start:`name = "TypeMonkey"\nfor i in range(1, 4):\n    print(f"{name} says ook #{i}")\n`},
   cs:{name:"C#",file:"Program.cs",start:`using System;\n\nclass Program {\n  static void Main() {\n    for (int i = 1; i <= 3; i++) {\n      Console.WriteLine($"TypeMonkey says ook #{i}");\n    }\n  }\n}\n`},
   cpp:{name:"C++",file:"main.cpp",start:`#include <iostream>\n\nint main() {\n  for (int i = 1; i <= 3; i++) {\n    std::cout << "TypeMonkey says ook #" << i << "\\n";\n  }\n  return 0;\n}\n`}
@@ -611,11 +756,11 @@ function playground(lang="js"){
     <div class="row"><button class="btn ghost sm" id="back">← Home</button></div>
     <section class="hero"><div class="label">Playground</div><h1>Code anything.</h1><p>No lesson, no rules. Write code, run it, break it, fix it. Your code is saved as you type.</p></section>
     <div class="langs">${Object.entries(PLAY).map(([k,v])=>`<button class="lang" data-k="${k}" aria-pressed="${k===lang}">${v.name}</button>`).join("")}</div>
-    ${P.run?"":`<div class="note">${P.name} needs its compiler, which ships inside the full TypeMonkey app. In this preview only JavaScript runs, so you can write ${P.name} here but not run it yet.</div>`}
-    <div class="editor"><div class="head"><span>${P.file}</span><button class="linkbtn" id="clear" style="color:var(--code-dim)">Reset</button><button class="run" id="run-p" ${P.run?"":"disabled"}>▶ Run</button></div>
+    ${P.run||P.web?"":`<div class="note">${P.name} needs its compiler, which ships inside the full TypeMonkey app. In this preview only JavaScript runs, so you can write ${P.name} here but not run it yet.</div>`}
+    <div class="editor"><div class="head"><span>${P.file}</span><button class="linkbtn" id="clear" style="color:var(--code-dim)">Reset</button><button class="run" id="run-p" ${P.run||P.web?"":"disabled"}>${P.web?"▶ Show page":"▶ Run"}</button></div>
       <textarea id="code-p" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="Playground editor" rows="14">${esc(saved||P.start)}</textarea>
-      <div class="console" id="out-p"><span class="dim">${P.run?"Output appears here":"Running "+P.name+" is coming in the full app"}</span></div></div>
-    ${buddy(P.run?"Tip: console.log anything you're curious about. That's how pros explore code too.":"You can still practice typing "+P.name+" syntax here. Your code is saved.","happy")}
+      ${P.web?`<div class="webview" id="out-p"></div>`:`<div class="console" id="out-p"><span class="dim">${P.run?"Output appears here":"Running "+P.name+" is coming in the full app"}</span></div>`}</div>
+    ${buddy(P.web?"Build any web page you like. The preview updates every time you tap Show page.":P.run?"Tip: console.log anything you're curious about. That's how pros explore code too.":"You can still practice typing "+P.name+" syntax here. Your code is saved.","happy")}
   </div>`;
   $("#back").onclick=home;
   $$(".lang").forEach(b=>b.onclick=()=>playground(b.dataset.k));
@@ -624,6 +769,7 @@ function playground(lang="js"){
   ta.addEventListener("keydown",e=>{if(e.key==="Tab"){e.preventDefault();const s=ta.selectionStart;ta.value=ta.value.slice(0,s)+"  "+ta.value.slice(ta.selectionEnd);ta.selectionStart=ta.selectionEnd=s+2}});
   $("#clear").onclick=()=>{ta.value=P.start;S.play=S.play||{};delete S.play[lang];save()};
   if(P.run)$("#run-p").onclick=async()=>paintConsole($("#out-p"),await runCode(ta.value));
+  if(P.web){renderWeb($("#out-p"),ta.value);$("#run-p").onclick=()=>renderWeb($("#out-p"),ta.value)}
   foot();window.scrollTo(0,0);
 }
 

@@ -1,0 +1,94 @@
+/* TypeMonkey Jr. · ages 7–12 · no typing. Maze steps: grid rows use # tree, . path, S start, B banana.
+   dir is the starting direction (N/E/S/W). blocks are the buttons offered. start pre-fills a (buggy) program.
+   solution must reach the banana within max blocks (checked by tests/verify_course.py). */
+const JF="fwd",JL="left",JRT="right",jrep=(n,...body)=>({rep:n,body});
+
+const JR_UNIT1={name:"Monkey moves",free:true,lessons:[
+{id:"jr1",title:"First steps",sub:"a program is a list of steps",steps:[
+ {type:"talk",title:"Hi, junior coder!",mood:"cheer",
+  body:`<p>I'm TypeMonkey, and I'm SO hungry. Can you help me get to my bananas? 🍌</p><p>You'll give me <b>instructions</b>, one block at a time. A list of instructions is called a <b>program</b>. I follow your program exactly, step by step!</p>`,
+  say:"Let's start easy. Tap Continue!"},
+ {type:"maze",title:"Walk to the banana",body:`<p>Tap <b>Forward</b> to add steps, then press <b>Go!</b></p>`,grid:["S..B"],dir:"E",blocks:[JF],solution:[JF,JF,JF],say:"Count the squares between me and the banana!"},
+ {type:"maze",title:"A longer walk",grid:["S....B"],dir:"E",blocks:[JF],solution:[JF,JF,JF,JF,JF],say:"How many steps this time?"},
+ {type:"quiz",q:"What is a program?",opts:["A list of steps for a computer to follow","A kind of banana","A TV show"],a:0,why:"Programs are instructions. Computers follow them exactly, in order."},
+ {type:"maze",title:"Going down",body:`<p>The little arrow shows which way I'm facing. Right now I'm facing down!</p>`,grid:["S","." ,".","B"],dir:"S",blocks:[JF],solution:[JF,JF,JF],say:"Forward always means the way my arrow points."},
+ {type:"done"}]},
+{id:"jr2",title:"Turning corners",sub:"turn left, turn right",steps:[
+ {type:"talk",title:"Turning",mood:"think",
+  body:`<p><b>Turn left</b> and <b>Turn right</b> spin me around without moving. Then <b>Forward</b> goes the new way.</p><p>Tip: turn the way <b>I</b> would turn, like you're walking in my shoes!</p>`,
+  say:"Watch my arrow change when I turn."},
+ {type:"maze",title:"Around the corner",grid:["S..#","##.#","##.B"],dir:"E",blocks:[JF,JL,JRT],solution:[JF,JF,JRT,JF,JF,JL,JF],say:"Walk, turn, walk, turn, walk!"},
+ {type:"quiz",q:"TypeMonkey faces right ➜ and turns LEFT. Which way is he facing now?",opts:["Up ⬆","Down ⬇","Left ⬅"],a:0,why:"If you face right and turn left, you end up facing up."},
+ {type:"maze",title:"Up the hill",grid:["##.B","##.#","S..#"],dir:"E",blocks:[JF,JL,JRT],solution:[JF,JF,JL,JF,JF,JRT,JF]},
+ {type:"maze",title:"Zig and zag",grid:["S.##","#..#","##.B"],dir:"E",blocks:[JF,JL,JRT],solution:[JF,JRT,JF,JL,JF,JRT,JF,JL,JF],say:"Lots of turns! Take it one step at a time."},
+ {type:"done"}]},
+{id:"jr3",title:"Bug hunt",sub:"finding and fixing mistakes",steps:[
+ {type:"talk",title:"What's a bug?",mood:"oops",
+  body:`<p>A <b>bug</b> is a mistake in a program. Even expert coders make them every day! Finding and fixing bugs is called <b>debugging</b>.</p><p>In these puzzles, someone already wrote a program, but it has a bug. Press Go to see what goes wrong, then fix it. Tap a block to remove it.</p>`,
+  say:"Let's squash some bugs! 🐛"},
+ {type:"maze",title:"Not far enough",grid:["S...B"],dir:"E",blocks:[JF],start:[JF,JF,JF],solution:[JF,JF,JF,JF],say:"This program has a bug. Press Go and watch what happens."},
+ {type:"maze",title:"Wrong turn",grid:["S..#","##.#","##.B"],dir:"E",blocks:[JF,JL,JRT],start:[JF,JF,JL,JF,JF,JL,JF],solution:[JF,JF,JRT,JF,JF,JL,JF],say:"Something turns the wrong way. Can you spot it?"},
+ {type:"quiz",q:"What's it called when you find and fix mistakes in a program?",opts:["Debugging","Bananaing","Restarting"],a:0,why:"Coders debug all the time. It's a superpower!"},
+ {type:"maze",title:"Bonk!",grid:["S.#","#.#","#.B"],dir:"E",blocks:[JF,JL,JRT],start:[JF,JF,JRT,JF,JF,JL,JF],solution:[JF,JRT,JF,JF,JL,JF],say:"Ouch, I keep hitting a tree! Fix the program."},
+ {type:"done"}]}
+]};
+
+const JR_UNIT2={name:"Loops",lessons:[
+{id:"jr4",title:"Repeat!",sub:"loops do things again and again",steps:[
+ {type:"talk",title:"The Repeat block",mood:"cheer",
+  body:`<p>Instead of Forward, Forward, Forward, Forward, Forward, you can say <b>Repeat 5 times: Forward</b>. That's called a <b>loop</b>!</p><p>Tap <b>Repeat</b>, add blocks inside it, then tap <b>done</b>. Tap the 🔁 number to change how many times it repeats.</p>`,
+  say:"Loops make programs shorter. Coders LOVE short programs."},
+ {type:"maze",title:"Use a loop",grid:["S....B"],dir:"E",blocks:[JF,"rep"],max:2,solution:[jrep(5,JF)],say:"Only 2 blocks allowed! Use Repeat."},
+ {type:"quiz",q:"Repeat 3 times: Forward. How many steps forward is that?",opts:["3","1","4"],a:0,why:"The block inside runs 3 times."},
+ {type:"maze",title:"The long way round",grid:["S....","####.","B...."],dir:"E",blocks:[JF,JL,JRT,"rep"],max:8,solution:[jrep(4,JF),JRT,jrep(2,JF),JRT,jrep(4,JF)],say:"You can use more than one Repeat!"},
+ {type:"maze",title:"Staircase",grid:["S.###","#..##","##..#","###.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(4,JF,JRT,JF,JL)],say:"Each stair is the same: forward, turn, forward, turn. Loop it!"},
+ {type:"done"}]},
+{id:"jr5",title:"Loop patterns",sub:"spot the part that repeats",steps:[
+ {type:"talk",title:"Find the pattern",mood:"think",
+  body:`<p>Before you build, look at the path. Do you see a shape that happens again and again? That's the part to put inside your Repeat.</p>`,
+  say:"Coders call this pattern-spotting. It's a big part of thinking like a programmer."},
+ {type:"quiz",q:"Which part repeats in: Forward, Turn, Forward, Turn, Forward, Turn?",opts:["Forward, Turn","Forward","Turn, Turn"],a:0,why:"Forward, Turn happens 3 times. So: Repeat 3 times: Forward, Turn."},
+ {type:"maze",title:"Climb up",grid:["###.B","##..#","#..##","S.###"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(4,JF,JL,JF,JRT)]},
+ {type:"maze",title:"Around the pond",grid:["S..","##.","B.."],dir:"E",blocks:[JF,JL,JRT,"rep"],max:4,solution:[jrep(3,JF,JF,JRT)],say:"Walk two, turn. Walk two, turn. See it?"},
+ {type:"maze",title:"Broken loop",grid:["S.####","#..###","##..##","###..#","####.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,start:[jrep(4,JF,JRT,JF,JL)],solution:[jrep(5,JF,JRT,JF,JL)],say:"This loop has a bug! It doesn't repeat enough times."},
+ {type:"done"}]},
+{id:"jr6",title:"Jungle adventure",sub:"bigger mazes, all your skills",project:true,steps:[
+ {type:"talk",title:"Into the jungle!",mood:"cheer",
+  body:`<p>These mazes are bigger. Use everything you know: Forward, turns, and Repeat. Plan first, then build!</p>`,
+  say:"I believe in you!"},
+ {type:"maze",title:"River bend",grid:["S...#","###.#","#B..#"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:8,solution:[jrep(3,JF),JRT,jrep(2,JF),JRT,jrep(2,JF)]},
+ {type:"maze",title:"Monkey bridge",grid:["S..#..","#.##.#","#....B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:7,solution:[JF,JRT,jrep(2,JF),JL,jrep(4,JF)]},
+ {type:"maze",title:"Giant stairs",grid:["S.####","#..###","##..##","###..#","####.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(5,JF,JRT,JF,JL)]},
+ {type:"done"}]}
+]};
+
+const JR_UNIT3={name:"Think like a coder",lessons:[
+{id:"jr7",title:"Step by step",sub:"why order matters",steps:[
+ {type:"talk",title:"Order matters",mood:"think",
+  body:`<p>Computers do things in the exact order you say. If you put on your shoes before your socks... uh oh! 🧦👟</p>`,
+  say:"Let's practice putting steps in order."},
+ {type:"order",title:"Banana sandwich",body:`<p>Put the steps in order.</p>`,lines:["Get two slices of bread","Spread peanut butter","Add banana slices","Put the slices together"],why:"First the bread, then the toppings, then close it up!"},
+ {type:"order",title:"Plant a seed",body:`<p>Put the steps in order.</p>`,lines:["Dig a hole","Drop in the seed","Cover it with soil","Water it"],why:"You can't cover the seed before it's in the hole!"},
+ {type:"quiz",q:"Why does order matter in a program?",opts:["The computer does steps exactly in the order you give","It doesn't matter at all","Computers like alphabetical order"],a:0,why:"Change the order and you change what happens."},
+ {type:"order",title:"Brush your teeth",body:`<p>One more!</p>`,lines:["Put toothpaste on the brush","Brush for two minutes","Spit","Rinse the brush"],why:"Nice sequencing! That's what coders call it."},
+ {type:"done"}]},
+{id:"jr8",title:"If this, then that",sub:"computers make choices",steps:[
+ {type:"talk",title:"Making choices",mood:"cheer",
+  body:`<p>Programs can make choices with <b>IF</b> and <b>THEN</b>. <b>IF</b> it's raining, <b>THEN</b> take an umbrella. <b>ELSE</b> (otherwise), wear sunglasses! 😎</p>`,
+  say:"Games use IF all the time: IF you touch a coin, THEN add a point."},
+ {type:"quiz",q:"IF the light is red, THEN…",opts:["Stop","Go","Dance"],a:0,why:"That's a rule drivers follow every day."},
+ {type:"quiz",q:"TypeMonkey's rule: IF hungry THEN eat a banana, ELSE play. He is NOT hungry. What does he do?",opts:["Play","Eat a banana","Sleep"],a:0,why:"The IF part is false, so the ELSE part happens."},
+ {type:"quiz",q:"In a game: IF you touch a star THEN you get a point. You touch 3 stars. How many points?",opts:["3","1","0"],a:0,why:"The rule happens every time you touch one."},
+ {type:"quiz",q:"Which one is an IF-THEN rule?",opts:["IF it's cold THEN wear a coat","Jump three times","Bananas are yellow"],a:0,why:"It has a condition (cold) and an action (coat)."},
+ {type:"done"}]},
+{id:"jr9",title:"Banana Quest",sub:"the final challenge",project:true,steps:[
+ {type:"talk",title:"The final quest!",mood:"cheer",
+  body:`<p>This is it: the Banana Quest! Three tricky mazes stand between me and the Golden Banana. Use sequences, loops and debugging. You've got this!</p>`,
+  say:"Ready? Let's go!"},
+ {type:"maze",title:"The canyon",grid:["S.#B","#.#.","#..."],dir:"E",blocks:[JF,JL,JRT,"rep"],max:10,solution:[JF,JRT,jrep(2,JF),JL,jrep(2,JF),JL,jrep(2,JF)]},
+ {type:"maze",title:"Buggy temple",grid:["S...","###.","###.","B..."],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,start:[jrep(3,JF,JF,JF,JL)],solution:[jrep(3,JF,JF,JF,JRT)],say:"The temple's program has a bug. Find it!"},
+ {type:"maze",title:"The Golden Banana",grid:["S.####","#..###","##..##","###..#","####.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(5,JF,JRT,JF,JL)],win:"You found the Golden Banana! You're a real coder now!"},
+ {type:"done"}]}
+]};
+
+const COURSE_JR={id:"jr",name:"TypeMonkey Jr.",blurb:"Puzzle adventures for ages 7–12. Snap blocks together to guide TypeMonkey to his bananas. No typing needed! Unit 1 is free.",units:[JR_UNIT1,JR_UNIT2,JR_UNIT3]};

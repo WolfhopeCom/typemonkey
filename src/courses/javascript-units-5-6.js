@@ -253,3 +253,4 @@ const JS_UNIT6={name:"Objects",lessons:[
 ]};
 
 const COURSE_JS={id:"js",name:"JavaScript",units:[JS_UNIT1,JS_UNIT2,JS_UNIT3,JS_UNIT4,JS_UNIT5,JS_UNIT6]};
+COURSE_JS.blurb="From your first console.log to building a game leaderboard. 25 lessons with real code you run yourself. Unit 1 is free.";

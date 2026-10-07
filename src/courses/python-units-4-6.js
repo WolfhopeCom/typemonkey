@@ -1,0 +1,196 @@
+/* Python course, Units 4–6 and the course object. */
+const PY_UNIT4={name:"Functions",lessons:[
+{id:"py11",title:"def and return",sub:"your own reusable commands",steps:[
+ {type:"talk",title:"Defining functions",
+  body:`<p>${C("def")} makes a function. The indented block is its body. Call it with parentheses.</p>`,
+  demo:`def greet(name):\n    print(f"Hey {name}!")\n\ngreet("Ava")\ngreet("Leo")`,
+  say:"Output: Hey Ava!, Hey Leo!"},
+ {type:"talk",title:"Returning values",mood:"think",
+  body:`<p>${C("return")} hands a value back. A function with no return gives back ${C("None")}, Python's "nothing" value.</p>`,
+  demo:`def add(a, b):\n    return a + b\n\nresult = add(2, 3)\nprint(result)\nprint(add(10, 20))\n\ndef nothing():\n    pass\n\nprint(nothing())`,
+  say:"Output: 5, 30, None. pass means 'do nothing'."},
+ {type:"quiz",q:"Which keyword starts a function definition?",opts:["def","function","func"],a:0,mono:true,why:"Python uses def, short for define."},
+ {type:"fill",title:"Square it",body:`<p>Make square() hand back n times n.</p>`,code:`[0] square(n):\n    [1] n * n\n\nprint(square(4))`,blanks:["def","return"],tokens:["def","return","print","function"],why:"def defines it; return hands back the answer.",out:"16"},
+ {type:"quiz",q:"What does this print?",code:`def f(x):\n    if x > 0:\n        return "pos"\n    return "neg"\n\nprint(f(-2))`,opts:["neg","pos","None"],a:0,mono:true,why:"-2 > 0 is False, so it returns \"neg\"."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`def f(n):\n    return n * 3\n\nprint(f(2))`,["6","5","n * 3"]],
+  [`def f():\n    return 5\n\nprint(f() + f())`,["10","55","5"]],
+  [`def f(s):\n    return len(s)\n\nprint(f("monkey"))`,["6","monkey","5"]],
+  [`def f(x):\n    x = x + 1\n\nprint(f(3))`,["None","4","3"]],
+  [`def shout(w):\n    return w.upper() + "!"\n\nprint(shout("ook"))`,["OOK!","ook!","OOK"]]
+ ]},
+{id:"py12",title:"Defaults & scope",sub:"default values, keyword arguments, local variables",steps:[
+ {type:"talk",title:"Default values",
+  body:`<p>Give a parameter a default with ${C("=")}. If the caller skips it, the default is used. You can also name arguments when calling.</p>`,
+  demo:`def greet(name, greeting="Hey"):\n    print(f"{greeting}, {name}!")\n\ngreet("Ava")\ngreet("Leo", "Yo")\ngreet(greeting="Hi", name="Kai")`,
+  say:"Output: Hey, Ava! / Yo, Leo! / Hi, Kai!"},
+ {type:"talk",title:"Scope",mood:"think",
+  body:`<p>Variables created inside a function are <b>local</b>: they vanish when the function ends. Variables outside can be read from inside.</p>`,
+  demo:`planet = "Earth"\n\ndef visit():\n    moon = "Luna"\n    print(planet, moon)\n\nvisit()\nprint(planet)`,
+  say:"Output: Earth Luna, then Earth. Printing moon outside would be a NameError."},
+ {type:"quiz",q:"What does this print?",code:`def power(base, exp=2):\n    return base ** exp\n\nprint(power(3))`,opts:["9","3","27"],a:0,mono:true,why:"exp defaults to 2, so 3 ** 2 = 9."},
+ {type:"fill",title:"Add a default",body:`<p>Make times default to 1.</p>`,code:`def cheer(times[0]1):\n    print("Ook! " * times)\n\ncheer()`,blanks:["="],tokens:["=","==",":","->"],why:"times=1 sets the default value.",out:"Ook!"},
+ {type:"quiz",q:"What does this print?",code:`x = 1\n\ndef f():\n    x = 5\n\nf()\nprint(x)`,opts:["1","5","None"],a:0,mono:true,why:"The x inside f is a brand-new local variable. The outside x is untouched."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`def f(a, b=10):\n    return a + b\n\nprint(f(5))`,["15","5","510"]],
+  [`def f(a, b=10):\n    return a + b\n\nprint(f(5, 1))`,["6","15","51"]],
+  [`def f(a, b):\n    return a - b\n\nprint(f(b=1, a=9))`,["8","-8","Error"]],
+  [`x = 3\n\ndef f():\n    return x * 2\n\nprint(f())`,["6","3","Error"]],
+  [`def hi(n="you"):\n    return "hi " + n\n\nprint(hi())`,["hi you","hi n","hi"]]
+ ]},
+{id:"py13",title:"Project: Password Checker",sub:"functions that judge a password",project:true,steps:[
+ {type:"talk",title:"Is it strong?",mood:"cheer",
+  body:`<p>Build a function that rates a password. Rules: at least 8 characters, contains a number, and contains a capital letter.</p><p>New tools: ${C("ch.isdigit()")} and ${C("ch.isupper()")} check a single character, and ${C("any()")} is True if any item is True.</p>`,
+  say:"Real sign-up pages do exactly this."},
+ {type:"fill",title:"Step 1: long enough",body:`<p>Return True if the password has 8 or more characters.</p>`,code:`def long_enough(pw):\n    return [0](pw) >= 8\n\nprint(long_enough("banana12"))`,blanks:["len"],tokens:["len","size","count","str"],why:"len() counts the characters.",out:"True"},
+ {type:"order",title:"Step 2: has a number",body:`<p>Loop over each character and look for a digit.</p>`,lines:["def has_digit(pw):","    for ch in pw:","        if ch.isdigit():","            return True","    return False","print(has_digit(\"ook7\"))"],why:"Return True the moment you find one. Only return False after checking everything.",out:"True"},
+ {type:"quiz",q:"In has_digit, why is return False OUTSIDE the for loop?",opts:["So it only gives up after checking every character","Python requires it","It makes it faster"],a:0,why:"Inside the loop, it would give up after the very first character."},
+ {type:"talk",title:"The finished checker",mood:"cheer",
+  body:`<p>Combining everything, with ${C("any()")} as a shortcut.</p>`,
+  demo:`def rate(pw):\n    score = 0\n    if len(pw) >= 8:\n        score += 1\n    if any(ch.isdigit() for ch in pw):\n        score += 1\n    if any(ch.isupper() for ch in pw):\n        score += 1\n    return ["Weak", "Weak", "Okay", "Strong"][score]\n\nprint(rate("ook"))\nprint(rate("bananas1"))\nprint(rate("Bananas123"))`,
+  say:"Output: Weak, Okay, Strong. The list trick turns a score into a word."},
+ {type:"done"}]}
+]};
+
+const PY_UNIT5={name:"Lists & dictionaries",lessons:[
+{id:"py14",title:"Lists",sub:"append, remove, len, in",steps:[
+ {type:"talk",title:"Ordered collections",
+  body:`<p>A <b>list</b> holds items in order inside square brackets. Indexes start at 0, and ${C("-1")} is the last item.</p>`,
+  demo:`fruits = ["banana", "mango", "kiwi"]\nprint(fruits[0])\nprint(fruits[-1])\nprint(len(fruits))\nprint(fruits)`,
+  say:"Output: banana, kiwi, 3, ['banana', 'mango', 'kiwi']"},
+ {type:"talk",title:"Changing lists",mood:"think",
+  body:`<p>${C(".append()")} adds to the end, ${C(".remove()")} deletes a value, ${C(".pop()")} removes and returns the last item, and ${C("in")} checks membership.</p>`,
+  demo:`pets = ["cat", "dog"]\npets.append("owl")\npets.remove("cat")\nprint(pets)\nlast = pets.pop()\nprint(last, pets)\nprint("dog" in pets)`,
+  say:"Output: ['dog', 'owl'], then owl ['dog'], then True"},
+ {type:"talk",title:"Looping over lists",
+  body:`<p>${C("for item in my_list:")} visits each item. Need the position too? ${C("enumerate()")} gives you both.</p>`,
+  demo:`squad = ["Ava", "Leo", "Kai"]\nfor name in squad:\n    print(f"Hi, {name}!")\nfor i, name in enumerate(squad):\n    print(i, name)`,
+  say:"Output: three greetings, then 0 Ava, 1 Leo, 2 Kai"},
+ {type:"quiz",q:"Which adds an item to the end of a list?",opts:["append","push","add"],a:0,mono:true,why:"Python lists use .append(). JavaScript uses push."},
+ {type:"fill",title:"Grow the list",body:`<p>Add "eggs", then print how many items there are.</p>`,code:`groceries = ["milk"]\ngroceries.[0]("eggs")\nprint([1](groceries))`,blanks:["append","len"],tokens:["append","len","push","size"],why:"append adds, len counts.",out:"2"},
+ {type:"order",title:"Total the scores",body:`<p>Arrange the lines so it prints ${C("50")}.</p>`,lines:["scores = [12, 7, 30, 1]","total = 0","for s in scores:","    total += s","print(total)"],why:"Make the list, start the total, add each score, print.",out:"50"},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`a = ["x", "y", "z"]\nprint(a[1])`,["y","x","z"]],
+  [`a = [5, 6, 7, 8]\nprint(len(a))`,["4","3","8"]],
+  [`a = [1, 2, 3]\nprint(a[-1])`,["3","1","-1"]],
+  [`a = [1]\na.append(2)\nprint(a)`,["[1, 2]","[2, 1]","[1]"]],
+  [`a = [1, 2, 3]\nprint(a.pop())`,["3","1","[1, 2]"]],
+  [`a = ["x", "y"]\nprint("z" in a)`,["False","True","-1"]]
+ ]},
+{id:"py15",title:"Slicing & comprehensions",sub:"the Python superpowers",steps:[
+ {type:"talk",title:"Slicing lists",
+  body:`<p>Slices work on lists just like strings: ${C("nums[1:3]")}, ${C("nums[:2]")}, ${C("nums[::-1]")} (reversed).</p>`,
+  demo:`nums = [10, 20, 30, 40, 50]\nprint(nums[1:3])\nprint(nums[:2])\nprint(nums[-2:])\nprint(nums[::-1])`,
+  say:"Output: [20, 30], [10, 20], [40, 50], [50, 40, 30, 20, 10]"},
+ {type:"talk",title:"List comprehensions",mood:"cheer",
+  body:`<p>A <b>list comprehension</b> builds a new list in one line: ${C("[expression for item in list]")}. Add ${C("if")} at the end to filter.</p>`,
+  demo:`nums = [1, 2, 3, 4, 5, 6]\ndoubled = [n * 2 for n in nums]\nevens = [n for n in nums if n % 2 == 0]\nprint(doubled)\nprint(evens)`,
+  say:"Output: [2, 4, 6, 8, 10, 12], then [2, 4, 6]. This is very Pythonic."},
+ {type:"quiz",q:"What does this print?",code:`print([n * n for n in range(4)])`,opts:["[0, 1, 4, 9]","[1, 4, 9, 16]","[0, 1, 2, 3]"],a:0,mono:true,why:"range(4) is 0, 1, 2, 3, and each gets squared."},
+ {type:"fill",title:"Keep the big ones",body:`<p>Keep only prices over 5.</p>`,code:`prices = [2, 5, 8, 12]\nbig = [p for p in prices [0] p > 5]\nprint(big)`,blanks:["if"],tokens:["if","when","and","where"],why:"An if at the end of a comprehension filters items.",out:"[8, 12]"},
+ {type:"quiz",q:"What does this print?",code:`print("monkey"[::-1])`,opts:["yeknom","monkey","m"],a:0,mono:true,why:"A step of -1 walks backwards. It works on strings too!"},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`print([1, 2, 3, 4][1:3])`,["[2, 3]","[1, 2, 3]","[2, 3, 4]"]],
+  [`print([1, 2, 3][::-1])`,["[3, 2, 1]","[1, 2, 3]","[3]"]],
+  [`print([x + 1 for x in [1, 2]])`,["[2, 3]","[1, 2]","[3]"]],
+  [`print([x for x in range(6) if x > 3])`,["[4, 5]","[3, 4, 5]","[4, 5, 6]"]],
+  [`print(["a", "b"][-1:])`,["['b']","b","['a']"]],
+  [`print(len([c for c in "banana" if c == "a"]))`,["3","2","6"]]
+ ]},
+{id:"py16",title:"Dictionaries",sub:"look things up by key",steps:[
+ {type:"talk",title:"Key: value pairs",
+  body:`<p>A <b>dictionary</b> stores values under keys, inside curly braces. Read and write with square brackets.</p>`,
+  demo:`monkey = {"name": "Mo", "age": 4}\nprint(monkey["name"])\nmonkey["age"] = 5\nmonkey["likes"] = "bananas"\nprint(monkey)`,
+  say:"Output: Mo, then {'name': 'Mo', 'age': 5, 'likes': 'bananas'}"},
+ {type:"talk",title:"Safe lookups and loops",mood:"think",
+  body:`<p>A missing key raises a ${C("KeyError")}. ${C(".get(key, default)")} avoids that. ${C(".items()")} loops over keys and values together.</p>`,
+  demo:`stock = {"banana": 12, "mango": 3}\nprint(stock.get("kiwi", 0))\nprint("mango" in stock)\nfor fruit, qty in stock.items():\n    print(f"{fruit}: {qty}")`,
+  say:"Output: 0, True, banana: 12, mango: 3"},
+ {type:"quiz",q:"What does get() return here?",code:`d = {"a": 1}\nprint(d.get("z", "none"))`,opts:["none","Error","a"],a:0,mono:true,why:"The key is missing, so the default comes back. And yes, it prints."},
+ {type:"fill",title:"Count words",body:`<p>Add 1 to the count for each word.</p>`,code:`counts = {}\nfor w in ["ook", "eek", "ook"]:\n    counts[w] = counts.[0](w, 0) + 1\nprint(counts["ook"])`,blanks:["get"],tokens:["get","find","key","add"],why:"get(w, 0) starts unseen words at 0.",out:"2"},
+ {type:"quiz",q:"What does this print?",code:`d = {"x": 5}\nd["x"] = 9\nprint(len(d))`,opts:["1","2","9"],a:0,mono:true,why:"Same key, so it replaces the value. Still one entry."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`d = {"a": 1, "b": 2}\nprint(d["b"])`,["2","1","b"]],
+  [`d = {"a": 1}\nd["b"] = 2\nprint(len(d))`,["2","1","3"]],
+  [`d = {"a": 1}\nprint("b" in d)`,["False","True","None"]],
+  [`d = {"hp": 10}\nd["hp"] -= 3\nprint(d["hp"])`,["7","10","13"]],
+  [`d = {"a": 1, "b": 2}\nprint(list(d.keys()))`,["['a', 'b']","[1, 2]","a b"]],
+  [`d = {"x": 3}\nprint(d.get("y", 0) + d["x"])`,["3","0","Error"]]
+ ]},
+{id:"py17",title:"Project: Grade Book",sub:"lists + dicts + functions",project:true,steps:[
+ {type:"talk",title:"Teacher mode",mood:"cheer",
+  body:`<p>Build a grade book: store students' scores in a dictionary of lists, compute averages, and find the top student.</p>`,
+  demo:`grades = {\n    "Ava": [92, 88, 95],\n    "Leo": [74, 80, 69],\n    "Kai": [85, 91, 78],\n}\nprint(grades["Leo"])`,
+  say:"Each name maps to a list of scores. Output: [74, 80, 69]"},
+ {type:"fill",title:"Step 1: average",body:`<p>${C("sum()")} adds a list up.</p>`,code:`def average(scores):\n    return [0](scores) / [1](scores)\n\nprint(average([90, 80, 70]))`,blanks:["sum","len"],tokens:["sum","len","max","count"],why:"Total divided by how many.",out:"80.0"},
+ {type:"order",title:"Step 2: report card",body:`<p>Print each student's rounded average.</p>`,lines:["grades = {\"Ava\": [92, 88, 95], \"Leo\": [74, 80, 69]}","for name, scores in grades.items():","    avg = sum(scores) / len(scores)","    print(name, round(avg, 1))"],why:"Loop the pairs, compute, print.",out:"Ava 91.7 Leo 74.3"},
+ {type:"quiz",q:"How would you find the student with the highest average?",opts:["Track the best name and score while looping","Use grades.max()","Sort the dictionary keys alphabetically"],a:0,why:"Keep a 'best so far' and update it whenever you find a higher one. (max() with a key works too, as you'll see.)"},
+ {type:"talk",title:"The finished grade book",mood:"cheer",
+  body:`<p>All together. ${C("max(grades, key=...)")} picks the key with the biggest result.</p>`,
+  demo:`grades = {\n    "Ava": [92, 88, 95],\n    "Leo": [74, 80, 69],\n    "Kai": [85, 91, 78],\n}\n\ndef average(scores):\n    return sum(scores) / len(scores)\n\nfor name, scores in grades.items():\n    print(f"{name}: {average(scores):.1f}")\n\ntop = max(grades, key=lambda n: average(grades[n]))\nprint(f"Top student: {top}")`,
+  say:"Output:\nAva: 91.7\nLeo: 74.3\nKai: 84.7\nTop student: Ava\n\nlambda is a tiny one-line function."},
+ {type:"done"}]}
+]};
+
+const PY_UNIT6={name:"Real-world Python",lessons:[
+{id:"py18",title:"Classes",sub:"__init__, self, methods",steps:[
+ {type:"talk",title:"Make your own types",
+  body:`<p>A ${C("class")} is a blueprint. ${C("__init__")} runs when you create an object, and ${C("self")} means "this object".</p>`,
+  demo:`class Pet:\n    def __init__(self, name):\n        self.name = name\n        self.hunger = 5\n\n    def feed(self):\n        self.hunger -= 1\n\nrex = Pet("Rex")\nrex.feed()\nrex.feed()\nprint(rex.name, rex.hunger)`,
+  say:"Output: Rex 3"},
+ {type:"talk",title:"Each object is separate",mood:"think",
+  body:`<p>Every object gets its own copy of the attributes. Methods can also return values.</p>`,
+  demo:`class Counter:\n    def __init__(self):\n        self.count = 0\n\n    def add(self):\n        self.count += 1\n        return self.count\n\na = Counter()\nb = Counter()\na.add()\na.add()\nprint(a.count, b.count)\nprint(b.add())`,
+  say:"Output: 2 0, then 1"},
+ {type:"quiz",q:"What is self?",opts:["The object the method was called on","The class name","A reserved word you can't use"],a:0,why:"rex.feed() passes rex in as self."},
+ {type:"fill",title:"The constructor",body:`<p>Store the name on the object.</p>`,code:`class Hero:\n    def [0](self, name):\n        [1].name = name\n\nh = Hero("Kai")\nprint(h.name)`,blanks:["__init__","self"],tokens:["__init__","self","init","this"],why:"__init__ sets things up; self.name stores it on the object.",out:"Kai"},
+ {type:"quiz",q:"What does this print?",code:`class Box:\n    def __init__(self):\n        self.size = 3\n\na = Box()\nb = a\na.size = 9\nprint(b.size)`,opts:["9","3","Error"],a:0,mono:true,why:"b = a doesn't copy. Both names point to the same Box."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`class C:\n    def __init__(self):\n        self.n = 1\n\nc = C()\nc.n += 4\nprint(c.n)`,["5","1","4"]],
+  [`class P:\n    def __init__(self, x):\n        self.x = x\n\np = P(7)\nprint(p.x * 2)`,["14","7","x"]],
+  [`class D:\n    def speak(self):\n        return "ook"\n\nprint(D().speak())`,["ook","speak","None"]],
+  [`class B:\n    def __init__(self):\n        self.v = 0\n\na = B()\nb = B()\na.v = 5\nprint(b.v)`,["0","5","None"]],
+  [`class L:\n    def __init__(self):\n        self.on = False\n\n    def flip(self):\n        self.on = not self.on\n\nl = L()\nl.flip()\nprint(l.on)`,["True","False","None"]]
+ ]},
+{id:"py19",title:"Handling errors",sub:"try, except, finally",steps:[
+ {type:"talk",title:"Errors stop programs",mood:"oops",
+  body:`<p>When something goes wrong, Python raises an <b>exception</b>, like ${C("ValueError")} or ${C("ZeroDivisionError")}. Unhandled, it crashes your program.</p>`,
+  demo:`print(int("12"))\nprint(10 / 2)`,
+  say:"These work. But int(\"twelve\") or 10 / 0 would crash."},
+ {type:"talk",title:"try and except",
+  body:`<p>Wrap risky code in ${C("try")}. If it fails, the matching ${C("except")} block runs instead of crashing. ${C("finally")} always runs.</p>`,
+  demo:`def safe_divide(a, b):\n    try:\n        return a / b\n    except ZeroDivisionError:\n        return "Can't divide by zero!"\n\nprint(safe_divide(10, 2))\nprint(safe_divide(1, 0))\n\ntry:\n    n = int("twelve")\nexcept ValueError:\n    print("That's not a number")\nfinally:\n    print("Done")`,
+  say:"Output: 5.0, Can't divide by zero!, That's not a number, Done"},
+ {type:"quiz",q:"What error does int(\"hi\") raise?",opts:["ValueError","TypeError","ZeroDivisionError"],a:0,mono:true,why:"The type (str) is fine, but the value can't become a number."},
+ {type:"fill",title:"Catch it",body:`<p>Handle the bad input.</p>`,code:`[0]:\n    age = int("abc")\n[1] ValueError:\n    print("Please type a number")`,blanks:["try","except"],tokens:["try","except","catch","error"],why:"Python uses try / except (not try / catch).",out:"Please type a number"},
+ {type:"quiz",q:"What does this print?",code:`try:\n    print("A")\n    x = 1 / 0\n    print("B")\nexcept ZeroDivisionError:\n    print("C")`,opts:["A C","A B C","C"],a:0,mono:true,why:"A prints, then the error jumps straight to except. B never runs."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`try:\n    print(1 / 0)\nexcept ZeroDivisionError:\n    print("oops")`,["oops","0","inf"]],
+  [`try:\n    print(int("5") + 1)\nexcept ValueError:\n    print("bad")`,["6","bad","51"]],
+  [`try:\n    x = int("x")\nexcept ValueError:\n    x = 0\nprint(x)`,["0","x","None"]],
+  [`try:\n    pass\nfinally:\n    print("always")`,["always","nothing","pass always"]],
+  [`d = {}\ntry:\n    print(d["k"])\nexcept KeyError:\n    print("missing")`,["missing","None","k"]]
+ ]},
+{id:"py20",title:"Final Project: Word Counter",sub:"everything you've learned, in one tool",project:true,steps:[
+ {type:"talk",title:"Build a text analyzer",mood:"cheer",
+  body:`<p>Writers, students and search engines all count words. You'll build a tool that cleans up text, counts every word, and reports the most common ones.</p><p>New tools: ${C(".split()")} breaks text into a list of words, and ${C(".strip()")} removes characters from the ends.</p>`,
+  demo:`text = "Ook ook, eek!"\nprint(text.lower().split())`,
+  say:"Output: ['ook', 'ook,', 'eek!']. We need to clean off that punctuation."},
+ {type:"fill",title:"Step 1: clean each word",body:`<p>Strip punctuation off the ends and lowercase it.</p>`,code:`def clean(word):\n    return word.[0](".,!?").[1]()\n\nprint(clean("Ook,"))`,blanks:["strip","lower"],tokens:["strip","lower","split","upper"],why:"strip removes the comma, lower makes it lowercase.",out:"ook"},
+ {type:"order",title:"Step 2: count the words",body:`<p>Build the counting function.</p>`,lines:["def count_words(text):","    counts = {}","    for w in text.split():","        w = w.strip(\".,!?\").lower()","        counts[w] = counts.get(w, 0) + 1","    return counts","print(count_words(\"Ook ook, eek!\"))"],why:"Start empty, clean each word, add one to its count, return it.",out:"{'ook': 2, 'eek': 1}"},
+ {type:"quiz",q:"How do you sort words from most to least common?",opts:["sorted(counts.items(), key=lambda p: p[1], reverse=True)","counts.sort()","sorted(counts)"],a:0,why:"Sort the (word, count) pairs by the count, biggest first."},
+ {type:"talk",title:"The finished analyzer",mood:"cheer",
+  body:`<p>The complete tool, with error handling for empty text.</p>`,
+  demo:`def count_words(text):\n    counts = {}\n    for w in text.split():\n        w = w.strip(".,!?").lower()\n        if w:\n            counts[w] = counts.get(w, 0) + 1\n    return counts\n\ndef report(text, top=3):\n    counts = count_words(text)\n    if not counts:\n        print("No words found!")\n        return\n    ranked = sorted(counts.items(), key=lambda p: p[1], reverse=True)\n    print(f"{sum(counts.values())} words, {len(counts)} unique")\n    for word, n in ranked[:top]:\n        print(f"  {word}: {n}")\n\nreport("The monkey saw the banana. The banana saw the monkey!")\nreport("")`,
+  say:"Output:\n10 words, 4 unique\n  the: 4\n  monkey: 2\n  saw: 2\nNo words found!\n\nYou finished Python! 🐍"},
+ {type:"done"}]}
+]};
+
+const COURSE_PY={id:"py",name:"Python",blurb:"The friendliest language around, used for AI, data, automation and more. Unit 1 is free.",units:[PY_UNIT1,PY_UNIT2,PY_UNIT3,PY_UNIT4,PY_UNIT5,PY_UNIT6]};

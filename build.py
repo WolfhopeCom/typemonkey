@@ -13,7 +13,15 @@ COURSE_FILES = [  # order matters: later files can reference earlier ones
     "javascript-units-1-2.js",
     "javascript-units-3-4.js",
     "javascript-units-5-6.js",
-    "csharp-cpp.js",
+    "csharp-units-2-4.js",
+    "csharp.js",
+    "cpp-units-2-4.js",
+    "cpp.js",
+    "python-units-1-3.js",
+    "python-units-4-6.js",
+    "sql.js",
+    "web.js",
+    "jr.js",
 ]
 
 HEAD = """<!doctype html>

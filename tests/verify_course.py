@@ -54,6 +54,36 @@ CHECK = r"""async () => {
       }
     }
   }
+  // HTML & CSS: every challenge's hint must pass, and the starter must not
+  const web = COURSES.find(c => c.id === "web");
+  for (const x of flat(web)) for (const [i, s] of (x.l.steps || []).entries()) if (s.type === "code") {
+    const g = gradeWebNow(s, s.hint); if (!g[0]) R.push(`${x.l.id} step ${i}: hint fails: ${g[1]}`);
+    const g2 = gradeWebNow(s, s.start); if (g2[0]) R.push(`${x.l.id} step ${i}: starter already passes`);
+  }
+  // TypeMonkey Jr.: every maze is well-formed, the solution wins within max, buggy starters fail
+  const jr = COURSES.find(c => c.id === "jr");
+  for (const x of flat(jr)) for (const [i, s] of (x.l.steps || []).entries()) if (s.type === "maze") {
+    const w = s.grid[0].length;
+    if (!s.grid.every(r => r.length === w)) R.push(`${x.l.id} step ${i}: grid rows differ in length`);
+    const m = mazeInfo(s.grid); if (!m.start || !m.goal) { R.push(`${x.l.id} step ${i}: missing S or B`); continue; }
+    const sol = simulate(s.grid, s.dir, s.solution);
+    if (sol.result !== "win") R.push(`${x.l.id} step ${i}: solution doesn't reach the banana (${sol.result})`);
+    if (s.max && blockCount(s.solution) > s.max) R.push(`${x.l.id} step ${i}: solution uses ${blockCount(s.solution)} blocks, max ${s.max}`);
+    const used = new Set(JSON.stringify(s.solution).match(/fwd|left|right/g)); if (JSON.stringify(s.solution).includes("rep")) used.add("rep");
+    for (const b of used) if (!s.blocks.includes(b)) R.push(`${x.l.id} step ${i}: solution needs block ${b} that isn't offered`);
+    for (const p of JSON.stringify(s.solution).match(/"rep":(\d+)/g) || []) { const n = +p.split(":")[1]; if (n < 2 || n > 5) R.push(`${x.l.id} step ${i}: repeat ${n} is outside 2–5`); }
+    if (s.start && simulate(s.grid, s.dir, s.start).result === "win") R.push(`${x.l.id} step ${i}: buggy starter already wins`);
+  }
+  // Every course: structure sanity
+  for (const c of COURSES) for (const x of flat(c)) {
+    if (!x.l.steps) { R.push(`${c.id}/${x.l.id}: no steps`); continue; }
+    if (x.l.steps[x.l.steps.length - 1].type !== "done") R.push(`${x.l.id}: last step isn't done`);
+    for (const [i, s] of x.l.steps.entries()) {
+      if (s.type === "quiz" && !(s.a >= 0 && s.a < s.opts.length)) R.push(`${x.l.id} step ${i}: quiz answer index out of range`);
+      if (s.type === "fill") { const n = (s.code.match(/\[(\d)\]/g) || []).length; if (n !== s.blanks.length) R.push(`${x.l.id} step ${i}: ${n} blanks in code but ${s.blanks.length} answers`); }
+    }
+    if (x.l.steps.some(s => s.type === "game") && !(x.l.pool || []).length) R.push(`${x.l.id}: has a game step but no pool`);
+  }
   return R;
 }"""
 
