@@ -38,7 +38,7 @@ def find_swiftc():
 
 def real_run(swiftc, code):
     """-> {"kind": "ok"|"error"|"crash", "out": stdout, "msg": compiler/runtime message}"""
-    key = hashlib.sha256(("v3\n" + code).encode()).hexdigest()
+    key = hashlib.sha256(("v4\n" + code).encode()).hexdigest()
     hit = CACHE / (key + ".json")
     if hit.exists():
         return json.loads(hit.read_text())
@@ -52,7 +52,9 @@ def real_run(swiftc, code):
         else:
             try:
                 p = subprocess.run(STDBUF + [str(pathlib.Path(d) / "prog")], capture_output=True, text=True, timeout=10, stdin=subprocess.DEVNULL)
-                r = {"kind": "crash" if p.returncode else "ok", "out": p.stdout, "msg": p.stderr.strip().splitlines()[0][:300] if p.returncode and p.stderr.strip() else ""}
+                lines = p.stderr.strip().splitlines() if p.returncode else []
+                fatal = [l for l in lines if re.search(r"Fatal error|failed|runtime failure|Error raised", l)]
+                r = {"kind": "crash" if p.returncode else "ok", "out": p.stdout, "msg": (fatal or lines or [""])[0][:300]}
             except subprocess.TimeoutExpired as t:
                 r = {"kind": "crash", "out": (t.stdout or b"").decode(errors="replace"), "msg": "timeout"}
     CACHE.mkdir(parents=True, exist_ok=True)
@@ -93,6 +95,10 @@ def compare(swiftc, programs):
             bad = f"real Swift: {rk} {r['msg']!r} {r['out'][-200:]!r}\n    TypeMonkey: {tk} {t['error']!r} {t['out'][-200:]!r}"
         elif tk != "error" and t["out"] != r["out"] and not unordered_equal(t["out"], r["out"]):
             bad = f"output differs\n    real Swift: {r['out'][-400:]!r}\n    TypeMonkey: {t['out'][-400:]!r}"
+        if not bad and tk == "crash" and VERBOSE:
+            real_msg = re.sub(r"^.*?(Fatal error|Precondition failed|Assertion failed)", r"\1", r["msg"])
+            if real_msg.strip() != t["error"].strip():
+                print(f"  note {w}: crash message differs. real: {real_msg!r}  TypeMonkey: {t['error']!r}")
         if bad:
             problems.append(f"{w}: {bad}\n    code: {code[:300]!r}")
         elif VERBOSE:

@@ -125,8 +125,8 @@ const TMSwift=(()=>{
         case "guard":{p++;const conds=condList();expect("else");const body=block();return {k:"guard",conds,body,line}}
         case "switch":return switchStmt();
         case "for":{p++;
-          if(accept("case"))fail(`line ${line}: for case patterns aren't supported in TypeMonkey's runner yet`,"NotSupported");
-          const pat=pattern();expect("in");noTrailing++;const seq=expr();noTrailing--;let where=null;if(accept("where")){noTrailing++;where=expr();noTrailing--}const body=block();return {k:"for",pat,seq,where,body,line}}
+          let casePat=null;if(accept("case")){noTrailing++;casePat=casePattern();noTrailing--}
+          const pat=casePat?{k:"wild"}:pattern();expect("in");noTrailing++;const seq=expr();noTrailing--;let where=null;if(accept("where")){noTrailing++;where=expr();noTrailing--}const body=block();return {k:"for",pat,seq,where,body,line,casePat}}
         case "while":{p++;const conds=condList();const body=block();return {k:"while",conds,body,line}}
         case "repeat":{p++;const body=block();expect("while");const c=expr();endStmt();return {k:"repeat",c,body,line}}
         case "return":{p++;let e=null;if(!peek().nl&&!is("}")&&!is(";")&&peek().k!=="eof")e=expr();endStmt();return {k:"return",e,line}}
@@ -277,10 +277,13 @@ const TMSwift=(()=>{
       if(is("let")||is("var")){p++;
         if(is("(")){p++;const items=[];if(!is(")"))do items.push(peek().v==="_"?(p++,{k:"wild"}):{k:"bind",name:ident()});while(accept(","));expect(")");return {k:"tuple",items}}
         if(is(".")){const cp=casePattern();markBind(cp);return cp}
-        return {k:"bind",name:ident()}}
+        const name=ident();
+        if(is("?")&&!peek().space){p++;return {k:"some",inner:{k:"bind",name}}}   // case let x?
+        if(accept("as"))return {k:"bindas",name,type:parseType()};                // case let n as Int
+        return {k:"bind",name}}
       if(is("(")){const save=p;p++;const items=[];let ok=true;
         try{if(!is(")"))do items.push(casePattern());while(accept(","));expect(")")}catch(e){ok=false}
-        if(ok&&items.length>1&&(is(":")||is(",")||is("where")))return {k:"tuple",items};
+        if(ok&&items.length>1&&(is(":")||is(",")||is("where")||is("=")||is("in")))return {k:"tuple",items};
         p=save}
       if(peek().k==="id"&&/^[A-Z]/.test(peek().v)&&is(".",1)&&peek(2).k==="id"&&is("(",3)){const tyName=peek().v;p++;const cp=casePattern();cp.tyName=tyName;return cp}
       if(is(".")&&peek(1).k==="id"){p++;const name=ident();
@@ -1286,7 +1289,7 @@ const TMSwift=(()=>{
         case "repeat":{for(;;){tick();try{execList(s.body,new Env(env))}catch(x){if(isBreak(x,s))break;if(!isCont(x,s))throw x}const c=ev(s.c,env);if(typeof c!=="boolean")fail(`line ${s.line}: the repeat-while condition must be true or false`);if(!c)break}return}
         case "for":{
           const seq=ev(s.seq,env);const items=iterate(seq,s.line);
-          for(const it of items){tick();const e2=new Env(env);bindPattern(s.pat,it,e2,true,s.line);
+          for(const it of items){tick();const e2=new Env(env);if(s.casePat){if(!match(s.casePat,it,e2))continue}else bindPattern(s.pat,it,e2,true,s.line);
             if(s.where&&!truth(ev(s.where,e2)))continue;
             try{execList(s.body,e2)}catch(x){if(isBreak(x,s))break;if(isCont(x,s))continue;throw x}}
           return}
@@ -1363,7 +1366,11 @@ const TMSwift=(()=>{
         case "wild":return true;
         case "bind":env.vars.set(pat.name,cell(v,null,true));return true;
         case "tuple":return v instanceof Tup&&v.items.length===pat.items.length&&pat.items.every((p2,i)=>match(p2,v.items[i],env));
+        case "some":return v instanceof Some&&match(pat.inner,v.v,env);
+        case "bindas":{const x=v instanceof Some?v.v:v;if(!isType(x,pat.type))return false;env.vars.set(pat.name,cell(x,null,true));return true}
         case "enum":{
+          if(pat.name==="some"&&!pat.tyName&&(v instanceof Some||v===NIL)&&!(v instanceof Some&&v.v instanceof ECase&&v.v.type.cases.some(c=>c.name==="some")))return v instanceof Some&&(!pat.items||match(pat.items[0],v.v,env));
+          if(pat.name==="none"&&!pat.tyName&&(v===NIL||v instanceof Some&&!(v.v instanceof ECase&&v.v.type.cases.some(c=>c.name==="none"))))return v===NIL;
           if(v instanceof Some)v=v.v;
           if(!(v instanceof ECase))return false;
           if(v.name!==pat.name||pat.tyName&&v.type.name!==pat.tyName)return false;
@@ -1476,13 +1483,15 @@ const TMSwift=(()=>{
       else if(k==="x"||k==="X"){s=num(v).toString(16);if(k==="X")s=s.toUpperCase()}else if(k==="o")s=num(v).toString(8);else if(k==="c")s=String.fromCharCode(num(v));else if(k==="@"||k==="s")s=desc(v);else s=String(Math.trunc(num(v)));
       if(plus&&/^[0-9]/.test(s))s="+"+s;
       if(w){const n=+w;s=left?s.padEnd(n):zero?s.padStart(n,"0"):s.padStart(n)}return s})}
+    // min(3.5, 2): the 2 is read as 2.0
+    const numMix=(r,args)=>typeof r==="number"&&args.some(a=>a.v instanceof D)?new D(r):r;
     const MATHF=new Set(["sqrt","pow","floor","ceil","round","log","log2","log10","exp","sin","cos","tan","atan","asin","acos","atan2","hypot","trunc"]);
     const BUILTINS={
       print:B((vals,args)=>{W(printArgs(vals,args));return undefined}),
       debugPrint:B((vals,args)=>{W(printArgs(vals,args,true));return undefined}),
       abs:B(([x])=>x instanceof D?new D(Math.abs(x.v)):Math.abs(x)),
-      min:B((vs,args,line)=>vs.reduce((a,b)=>cmp(b,a,line)<0?b:a)),
-      max:B((vs,args,line)=>vs.reduce((a,b)=>cmp(b,a,line)>0?b:a)),
+      min:B((vs,args,line)=>numMix(vs.reduce((a,b)=>cmp(b,a,line)<0?b:a),args)),
+      max:B((vs,args,line)=>numMix(vs.reduce((a,b)=>cmp(b,a,line)>0?b:a),args)),
       sqrt:B(([x])=>new D(Math.sqrt(num(x)))),pow:B(([x,y])=>new D(Math.pow(num(x),num(y)))),
       log:B(([x])=>new D(Math.log(num(x)))),log2:B(([x])=>new D(Math.log2(num(x)))),log10:B(([x])=>new D(Math.log10(num(x)))),exp:B(([x])=>new D(Math.exp(num(x)))),
       sin:B(([x])=>new D(Math.sin(num(x)))),cos:B(([x])=>new D(Math.cos(num(x)))),tan:B(([x])=>new D(Math.tan(num(x)))),atan:B(([x])=>new D(Math.atan(num(x)))),asin:B(([x])=>new D(Math.asin(num(x)))),acos:B(([x])=>new D(Math.acos(num(x)))),
