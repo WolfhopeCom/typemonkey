@@ -192,7 +192,8 @@ const TMSwift=(()=>{
       let throws=false;if(accept("throws"))throws=true;else accept("rethrows");
       let ret=null;if(accept("->"))ret=parseType();
       skipWhere();
-      let body=null;if(is("{"))body=block();
+      if(!is("{"))fail(`line ${peek().line}: expected { to start the body of ${name==="init"?"init":"func "+name}${peek().k==="id"&&!ret?" (put -> before the return type)":""}`);
+      const body=block();
       return {k:"func",name,params,ret,body,throws,mods,line};
     }
     // generics are checked by the Swift compiler, not by TypeMonkey: <T: Comparable> and where clauses are skipped
@@ -754,7 +755,7 @@ const TMSwift=(()=>{
     }
     function callFn(f,args,line,self,selfType){
       tick();
-      if(f.builtin)return f.builtin(args.map(a=>a.v),args,line);
+      if(f.builtin){const r=f.builtin(args.map(a=>a.v),args,line);if(pendingObs.length){const l=pendingObs;pendingObs=[];obsFire(l)}return r}
       if(f.closure)return callClosure(f,args,line);
       return callDecl(f,args,line,self,selfType);
     }
@@ -932,7 +933,7 @@ const TMSwift=(()=>{
                 return}
               const comp=pr.computed;if(!comp.set)fail(`line ${e.line}: cannot assign to property: '${e.name}' is a get-only property`);
               const ce=new Env(globals);ce.self=o;ce.selfType=pr.owner;ce.mutSelf=true;ce.vars.set(comp.setName,cell(v,null,true));execList(comp.set,ce)},
-              root:viaClass?null:base.root,name:e.name,viaClass:viaClass||base.viaClass,parent:base,optional:base.optional};
+              root:viaClass?null:base.root,name:e.name,viaClass:viaClass||base.viaClass,parent:base,optional:base.optional,observe:ty.observers[e.name]?{o:b,ty,name:e.name}:null};
           }
           if(b instanceof Tup){const idx=/^\d+$/.test(e.name)?+e.name:b.labels.indexOf(e.name);if(idx<0)fail(`line ${e.line}: tuple has no member '${e.name}'`);return {get:()=>getBase().items[idx],set:v=>{checkMutable(base,e.line);getBase().items[idx]=v},root:base.root}}
           return {get:()=>memberOf(getBase(),e.name,e,env),set:()=>fail(`line ${e.line}: cannot assign to property: '${e.name}' is a get-only property`),root:base.root,parent:base};
@@ -1228,7 +1229,9 @@ const TMSwift=(()=>{
       // Type(...) construct, or a builtin conversion
       if(f.k==="name"&&!env.find(f.v)&&!(env.self&&findMethod(env.self.type,f.v))){
         if(types[f.v]){const o=construct(types[f.v],argList(e,env),e.line);if(f.targs&&o instanceof Obj)o.targs=f.targs;return o}
-        const conv=CONV[f.v];if(conv)return conv(argList(e,env),e.line,e);
+        const conv=CONV[f.v];if(conv){const args=argList(e,env);if(!args.length&&!["String","Array","Set","Dictionary","Int","Double","Bool","Character","Float"].includes(f.v)||!args.length&&f.v!=="String"&&f.v!=="Array"&&f.v!=="Set"&&f.v!=="Dictionary"&&(f.v==="Character"))fail(`line ${e.line}: missing argument in call to ${f.v}(...)`);
+          if(!args.length&&["Int","Double","Bool","Float"].includes(f.v))return f.v==="Int"?0:f.v==="Bool"?false:f.v==="Float"?F32(0):new D(0);
+          return conv(args,e.line,e)}
       }
       if(f.k==="member"&&f.e.k==="name"&&types[f.e.v]&&f.name==="init"&&!env.find(f.e.v))return construct(types[f.e.v],argList(e,env),e.line);
       return NOSPECIAL;
@@ -1426,11 +1429,22 @@ const TMSwift=(()=>{
         else bindPattern(d.pat,v,env,s.isLet,s.line);
       }
     }
+    // didSet also runs when a watched property changes in place: items.append(x), pos.x += 1
+    let pendingObs=[];
+    function obsSnap(lv,self){const r=[];for(let x=self?lv:lv.parent;x;x=x.parent)if(x.observe&&x.observe.ty.observers[x.observe.name].didSet)r.push({ob:x.observe,old:copy(x.get())});return r}
+    function obsFire(list){for(const {ob,old} of list){const o=ob.o,obs=ob.ty.observers[ob.name];const busy=o.obsBusy||(o.obsBusy=new Set());if(busy.has(ob.name))continue;
+      busy.add(ob.name);try{const oe=new Env(globals);oe.self=o;oe.selfType=ob.ty;oe.mutSelf=true;oe.vars.set(obs.didSet.name,cell(old,null,true));execList(obs.didSet.body,oe)}finally{busy.delete(ob.name)}}}
     function assign(s,env){
       if(s.l.k==="name"&&s.l.v==="_"&&s.op==="="){ev(s.r,env);return}
       if(s.l.k==="tuple"&&s.op==="="){const r=ev(s.r,env);if(!(r instanceof Tup)||r.items.length!==s.l.items.length)fail(`line ${s.line}: the tuples on each side of = must have the same number of parts`);const vals=r.items.map(copy);s.l.items.forEach((le,i)=>assign({k:"assign",op:"=",l:le,r:{k:"lit",v:vals[i]},line:s.line},env));return}
       const lv=lval(s.l,env);
       if(lv.isNil&&lv.isNil())return;
+      const snaps=obsSnap(lv,lv.observe&&s.op==="+="&&lv.get() instanceof Arr);
+      assignTo(s,env,lv);
+      if(snaps.length)obsFire(snaps);
+    }
+    function assignTo(s,env,lv){
+      if(s.l.k==="tuple"&&s.op==="="){const r=ev(s.r,env);if(!(r instanceof Tup)||r.items.length!==s.l.items.length)fail(`line ${s.line}: the tuples on each side of = must have the same number of parts`);const vals=r.items.map(copy);s.l.items.forEach((le,i)=>assign({k:"assign",op:"=",l:le,r:{k:"lit",v:vals[i]},line:s.line},env));return}
       if(lv.cell){if(lv.cell.isLet&&!lv.cell.unset)fail(`line ${s.line}: cannot assign to value: '${lv.name}' is a 'let' constant`);
         if(lv.cell.isLet&&lv.cell.unset&&s.op!=="=")fail(`line ${s.line}: constant '${lv.name}' used before being initialized`)}
       else if(s.l.k==="index"||s.l.k==="member"){}
@@ -1553,7 +1567,7 @@ const TMSwift=(()=>{
     function builtinMember(b,n,e,env){
       const line=e.line;
       const M=fn=>new Fn({builtin:fn});
-      const mut=()=>{const lv=lval(e.e,env);if(lv.ensure)lv.ensure();checkMutable(lv,line);return lv};
+      const mut=()=>{const lv=lval(e.e,env);if(lv.ensure)lv.ensure();checkMutable(lv,line);pendingObs.push(...obsSnap(lv,true));return lv};
       if(b&&b.ns){const v=b.ns[n];if(v!==undefined)return v;
         if(n==="init"&&CONV[b.isTypeName])return M((vals,args,ln)=>CONV[b.isTypeName](args.map(a=>({...a,label:null})),ln));
         if(n==="self")return b;
