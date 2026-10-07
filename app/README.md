@@ -95,7 +95,7 @@ The icon is TypeMonkey's happy monkey (drawn by `monkey("happy")` in the app) on
 | Splash | 0.6 s, fades out, no spinner | |
 | Status bar | `DEFAULT` style, not overlaying on Android | Dark text on the light theme, follows dark mode on iOS. The page already pads for `env(safe-area-inset-*)`. |
 | iOS Info.plist | Display name TypeMonkey; portrait + landscape on iPhone, all four on iPad; `ITSAppUsesNonExemptEncryption = NO` | Set by `build_app.py` every build (skips the export-compliance question on upload) |
-| Android permissions | `INTERNET` only (Capacitor's default) | The app runs from local assets, but it still loads Google Fonts until those are bundled. Keep it: it has no runtime prompt and is allowed for Kids/Families apps. `build_app.py` warns if any other permission appears. |
+| Android permissions | `INTERNET` only (Capacitor's default) | The app runs from local assets and its fonts are bundled, so it makes no network requests. Keeping INTERNET is harmless (no runtime prompt, allowed for Kids/Families apps). `build_app.py` warns if any other permission appears. |
 
 Web Audio and `localStorage` work in both WebViews (WKWebView on iOS, Android System WebView). Sounds start on a tap, as the app already does.
 
@@ -141,5 +141,5 @@ The purchase entry point is `unlockFull()` in `src/app.html`: it already runs `g
 - [ ] No third-party analytics, advertising or tracking SDKs at all. (The app has none; keep plugins to Capacitor's own and the purchase plugin.)
 - [ ] Parental gate before any purchase **and** before any link that leaves the app (web pages, mail, store review links).
 - [ ] Privacy policy URL in both stores (draft text lives in `src/legal.js`). App Privacy label: **Data Not Collected**. Play **Data safety**: no data collected or shared.
-- [ ] Remove the Google Fonts request before submitting (fonts are being bundled), so the app makes no network requests.
+- [x] Fonts are bundled; the app makes no network requests.
 - [ ] Apple age rating questionnaire, Kids Category with age band 9–11 (or 6–8) only if you choose the Kids Category. Play **Target audience and content**: include the under-13 ages, which puts the app under the Families policy.

@@ -38,7 +38,7 @@ Also included:
 - **Progress:** XP, bananas, daily streak and resume-where-you-left-off, saved on the device.
 - **Business model:** Unit 1 of each course is free; a one-time $4.99 unlock opens everything (currently a demo button behind a grown-up check).
 
-Everything runs on the device. There are no servers, accounts, API keys or outside services.
+Everything runs on the device, including the fonts (bundled Latin subsets of Baloo 2, Nunito and JetBrains Mono, SIL Open Font License; see src/fonts). There are no servers, accounts, API keys, outside services or network requests.
 
 ## Project layout
 
