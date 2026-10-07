@@ -52566,6 +52566,9 @@ const SFX=(()=>{
     plop:(c,o,t,n=0)=>{const f=SCALE[Math.max(0,Math.min(10,n))];note(c,o,f*1.5,t,.12,{type:"sine",vol:.11,to:f*.7});note(c,o,f,t+.05,.2,{type:"sine",vol:.04})},
     zap:(c,o,t)=>{note(c,o,300,t,.25,{type:"triangle",vol:.08,to:1400});note(c,o,450,t+.04,.25,{type:"sine",vol:.05,to:2100})},
     ding:(c,o,t,n=0)=>{const f=SCALE[n%9];note(c,o,f,t,.4,{type:"sine",vol:.09});note(c,o,f*2,t,.15,{type:"sine",vol:.03})},
+    // your program's own result: a happy "you got it!" fanfare, or a friendly "nope" boop
+    out_win:(c,o,t)=>{[659,784,1047].forEach((f,i)=>note(c,o,f,t+i*.09,.16,{type:"square",vol:.03}));note(c,o,1319,t+.27,.45,{type:"triangle",vol:.09});note(c,o,1568,t+.27,.45,{type:"sine",vol:.05});noise(c,o,t+.27,.35,{f:7000,ftype:"highpass",vol:.025})},
+    out_lose:(c,o,t)=>{note(c,o,392,t,.14,{type:"triangle",vol:.08,to:370});note(c,o,311,t+.15,.3,{type:"triangle",vol:.08,to:262})},
     tada:(c,o,t)=>{[523,659,784].forEach((f,i)=>mar(c,o,f,t+i*.1,.08));[1047,1319,1568].forEach(f=>note(c,o,f,t+.32,.7,{type:"triangle",vol:.05}));noise(c,o,t+.32,.5,{f:6000,ftype:"highpass",vol:.03})},
     tap:(c,o,t)=>note(c,o,880,t,.05,{type:"triangle",vol:.035,attack:.004}),
     correct:(c,o,t)=>{note(c,o,784,t,.16,{type:"triangle",vol:.1});note(c,o,1175,t+.09,.3,{type:"sine",vol:.1})},
@@ -52595,7 +52598,9 @@ const SFX=(()=>{
       if(name==="tap"&&now-lastBig<150)return false;  // don't click over a chime
       last[name]=now;if(name!=="tap"&&name!=="step")lastBig=now;
       if(ctx.state!=="running")ctx.resume().catch(()=>{});
-      r(ctx,master,ctx.currentTime+.01,arg);return true;
+      // a lesson's right/wrong chime waits a moment if the program's own win/lose sound just played
+      const after=(name==="correct"||name==="wrong")&&now-(last.out||0)<400?.5:0;if(name.startsWith("out_"))last.out=now;(play.log=play.log||[]).push(name);if(play.log.length>20)play.log.shift();
+      r(ctx,master,ctx.currentTime+.01+after,arg);return true;
     }catch(e){return false}
   }
   /* ---- Music: tiny looping tunes for TypeMonkey Jr. (dance beat, calm jungle). Scheduled a little ahead, fades in and out. ---- */
@@ -52816,7 +52821,10 @@ function arcadeConsole(el,out,hint){
   };
   draw();
 }
-function paintConsole(el,out,hint){
+/* Did the program say the player won or lost? ("You got it!" vs "Too low") Plays a matching sound. */
+const OUT_WIN=/(you got it|you win|you won|correct!|you found|you escape|perfect!|winner|🎉)/i,OUT_LOSE=/(too low|too high|nope|wrong|try again|game over|you lose|you lost|defeated|not quite)/i;
+function outSound(out){try{const logs=(out||[]).filter(o=>o[0]==="log").map(o=>String(o[1]));for(let i=logs.length-1;i>=0;i--){if(OUT_WIN.test(logs[i]))return sfx("out_win");if(OUT_LOSE.test(logs[i]))return sfx("out_lose")}}catch(e){}}
+function paintConsole(el,out,hint){outSound(out);
   if(typeof cur!=="undefined"&&cur&&cur.c&&cur.c.id==="game"&&el.id!=="out-p"&&!out.table){el.classList.add("arcade");return arcadeConsole(el,out,hint)}
   if(out.table&&out.table.columns.length){
     const r=out.table;
