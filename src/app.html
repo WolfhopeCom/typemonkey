@@ -297,9 +297,10 @@ span.repn{display:inline-block}
 .blk:active{transform:translateY(3px)}
 /* Jr.: big goal line, gentle "oops" feedback, glowing hints, predict + level builder */
 .jgoal{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:color-mix(in srgb,var(--banana) 30%,var(--surface));border:3px solid var(--banana);border-radius:16px;padding:10px 12px}
-.jg-t{flex:1 1 180px;font-family:var(--display);font-size:1.3rem;font-weight:800;line-height:1.2}
+.jg-btns{display:flex;flex-direction:column;gap:6px;align-items:stretch;flex:none}
+.jg-t{flex:1 1 0;min-width:0;font-family:var(--display);font-size:1.3rem;font-weight:800;line-height:1.2}
 .jg-btn{border:0;border-radius:999px;background:var(--banana);color:#2A1300;font-weight:800;min-height:44px;min-width:44px;padding:0 12px;font-size:1.15rem}
-.jg-btn.jg-auto{font-size:.9rem;background:var(--surface);border:2px solid var(--banana)}.jg-btn.jg-auto[aria-pressed="true"]{background:var(--banana)}
+.jg-btn.jg-auto{font-size:.8rem;min-height:34px;padding:0 8px;background:var(--surface);border:2px solid var(--banana)}.jg-btn.jg-auto[aria-pressed="true"]{background:var(--banana)}
 .feedback.oops{background:color-mix(in srgb,var(--banana) 26%,var(--surface));border:2px solid color-mix(in srgb,var(--banana) 70%,var(--accent))}
 .nudge{margin-top:10px;padding:8px 12px;border-radius:12px;background:var(--surface);border:2px dashed var(--banana);font-weight:700}
 .nudge .linkbtn{margin-left:4px}
@@ -1117,7 +1118,7 @@ function jrAim(s){
   if(s.type==="build")return "🛠️ Make your own puzzle, then solve it!";
   return "";
 }
-function jrGoal(s){const on=jrVoice();return `<div class="jgoal"><span class="jg-t" id="jgt">${jrAim(s)}</span>${canSpeak?`<button class="jg-btn" id="jgsay" type="button" aria-label="Read it to me">🔊</button><button class="jg-btn jg-auto" id="jgauto" type="button" aria-pressed="${on}" aria-label="Read every puzzle out loud">🗣️ ${on?"On":"Off"}</button>`:""}</div>`}
+function jrGoal(s){const on=jrVoice();return `<div class="jgoal"><span class="jg-t" id="jgt">${jrAim(s)}</span>${canSpeak?`<span class="jg-btns"><button class="jg-btn" id="jgsay" type="button" aria-label="Read it to me">🔊</button><button class="jg-btn jg-auto" id="jgauto" type="button" aria-pressed="${on}" aria-label="Read every puzzle out loud">🗣️ ${on?"On":"Off"}</button></span>`:""}</div>`}
 function wireGoal(){const b=$("#jgsay");if(!b)return;
   const read=()=>{const bub=document.querySelector("#bud .bubble"),fb=document.querySelector("#fb .feedback");jrSpeak($("#jgt").textContent+(fb?". "+fb.textContent:"")+(bub?". "+bub.textContent:""))};
   b.onclick=read;
@@ -1455,7 +1456,7 @@ function maze(s){
     if(result==="extra")return `Yum, ${nB>1?"every banana":"the banana"}! But then the monkey kept going. The wiggly block is extra. Take it away!`;
     return `So close! ${left>1?`${left} bananas are`:"A banana is"} still waiting. Add more blocks at the end.`};
   $("#run").onclick=()=>{
-    if(running||won||!prog.length)return;running=true;open=null;mark=null;glow=null;draw();reset();
+    if(running||won||!prog.length)return;running=true;open=null;mark=null;glow=null;$("#fb").innerHTML="";draw();reset();
     const {path,result,failAt,left}=simulate(s.grid,s.dir,prog,fn);let k=1;
     const tick=()=>{
       if(!$("#mk"))return;
