@@ -1815,12 +1815,41 @@ const TMSwift=(()=>{
       fail(`line ${line}: value of type 'Set' has no member '${n}'`);
     }
 
+    /* ----- checks on every function before the program runs (like Swift's compiler) ----- */
+    const isCallTo=(e,names)=>e&&e.k==="call"&&e.f.k==="name"&&names.includes(e.f.v);
+    function returns(list){return list.some(st=>{
+      switch(st.k){
+        case "return":case "throw":return true;
+        case "expr":return isCallTo(st.e,["fatalError","preconditionFailure"]);
+        case "if":return st.conds.length===1&&st.conds[0].k==="bool"&&st.conds[0].e.k==="lit"&&st.conds[0].e.v===true?returns(st.body):!!st.els&&returns(st.body)&&returns(st.els);
+        case "switch":return st.cases.every(c=>returns(c.body));
+        case "do":return returns(st.body)&&st.catches.length>0&&st.catches.some(c=>!c.pat)&&st.catches.every(c=>returns(c.body));
+        case "while":return st.conds.length===1&&st.conds[0].k==="bool"&&st.conds[0].e.k==="lit"&&st.conds[0].e.v===true&&!breaks(st.body);
+        case "repeat":return st.c.k==="lit"&&st.c.v===true&&!breaks(st.body);
+      }
+      return false})}
+    function breaks(list){return list.some(st=>st.k==="break"&&!st.label||["if","guard","do","switch"].includes(st.k)&&[st.body,st.els,...(st.catches||[]).map(c=>c.body)].some(b=>Array.isArray(b)&&(st.k==="switch"?false:breaks(b))))}
+    function valueReturn(list){for(const st of list){if(st.k==="return"&&st.e&&!(st.e.k==="tuple"&&!st.e.items.length))return st.line;
+      if(st.k==="func"||st.k==="type")continue;
+      for(const b of [st.body,st.els,...(st.cases||[]).map(c=>c.body),...(st.catches||[]).map(c=>c.body)])if(Array.isArray(b)){const r=valueReturn(b);if(r)return r}}return 0}
+    function checkFuncs(list){
+      for(const st of list){
+        if(st.k==="func"&&st.body){
+          if(st.ret===null&&st.name!=="init"){const ln=valueReturn(st.body);if(ln)fail(`line ${ln}: unexpected non-void return value in void function. Add -> Type after the ( ) to give back a value`)}
+          if(st.ret&&!(st.body.length===1&&(st.body[0].k==="expr"||(st.body[0].k==="if"||st.body[0].k==="switch")&&exprBranches(st.body[0])))&&!returns(st.body))
+            fail(`line ${st.line}: missing return in function '${st.name}' expected to return '${tname(st.ret)}'`);
+        }
+        if(st.k==="type")checkFuncs(st.members);
+        for(const b of [st.body,st.els,...(st.cases||[]).map(c=>c.body),...(st.catches||[]).map(c=>c.body)])if(Array.isArray(b))checkFuncs(b);
+      }
+    }
+
     /* ----- program ----- */
     try{
       const prog=parse(lex(code)).program();
       const hoist=list=>{for(const s of list){if(s.k==="type")declareType(s)}};
       hoist(prog);
-      for(const s of prog)if(s.k==="type"&&s.kind!=="extension"){}
+      checkFuncs(prog);
       linkTypes();
       execList(prog,globals);
       return {out,error:null};
