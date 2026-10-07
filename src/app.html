@@ -119,6 +119,13 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 .run[disabled]{opacity:.4;cursor:not-allowed}
 .console{background:#000;color:#B8F5D3;font-family:var(--mono);font-size:.88rem;padding:10px 14px;min-height:44px;white-space:pre-wrap;word-break:break-word;border-top:1px solid #ffffff14}
 .console .err{color:#FF9C92}
+#fcode{white-space:pre-wrap;word-break:break-word}
+.peek{margin-top:12px;background:var(--surface2);border:1px dashed var(--line);border-radius:12px;padding:10px 14px}
+.peek ul{margin:6px 0 0;padding-left:20px}.peek li.ok{color:var(--leaf)}
+.peek pre{margin:6px 0 0;font-family:var(--mono);font-size:.85rem;white-space:pre-wrap;overflow-x:auto}
+.btn.nudge{animation:nudge 1.2s ease 2;border-color:var(--accent);color:var(--accent)}
+@keyframes nudge{0%,100%{transform:none}25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}}
+@media (prefers-reduced-motion:reduce){.btn.nudge{animation:none}}
 /* Build a Game: the console becomes a little arcade screen */
 .console.arcade{background:#170F2E;background-image:repeating-linear-gradient(0deg,#ffffff06 0 1px,transparent 1px 3px);color:#FFE36E;border-top:2px solid #7C5CFF}
 .console.arcade .dim{color:#8D7FC0}
@@ -616,7 +623,7 @@ const PRINT_HINT={js:"Try console.log",py:"Try print()",cs:"Try Console.WriteLin
 const norm=l=>{l=String(l).trim();return /^[\[{]/.test(l)?l.replace(/\s+/g,""):l};
 function checkOut(st,out){
   const err=out.find(o=>o[0]==="err");
-  if(err)return [false,"Your code hit an error. Read the red line in the console: it says what went wrong and usually which line."];
+  if(err)return [false,"Your code hit an error. The red line in the console says what went wrong, and usually which line.",String(err[1]).slice(0,240)];
   const logs=out.filter(o=>o[0]==="log").map(o=>o[1]);
   if(st.out){
     const ok=st.out.length===logs.length&&st.out.every((e,i)=>norm(e)===norm(logs[i]));
@@ -830,19 +837,76 @@ function talk(s,R){
     ${buddy(s.say||"",s.mood||"happy")}<div class="row"><button class="btn" id="go">Continue</button></div>`);
   if(s.demo&&R)wireEditor("d");$("#go").onclick=next;
 }
+/* ---------- TypeMonkey's help: a plan, then the answer one line at a time ---------- */
+function newLines(s){const have=new Set((s.start||"").split("\n").map(l=>l.trim()).filter(Boolean));return (s.hint||"").split("\n").filter(l=>l.trim()&&!have.has(l.trim()))}
+function helpPlan(s){return {tips:s.use||[],lines:newLines(s)}}
+/* Warm-ups: before a long challenge, show TypeMonkey's version with a few pieces missing, so you see the shape first */
+const WARM_WORDS={js:["for","while","if","else","return","const","let","function","push","length","console","log","Math","class","new","this","of"],
+  py:["for","while","if","elif","else","return","def","print","append","range","len","in","class","self","import"],
+  java:["for","while","if","else","return","static","new","System","println","add","get","size","length","class","this","int","String","throw","try","catch"],
+  cs:["for","foreach","while","if","else","return","static","new","Console","WriteLine","Add","Count","Length","class","int","string","throw","try","catch"],
+  cpp:["for","while","if","else","return","int","std","cout","push_back","size","class","struct","void","double"],
+  swift:["for","while","if","else","guard","return","func","let","var","print","append","count","in","struct","class","init","self","throw","try","switch","case"],
+  sql:["SELECT","FROM","WHERE","ORDER","BY","GROUP","JOIN","ON","COUNT","SUM","AS","INSERT","INTO","VALUES","UPDATE","SET","LEFT","DESC"]};
+function makeWarmup(s,kind){
+  if(/\[\d\]/.test(s.hint||""))return null;
+  const lines=newLines(s);if(lines.length<6)return null;
+  const pool=WARM_WORDS[kind]||WARM_WORDS.js;const useSrc=(s.use||[]).map(u=>u[0].source).join(" ");
+  const code=s.hint.split("\n");const newSet=new Set(lines);const picked=[];
+  for(let li=0;li<code.length&&picked.length<3;li++){
+    const line=code[li];if(!newSet.has(line))continue;
+    const re=/[A-Za-z_][A-Za-z0-9_]*/g;let m;
+    while((m=re.exec(line))){
+      const w=m[0];const before=line.slice(0,m.index);
+      if((before.split('"').length-1)%2||(before.split("'").length-1)%2||(before.split("`").length-1)%2)continue;
+      if(before.includes("//")||before.includes("#")&&kind==="py")break;
+      if(picked.some(p=>p.w===w))continue;
+      if(!(pool.includes(w)||(w.length>2&&useSrc.includes(w))))continue;
+      picked.push({li,at:m.index,w});break;
+    }
+  }
+  if(picked.length<2)return null;
+  picked.forEach((p,i)=>{const l=code[p.li];code[p.li]=l.slice(0,p.at)+"["+i+"]"+l.slice(p.at+p.w.length)});
+  const blanks=picked.map(p=>p.w);
+  const extra=pool.filter(w=>!blanks.includes(w)&&!s.hint.includes(w)).slice(0,2);
+  return {type:"fill",auto:true,title:"Warm-up: "+s.title,body:`<p>This one's a bigger challenge, so first TypeMonkey will show you a way to do it. Fill in the missing pieces, then you'll write it yourself.</p>`,
+    code:code.join("\n"),blanks,tokens:[...blanks,...extra],why:"Now you've seen how it fits together. Next, try writing it yourself (you can always tap 💡 Help)."};
+}
+function addWarmups(){
+  for(const c of COURSES){if(!c.units||c.kids||c.runnable==="web")continue;const kind=kindOf(c);
+    for(const u of c.units)for(const l of u.lessons){if(!l.steps||l.__warm)continue;l.__warm=true;let added=0;
+      for(let i=0;i<l.steps.length&&added<2;i++){const s=l.steps[i];if(s.type!=="code")continue;const w=makeWarmup(s,kind);if(w){l.steps.splice(i,0,w);i++;added++}}}}
+}
 function codeStep(s){
   let tries=0,solved=false;const k="c"+cur.step;
-  shell(`<div class="card"><div class="label">${cur.l.project?"Project step":"Code challenge"} · +30 XP</div><h2>${s.title}</h2>${s.body}${editorBlock("c",draft(k)||s.start,cur.c.runnable||true,cur.c.lang)}<div id="fb"></div></div>
-    <div id="bud">${buddy(cur.c.runnable==="web"?"Type your code, then tap ▶ Show page. I'll check what you built.":"Write your code, then hit ▶ Run. I'll check it for you.","think")}</div>
-    <div class="row"><button class="btn" id="go" disabled>Continue</button><button class="btn ghost" id="hint">Show me how</button></div>`);
+  const H=helpPlan(s);let level=0;
+  shell(`<div class="card"><div class="label">${cur.l.project?"Project step":"Code challenge"} · +30 XP</div><h2>${s.title}</h2>${s.body}${editorBlock("c",draft(k)||s.start,cur.c.runnable||true,cur.c.lang)}<div id="fb"></div><div id="peek"></div></div>
+    <div id="bud">${buddy(cur.c.runnable==="web"?"Type your code, then tap ▶ Show page. I'll check what you built. Stuck? Tap 💡 Help and I'll give you one clue at a time.":"Write your code, then hit ▶ Run. Stuck? Tap 💡 Help and I'll give you one clue at a time.","think")}</div>
+    <div class="row"><button class="btn" id="go" disabled>Continue</button><button class="btn ghost" id="hint">💡 Help</button><button class="linkbtn" id="answer" hidden>Show the whole answer</button></div>`);
+  const showHelp=()=>{
+    const code=$("#code-c").value;
+    if(level===0&&H.tips.length){level=1;
+      $("#peek").innerHTML=`<div class="peek"><b>TypeMonkey's plan</b><ul>${H.tips.map(([re,m])=>`<li class="${re.test(code)?"ok":""}">${re.test(code)?"✓ ":""}${esc(m)}</li>`).join("")}</ul></div>`;
+      $("#bud").innerHTML=buddy("Here's the plan. Ticks show the parts you've already got. Tap 💡 again if you want to see how it starts.","think");$("#answer").hidden=false;return}
+    if(level===0)level=1;
+    const shown=Math.min(H.lines.length,level);level++;
+    if(H.lines.length){
+      $("#peek").innerHTML=`<div class="peek"><b>Here's how it starts${shown<H.lines.length?` (${shown} of ${H.lines.length} new lines)`:""}</b><pre>${esc(H.lines.slice(0,shown).join("\n"))}</pre></div>`;
+      $("#bud").innerHTML=buddy(shown<H.lines.length?"Try writing the next part yourself. Tap 💡 for one more line.":"That's every new line! Put them in the right spot and press ▶ Run.","happy");
+    }
+    $("#answer").hidden=false;
+    if(shown>=H.lines.length)$("#hint").hidden=true;
+  };
   wireEditor("c",async(code)=>{
     tries++;const [ok,msg,detail]=cur.c.runnable==="web"?gradeWebNow(s,code):await grade(s,code,kindOf(cur.c));
     $("#fb").innerHTML=`<div class="feedback ${ok?"good":"bad"}">${ok?"✓ ":""}${esc(msg)}${detail?`<pre>${esc(detail)}</pre>`:""}</div>`;
-    $("#bud").innerHTML=buddy(ok?"Look at you go! 🍌 +5":tries>2?"Stuck? Tap “Show me how”. Peeking is part of learning.":"Not quite yet. You've got this.",ok?"cheer":"oops");
+    $("#bud").innerHTML=buddy(ok?(level>1?"You did it! Using hints is how everyone learns. 🍌 +5":"Look at you go! 🍌 +5"):tries>=2&&level===0?"This one's tricky! Tap 💡 Help and I'll show you the plan.":tries>=2?"Getting closer! Tap 💡 for the next clue.":"Not quite yet. Read the message above, tweak it, and run it again.",ok?"cheer":"oops");
+    if(!ok&&tries===2&&level===0)$("#hint").classList.add("nudge");
     if(ok&&!solved){solved=true;$("#go").disabled=false;award(30,5);bump("challenges");if(tries===1)bump("firstTry")}
   });
   $("#code-c").addEventListener("input",()=>draft(k,$("#code-c").value));
-  $("#hint").onclick=()=>{$("#code-c").value=s.hint;draft(k,s.hint);$("#bud").innerHTML=buddy("Here's one way to write it. Read it line by line, then press ▶ Run.","happy")};
+  $("#hint").onclick=()=>{$("#hint").classList.remove("nudge");showHelp()};
+  $("#answer").onclick=()=>{$("#code-c").value=s.hint;draft(k,s.hint);$("#peek").innerHTML="";$("#bud").innerHTML=buddy("Here's one way to write it. Read it line by line so it makes sense, then press ▶ Run.","happy")};
   $("#go").onclick=next;
 }
 function quiz(s){
@@ -1390,5 +1454,6 @@ function playground(lang="js"){
 }
 
 $("#homeBtn").onclick=home;$("#gearBtn").onclick=settingsPage;
+try{addWarmups()}catch(e){console.warn(e)}
 renderStats();home();
 </script>
