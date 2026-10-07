@@ -75,6 +75,16 @@ const JR_UNIT3={name:"Think like a coder",lessons:[
  {type:"order",title:"Plant a seed",body:`<p>Put the steps in order.</p>`,lines:["Dig a hole","Drop in the seed","Cover it with soil","Water it"],why:"You can't cover the seed before it's in the hole!"},
  {type:"dance",title:"Order changes the dance",body:`<p>Same moves, different order, different dance! Copy this one exactly.</p>`,moves:["clap","jump","spin","wave"],target:["spin","wave","jump","clap"],solution:{pattern:["spin","wave","jump","clap"]}},
  {type:"done"}]},
+{id:"jrv",title:"Banana boxes",sub:"variables hold things",steps:[
+ {type:"talk",title:"Boxes with names",mood:"cheer",
+  body:`<p>Coders keep things in <b>boxes with names</b>. They're called <b>variables</b>!</p><p>My box is called <b>bananas</b>. Right now it has 0 inside. Every time you tap a button, I change what's in the box, and you'll see the line of code that does it.</p>`,
+  say:"Games use variables for your score, your lives, your coins..."},
+ {type:"box",title:"Fill the box",body:`<p>Tap <b>+ 1</b> until the box holds 3 bananas.</p>`,name:"bananas",startVal:0,goal:3,ops:["+1"],solution:["+1","+1","+1"],say:"Tap + 1 three times!"},
+ {type:"quiz",q:"bananas = 2, then bananas = bananas + 1. What's in the box now?",opts:["3","2","1"],a:0,why:"It had 2, and we added 1 more. Now it holds 3."},
+ {type:"box",title:"Bigger jumps",body:`<p>Now you can add 1 <b>or</b> 2 at a time. Get to 5 in only <b>3 taps</b>!</p>`,name:"bananas",startVal:0,goal:5,ops:["+1","+2"],max:3,solution:["+2","+2","+1"],say:"Big jumps first, then a little one!"},
+ {type:"box",title:"Score points",body:`<p>Games keep a <b>score</b>. Get the score to 10 in <b>3 taps</b>.</p>`,name:"score",startVal:0,goal:10,ops:["+1","+2","+5"],max:3,solution:["+5","+5"],say:"Which button gets there fastest?"},
+ {type:"box",title:"Double trouble",body:`<p>New button: <b>× 2</b> doubles what's in the box! Start with 1 and get to 8 in <b>3 taps</b>.</p>`,name:"bananas",startVal:1,goal:8,ops:["+1","x2"],max:3,solution:["x2","x2","x2"],win:"Doubling is super powerful! 1, 2, 4, 8!"},
+ {type:"done"}]},
 {id:"jr8",title:"If this, then that",sub:"computers make choices",steps:[
  {type:"talk",title:"Making choices",mood:"cheer",
   body:`<p>Programs can make choices with <b>IF</b> and <b>ELSE</b>. <b>IF</b> it's raining, take an umbrella. <b>ELSE</b> (otherwise), wear sunglasses! 😎</p><p>Let's try it with my sorting machine!</p>`,
@@ -96,6 +106,7 @@ const JR_UNIT3={name:"Think like a coder",lessons:[
  {type:"sort",title:"The temple gate",body:`<p>The gate only opens for the right things!</p>`,rule:"IF it's a number bigger than 5 ➜ 🚪 Open the gate<br>ELSE ➜ 🔒 Stay shut",bins:[{icon:"🚪",name:"Open"},{icon:"🔒",name:"Stay shut"}],
   items:[{icon:"8",bin:0},{icon:"2",bin:1,why:"2 is smaller than 5. Stay shut!"},{icon:"10",bin:0,why:"10 is bigger than 5!"},{icon:"5",bin:1,why:"5 is not BIGGER than 5. It's the same! Stay shut."},{icon:"7",bin:0,why:"7 is bigger than 5!"}],
   code:"if number > 5:\n    open_gate()\nelse:\n    stay_shut()",say:"Careful with 5!"},
+ {type:"box",title:"The treasure counter",body:`<p>The treasure chest opens when <b>coins</b> is exactly 12. Use <b>4 taps</b> or fewer.</p>`,name:"coins",startVal:0,goal:12,ops:["+1","+5","x2","-1"],max:4,solution:["+5","+1","x2"],say:"There's more than one way to do it!"},
  {type:"maze",title:"Buggy temple",grid:["S...","###.","###.","B..."],dir:"N",blocks:[JF,JL,JRT,"rep"],max:5,start:[jrep(3,JL,JF,JF,JF)],solution:[jrep(3,JRT,JF,JF,JF)],say:"The temple's program has a bug. Find it!"},
  {type:"maze",title:"The Golden Banana",grid:["S#####","..####","#..###","##..##","###..#","####.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(5,JRT,JF,JL,JF)],win:"You found the Golden Banana! You're a real coder now!"},
  {type:"done"}]}

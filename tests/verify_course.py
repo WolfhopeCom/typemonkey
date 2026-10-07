@@ -76,6 +76,12 @@ CHECK = r"""async () => {
       if ([...s.target, ...(s.start || [])].some(m => !s.moves.includes(m) || !DMOVES[m])) R.push(`${x.l.id} step ${i}: dance uses a move not offered`);
       if (s.start && JSON.stringify(s.start) === JSON.stringify(s.target)) R.push(`${x.l.id} step ${i}: buggy dance already correct`);
     }
+    if (s.type === "box") {
+      const v = s.solution.reduce((n, o) => BOXOPS[o](n), s.startVal || 0);
+      if (v !== s.goal) R.push(`${x.l.id} step ${i}: box solution gives ${v}, goal ${s.goal}`);
+      if (s.max && s.solution.length > s.max) R.push(`${x.l.id} step ${i}: box solution too long`);
+      if (s.solution.some(o => !s.ops.includes(o))) R.push(`${x.l.id} step ${i}: box solution uses an op not offered`);
+    }
     if (s.type === "sort") {
       if (!s.items.length || s.items.some(it => !(it.bin >= 0 && it.bin < s.bins.length))) R.push(`${x.l.id} step ${i}: sort item with bad bin`);
       if (s.bins.some((b, k) => !s.items.some(it => it.bin === k))) R.push(`${x.l.id} step ${i}: a sort bin gets nothing`);
