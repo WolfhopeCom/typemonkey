@@ -315,6 +315,19 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 .actionbar .kidrow{position:static;box-shadow:none;padding:0;margin:0;background:none}
 .tapmode .tbuild,.tapmode .ttray{display:flex}
 .tapmode .editor textarea,.tapmode .symbar{display:none}
+.path{display:flex;flex-direction:column;align-items:center;gap:10px;padding-block:14px 6px}
+.pnode{display:flex;flex-direction:column;align-items:center;gap:4px;transform:translateX(calc(var(--off) * 46px));max-width:62%;text-align:center}
+.lesson.pbtn{position:relative;width:78px;height:78px;border-radius:50%;padding:0;justify-content:center;flex:none;background:var(--surface2);box-shadow:0 6px 0 var(--line);font-size:1.7rem;font-weight:900;color:var(--muted)}
+.pnode.open .pbtn{background:var(--accent);color:var(--accent-ink);box-shadow:0 6px 0 color-mix(in srgb,var(--accent) 60%,#000)}
+.pnode.done .pbtn{background:var(--leaf);color:#fff;box-shadow:0 6px 0 color-mix(in srgb,var(--leaf) 60%,#000)}
+.pnode.proj .pbtn{border-radius:24px}
+.pnode.next .pbtn{animation:pnext 1.6s ease-in-out infinite}
+@keyframes pnext{0%,100%{transform:none}50%{transform:translateY(-4px)}}
+.pbtn:active{transform:translateY(4px)!important;box-shadow:0 2px 0 var(--line)!important}
+.pbtn[disabled]{opacity:.7}
+.pstart{position:absolute;top:-30px;left:50%;transform:translateX(-50%);background:var(--surface);color:var(--accent);border:2px solid var(--accent);border-radius:10px;padding:2px 10px;font-size:.78rem;font-weight:900;letter-spacing:.06em;white-space:nowrap}
+.pnode.next{margin-top:24px}
+.plabel{display:flex;flex-direction:column;line-height:1.25}.plabel b{font-size:.98rem}.plabel span{font-size:.8rem;color:var(--muted)}
 .kcode{margin-top:10px;text-align:left}.kcode small{display:block;font-weight:700;margin-bottom:4px}.kcode pre{margin:0;background:var(--code-bg);color:var(--code-fg);border-radius:10px;padding:10px 12px;font-size:.92rem;line-height:1.45;overflow-x:auto}
 .mk{position:absolute;width:calc(100% / var(--w));height:calc(100% / var(--h));display:grid;place-items:center;transition:left .32s ease,top .32s ease,transform .25s ease;pointer-events:none}
 .mface{width:82%;height:82%;display:grid;place-items:center}.mface svg{width:100%;height:100%;filter:drop-shadow(0 2px 2px #0004)}
@@ -1090,6 +1103,17 @@ let rerender=home;
 function setMode(){}
 
 /* ---------- Course page ---------- */
+/* Course map: lessons as a winding path of big circles (easy to tap on a phone) */
+function pathHTML(c,L,ui,nuId){
+  const OFF=[0,1,2,1,0,-1,-2,-1];
+  return L.filter(x=>x.ui===ui).map((x,k)=>{const st=status(c,x);const res=S.progress[x.l.id]&&st!=="pro"&&st!=="soon";
+    const cls=st==="done"&&!res?"done":(st==="open"||res||st==="done")?"open":st==="pro"?"pro":"locked";const isNext=x.l.id===nuId;
+    const icon=cls==="done"?"✓":cls==="locked"||cls==="pro"?"🔒":x.l.project?"★":x.idx+1;
+    const sub=res?`Step ${S.progress[x.l.id].step+1} of ${x.l.steps.length-1} · saved`:cls==="pro"?"Pro":x.l.sub;
+    return `<div class="pnode ${cls} ${isNext?"next":""} ${x.l.project?"proj":""}" style="--off:${OFF[k%8]}">
+      <button class="lesson pbtn" data-l="${x.l.id}" aria-label="${esc(x.l.title)}${cls==="done"?" (done)":cls==="locked"?" (locked)":""}" ${cls==="open"||cls==="done"||res?"":"disabled"}>${isNext?`<span class="pstart">${res?"RESUME":"START"}</span>`:""}<span class="pic">${icon}</span></button>
+      <div class="plabel"><b>${x.l.title}</b><span>${sub}</span>${res?`<button class="linkbtn" data-restart="${x.l.id}">Start over</button>`:""}</div></div>`}).join("");
+}
 function coursePage(cid){
   SFX.stopMusic();
   rerender=()=>coursePage(cid);
@@ -1101,15 +1125,15 @@ function coursePage(cid){
     <div class="row"><div class="progress"><span style="width:${n?d/n*100:0}%"></span></div><b style="font-variant-numeric:tabular-nums">${d}/${n}</b></div>
     ${nuId?`<button class="btn" id="ccont">▶ ${S.progress[nuId]?"Resume":c.pickAny&&!d?"Start":d?"Continue":"Start"}: ${esc(nu.l.title)}</button>`:""}
     ${c.pickAny?`<p class="pickhint">👉 Pick any project you like in an open level. Finish any 2 projects in a level to open the next one. Not sure where to start? Try the one marked <b>⭐ Recommended next</b>.</p>`:""}
-    ${c.units.map((u,ui)=>`<div class="unit"><div class="unit-head"><h3>${c.kids?WORLDS[ui%WORLDS.length].emoji+" ":""}Unit ${ui+1} · ${u.name}</h3><span class="label">${u.free?"Free":S.pro?"Unlocked":"Pro"}</span></div>${c.pickAny&&ui>0&&(S.pro||u.free)&&L.filter(x=>x.ui===ui).every(x=>status(c,x)==="locked")?(()=>{const pv=L.filter(x=>x.ui===ui-1&&x.l.steps),need=Math.min(2,pv.length)-pv.filter(x=>S.done.includes(x.l.id)).length;return `<p class="pickhint">🔒 Finish ${need} more ${c.units[ui-1].name} project${need===1?"":"s"} to open this level.</p>`})():""}<div class="lessons">${
-      L.filter(x=>x.ui===ui).map(x=>{const st=status(c,x);const res=S.progress[x.l.id]&&st!=="pro"&&st!=="soon";
+    ${c.units.map((u,ui)=>`<div class="unit"><div class="unit-head"><h3>${c.kids?WORLDS[ui%WORLDS.length].emoji+" ":""}Unit ${ui+1} · ${u.name}</h3><span class="label">${u.free?"Free":S.pro?"Unlocked":"Pro"}</span></div>${c.pickAny&&ui>0&&(S.pro||u.free)&&L.filter(x=>x.ui===ui).every(x=>status(c,x)==="locked")?(()=>{const pv=L.filter(x=>x.ui===ui-1&&x.l.steps),need=Math.min(2,pv.length)-pv.filter(x=>S.done.includes(x.l.id)).length;return `<p class="pickhint">🔒 Finish ${need} more ${c.units[ui-1].name} project${need===1?"":"s"} to open this level.</p>`})():""}<div class="${c.pickAny?"lessons":"path"}">${
+      c.pickAny?L.filter(x=>x.ui===ui).map(x=>{const st=status(c,x);const res=S.progress[x.l.id]&&st!=="pro"&&st!=="soon";
         const cls=st==="done"&&!res?"done":(st==="open"||res||st==="done")?"open":"";
         const isNext=x.l.id===nuId;
         return `<button class="lesson ${cls} ${x.l.project?"proj":""} ${isNext?"next":""}" data-l="${x.l.id}" ${st==="open"||st==="done"||res?"":"disabled"}>
           <span class="dot">${st==="done"&&!res?"✓":x.l.project?"★":x.idx+1}</span>
           <span class="t">${isNext?`<span class="nexttag">${c.pickAny?"⭐ Recommended next":"👉 Next up"}</span>`:""}<b>${x.l.title}</b><span>${res?`Step ${S.progress[x.l.id].step+1} of ${x.l.steps.length-1} · saved`:x.l.sub}</span></span>
           <span class="pill ${st==="open"||res?"go":st==="done"?"ok":""}">${res?"Resume":{done:"Replay",open:"Play",pro:"Pro",locked:"🔒",soon:"Soon"}[st]}</span></button>
-          ${res?`<button class="linkbtn" data-restart="${x.l.id}">Start “${x.l.title}” over</button>`:""}`}).join("")}</div></div>`).join("")}
+          ${res?`<button class="linkbtn" data-restart="${x.l.id}">Start “${x.l.title}” over</button>`:""}`}).join(""):pathHTML(c,L,ui,nuId)}</div></div>`).join("")}
     ${S.pro?"":`<div class="paywall"><div><h3>Unlock all of TypeMonkey</h3><p>Every unit in every language, plus future courses and bonus games. One-time purchase.</p></div><button class="btn banana" id="buy">Unlock · $4.99</button></div>`}
   </div>`;
   $("#back").onclick=home;
@@ -1199,8 +1223,9 @@ function bananaBurst(){if(matchMedia("(prefers-reduced-motion: reduce)").matches
 const todo=(txt,extra="")=>`<p class="todo"><span>👉 ${txt}</span>${extra}</p>`;
 function talk(s,R){
   shell(`<div class="card">${s.demo&&R?todo("Read this, press ▶ Run to try the code, then tap Continue."):cur.step===0?todo("Read this, then tap Continue."):""}<h2>${s.title}</h2>${s.body}${(s.show||[]).map(t=>tableHTML(cur.c,t)).join("")}${s.demo?editorBlock("d",s.demo,R,cur.c.lang,s.input):""}</div>
-    ${buddy(s.say||"",s.mood||"happy")}<div class="row"><button class="btn" id="go">Continue</button>${readAloudBtn()}</div>`);
+    ${buddy(s.say||"",s.mood||"happy")}<div class="row">${s.demo&&R?`<button class="btn banana" id="trund">${R==="web"?"▶ Show the example":"▶ Run the example"}</button>`:""}<button class="btn" id="go">Continue</button>${readAloudBtn()}</div>`);
   if(s.demo&&R)wireEditor("d");$("#go").onclick=next;wireReadAloud();
+  if($("#trund"))$("#trund").onclick=()=>{const b=$("#run-d");if(b)b.click();setTimeout(()=>{try{$("#out-d").scrollIntoView({block:"nearest",behavior:"smooth"})}catch(e){}},400)};
 }
 /* ---------- TypeMonkey's help: a plan, then the answer one line at a time ---------- */
 function newLines(s){const have=new Set((s.start||"").split("\n").map(l=>l.trim()).filter(Boolean));return (s.hint||"").split("\n").filter(l=>l.trim()&&!have.has(l.trim()))}

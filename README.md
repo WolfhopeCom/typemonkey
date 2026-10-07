@@ -29,6 +29,7 @@ On phones, most code challenges can be solved by **tapping tiles** (word tiles f
 Also included:
 
 - **TypeMonkey Jr. help:** a clear goal line on every puzzle, kind "oops" messages, step-by-step hints that glow on the block to fix, a gentle "can you make it shorter?" nudge, and the kid's blocks shown as real code after each win.
+- **Phone-first lessons:** a winding path map of big lesson circles, one big Check / Continue / Run button pinned at the bottom, feedback that slides up above it, and the tile tray docked like a keyboard. No hearts or lives.
 - **Playground:** free coding in every language, with an input box for programs that ask questions.
 - **Daily challenge:** new every day. Coders get two freshly generated "what prints?" puzzles and a small code task in their current language, harder as they progress; Jr.-only kids get a brand-new maze, dance and banana box.
 - **Review:** missed questions come back with spaced repetition.
