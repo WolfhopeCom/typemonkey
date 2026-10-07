@@ -1,6 +1,6 @@
 /* Swift course. Runs in TypeMonkey's in-house Swift runner (src/engines/swift.js).
-   Swift itself can't be installed where TypeMonkey is built, so answers are checked against the runner
-   by tests/verify_swift.py and written from the Swift language reference. */
+   Answers are checked against the runner by tests/verify_swift.py, and against real Swift 6 by
+   tests/verify_swift_real.py when a Swift compiler is available. */
 const COURSE_SWIFT={id:"swift",name:"Swift",blurb:"Apple's language for iPhone, iPad and Mac apps. Clean, safe and fun to write. Unit 1 is free.",units:[
 {name:"Hello, Swift",free:true,lessons:[
 {id:"sw1",title:"Hello, Swift",sub:"print and your first program",steps:[

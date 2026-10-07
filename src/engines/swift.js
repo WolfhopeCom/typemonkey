@@ -6,7 +6,9 @@
    closures), arrays, dictionaries, sets, tuples, structs (value semantics, mutating, memberwise init),
    classes (reference semantics, inheritance, override, super), enums (raw values, CaseIterable,
    associated values), protocols and extensions, errors (throw/try/do-catch).
-   Swift isn't installed where TypeMonkey is built, so this follows the Swift language reference;
+   Also: generics, extensions on built-in types, subscripts, key paths, property observers, lazy vars,
+   String.Index, if/switch expressions, operator functions, Int8...UInt64 overflow checks.
+   Its output is compared with real Swift 6 by tests/verify_swift_real.py (and the cases in tests/verify_swift.py);
    anything outside the subset reports a friendly "not supported yet" error. */
 const TMSwift=(()=>{
   class SErr extends Error{constructor(m,kind){super(m);this.kind=kind}}
@@ -755,9 +757,16 @@ const TMSwift=(()=>{
     }
     function callFn(f,args,line,self,selfType){
       tick();
-      if(f.builtin){const r=f.builtin(args.map(a=>a.v),args,line);if(pendingObs.length){const l=pendingObs;pendingObs=[];obsFire(l)}return r}
+      if(f.builtin)return callBuiltin(f,args,line);
       if(f.closure)return callClosure(f,args,line);
       return callDecl(f,args,line,self,selfType);
+    }
+    function callBuiltin(f,args,line){
+      let r;
+      try{r=f.builtin(args.map(a=>a.v),args,line)}
+      catch(x){if(x instanceof TypeError)fail(`line ${line}: this call is missing a value it needs, or has the wrong kind of value`);throw x}
+      if(pendingObs.length){const l=pendingObs;pendingObs=[];obsFire(l)}
+      return r;
     }
     const MAXDEPTH=20000;
     function tooDeep(){depth=0;fatal("stack overflow (a function keeps calling itself). Check your stopping case.")}
@@ -943,6 +952,7 @@ const TMSwift=(()=>{
           if(base.optional&&base.get()===NIL)return NILCHAIN;
           const b=base.get();
           const args=e.args.map(a=>({label:a.label,v:ev(a.e,env)}));
+          if(!args.length)fail(`line ${e.line}: put an index or key inside the [ ]`);
           // subscript(...) written in your own type
           if((b instanceof Obj||b instanceof ECase)&&findSub(b.type)){const sub=findSub(b.type);
             const subEnv=()=>{const se=new Env(globals);se.self=base.get();se.selfType=sub.owner;se.mutSelf=true;bindArgs(sub,args,se,e.line);return se};
@@ -1506,9 +1516,11 @@ const TMSwift=(()=>{
         return d},
     };
     for(const n in IRANGE)CONV[n]=(args,line)=>intN(n,line)(args);
+    // like C's printf: an exact tie (2.5 with %.0f) rounds to the even digit
+    function cfixed(x,p){const sc=x*Math.pow(10,p);if(isFinite(sc)&&Math.abs(sc)<1e15&&!Number.isInteger(sc)&&Number.isInteger(sc*2)){let r=Math.floor(sc);if(r%2!==0)r+=1;return (r/Math.pow(10,p)).toFixed(p)}return x.toFixed(p)}
     function cformat(f,vals,line){let i=0;return String(f).replace(/%(-?)(\+?)(0?)(\d*)(?:\.(\d+))?(lld|ld|lu|u|d|i|f|e|E|g|G|s|@|x|X|o|c|%)/g,(m,left,plus,zero,w,pr,k)=>{if(k==="%")return "%";const v=vals[i++];let s;
       const expo=(x,p)=>x.toExponential(p).replace(/e([+-])(\d)$/,"e$10$2");
-      if(k==="f"){s=num(v).toFixed(pr===undefined?6:+pr)}
+      if(k==="f"){s=cfixed(num(v),pr===undefined?6:+pr)}
       else if(k==="e"||k==="E"){s=expo(num(v),pr===undefined?6:+pr);if(k==="E")s=s.toUpperCase()}
       else if(k==="g"||k==="G"){const x=num(v),P=pr===undefined?6:Math.max(1,+pr);const ex=x===0?0:Math.floor(Math.log10(Math.abs(x)));
         if(ex<-4||ex>=P)s=expo(x,P-1).replace(/\.?0+e/,"e");else{s=x.toFixed(Math.max(0,P-1-ex));if(s.includes("."))s=s.replace(/\.?0+$/,"")}if(k==="G")s=s.toUpperCase()}
