@@ -45243,7 +45243,315 @@ COURSE_PY.units.push({name:"Objects & sturdy programs",lessons:[
  {type:"done"}]}
 ]});
 
-/* deep-sql: added units (see header in each agent's work). */
+/* deep-sql: SQL Unit 6 "Query workout" (sql16-sql20) and Unit 7 "Data detective" (sql21-sql25).
+   Adds the zoo gift shop table (sales). Prices are whole coins; keeper_id is who ran the till (NULL = the self-serve machine).
+   Answers are verified with SQLite (tests/verify_compiled.py sql, tests/verify_sql_engine.py). */
+ZOO_TABLES.sales={cols:["id","day","item","price","qty","keeper_id"],rows:[
+  [1,"Mon","banana",2,10,1],[2,"Mon","ice pop",3,4,3],[3,"Tue","banana",2,7,2],[4,"Tue","peanuts",1,12,2],
+  [5,"Wed","ice pop",3,9,1],[6,"Wed","banana",2,15,3],[7,"Wed","hat",8,2,1],[8,"Thu","peanuts",1,5,null]]};
+
+COURSE_SQL.units.push({name:"Query workout",lessons:[
+{id:"sql16",title:"Smarter filters",sub:"AND, OR, NOT and parentheses",steps:[
+ {type:"talk",title:"Group your conditions",
+  body:`<p>When a WHERE mixes ${C("AND")} and ${C("OR")}, wrap the OR part in parentheses so SQL checks it as one idea.</p>`,
+  demo:`SELECT name FROM animals\nWHERE (species = 'monkey' OR species = 'owl') AND age > 3;`,show:["animals"],
+  say:"Result: Mo, Odo. Pip is a monkey, but he's only 2."},
+ {type:"talk",title:"AND goes first",mood:"oops",
+  body:`<p>Without parentheses, SQL does ${C("AND")} before ${C("OR")}, just like × comes before + in math. This query means "monkeys, OR owls older than 3":</p>`,
+  demo:`SELECT name FROM animals\nWHERE species = 'monkey' OR species = 'owl' AND age > 3;`,
+  say:"Result: Mo, Pip, Odo. Pip sneaks in because the age check only sticks to the owl part."},
+ {type:"quiz",q:"In a WHERE with both AND and OR (and no parentheses), which is checked first?",opts:["AND","OR","Whichever comes first, left to right"],a:0,why:"AND binds tighter than OR. Parentheses make your meaning clear either way."},
+ {type:"code",title:"Fix the filter",body:`<p>We want monkeys and pandas that are <b>older than 3</b>, sorted by name. The starter lets young Pip slip through. Fix it!</p>`,
+  start:`SELECT name FROM animals\nWHERE species = 'monkey' OR species = 'panda' AND age > 3\nORDER BY name;`,
+  use:[[/\(/,"Group the two species checks with parentheses ( ), or use IN (...)."]],out:["Bao","Mo"],
+  hint:`SELECT name FROM animals\nWHERE (species = 'monkey' OR species = 'panda') AND age > 3\nORDER BY name;`},
+ {type:"talk",title:"NOT, and the _ wildcard",mood:"think",
+  body:`<p>${C("NOT")} flips a condition: ${C("NOT IN")}, ${C("NOT LIKE")}, ${C("NOT BETWEEN")}. In LIKE, ${C("%")} means "any amount of letters" and ${C("_")} means "exactly one letter".</p>`,
+  demo:`SELECT name FROM animals WHERE name LIKE '_i%';`,
+  say:"Result: Kiki, Pip. Their second letter is i."},
+ {type:"fill",title:"Second letter a",body:`<p>Find keepers whose name has ${C("a")} as the second letter.</p>`,
+  code:`SELECT name FROM keepers WHERE name [0] '[1]a%';`,blanks:["LIKE","_"],tokens:["LIKE","_","=","*"],why:"_ matches exactly one letter, then a, then anything.",out:"Kai"},
+ {type:"code",title:"No birds, middle ages",body:`<p>Find animals that are <b>not</b> parrots or owls (use ${C("NOT IN")}) and are aged ${C("BETWEEN")} 3 and 9. Sort them by age.</p>`,
+  start:`SELECT name FROM animals\n`,
+  use:[[/not\s+in/i,"Use NOT IN ('parrot', 'owl')."],[/between/i,"Use BETWEEN 3 AND 9 for the ages."]],out:["Mo","Bao","Zuri"],
+  hint:`SELECT name FROM animals\nWHERE species NOT IN ('parrot', 'owl')\n  AND age BETWEEN 3 AND 9\nORDER BY age;`},
+ {type:"quiz",q:"What does this return?",code:`SELECT COUNT(*) FROM snacks\nWHERE NOT (food = 'banana' OR qty > 10);`,opts:["2","4","3"],a:0,mono:true,why:"It keeps snacks that are neither bananas nor big: seeds (4) and mango (2)."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`SELECT name FROM animals WHERE species = 'monkey' AND age > 3 OR species = 'owl';`,["Mo\nOdo","Mo","Mo\nPip\nOdo"]],
+  [`SELECT name FROM keepers WHERE NOT shift = 'night';`,["Ava\nKai","Leo\nMia","Ava"]],
+  [`SELECT food FROM snacks WHERE food LIKE 'b_n%';`,["banana\nbanana","banana\nbamboo","bamboo"]],
+  [`SELECT COUNT(*) FROM animals WHERE (age < 5 OR age > 10) AND keeper_id IS NOT NULL;`,["3","4","2"]],
+  [`SELECT name FROM animals WHERE age NOT BETWEEN 4 AND 9;`,["Kiki\nPip","Mo\nBao\nZuri\nOdo","Pip"]]
+ ]},
+{id:"sql17",title:"Sorting like a pro",sub:"two-column sorts, DISTINCT and OFFSET",steps:[
+ {type:"talk",title:"Sort by two columns",
+  body:`<p>${C("ORDER BY")} can take several columns. SQL sorts by the first one, and only uses the next one to break ties.</p>`,
+  demo:`SELECT species, name, age FROM animals\nORDER BY species, age DESC;`,show:["animals"],
+  say:"The two monkeys tie on species, so age DESC decides: Mo (4) comes before Pip (2)."},
+ {type:"talk",title:"DISTINCT: no repeats",mood:"think",
+  body:`<p>${C("SELECT DISTINCT")} removes duplicate rows from the result. Great for "which different values are there?"</p>`,
+  demo:`SELECT DISTINCT food FROM snacks ORDER BY food;`,show:["snacks"],
+  say:"Result: bamboo, banana, leaves, mango, seeds. Banana appears once, not twice."},
+ {type:"quiz",q:"In ORDER BY shift, name, when does SQL look at name?",opts:["Only when two rows have the same shift","Always first","Never, only one column counts"],a:0,why:"The second column is the tie-breaker."},
+ {type:"code",title:"Keeper roster",body:`<p>Show each keeper's ${C("shift")} and ${C("name")}, sorted by shift A to Z, and inside each shift by name <b>Z to A</b>.</p>`,
+  start:`SELECT shift, name FROM keepers\nORDER BY shift;`,
+  use:[[/order\s+by\s+shift(\s+asc)?\s*,\s*name\s+desc/i,"Sort by shift, then name DESC."]],out:["morning | Kai","morning | Ava","night | Mia","night | Leo"],
+  hint:`SELECT shift, name FROM keepers\nORDER BY shift, name DESC;`},
+ {type:"talk",title:"OFFSET: skip ahead",
+  body:`<p>${C("LIMIT 2 OFFSET 2")} skips the first 2 rows, then keeps 2. That's how apps show "page 2" of a list.</p>`,
+  demo:`SELECT name, age FROM animals\nORDER BY age DESC\nLIMIT 2 OFFSET 2;`,
+  say:"Kiki and Zuri are page 1. Page 2 is Bao | 7, Odo | 5."},
+ {type:"fill",title:"Third place",body:`<p>Find the snack with the <b>third</b> biggest qty.</p>`,
+  code:`SELECT food, qty FROM snacks\nORDER BY qty [0]\nLIMIT 1 [1] 2;`,blanks:["DESC","OFFSET"],tokens:["DESC","OFFSET","ASC","SKIP"],why:"Biggest first, skip the top 2, keep 1.",out:"banana | 6"},
+ {type:"code",title:"Busy keepers",body:`<p>List the <b>different</b> keeper_ids that look after an animal, smallest first. Leave out the NULL.</p>`,
+  start:`SELECT keeper_id FROM animals;`,
+  use:[[/\bdistinct\b/i,"Use SELECT DISTINCT so each id appears once."]],out:["1","2","3"],
+  hint:`SELECT DISTINCT keeper_id FROM animals\nWHERE keeper_id IS NOT NULL\nORDER BY keeper_id;`},
+ {type:"quiz",q:"What does this return?",code:`SELECT DISTINCT species FROM animals\nWHERE age < 6\nORDER BY species;`,opts:["monkey\nowl","monkey\nmonkey\nowl","owl"],a:0,mono:true,why:"Mo, Pip and Odo are under 6. The two monkeys collapse into one row."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`SELECT name FROM keepers ORDER BY shift DESC, name;`,["Leo\nMia\nAva\nKai","Ava\nKai\nLeo\nMia","Mia\nLeo\nKai\nAva"]],
+  [`SELECT COUNT(DISTINCT food) FROM snacks;`,["5","6","2"]],
+  [`SELECT name FROM animals ORDER BY name LIMIT 2 OFFSET 1;`,["Kiki\nMo","Bao\nKiki","Mo\nOdo"]],
+  [`SELECT DISTINCT shift FROM keepers ORDER BY shift DESC;`,["night\nmorning","morning\nnight","night"]]
+ ]},
+{id:"sql18",title:"The gift shop",sub:"GROUP BY with math inside",steps:[
+ {type:"talk",title:"Meet the sales table",mood:"cheer",
+  body:`<p>The zoo has a gift shop! Each row of ${C("sales")} is one sale: the ${C("day")}, the ${C("item")}, its ${C("price")} in coins, how many were sold (${C("qty")}) and which keeper ran the till. A NULL keeper_id means the self-serve machine.</p>`,
+  show:["sales"],say:"Row 1: on Monday Ava sold 10 bananas at 2 coins each."},
+ {type:"talk",title:"Math inside aggregates",
+  body:`<p>Aggregates can work on a calculation. ${C("price * qty")} is the coins from one row, and ${C("SUM()")} adds them all up.</p>`,
+  demo:`SELECT SUM(price * qty) AS coins FROM sales;`,
+  say:"Result: 136 coins for the whole week."},
+ {type:"code",title:"Coins per item",body:`<p>For each item, show the item and the total coins it earned (${C("price * qty")}), biggest first.</p>`,
+  start:`SELECT item, SUM(qty)\nFROM sales\nGROUP BY item;`,
+  use:[[/sum\s*\(\s*(price\s*\*\s*qty|qty\s*\*\s*price)\s*\)/i,"Total the coins with SUM(price * qty)."],[/group\s+by\s+item/i,"Group by item."]],out:["banana | 64","ice pop | 39","peanuts | 17","hat | 16"],
+  hint:`SELECT item, SUM(price * qty) AS coins\nFROM sales\nGROUP BY item\nORDER BY coins DESC;`},
+ {type:"talk",title:"Several numbers per group",mood:"think",
+  body:`<p>One GROUP BY can produce lots of numbers at once. Here's how many sales and how many items each day had.</p>`,
+  demo:`SELECT day, COUNT(*) AS sales, SUM(qty) AS sold\nFROM sales\nGROUP BY day\nORDER BY sold DESC;`,
+  say:"Result: Wed | 3 | 26, Tue | 2 | 19, Mon | 2 | 14, Thu | 1 | 5"},
+ {type:"quiz",q:"You want only days that earned more than 30 coins. Where does that condition go?",opts:["HAVING SUM(price * qty) > 30","WHERE SUM(price * qty) > 30","ORDER BY 30"],a:0,why:"The total only exists after grouping, so it has to be HAVING."},
+ {type:"fill",title:"Big days",body:`<p>Show the days that earned more than 30 coins.</p>`,
+  code:`SELECT day, SUM(price * qty) AS coins\nFROM sales\n[0] day\n[1] SUM(price * qty) > 30\nORDER BY coins DESC;`,blanks:["GROUP BY","HAVING"],tokens:["GROUP BY","HAVING","WHERE","ORDER BY"],why:"Group by day, then keep only the big groups.",out:"Wed | 73\nMon | 32"},
+ {type:"code",title:"Average sale size",body:`<p>For each item sold <b>more than once</b>, show the item and its average qty rounded to 1 decimal place, biggest first.</p>`,
+  start:`SELECT item, AVG(qty)\nFROM sales\nGROUP BY item;`,
+  use:[[/\bhaving\b/i,"Keep only items sold more than once with HAVING COUNT(*) > 1."],[/round\s*\(/i,"Round with ROUND(AVG(qty), 1)."]],out:["banana | 10.7","peanuts | 8.5","ice pop | 6.5"],
+  hint:`SELECT item, ROUND(AVG(qty), 1) AS avg_qty\nFROM sales\nGROUP BY item\nHAVING COUNT(*) > 1\nORDER BY avg_qty DESC;`},
+ {type:"quiz",q:"What does this return?",code:`SELECT item FROM sales\nGROUP BY item\nHAVING SUM(qty) > 15\nORDER BY item;`,opts:["banana\npeanuts","banana","banana\nice pop\npeanuts"],a:0,mono:true,why:"Bananas sold 32 and peanuts 17. Ice pops only sold 13."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`SELECT SUM(qty) FROM sales WHERE item = 'banana';`,["32","3","64"]],
+  [`SELECT COUNT(DISTINCT day) FROM sales;`,["4","8","3"]],
+  [`SELECT item, MAX(price) FROM sales GROUP BY item ORDER BY MAX(price) DESC LIMIT 1;`,["hat | 8","banana | 2","ice pop | 3"]],
+  [`SELECT day FROM sales GROUP BY day HAVING COUNT(*) = 1;`,["Thu","Mon","Wed"]],
+  [`SELECT SUM(price * qty) FROM sales WHERE day = 'Mon';`,["32","14","5"]]
+ ]},
+{id:"sql19",title:"Joins workout",sub:"three tables, LEFT JOIN and COALESCE",steps:[
+ {type:"talk",title:"Who sold it?",
+  body:`<p>${C("sales.keeper_id")} points at ${C("keepers.id")}, just like animals do. Join them to see names.</p>`,
+  demo:`SELECT s.day, s.item, k.name\nFROM sales s\nJOIN keepers k ON s.keeper_id = k.id\nWHERE s.item = 'banana'\nORDER BY s.id;`,show:["sales","keepers"],
+  say:"Result: Mon | banana | Ava, Tue | banana | Leo, Wed | banana | Kai"},
+ {type:"talk",title:"LEFT JOIN + COALESCE",mood:"think",
+  body:`<p>The Thursday sale was the machine, so an INNER JOIN drops it. A ${C("LEFT JOIN")} keeps it with a NULL name, and ${C("COALESCE")} swaps that NULL for a friendly word.</p>`,
+  demo:`SELECT s.id, COALESCE(k.name, 'machine') AS seller\nFROM sales s\nLEFT JOIN keepers k ON s.keeper_id = k.id\nWHERE s.day = 'Thu';`,
+  say:"Result: 8 | machine"},
+ {type:"quiz",q:"Which query keeps the machine's sale in the results?",opts:["FROM sales s LEFT JOIN keepers k ...","FROM sales s JOIN keepers k ...","Neither can"],a:0,why:"LEFT JOIN keeps every row of the left table (sales), matched or not."},
+ {type:"code",title:"Seller leaderboard",body:`<p>Show each seller's name and the coins they earned (${C("price * qty")}), biggest first. Count the machine too, with the name ${C("machine")}.</p>`,
+  start:`SELECT k.name, SUM(s.price * s.qty)\nFROM sales s\nJOIN keepers k ON s.keeper_id = k.id\nGROUP BY k.name;`,
+  use:[[/left\s+join/i,"Use LEFT JOIN so the machine's sale counts too."],[/coalesce|ifnull/i,"Turn the NULL name into 'machine' with COALESCE."]],out:["Ava | 63","Kai | 42","Leo | 26","machine | 5"],
+  hint:`SELECT COALESCE(k.name, 'machine') AS seller, SUM(s.price * s.qty) AS coins\nFROM sales s\nLEFT JOIN keepers k ON s.keeper_id = k.id\nGROUP BY seller\nORDER BY coins DESC;`},
+ {type:"talk",title:"Three tables in a row",
+  body:`<p>You can chain joins: snacks → animals → keepers. Each JOIN adds one more table to the row.</p>`,
+  demo:`SELECT k.name, a.name, s.food\nFROM snacks s\nJOIN animals a ON s.animal_id = a.id\nJOIN keepers k ON a.keeper_id = k.id\nWHERE k.shift = 'morning'\nORDER BY s.qty DESC\nLIMIT 3;`,
+  say:"Result: Ava | Bao | bamboo, Kai | Zuri | leaves, Ava | Mo | banana"},
+ {type:"order",title:"Snacks per shift",body:`<p>Total the snacks eaten by animals of each shift's keepers.</p>`,
+  lines:["SELECT k.shift, SUM(s.qty) AS eaten","FROM snacks s","JOIN animals a ON s.animal_id = a.id","JOIN keepers k ON a.keeper_id = k.id","GROUP BY k.shift","ORDER BY eaten DESC;"],why:"Join animals first, because keepers connect through a.keeper_id.",out:"morning | 46\nnight | 4"},
+ {type:"code",title:"Everyone's sales",body:`<p>Show every keeper's name and how many sales they rang up, most first, then by name. Mia sold nothing, so she should show ${C("0")}. The starter has a sneaky bug: it gives Mia 1!</p>`,
+  start:`SELECT k.name, COUNT(*)\nFROM keepers k\nLEFT JOIN sales s ON s.keeper_id = k.id\nGROUP BY k.id\nORDER BY k.name;`,
+  use:[[/count\s*\(\s*s\.\w+\s*\)/i,"Count a column from sales, like COUNT(s.id). COUNT(*) also counts Mia's empty row."]],out:["Ava | 3","Kai | 2","Leo | 2","Mia | 0"],
+  hint:`SELECT k.name, COUNT(s.id) AS num_sales\nFROM keepers k\nLEFT JOIN sales s ON s.keeper_id = k.id\nGROUP BY k.id\nORDER BY num_sales DESC, k.name;`},
+ {type:"quiz",q:"What does this return?",code:`SELECT COUNT(*) FROM sales s\nJOIN keepers k ON s.keeper_id = k.id\nWHERE k.shift = 'night';`,opts:["2","4","3"],a:0,mono:true,why:"Night keepers are Leo and Mia. Leo made 2 sales and Mia made none."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`SELECT k.name FROM sales s JOIN keepers k ON s.keeper_id = k.id WHERE s.item = 'hat';`,["Ava","Kai","hat"]],
+  [`SELECT COUNT(*) FROM sales s LEFT JOIN keepers k ON s.keeper_id = k.id;`,["8","7","4"]],
+  [`SELECT COALESCE(keeper_id, 0) FROM sales WHERE id = 8;`,["0","NULL","8"]],
+  [`SELECT k.name, SUM(s.qty) FROM keepers k JOIN sales s ON s.keeper_id = k.id GROUP BY k.id ORDER BY SUM(s.qty) DESC LIMIT 1;`,["Ava | 21","Leo | 19","Kai | 19"]]
+ ]},
+{id:"sql20",title:"Project: Banana Shop Analytics",sub:"a weekly report for the gift shop",project:true,steps:[
+ {type:"talk",title:"The shop manager needs numbers",mood:"cheer",
+  body:`<p>The gift shop manager wants a weekly report: total takings, the best day, banana sales per day, and a price list. You'll write each query.</p>`,
+  show:["sales"],say:"This is exactly what data analysts do with real shop data."},
+ {type:"code",title:"Step 1: the week's takings",body:`<p>In one query, show the total coins (${C("price * qty")}) and the total number of items sold, as two columns.</p>`,
+  start:`-- two SUMs in one SELECT\n`,
+  use:[[/sum\s*\(/i,"Use SUM() twice."]],out:["136 | 64"],
+  hint:`SELECT SUM(price * qty) AS coins, SUM(qty) AS items\nFROM sales;`},
+ {type:"code",title:"Step 2: best day",body:`<p>Show the single day that earned the most coins, and how many coins.</p>`,
+  start:`SELECT day, SUM(price * qty) AS coins\nFROM sales\nGROUP BY day;`,
+  use:[[/order\s+by/i,"Sort with ORDER BY coins DESC."],[/limit\s+1/i,"Keep just the top row with LIMIT 1."]],out:["Wed | 73"],
+  hint:`SELECT day, SUM(price * qty) AS coins\nFROM sales\nGROUP BY day\nORDER BY coins DESC\nLIMIT 1;`},
+ {type:"code",title:"Step 3: bananas vs the rest",body:`<p>For each day, show the day, how many bananas were sold, and how many <b>other</b> items were sold. Use ${C("SUM(CASE WHEN ... THEN qty ELSE 0 END)")}. Most bananas first.</p>`,
+  start:`SELECT day, SUM(qty)\nFROM sales\nGROUP BY day;`,
+  use:[[/sum\s*\(\s*case/i,"Use SUM(CASE WHEN item = 'banana' THEN qty ELSE 0 END)."]],out:["Wed | 15 | 11","Mon | 10 | 4","Tue | 7 | 12","Thu | 0 | 5"],
+  hint:`SELECT day,\n  SUM(CASE WHEN item = 'banana' THEN qty ELSE 0 END) AS bananas,\n  SUM(CASE WHEN item <> 'banana' THEN qty ELSE 0 END) AS other\nFROM sales\nGROUP BY day\nORDER BY bananas DESC;`},
+ {type:"quiz",q:"Why write ELSE 0 inside those CASEs?",opts:["So a day with no bananas shows 0 instead of NULL","Because CASE must always have ELSE","To make the query faster"],a:0,why:"Without ELSE, non-matching rows give NULL. If every row is NULL, SUM returns NULL too."},
+ {type:"order",title:"Step 4: the price list",body:`<p>List the items that sold at least 10, with their price and total sold, priciest first.</p>`,
+  lines:["SELECT item, price, SUM(qty) AS sold","FROM sales","GROUP BY item","HAVING SUM(qty) >= 10","ORDER BY price DESC;"],why:"FROM, GROUP BY, HAVING, ORDER BY. The hat only sold 2, so it's left out.",out:"ice pop | 3 | 13\nbanana | 2 | 32\npeanuts | 1 | 17"},
+ {type:"talk",title:"The finished report",mood:"cheer",
+  body:`<p>Here's a report card for every item, including each item's share of the takings. The subquery finds the week's total so we can work out a percentage.</p>`,
+  demo:`SELECT item,\n       SUM(qty) AS sold,\n       SUM(price * qty) AS coins,\n       ROUND(100.0 * SUM(price * qty) / (SELECT SUM(price * qty) FROM sales), 1) AS pct\nFROM sales\nGROUP BY item\nORDER BY coins DESC;`,
+  say:"Result:\nbanana | 32 | 64 | 47.1\nice pop | 13 | 39 | 28.7\npeanuts | 17 | 17 | 12.5\nhat | 2 | 16 | 11.8\n\nBananas bring in almost half the money. Of course they do! 🍌"},
+ {type:"done"}]}
+]});
+
+COURSE_SQL.units.push({name:"Data detective",lessons:[
+{id:"sql21",title:"EXISTS & linked subqueries",sub:"subqueries that look at the outer row",steps:[
+ {type:"talk",title:"A subquery per row",
+  body:`<p>A subquery can use a column from the <b>outer</b> query. Then it runs once for each row. Here it counts each animal's meals.</p>`,
+  demo:`SELECT name,\n  (SELECT COUNT(*) FROM snacks s WHERE s.animal_id = a.id) AS meals\nFROM animals a\nORDER BY a.id;`,show:["animals","snacks"],
+  say:"Result: Mo 2, Kiki 1, Bao 1, Zuri 1, Pip 1, Odo 0. The a.id inside changes for every animal."},
+ {type:"talk",title:"EXISTS: is there at least one?",mood:"think",
+  body:`<p>${C("EXISTS (SELECT ...)")} is true when the subquery finds at least one row. ${C("NOT EXISTS")} is true when it finds none. What you SELECT inside doesn't matter, so people write ${C("SELECT 1")}.</p>`,
+  demo:`SELECT name FROM keepers k\nWHERE EXISTS (\n  SELECT 1 FROM sales s WHERE s.keeper_id = k.id\n);`,
+  say:"Result: Ava, Leo, Kai. They've each sold something in the shop."},
+ {type:"quiz",q:"What does EXISTS check?",opts:["Whether the subquery returns at least one row","Whether a table exists","Whether a column is NULL"],a:0,why:"It only cares if there's a row or not."},
+ {type:"code",title:"Snackless animals",body:`<p>Find the animals that have <b>no</b> snacks at all. The starter finds the opposite. Flip it!</p>`,
+  start:`SELECT name FROM animals a\nWHERE EXISTS (\n  SELECT 1 FROM snacks s WHERE s.animal_id = a.id\n);`,
+  use:[[/not\s+exists/i,"Use NOT EXISTS."]],out:["Odo"],
+  hint:`SELECT name FROM animals a\nWHERE NOT EXISTS (\n  SELECT 1 FROM snacks s WHERE s.animal_id = a.id\n);`},
+ {type:"fill",title:"Oldest of each kind",body:`<p>Find the oldest animal of each species. The inner query looks only at the outer animal's species.</p>`,
+  code:`SELECT name FROM animals a\nWHERE age = (SELECT [0](age) FROM animals b WHERE b.species = [1].species)\nORDER BY name;`,blanks:["MAX","a"],tokens:["MAX","a","MIN","b"],why:"b is the inner copy of animals; a.species is the outer animal's species.",out:"Bao\nKiki\nMo\nOdo\nZuri"},
+ {type:"code",title:"Snack sellers",body:`<p>Find the keepers who sold at least one ${C("hat")} or ${C("ice pop")}. Use ${C("EXISTS")}. Sort by name.</p>`,
+  start:`SELECT name FROM keepers k\nORDER BY name;`,
+  use:[[/\bexists\s*\(/i,"Use EXISTS (SELECT 1 FROM sales s WHERE ...)."]],out:["Ava","Kai"],
+  hint:`SELECT name FROM keepers k\nWHERE EXISTS (\n  SELECT 1 FROM sales s\n  WHERE s.keeper_id = k.id AND s.item IN ('hat', 'ice pop')\n)\nORDER BY name;`},
+ {type:"quiz",q:"What does this return?",code:`SELECT name FROM keepers k\nWHERE NOT EXISTS (\n  SELECT 1 FROM animals a WHERE a.keeper_id = k.id\n);`,opts:["Mia","Odo","(no rows)"],a:0,mono:true,why:"Mia is the only keeper with no animals."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`SELECT COUNT(*) FROM animals a WHERE EXISTS (SELECT 1 FROM snacks s WHERE s.animal_id = a.id);`,["5","6","1"]],
+  [`SELECT EXISTS (SELECT 1 FROM animals WHERE age > 10);`,["1","0","Kiki"]],
+  [`SELECT (SELECT COUNT(*) FROM sales s WHERE s.keeper_id = k.id) FROM keepers k WHERE k.name = 'Kai';`,["2","3","0"]],
+  [`SELECT name FROM keepers k WHERE NOT EXISTS (SELECT 1 FROM sales s WHERE s.keeper_id = k.id);`,["Mia","(no rows)","Leo"]]
+ ]},
+{id:"sql22",title:"CASE power-ups",sub:"labels, custom sorting and pivot tables",steps:[
+ {type:"talk",title:"Count with CASE",
+  body:`<p>${C("SUM(CASE WHEN ... THEN 1 ELSE 0 END)")} counts only the rows that match, so you can count several things in one query.</p>`,
+  demo:`SELECT COUNT(*) AS animals,\n       SUM(CASE WHEN age >= 5 THEN 1 ELSE 0 END) AS grownups\nFROM animals;`,show:["animals"],
+  say:"Result: 6 | 4. Kiki, Bao, Zuri and Odo are 5 or older."},
+ {type:"talk",title:"Your own sort order",mood:"think",
+  body:`<p>Days sort A to Z as Mon, Thu, Tue, Wed. Oops! A CASE in ${C("ORDER BY")} turns each day into a number. ${C("CASE day WHEN 'Mon' THEN 1 ...")} is a shortcut for comparing one column.</p>`,
+  demo:`SELECT day, SUM(qty) AS sold\nFROM sales\nGROUP BY day\nORDER BY CASE day WHEN 'Mon' THEN 1\n                  WHEN 'Tue' THEN 2\n                  WHEN 'Wed' THEN 3\n                  ELSE 4 END;`,show:["sales"],
+  say:"Result: Mon | 14, Tue | 19, Wed | 26, Thu | 5. In week order!"},
+ {type:"quiz",q:"Where can you use CASE?",opts:["In SELECT, WHERE, ORDER BY, even inside SUM()","Only in SELECT","Only in WHERE"],a:0,why:"CASE is just an expression, so it works anywhere a value can go."},
+ {type:"code",title:"Early birds and night owls",body:`<p>Show each keeper's name and a label: ${C("early bird")} for the morning shift, ${C("night owl")} for the night shift. Sort by name.</p>`,
+  start:`SELECT name, shift FROM keepers\nORDER BY name;`,
+  use:[[/\bcase\b/i,"Use CASE WHEN shift = 'morning' THEN ... ELSE ... END."]],out:["Ava | early bird","Kai | early bird","Leo | night owl","Mia | night owl"],
+  hint:`SELECT name,\n  CASE WHEN shift = 'morning' THEN 'early bird' ELSE 'night owl' END AS label\nFROM keepers\nORDER BY name;`},
+ {type:"fill",title:"A tiny pivot",body:`<p>Count morning and night keepers side by side, as two columns.</p>`,
+  code:`SELECT\n  SUM(CASE WHEN shift = 'morning' THEN 1 ELSE 0 END) AS morning,\n  SUM([0] WHEN shift = 'night' [1] 1 ELSE 0 END) AS night\nFROM keepers;`,blanks:["CASE","THEN"],tokens:["CASE","THEN","IF","DO"],why:"Same pattern, different condition. Turning rows into columns like this is called a pivot.",out:"2 | 2"},
+ {type:"code",title:"Snack pivot",body:`<p>For each animal that ate snacks, show its name, its <b>fruit</b> qty (banana and mango) and its <b>other</b> qty, sorted by name.</p>`,
+  start:`SELECT a.name, SUM(s.qty)\nFROM snacks s\nJOIN animals a ON s.animal_id = a.id\nGROUP BY a.id\nORDER BY a.name;`,
+  use:[[/sum\s*\(\s*case/i,"Use SUM(CASE WHEN ... THEN s.qty ELSE 0 END) for each column."]],out:["Bao | 0 | 20","Kiki | 0 | 4","Mo | 8 | 0","Pip | 3 | 0","Zuri | 0 | 15"],
+  hint:`SELECT a.name,\n  SUM(CASE WHEN s.food IN ('banana', 'mango') THEN s.qty ELSE 0 END) AS fruit,\n  SUM(CASE WHEN s.food NOT IN ('banana', 'mango') THEN s.qty ELSE 0 END) AS other\nFROM snacks s\nJOIN animals a ON s.animal_id = a.id\nGROUP BY a.id\nORDER BY a.name;`},
+ {type:"quiz",q:"What does this return?",code:`SELECT CASE WHEN qty > 10 THEN 'big' END\nFROM snacks WHERE id = 4;`,opts:["NULL","big","small"],a:0,mono:true,why:"Seeds have qty 4, nothing matches and there's no ELSE, so the answer is NULL."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`SELECT CASE species WHEN 'monkey' THEN '🐒' ELSE '?' END FROM animals WHERE id = 5;`,["🐒","?","monkey"]],
+  [`SELECT SUM(CASE WHEN food = 'banana' THEN qty ELSE 0 END) FROM snacks;`,["9","2","50"]],
+  [`SELECT name FROM keepers ORDER BY CASE WHEN shift = 'night' THEN 0 ELSE 1 END, id LIMIT 1;`,["Leo","Ava","Mia"]],
+  [`SELECT COUNT(CASE WHEN keeper_id IS NULL THEN 1 END) FROM sales;`,["1","8","0"]]
+ ]},
+{id:"sql23",title:"WITH: queries in steps",sub:"common table expressions (CTEs)",steps:[
+ {type:"talk",title:"Name a step",
+  body:`<p>${C("WITH name AS (SELECT ...)")} gives a query a name. Then the main query can use it like a table. This is called a <b>CTE</b> (common table expression).</p>`,
+  demo:`WITH monkeys AS (\n  SELECT * FROM animals WHERE species = 'monkey'\n)\nSELECT name, age FROM monkeys ORDER BY age;`,show:["animals"],
+  say:"Result: Pip | 2, Mo | 4"},
+ {type:"talk",title:"Step after step",mood:"think",
+  body:`<p>Separate several CTEs with commas. Each one can use the ones before it, so a tricky question becomes small, readable steps.</p>`,
+  demo:`WITH totals AS (\n  SELECT animal_id, SUM(qty) AS eaten FROM snacks GROUP BY animal_id\n),\nbig AS (\n  SELECT * FROM totals WHERE eaten >= 8\n)\nSELECT a.name, b.eaten\nFROM big b\nJOIN animals a ON a.id = b.animal_id\nORDER BY b.eaten DESC;`,
+  say:"Result: Bao | 20, Zuri | 15, Mo | 8"},
+ {type:"quiz",q:"Why do people use WITH?",opts:["To give a step a name, so big queries read top to bottom","To make a permanent new table","To delete rows safely"],a:0,why:"A CTE only lives for that one query. It's about readability."},
+ {type:"code",title:"Grown-up club",body:`<p>Finish the CTE: ${C("grownups")} should hold the animals aged 5 or more. The main query is already written.</p>`,
+  start:`WITH grownups AS (\n  -- your query here\n)\nSELECT name FROM grownups ORDER BY name;`,
+  use:[[/^\s*with\s+grownups\s+as\s*\(/i,"Keep WITH grownups AS ( ... ) at the top."],[/age\s*>=\s*5|age\s*>\s*4/i,"Inside, keep animals WHERE age >= 5."]],out:["Bao","Kiki","Odo","Zuri"],
+  hint:`WITH grownups AS (\n  SELECT * FROM animals WHERE age >= 5\n)\nSELECT name FROM grownups ORDER BY name;`},
+ {type:"fill",title:"Keeper totals",body:`<p>Name a step that totals each keeper's sales, then join it to keepers.</p>`,
+  code:`[0] keeper_totals [1] (\n  SELECT keeper_id, SUM(qty) AS sold FROM sales GROUP BY keeper_id\n)\nSELECT k.name, t.sold\nFROM keeper_totals t\nJOIN keepers k ON k.id = t.keeper_id\nORDER BY t.sold DESC, k.name;`,blanks:["WITH","AS"],tokens:["WITH","AS","FROM","TABLE"],why:"WITH name AS ( query ).",out:"Ava | 21\nKai | 19\nLeo | 19"},
+ {type:"code",title:"Star items",body:`<p>${C("item_coins")} already totals the coins for each item. Keep only items that earned <b>more than the average item</b>, using ${C("(SELECT AVG(coins) FROM item_coins)")}.</p>`,
+  start:`WITH item_coins AS (\n  SELECT item, SUM(price * qty) AS coins\n  FROM sales\n  GROUP BY item\n)\nSELECT item, coins FROM item_coins\nORDER BY coins DESC;`,
+  use:[[/avg\s*\(\s*coins\s*\)/i,"Compare with (SELECT AVG(coins) FROM item_coins)."]],out:["banana | 64","ice pop | 39"],
+  hint:`WITH item_coins AS (\n  SELECT item, SUM(price * qty) AS coins\n  FROM sales\n  GROUP BY item\n)\nSELECT item, coins FROM item_coins\nWHERE coins > (SELECT AVG(coins) FROM item_coins)\nORDER BY coins DESC;`},
+ {type:"order",title:"Who never ate?",body:`<p>Put the CTE query in order to count animals that never had a snack.</p>`,
+  lines:["WITH fed AS (","  SELECT DISTINCT animal_id FROM snacks",")","SELECT COUNT(*) FROM animals","WHERE id NOT IN (SELECT animal_id FROM fed);"],why:"The WITH step comes first, then the main query uses it.",out:"1"},
+ {type:"quiz",q:"What does this return?",code:`WITH t AS (SELECT qty FROM snacks WHERE qty > 5)\nSELECT COUNT(*) FROM t;`,opts:["3","6","2"],a:0,mono:true,why:"Only 6, 20 and 15 are bigger than 5."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`WITH m AS (SELECT * FROM animals WHERE species = 'monkey') SELECT SUM(age) FROM m;`,["6","2","4"]],
+  [`WITH n AS (SELECT name FROM keepers WHERE shift = 'night') SELECT COUNT(*) FROM n;`,["2","4","1"]],
+  [`WITH big AS (SELECT * FROM sales WHERE qty >= 10) SELECT item FROM big ORDER BY qty DESC;`,["banana\npeanuts\nbanana","banana\nbanana\npeanuts","peanuts"]],
+  [`WITH base AS (SELECT 2 AS x), bigger AS (SELECT x * 10 AS y FROM base) SELECT y FROM bigger;`,["20","2","10"]]
+ ]},
+{id:"sql24",title:"Changing data like a pro",sub:"UPDATE and DELETE with subqueries, INSERT … SELECT",steps:[
+ {type:"talk",title:"Price rise",
+  body:`<p>${C("UPDATE")} can use math on the old value. Bananas just went up by 1 coin!</p>`,
+  demo:`UPDATE sales SET price = price + 1 WHERE item = 'banana';\nSELECT SUM(price * qty) FROM sales;`,show:["sales"],
+  say:"Result: 168. That's 136 plus 32 extra coins, one per banana sold."},
+ {type:"talk",title:"Subqueries pick the rows",mood:"think",
+  body:`<p>The WHERE of an UPDATE or DELETE can use ${C("IN (SELECT ...)")}, so one table decides what changes in another.</p>`,
+  demo:`DELETE FROM snacks\nWHERE animal_id IN (SELECT id FROM animals WHERE species = 'monkey');\nSELECT COUNT(*) FROM snacks;`,
+  say:"Result: 3. Mo's and Pip's snacks are gone."},
+ {type:"quiz",q:"Before running a big UPDATE or DELETE, what's a smart habit?",opts:["Run a SELECT with the same WHERE first, to see which rows it hits","Run it twice to be sure","Leave out the WHERE"],a:0,why:"Pros preview the rows first. There's no undo button!"},
+ {type:"code",title:"Snack top-up",body:`<p>Every animal looked after by a <b>morning</b> keeper gets 5 more of each snack. Update ${C("snacks")} using ${C("IN (SELECT ...)")}, then run the SELECT that's already there.</p>`,
+  start:`-- UPDATE snacks here\n\nSELECT food, qty FROM snacks ORDER BY id;`,
+  use:[[/update\s+snacks/i,"Start with UPDATE snacks SET qty = qty + 5."],[/in\s*\(\s*select/i,"Choose the animals with WHERE animal_id IN (SELECT ...)."]],out:["banana | 11","banana | 8","bamboo | 25","seeds | 4","mango | 7","leaves | 20"],
+  hint:`UPDATE snacks SET qty = qty + 5\nWHERE animal_id IN (\n  SELECT a.id FROM animals a\n  JOIN keepers k ON a.keeper_id = k.id\n  WHERE k.shift = 'morning'\n);\n\nSELECT food, qty FROM snacks ORDER BY id;`},
+ {type:"talk",title:"INSERT … SELECT",
+  body:`<p>Instead of ${C("VALUES")}, an INSERT can take the rows of a SELECT. Handy for copying or archiving data.</p>`,
+  demo:`CREATE TABLE top_snacks (food TEXT, qty INTEGER);\nINSERT INTO top_snacks SELECT food, qty FROM snacks WHERE qty > 10;\nSELECT * FROM top_snacks;`,
+  say:"Result: bamboo | 20, leaves | 15"},
+ {type:"fill",title:"Unplug the machine",body:`<p>Delete the machine's sales (no keeper), then count what's left.</p>`,
+  code:`DELETE [0] sales [1] keeper_id IS NULL;\nSELECT COUNT(*) FROM sales;`,blanks:["FROM","WHERE"],tokens:["FROM","WHERE","INTO","IF"],why:"DELETE FROM table WHERE condition.",out:"7"},
+ {type:"code",title:"Monday archive",body:`<p>The ${C("monday")} table is ready. Fill it with Monday's sales using ${C("INSERT INTO monday SELECT ...")}: the item and its coins (${C("price * qty")}).</p>`,
+  start:`CREATE TABLE monday (item TEXT, coins INTEGER);\n-- INSERT INTO monday SELECT ...\n\nSELECT item, coins FROM monday ORDER BY coins DESC;`,
+  use:[[/insert\s+into\s+monday\s*(\([^)]*\)\s*)?select/i,"Fill it with INSERT INTO monday SELECT item, price * qty FROM sales WHERE ..."]],out:["banana | 20","ice pop | 12"],
+  hint:`CREATE TABLE monday (item TEXT, coins INTEGER);\nINSERT INTO monday SELECT item, price * qty FROM sales WHERE day = 'Mon';\n\nSELECT item, coins FROM monday ORDER BY coins DESC;`},
+ {type:"quiz",q:"What does the SELECT return?",code:`UPDATE keepers SET shift = 'night'\nWHERE id IN (SELECT keeper_id FROM animals WHERE species = 'giraffe');\nSELECT COUNT(*) FROM keepers WHERE shift = 'night';`,opts:["3","2","1"],a:0,mono:true,why:"Zuri's keeper Kai moves to nights, joining Leo and Mia."},
+ {type:"game"},{type:"done"}],
+ pool:[
+  [`DELETE FROM sales WHERE item = 'banana';\nSELECT COUNT(*) FROM sales;`,["5","3","8"]],
+  [`UPDATE sales SET qty = 0 WHERE day = 'Thu';\nSELECT SUM(qty) FROM sales;`,["59","64","5"]],
+  [`INSERT INTO keepers SELECT 5, 'Zed', shift FROM keepers WHERE id = 2;\nSELECT shift FROM keepers WHERE name = 'Zed';`,["night","morning","Zed"]],
+  [`DELETE FROM animals WHERE id NOT IN (SELECT animal_id FROM snacks);\nSELECT name FROM animals WHERE species = 'owl';`,["(no rows)","Odo","NULL"]]
+ ]},
+{id:"sql25",title:"Project: Keeper of the Month",sub:"CTEs, joins and CASE in one report",project:true,steps:[
+ {type:"talk",title:"Who wins this month?",mood:"cheer",
+  body:`<p>The zoo director wants to crown a <b>Keeper of the Month</b>. Each keeper scores 1 point per shop coin they earned, plus 2 points per snack their animals ate. You'll build it in steps with WITH.</p>`,
+  show:["keepers","animals","snacks","sales"],say:"Four tables, one fair answer. Let's be data detectives!"},
+ {type:"code",title:"Step 1: shop coins",body:`<p>Fill in the ${C("shop")} step: the total coins (${C("price * qty")}) for each ${C("keeper_id")} in sales. Name the total ${C("coins")}.</p>`,
+  start:`WITH shop AS (\n  -- total coins per keeper_id\n)\nSELECT * FROM shop\nWHERE keeper_id IS NOT NULL\nORDER BY keeper_id;`,
+  use:[[/group\s+by\s+keeper_id/i,"Group by keeper_id."]],out:["1 | 63","2 | 26","3 | 42"],
+  hint:`WITH shop AS (\n  SELECT keeper_id, SUM(price * qty) AS coins\n  FROM sales\n  GROUP BY keeper_id\n)\nSELECT * FROM shop\nWHERE keeper_id IS NOT NULL\nORDER BY keeper_id;`},
+ {type:"code",title:"Step 2: snacks served",body:`<p>Fill in the ${C("fed")} step: join snacks to animals and total ${C("s.qty")} for each ${C("a.keeper_id")}. Name the total ${C("snacks")}.</p>`,
+  start:`WITH fed AS (\n  -- join snacks s to animals a, group by a.keeper_id\n)\nSELECT * FROM fed\nORDER BY keeper_id;`,
+  use:[[/\bjoin\b/i,"JOIN animals a ON s.animal_id = a.id."],[/group\s+by\s+a\.keeper_id/i,"Group by a.keeper_id."]],out:["1 | 31","2 | 4","3 | 15"],
+  hint:`WITH fed AS (\n  SELECT a.keeper_id, SUM(s.qty) AS snacks\n  FROM snacks s\n  JOIN animals a ON s.animal_id = a.id\n  GROUP BY a.keeper_id\n)\nSELECT * FROM fed\nORDER BY keeper_id;`},
+ {type:"code",title:"Step 3: the scoreboard",body:`<p>Both steps are ready. Now show <b>every</b> keeper's name, coins, snacks and ${C("score")} (coins + 2 × snacks), highest score first. Use LEFT JOINs and ${C("COALESCE(..., 0)")} so Mia gets zeros instead of vanishing.</p>`,
+  start:`WITH shop AS (\n  SELECT keeper_id, SUM(price * qty) AS coins FROM sales GROUP BY keeper_id\n),\nfed AS (\n  SELECT a.keeper_id, SUM(s.qty) AS snacks\n  FROM snacks s JOIN animals a ON s.animal_id = a.id\n  GROUP BY a.keeper_id\n)\nSELECT k.name, sh.coins, f.snacks\nFROM keepers k\nJOIN shop sh ON sh.keeper_id = k.id\nJOIN fed f ON f.keeper_id = k.id;`,
+  use:[[/left\s+join/i,"Use LEFT JOIN so Mia stays in."],[/coalesce|ifnull/i,"Use COALESCE(sh.coins, 0) to turn NULL into 0."]],out:["Ava | 63 | 31 | 125","Kai | 42 | 15 | 72","Leo | 26 | 4 | 34","Mia | 0 | 0 | 0"],
+  hint:`WITH shop AS (\n  SELECT keeper_id, SUM(price * qty) AS coins FROM sales GROUP BY keeper_id\n),\nfed AS (\n  SELECT a.keeper_id, SUM(s.qty) AS snacks\n  FROM snacks s JOIN animals a ON s.animal_id = a.id\n  GROUP BY a.keeper_id\n)\nSELECT k.name,\n       COALESCE(sh.coins, 0) AS coins,\n       COALESCE(f.snacks, 0) AS snacks,\n       COALESCE(sh.coins, 0) + 2 * COALESCE(f.snacks, 0) AS score\nFROM keepers k\nLEFT JOIN shop sh ON sh.keeper_id = k.id\nLEFT JOIN fed f ON f.keeper_id = k.id\nORDER BY score DESC;`},
+ {type:"quiz",q:"Why did step 3 need LEFT JOINs?",opts:["Mia has no sales and no snacks, so an INNER JOIN would drop her","LEFT JOIN is faster","CTEs only work with LEFT JOIN"],a:0,why:"LEFT JOIN keeps every keeper; COALESCE turns her NULLs into 0."},
+ {type:"code",title:"Step 4: medals",body:`<p>This time ${C("scores")} works out each score with linked subqueries. Add a ${C("medal")} column: ${C("gold")} for 100 or more, ${C("silver")} for 50 or more, otherwise ${C("bronze")}. Highest score first.</p>`,
+  start:`WITH scores AS (\n  SELECT k.name,\n    COALESCE((SELECT SUM(price * qty) FROM sales s WHERE s.keeper_id = k.id), 0)\n    + 2 * COALESCE((SELECT SUM(sn.qty) FROM snacks sn JOIN animals a ON sn.animal_id = a.id\n                    WHERE a.keeper_id = k.id), 0) AS score\n  FROM keepers k\n)\nSELECT name, score FROM scores\nORDER BY score DESC;`,
+  use:[[/\bcase\b/i,"Use CASE WHEN score >= 100 THEN 'gold' ... END."]],out:["Ava | 125 | gold","Kai | 72 | silver","Leo | 34 | bronze","Mia | 0 | bronze"],
+  hint:`WITH scores AS (\n  SELECT k.name,\n    COALESCE((SELECT SUM(price * qty) FROM sales s WHERE s.keeper_id = k.id), 0)\n    + 2 * COALESCE((SELECT SUM(sn.qty) FROM snacks sn JOIN animals a ON sn.animal_id = a.id\n                    WHERE a.keeper_id = k.id), 0) AS score\n  FROM keepers k\n)\nSELECT name, score,\n  CASE WHEN score >= 100 THEN 'gold'\n       WHEN score >= 50 THEN 'silver'\n       ELSE 'bronze' END AS medal\nFROM scores\nORDER BY score DESC;`},
+ {type:"talk",title:"And the winner is…",mood:"cheer",
+  body:`<p>Ava takes gold! You just combined CTEs, LEFT JOINs, COALESCE, linked subqueries and CASE into one real report. That's genuine data-detective work.</p>`,
+  demo:`WITH scores AS (\n  SELECT k.name,\n    COALESCE((SELECT SUM(price * qty) FROM sales s WHERE s.keeper_id = k.id), 0)\n    + 2 * COALESCE((SELECT SUM(sn.qty) FROM snacks sn JOIN animals a ON sn.animal_id = a.id\n                    WHERE a.keeper_id = k.id), 0) AS score\n  FROM keepers k\n)\nSELECT name AS keeper_of_the_month FROM scores\nORDER BY score DESC\nLIMIT 1;`,
+  say:"Result: Ava 🏆 You've finished the Data Detective unit. Amazing work!"},
+ {type:"done"}]}
+]});
 
 /* deep-cs-cpp: added units (see header in each agent's work). */
 
@@ -45292,7 +45600,7 @@ privacy:{title:"Privacy Policy",sections:[
 
 /* TypeMonkey SQL: a small in-house SQL engine with SQLite-style behavior.
    Supports CREATE TABLE, INSERT, UPDATE, DELETE and SELECT with DISTINCT, joins (INNER/LEFT),
-   WHERE, GROUP BY, HAVING, ORDER BY, LIMIT/OFFSET, subqueries, CASE, aggregates and common functions.
+   WHERE, GROUP BY, HAVING, ORDER BY, LIMIT/OFFSET, subqueries (incl. EXISTS), WITH, CASE, aggregates and common functions.
    TMSQL.run(sql, tables) -> {ok, columns, rows, error}. Tables: {name:{cols:[...], rows:[[...]]}} (copied, never mutated). */
 const TMSQL=(()=>{
   class Real{constructor(x){this.x=x}}           // REAL values (so 4.0 prints as 4.0, like SQLite)
@@ -45445,6 +45753,7 @@ const TMSQL=(()=>{
       if(isKw("TRUE")){p++;return {lit:1}}
       if(isKw("FALSE")){p++;return {lit:0}}
       if(acceptOp("(")){if(isKw("SELECT")){const q=select();op(")");return {scalar:q}}const e=expr();op(")");return e}
+      if(isKw("EXISTS")){p++;op("(");if(!isKw("SELECT"))fail("EXISTS needs a query, like EXISTS (SELECT ...)");const q=select();op(")");return {exists:q}}
       if(isKw("CASE")){
         p++;let base=null;if(!isKw("WHEN"))base=expr();const whens=[];
         while(acceptKw("WHEN")){const w=expr();kw("THEN");whens.push([w,expr()])}
@@ -45522,6 +45831,7 @@ const TMSQL=(()=>{
       return lookup(ctx,e);
     }
     if(e.scalar){const r=runSelect(e.scalar,db,ctx);return r.rows.length?r.rows[0][0]:null}
+    if(e.exists)return runSelect(e.exists,db,ctx).rows.length?1:0;
     if(e.cas){
       const base=e.base?evalE(e.base,ctx,db):undefined;
       for(const [w,t] of e.whens){const wv=evalE(w,ctx,db);if(base!==undefined?(base!==null&&wv!==null&&compare(base,wv)===0):truthy(wv))return evalE(t,ctx,db)}

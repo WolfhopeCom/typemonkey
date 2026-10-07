@@ -45,6 +45,13 @@ EXTRA = [
     "SELECT name FROM animals WHERE name = 'mo'",
     "SELECT name FROM animals WHERE name LIKE 'mo'",
     "SELECT AVG(age) FROM animals WHERE species = 'monkey'",
+    "SELECT name FROM animals a WHERE EXISTS (SELECT 1 FROM snacks s WHERE s.animal_id = a.id AND s.qty > 5) ORDER BY name",
+    "SELECT name FROM keepers k WHERE NOT EXISTS (SELECT * FROM animals a WHERE a.keeper_id = k.id)",
+    "SELECT EXISTS (SELECT 1 FROM animals WHERE age > 100), NOT EXISTS (SELECT 1 FROM keepers)",
+    "SELECT k.name, EXISTS (SELECT 1 FROM animals a WHERE a.keeper_id = k.id) AS busy FROM keepers k ORDER BY k.id",
+    "SELECT COUNT(*) FROM animals a WHERE EXISTS (SELECT 1 FROM keepers k WHERE k.id = a.keeper_id AND k.shift = 'morning') OR a.keeper_id IS NULL",
+    "UPDATE animals SET age = 0 WHERE NOT EXISTS (SELECT 1 FROM snacks s WHERE s.animal_id = animals.id); SELECT name, age FROM animals WHERE age = 0",
+    "WITH fed AS (SELECT DISTINCT animal_id FROM snacks) SELECT name FROM animals a WHERE EXISTS (SELECT 1 FROM fed f WHERE f.animal_id = a.id) ORDER BY name",
 ]
 
 
@@ -83,7 +90,7 @@ console.log(JSON.stringify(I.q.map(q=>{const r=TMSQL.run(q,I.t);return r.ok?TMSQ
     problems = 0
     for q, mine in zip(queries, ours):
         multi = [s for s in q.split(";") if s.strip()]
-        has_select = any(s.strip().upper().startswith("SELECT") for s in multi)
+        has_select = any(s.strip().upper().startswith(("SELECT", "WITH")) for s in multi)
         ok, real = run_sql(q, setup)
         if not ok:
             real = "ERROR"
