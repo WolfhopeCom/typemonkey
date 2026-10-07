@@ -94,8 +94,38 @@ def patch_podfile():
             print("set the App target's iOS Deployment Target to 15.0")
 
 
+AUDIO_SNIPPET = """        // TypeMonkey: let the app's sounds play even when the iPhone's silent switch is on,
+        // mixing with (not stopping) any music the player already has playing.
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
+        try? AVAudioSession.sharedInstance().setActive(true)
+"""
+
+
+def patch_app_delegate():
+    ad = IOS / "App" / "App" / "AppDelegate.swift"
+    if not ad.exists():
+        return
+    s = ad.read_text()
+    if "AVAudioSession" in s:
+        return
+    if "import AVFoundation" not in s:
+        s = s.replace("import Capacitor", "import Capacitor\nimport AVFoundation", 1)
+    anchor = "// Override point for customization after application launch."
+    if anchor in s:
+        s = s.replace(anchor, anchor + "\n" + AUDIO_SNIPPET.rstrip("\n"), 1)
+    else:
+        m = re.search(r"didFinishLaunchingWithOptions[^{]*\{\n", s)
+        if not m:
+            print("warning: could not find didFinishLaunching in AppDelegate.swift; sounds follow the silent switch")
+            return
+        s = s[:m.end()] + AUDIO_SNIPPET + s[m.end():]
+    ad.write_text(s)
+    print("patched ios/App/App/AppDelegate.swift (sounds play with the silent switch on)")
+
+
 def patch_ios():
     patch_podfile()
+    patch_app_delegate()
     plist = IOS / "App" / "App" / "Info.plist"
     if not plist.exists():
         return

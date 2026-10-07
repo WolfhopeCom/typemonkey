@@ -34,7 +34,10 @@ button{font:inherit;cursor:pointer}
 .stats{margin-left:auto;display:flex;gap:6px}
 .stat{display:flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-weight:800;font-size:.9rem;font-variant-numeric:tabular-nums}
 .stat i{font-style:normal;font-size:.75rem;color:var(--muted);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
-@media (max-width:400px){.brand .word{display:none}}
+@media (max-width:520px){.brand .word{display:none}}
+.stats{min-width:0}.stat{min-width:0;flex-shrink:1}
+/* app feel: never slide sideways, no double-tap zoom */
+html,body{overflow-x:hidden;max-width:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{touch-action:manipulation}
 
 .buddy{display:flex;gap:12px;align-items:flex-end}
 .buddy .tm{width:88px;height:88px;flex:none}
@@ -279,6 +282,24 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 .blk.vop{background:#FFD25C;font-size:1.3rem}.blk.vop span{font-size:1.4rem}.blk.vop:disabled{opacity:.5}
 .langtag{display:inline-flex;align-items:center;gap:4px;margin-left:6px;padding:2px 10px;border-radius:999px;background:#3776AB;color:#fff;font-size:.78rem;letter-spacing:.02em;text-transform:none;font-weight:800;vertical-align:middle}.langtag.big{font-size:.9rem;padding:4px 12px}
 .kidrow{position:sticky;bottom:0;z-index:5;background:var(--bg);padding-block:10px calc(10px + env(safe-area-inset-bottom,0px));margin-inline:-4px;padding-inline:4px;box-shadow:0 -8px 12px -8px #0003}
+.tiles{display:flex;flex-direction:column;gap:8px}
+.tmode{display:flex;background:var(--surface2);border-radius:12px;padding:3px;gap:2px;align-self:flex-start}
+.tmode button{border:0;background:none;color:var(--fg);font-weight:800;font-size:.9rem;padding:8px 12px;border-radius:9px;min-height:40px}
+.tmode button[aria-pressed="true"]{background:var(--surface);box-shadow:0 1px 3px #0002;color:var(--accent)}
+.tbuild{display:none;flex-direction:column;gap:4px;min-height:56px;background:var(--code-bg);border-radius:12px;padding:10px;font-family:var(--mono);font-size:.95rem}
+.tbuild .tline{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-left:calc(var(--in,0) * .5ch);color:var(--code-fg);text-align:left}
+.tbuild .tline.given{opacity:.6;padding:4px 6px}
+.tbuild .empty,.ttray .empty{color:var(--code-dim);font-family:var(--body);font-size:.9rem}
+.ttray .empty{color:var(--muted)}
+.ttray{display:none;flex-wrap:wrap;gap:8px}
+.tile{font-family:var(--mono);font-size:1rem;min-height:44px;padding:6px 12px;border-radius:10px;border:0;background:var(--surface);color:var(--fg);box-shadow:0 3px 0 var(--line),0 0 0 2px var(--line) inset;font-weight:600;white-space:pre}
+.tile.tl{text-align:left;white-space:pre-wrap;overflow-wrap:anywhere}
+.tile.on{background:#FFD9B5;color:#2A1300;box-shadow:0 2px 0 #E0A060}
+.tbuild .tline.tile.on{display:block;width:fit-content;max-width:100%}
+.tapmode .tbuild,.tapmode .ttray{display:flex}
+.tapmode .editor textarea,.tapmode .symbar{display:none}
+.symbar{display:flex;gap:4px;overflow-x:auto;padding:6px 8px;background:#0F1A16;scrollbar-width:none}
+.symbar button{flex:none;min-width:38px;height:38px;border:0;border-radius:8px;background:#22332C;color:#E8F2EC;font-family:var(--mono);font-size:1.05rem;font-weight:700}
 .kcode{margin-top:10px;text-align:left}.kcode small{display:block;font-weight:700;margin-bottom:4px}.kcode pre{margin:0;background:var(--code-bg);color:var(--code-fg);border-radius:10px;padding:10px 12px;font-size:.92rem;line-height:1.45;overflow-x:auto}
 .mk{position:absolute;width:calc(100% / var(--w));height:calc(100% / var(--h));display:grid;place-items:center;transition:left .32s ease,top .32s ease,transform .25s ease;pointer-events:none}
 .mface{width:82%;height:82%;display:grid;place-items:center}.mface svg{width:100%;height:100%;filter:drop-shadow(0 2px 2px #0004)}
@@ -386,6 +407,13 @@ span.repn{display:inline-block}
 .gear{background:var(--surface);border:1px solid var(--line);color:var(--fg);border-radius:999px;width:36px;height:36px;display:grid;place-items:center;padding:0;flex:none}
 .setlist{gap:4px}
 .setlist h3{font-size:1.1rem;margin-bottom:4px}
+.setpage{gap:12px}.sethead{display:flex;align-items:center;gap:12px}.sethead h1{font-size:1.8rem}
+.setpage .setlist{padding-block:4px}
+.setpage .setrow{flex-wrap:nowrap;padding-block:9px}.setpage .setrow>b{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2}
+.setpage .setrow small{color:var(--muted);font-weight:600;font-size:.8rem}
+.setbtns{display:flex;gap:6px;flex:none}
+.setfoot{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;justify-content:center;color:var(--muted);font-size:.82rem;text-align:center}
+.setfoot .credits{flex-basis:100%;font-size:.75rem}
 .setrow{display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap;padding-block:10px;border-top:1px solid var(--line)}
 .setrow:first-of-type{border-top:0}
 .setrow>div:first-child{min-width:0;flex:1 1 180px;display:flex;flex-direction:column}
@@ -634,7 +662,10 @@ const SFX=(()=>{
   function wake(){ // called from inside a real user gesture
     gestured=true;if(!AC||!on())return;
     try{if(!ctx){ctx=new AC();master=ctx.createGain();master.gain.value=.7;master.connect(ctx.destination)}
-      if(ctx.state!=="running")ctx.resume().catch(()=>{})}catch(e){ctx=null}
+      if(ctx.state!=="running")ctx.resume().catch(()=>{});
+      // iPhone/iPad: play one silent sample inside the first tap so the audio system fully wakes up
+      if(!wake.unlocked){const b=ctx.createBuffer(1,1,22050),src=ctx.createBufferSource();src.buffer=b;src.connect(ctx.destination);src.start(0);wake.unlocked=true}
+    }catch(e){ctx=null}
   }
   if(typeof document!=="undefined")["pointerdown","touchend","keydown"].forEach(ev=>document.addEventListener(ev,wake,{capture:true,passive:true}));
   function play(name,arg){
@@ -1103,7 +1134,7 @@ function editorBlock(id,code,runnable,file,input){
   const wantsIn=runnable&&runnable!=="web"&&runnable!=="sql"&&(input||/\b(input|ReadLine|Scanner|readLine|prompt|cin)\b/.test(code));
   return `<div class="editor"><div class="head"><span>${file}</span>${runnable?`<button class="run" id="run-${id}">${runnable==="web"?"▶ Show page":"▶ Run"}</button>`:""}</div>
     ${runnable?`<textarea id="code-${id}" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" aria-label="Code editor" rows="${Math.min(14,Math.max(5,code.split("\n").length+1))}">${esc(code)}</textarea>
-    ${wantsIn?inputBox(id,input):""}
+    ${symBar(id)}${wantsIn?inputBox(id,input):""}
     ${runnable==="web"?`<div class="webview" id="out-${id}" aria-label="Page preview"></div>`:(cur&&cur.c&&cur.c.id==="game"?`<div class="console arcade" id="out-${id}"><div class="arcade-top"><span>🎮 GAME SCREEN</span></div><span class="dim">Press ▶ Run to play</span></div>`:`<div class="console" id="out-${id}"><span class="dim">Console output appears here</span></div>`)}`:`<pre>${esc(code)}</pre>`}</div>`;
 }
 /* Phones love "smart" punctuation: curly quotes and … break code, so turn them back into plain ' " and ... */
@@ -1185,15 +1216,74 @@ function addWarmups(){
     for(const u of c.units)for(const l of u.lessons){if(!l.steps||l.__warm)continue;l.__warm=true;let added=0;
       for(let i=0;i<l.steps.length&&added<2;i++){const s=l.steps[i];if(s.type!=="code"||s.final)continue;const w=makeWarmup(s,kind);if(w){l.steps.splice(i,0,w);i++;added++}}}}
 }
+/* ---------- Tap mode: build code from tiles instead of typing (great on phones) ----------
+   Short answers become word tiles ( print  (  "Hi"  ) ), longer ones become line tiles to put in order.
+   The tiles fill the real editor behind the scenes, so running, grading and hints work the same. */
+const isTouch=()=>{try{return matchMedia("(pointer: coarse)").matches}catch(e){return false}};
+function tokenizeLine(line){
+  const lead=line.match(/^\s*/)[0],rest=line.slice(lead.length);
+  const re=/("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`[^`]*`|[A-Za-z_$][\w$]*|\d+(?:\.\d+)?|==|!=|<=|>=|=>|\+=|-=|\*\*|&&|\|\||<<|>>|::|->|[^\s\w])\s*/g;
+  const out=[];let m;while((m=re.exec(rest)))out.push(m[0]);
+  if(out.join("")!==rest||!out.length)return null;out[0]=lead+out[0];return out;
+}
+function tilePlan(s){
+  if(s.type!=="code"||s.final||!s.hint)return null;
+  const lines=t=>String(t||"").replace(/\r/g,"").split("\n");
+  const isNote=l=>!l.trim()||/^\s*(#(\s|$)|\/\/|--(\s|$)|<!--)/.test(l);
+  const hint=lines(s.hint).filter(l=>!isNote(l)),start=lines(s.start).filter(l=>!isNote(l));
+  let pre=0;while(pre<start.length&&pre<hint.length&&start[pre]===hint[pre])pre++;
+  if(pre<start.length)pre=0;                       // the starter isn't a clean beginning of the answer: give nothing
+  const given=hint.slice(0,pre),todo=hint.slice(pre);
+  if(!todo.length)return null;
+  if(todo.length===1){const t=tokenizeLine(todo[0]);if(!t||t.length<2||t.length>12)return null;return {mode:"tokens",given,pieces:t}}
+  if(todo.length>8)return null;
+  return {mode:"lines",given,pieces:todo};
+}
+const tileCode=(p,placed)=>[...p.given,...(p.mode==="tokens"?(placed.length?[placed.map(i=>p.pieces[i]).join("")]:[]):placed.map(i=>p.pieces[i]))].join("\n");
+const codeInputMode=()=>(S.settings.codeInput||(isTouch()?"tap":"type"));
+function wireTiles(s,p,onMode){
+  const ta=$("#code-c"),card=ta.closest(".card");let placed=[];
+  const order=(()=>{let o=shuffle(p.pieces.map((_,i)=>i));if(o.length>1&&o.every((v,i)=>v===i))o.reverse();return o})();
+  const show=t=>esc(t.replace(/\s+$/,""));
+  const indent=t=>(t.match(/^\s*/)[0].length);
+  const sync=()=>{ta.value=tileCode(p,placed)};
+  const draw=()=>{
+    $("#tbuild").innerHTML=(p.given.map(l=>`<div class="tline given" style="--in:${indent(l)}">${show(l)}</div>`).join(""))+
+      (p.mode==="tokens"?`<div class="tline tokens">${placed.map((i,k)=>`<button class="tile on" data-k="${k}">${show(p.pieces[i].trim())}</button>`).join("")||'<span class="empty">Tap tiles below to build the line</span>'}</div>`:
+        (placed.map((i,k)=>`<button class="tline tile on" data-k="${k}" style="--in:${indent(p.pieces[i])}">${show(p.pieces[i].trimStart())}</button>`).join("")||'<span class="empty">Tap the lines below in the right order</span>'));
+    $("#ttray").innerHTML=order.filter(i=>!placed.includes(i)).map(i=>`<button class="tile ${p.mode==="lines"?"tl":""}" data-i="${i}">${show(p.mode==="lines"?p.pieces[i].trim():p.pieces[i].trim())}</button>`).join("")||'<span class="empty">All tiles placed! Press ▶ Run.</span>';
+    $$("#tbuild .tile").forEach(b=>b.onclick=()=>{placed.splice(+b.dataset.k,1);sync();draw()});
+    $$("#ttray .tile").forEach(b=>b.onclick=()=>{placed.push(+b.dataset.i);sync();draw();if(placed.length===p.pieces.length){const r=$("#run-c");r&&r.classList.add("ready")}});
+  };
+  const setMode=m=>{S.settings.codeInput=m;save();card.classList.toggle("tapmode",m==="tap");
+    $$("#tmode button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===m));
+    if(m==="tap"){placed=[];sync();draw()}else{if(!placed.length)ta.value=draft("c"+cur.step)||s.start}
+    onMode&&onMode(m)};
+  $$("#tmode button").forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+  setMode(codeInputMode());
+  return {fill(){placed=p.pieces.map((_,i)=>i);sync();draw()},mode:()=>card.classList.contains("tapmode")?"tap":"type"};
+}
+const tileBlock=()=>`<div class="tiles"><div class="tmode" id="tmode" role="group" aria-label="How to write the code"><button data-m="tap" aria-pressed="false">🧩 Tap tiles</button><button data-m="type" aria-pressed="false">⌨️ Type it</button></div>
+  <div class="tbuild code" id="tbuild"></div><div class="ttray" id="ttray"></div></div>`;
+/* A row of code symbols above the keyboard, so typing on a phone is easier */
+const SYMS=["(",")",'"',"'",":","=","+","-","*","/","<",">","[","]","{","}",",",".",";","#","_","⇥"];
+function symBar(id){return isTouch()?`<div class="symbar" id="sym-${id}" aria-label="Code symbols">${SYMS.map(c=>`<button type="button" data-c="${esc(c)}">${esc(c)}</button>`).join("")}</div>`:""}
+function wireSymBar(id){const bar=$("#sym-"+id),ta=$("#code-"+id);if(!bar||!ta)return;
+  bar.addEventListener("pointerdown",e=>e.preventDefault());   // keep the keyboard open
+  $$("#sym-"+id+" button").forEach(b=>b.onclick=()=>{const c=b.dataset.c==="⇥"?"    ":b.dataset.c;const a=ta.selectionStart,z=ta.selectionEnd;
+    ta.setRangeText(c,a,z,"end");ta.focus();ta.dispatchEvent(new Event("input",{bubbles:true}))})}
+
 function codeStep(s){
   let tries=0,solved=false;const k="c"+cur.step;
   const H=helpPlan(s);let level=0;const isBug=s.type==="bug";
   const LN=cur.c.langName?`<span class="langtag">🐍 ${cur.c.langName}</span>`:"";
   const label=isBug?"🐛 Bug Lab · fix the code":s.final?"🏁 Final build":s.mission?"🏗️ "+esc(s.mission):cur.l.project?"Project step":"Code challenge";
   const firstIn=s.input||(s.tests&&s.tests[0].input)||"";
-  const doIt=isBug?"Press ▶ Run to see the bug, fix the code, then run it again.":cur.c.runnable==="web"?"Type your code, then tap ▶ Show page.":"Type your code, then press ▶ Run.";
-  shell(`<div class="card"><div class="label">${label} · +30 XP ${LN}</div>${todo(doIt,`<button class="hint2" id="hint2" type="button">💡 Stuck? Get help</button>`)}<h2>${s.title}</h2>${s.body}${s.tests&&s.tests.length>1?`<p class="testnote">TypeMonkey will test it ${s.tests.length} ways, typing different answers each time.</p>`:""}${editorBlock("c",draft(k)||s.start,cur.c.runnable||true,cur.c.lang,firstIn)}<div id="fb"></div><div id="peek"></div></div>
-    <div id="bud">${buddy(isBug?"This code is broken! Press ▶ Run to see what happens, then fix it. Tap 💡 Hint if you get stuck.":cur.c.runnable==="web"?"Type your code, then tap ▶ Show page. I'll check what you built. Stuck? Tap 💡 Help and I'll give you one clue at a time.":"Write your code, then hit ▶ Run. Stuck? Tap 💡 Help and I'll give you one clue at a time.","think")}</div>
+  const TP=isBug?null:tilePlan(s),tapNow=TP&&codeInputMode()==="tap";
+  const doTap=`Tap the ${TP&&TP.mode==="lines"?"lines":"tiles"} in order, then press ${cur.c.runnable==="web"?"▶ Show page":"▶ Run"}.`;
+  const doIt=isBug?"Press ▶ Run to see the bug, fix the code, then run it again.":tapNow?doTap:cur.c.runnable==="web"?"Type your code, then tap ▶ Show page.":"Type your code, then press ▶ Run.";
+  shell(`<div class="card"><div class="label">${label} · +30 XP ${LN}</div>${todo(doIt,`<button class="hint2" id="hint2" type="button">💡 Stuck? Get help</button>`)}<h2>${s.title}</h2>${s.body}${s.tests&&s.tests.length>1?`<p class="testnote">TypeMonkey will test it ${s.tests.length} ways, typing different answers each time.</p>`:""}${TP?tileBlock():""}${editorBlock("c",draft(k)||s.start,cur.c.runnable||true,cur.c.lang,firstIn)}<div id="fb"></div><div id="peek"></div></div>
+    <div id="bud">${buddy(isBug?"This code is broken! Press ▶ Run to see what happens, then fix it. Tap 💡 Hint if you get stuck.":cur.c.runnable==="web"?"Type your code, then tap ▶ Show page. I'll check what you built. Stuck? Tap 💡 Help and I'll give you one clue at a time.":(tapNow?"Tap the pieces in the right order, then hit ▶ Run. Stuck? Tap 💡 Help and I'll give you one clue at a time.":"Write your code, then hit ▶ Run. Stuck? Tap 💡 Help and I'll give you one clue at a time."),"think")}</div>
     <div class="row"><button class="btn" id="go" disabled>Continue</button><button class="btn ghost helpbtn" id="hint">${isBug?"💡 Hint 1":"💡 Help"}</button><button class="linkbtn" id="answer" hidden>${isBug?"Show the fixed code":"Show the whole answer"}</button></div>`);
   const showBugHelp=()=>{
     const hs=s.hints||[];
@@ -1228,10 +1318,13 @@ function codeStep(s){
     if(!ok&&tries===2&&level===0)$("#hint").classList.add("nudge");
     if(ok&&!solved){solved=true;$("#go").disabled=false;award(30,5);bump("challenges");if(tries===1)bump("firstTry")}
   });
-  $("#code-c").addEventListener("input",()=>draft(k,$("#code-c").value));
+  $("#code-c").addEventListener("input",()=>{if(!T||T.mode()==="type")draft(k,$("#code-c").value)});
+  const doType=cur.c.runnable==="web"?"Type your code, then tap ▶ Show page.":"Type your code, then press ▶ Run.";
+  const T=TP?wireTiles(s,TP,m=>{const t=document.querySelector(".card .todo span");if(t)t.textContent="👉 "+(m==="tap"?doTap:doType)}):null;
+  wireSymBar("c");
   $("#hint").onclick=()=>{$("#hint").classList.remove("nudge");sfx("hint");showHelp()};
   $("#hint2").onclick=()=>{if(!$("#hint").hidden)$("#hint").click();else{$("#answer").hidden=false;$("#answer").scrollIntoView({block:"center",behavior:"smooth"});$("#peek").scrollIntoView({block:"nearest"})}};
-  $("#answer").onclick=()=>{$("#code-c").value=s.hint;draft(k,s.hint);$("#peek").innerHTML="";$("#bud").innerHTML=buddy("Here's one way to write it. Read it line by line so it makes sense, then press ▶ Run.","happy")};
+  $("#answer").onclick=()=>{if(T&&T.mode()==="tap"){T.fill();$("#peek").innerHTML="";$("#bud").innerHTML=buddy("Here are the tiles in order. Read them line by line so it makes sense, then press ▶ Run.","happy");return}$("#code-c").value=s.hint;draft(k,s.hint);$("#peek").innerHTML="";$("#bud").innerHTML=buddy("Here's one way to write it. Read it line by line so it makes sense, then press ▶ Run.","happy")};
   $("#go").onclick=next;
 }
 function quiz(s){
@@ -2110,42 +2203,27 @@ function shop(tab="hat",preview){SFX.stopMusic();
 }
 
 /* ---------- Settings ---------- */
-const APP_VERSION="0.9 (prototype)";
+const APP_VERSION="1.0";
 function settingsPage(){SFX.stopMusic();
   const back=rerender===settingsPage?home:rerender;rerender=settingsPage;setMode(false);
   const st=S.settings;
   const seg=(id,val,opts)=>`<div class="seg" role="radiogroup" id="${id}">${opts.map(([v,l])=>`<button role="radio" aria-checked="${val===v}" data-v="${v}">${l}</button>`).join("")}</div>`;
-  $("#screen").innerHTML=`<div class="stack">
-    <div class="row"><button class="btn ghost sm" id="back">← Back</button></div>
-    <section class="hero"><div class="label">TypeMonkey</div><h1>Settings</h1></section>
+  $("#screen").innerHTML=`<div class="stack setpage">
+    <div class="sethead"><button class="btn ghost sm" id="back">← Back</button><h1>Settings</h1></div>
     <div class="card setlist">
-      <h3>Appearance</h3>
-      <div class="setrow"><div><b>Theme</b><span>Light, dark, or match your device</span></div>${seg("theme",st.theme,[["system","Device"],["light","Light"],["dark","Dark"]])}</div>
-      <div class="setrow"><div><b>Text size</b><span>Make lessons easier to read</span></div>${seg("text",st.text,[["normal","Normal"],["large","Large"]])}</div>
-      <div class="setrow"><div><b>Sounds</b><span>Little chimes and boops when you tap and answer</span></div>${seg("sound",st.sound===false?"off":"on",[["on","On"],["off","Off"]])}</div>
-      <div class="setrow"><div><b>Music</b><span>Dance beats and jungle tunes in TypeMonkey Jr. puzzles</span></div>${seg("music",st.music===false?"off":"on",[["on","On"],["off","Off"]])}</div>
-      <div class="setrow"><div><b>Calm mode</b><span>Turn off bouncing and moving effects</span></div>${seg("calm",st.calm?"on":"off",[["off","Off"],["on","On"]])}</div>
+      <div class="setrow"><b>Theme</b>${seg("theme",st.theme,[["system","Auto"],["light","Light"],["dark","Dark"]])}</div>
+      <div class="setrow"><b>Text size</b>${seg("text",st.text,[["normal","Normal"],["large","Large"]])}</div>
+      <div class="setrow"><b>Sounds</b>${seg("sound",st.sound===false?"off":"on",[["on","On"],["off","Off"]])}</div>
+      <div class="setrow"><b>Music <small>in Jr.</small></b>${seg("music",st.music===false?"off":"on",[["on","On"],["off","Off"]])}</div>
+      <div class="setrow"><b>Calm mode <small>less motion</small></b>${seg("calm",st.calm?"on":"off",[["off","Off"],["on","On"]])}</div>
     </div>
     <div class="card setlist">
-      <h3>Full version</h3>
-      ${S.pro?`<div class="setrow"><div><b>✓ Unlocked</b><span>You have every lesson in every course.</span></div></div>`:
-        `<div class="setrow"><div><b>Unlock everything</b><span>All courses and future updates. One-time $4.99.</span></div><button class="btn banana sm" id="sbuy">Unlock</button></div>`}
-      <div class="setrow"><div><b>Restore purchase</b><span>Already bought it on another device?</span></div><button class="btn ghost sm" id="restore">Restore</button></div>
-    </div>
-    <div class="card setlist">
-      <h3>Progress</h3>
-      <div class="setrow"><div><b>Your stats</b><span>${S.done.length} lessons done · ${S.xp} XP · ${S.bananas} bananas · ${reviewSize()} in review</span></div></div>
-      <div class="setrow"><div><b>Back up my progress</b><span>Get a code to keep your progress safe or move it to another device</span></div><button class="btn sm" id="sbackup">Back up / restore</button></div>
-      <div class="setrow"><div><b>Reset progress</b><span>Erase lessons, XP, bananas, outfits and review</span></div><button class="btn ghost sm" id="reset">Reset…</button></div>
+      <div class="setrow"><b>${S.pro?"✓ Full version unlocked":"Full version <small>one-time $4.99</small>"}</b><div class="setbtns">${S.pro?"":`<button class="btn banana sm" id="sbuy">Unlock</button>`}<button class="btn ghost sm" id="restore">Restore</button></div></div>
+      <div class="setrow"><b>Progress <small>${S.done.length} lessons · ${S.xp} XP · ${S.bananas} 🍌</small></b><div class="setbtns"><button class="btn sm" id="sbackup">Back up</button><button class="btn ghost sm" id="reset">Reset…</button></div></div>
       <div id="confirm"></div>
     </div>
-    <div class="card setlist">
-      <h3>About</h3>
-      <div class="setrow"><div><b>Terms of Service</b></div><button class="btn ghost sm" id="sterms">Read</button></div>
-      <div class="setrow"><div><b>Privacy Policy</b><span>TypeMonkey doesn't collect any personal information.</span></div><button class="btn ghost sm" id="sprivacy">Read</button></div>
-      <div class="setrow"><div><b>Version</b><span>${APP_VERSION}</span></div></div>
-      <div class="setrow"><div><b>Credits</b><span>Python runs on Brython (BSD license, © Pierre Quentel). Fonts: Baloo 2, Nunito and JetBrains Mono (SIL Open Font License).</span></div></div>
-    </div>
+    <div class="setfoot"><button class="linkbtn" id="sterms">Terms</button><button class="linkbtn" id="sprivacy">Privacy</button><span>Version ${APP_VERSION}</span>
+      <span class="credits">No personal data collected. Python by Brython (BSD). Fonts: Baloo 2, Nunito, JetBrains Mono (OFL).</span></div>
   </div>`;
   $("#back").onclick=()=>back();
   const bindSeg=(id,fn)=>$$(`#${id} button`).forEach(b=>b.onclick=()=>{fn(b.dataset.v);save();applySettings();settingsPage()});
