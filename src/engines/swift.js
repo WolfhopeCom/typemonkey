@@ -112,12 +112,16 @@ const TMSwift=(()=>{
     function endStmt(){if(accept(";"))return;const t=peek();if(t.nl||t.k==="eof"||is("}"))return;fail(`line ${t.line}: put each statement on its own line (or separate them with ;) near ${near()}`)}
 
     function statement(){
+      while(is("@")){p++;const at=ident();if(["propertyWrapper","resultBuilder","dynamicMemberLookup","MainActor","Observable","Model"].includes(at))fail(`line ${peek().line}: @${at} isn't supported in TypeMonkey's runner yet`,"NotSupported");if(is("("))skipParens()}
       const t=peek(),line=t.line;
-      while(is("@")){p++;ident()}
+      if(t.k==="id"&&t.v==="actor"&&peek(1).k==="id")fail(`line ${line}: actors (and async/await) aren't supported in TypeMonkey's runner yet`,"NotSupported");
+      if(is("deinit"))fail(`line ${line}: deinit isn't supported in TypeMonkey's runner yet (it doesn't track when objects are freed)`,"NotSupported");
       const mods=[];while(peek().k==="kw"&&["private","public","fileprivate","internal","final","static","override","mutating","lazy","weak","open","required","convenience","nonmutating","indirect"].includes(peek().v)){mods.push(peek().v);p++;if(is("(")&&(is("set",1))&&is(")",2))p+=3}
       if(peek().k==="id"&&is(":",1)&&["for","while","repeat"].includes(peek(2).v)){const label=ident();p++;const s=statement();s.label=label;return s}
       if(t.k==="kw")switch(peek().v){
-        case "import":p++;while(!peek().nl&&peek().k!=="eof")p++;return {k:"empty"};
+        case "import":{p++;const mod=peek().v;while(!peek().nl&&peek().k!=="eof")p++;
+          if(!["Foundation","UIKit","SwiftUI","Cocoa","AppKit","Darwin","Glibc","Swift"].includes(mod))fail(`line ${line}: the ${mod} module isn't available in TypeMonkey's runner`,"NotSupported");
+          return {k:"empty"}}
         case "let":case "var":return varDecl(mods);
         case "func":return funcDecl(mods);
         case "struct":case "class":case "enum":case "protocol":case "extension":return typeDecl();
@@ -184,6 +188,7 @@ const TMSwift=(()=>{
       else{p++;if(peek().k==="op"){name=peek().v;p++}else name=ident()}
       skipGenerics();
       const params=paramList();if(!/^[A-Za-z_]/.test(name))params.forEach(q=>q.label=null);  // operators take their values without labels
+      if(peek().k==="id"&&peek().v==="async")fail(`line ${line}: async/await isn't supported in TypeMonkey's runner yet`,"NotSupported");
       let throws=false;if(accept("throws"))throws=true;else accept("rethrows");
       let ret=null;if(accept("->"))ret=parseType();
       skipWhere();
@@ -192,6 +197,7 @@ const TMSwift=(()=>{
     }
     // generics are checked by the Swift compiler, not by TypeMonkey: <T: Comparable> and where clauses are skipped
     function skipGenerics(){if(!is("<"))return;let d=0;do{if(is("<"))d++;else if(is(">"))d--;else if(is(">>"))d-=2;else if(peek().k==="eof")fail("a < is missing its closing >");p++}while(d>0)}
+    function skipParens(){let d=0;do{if(is("("))d++;else if(is(")"))d--;else if(peek().k==="eof")return;p++}while(d>0)}
     function skipWhere(){if(!accept("where"))return;while(!is("{")&&peek().k!=="eof")p++}
     function paramList(){
       expect("(");const ps=[];
@@ -944,7 +950,7 @@ const TMSwift=(()=>{
           if(b instanceof Arr){const i=args[0].v;const off=b.off||0;
             // a slice (a[2...]) keeps the indexes of the array it came from
             if(i instanceof Range){const lo=i.lo===null?off:i.lo,hi=i.hi===null?off+b.items.length:i.closed?i.hi+1:i.hi;
-              return {get:()=>{if(lo<off||hi>off+b.items.length||lo>hi)fatal("Array index is out of range");const r=new Arr(b.items.slice(lo-off,hi-off),b.et);r.off=lo;return r},set:()=>fail(`line ${e.line}: assigning to a range of an array isn't supported yet`,"NotSupported"),root:base.root}}
+              return {get:()=>{if(lo<off||hi>off+b.items.length||lo>hi)fatal("Array index is out of range");const r=new Arr(b.items.slice(lo-off,hi-off),b.et);r.off=lo;return r},set:v=>{checkMutable(base,e.line);const a=base.get();if(lo<off||hi>off+a.items.length||lo>hi)fatal("Array index is out of range");a.items.splice(lo-off,hi-lo,...[...iterate(v,e.line)].map(x=>conform(copy(x),a.et,e.line,false,"assign value")))},root:base.root,parent:base}}
             if(!isInt(i))fail(`line ${e.line}: cannot subscript a value of type '${typeOfV(b)}' with an argument of type '${typeOfV(i)}'`);
             return {get:()=>{const a=base.get();const k=i-(a.off||0);if(k<0||k>=a.items.length)fatal("Index out of range");return a.items[k]},set:v=>{checkMutable(base,e.line);const a=base.get();const k=i-(a.off||0);if(k<0||k>=a.items.length)fatal("Index out of range");a.items[k]=conform(copy(v),a.et,e.line,false,"assign value")},root:base.root,parent:base,optional:base.optional};
           }
@@ -1526,6 +1532,7 @@ const TMSwift=(()=>{
       Bool:{isTypeName:"Bool",ns:{random:B(()=>Math.random()<0.5)}},
       Float:{isTypeName:"Float",ns:{pi:F32(Math.PI),infinity:F32(Infinity),nan:F32(NaN),greatestFiniteMagnitude:F32(3.4028234663852886e38)}},
       Character:{isTypeName:"Character",ns:{}},
+      Array:{isTypeName:"Array",ns:{}},Set:{isTypeName:"Set",ns:{}},Dictionary:{isTypeName:"Dictionary",ns:{}},
       String:{isTypeName:"String",ns:{}},
     };
     for(const n in IRANGE)BUILTINS[n]={isTypeName:n,ns:{max:IRANGE[n][1],min:IRANGE[n][0]}};
@@ -1694,6 +1701,9 @@ const TMSwift=(()=>{
         case "allSatisfy":return M((vals,args)=>{const f=fnArg(args);return it.every(x=>truth(callFn(f,[{v:x}],line)))});
         case "firstIndex":return M((vals,args)=>{let i;if(args[0].label==="where"||args[0].v instanceof Fn){const f=args[0].v;i=it.findIndex(x=>truth(callFn(f,[{v:x}],line)))}else i=it.findIndex(x=>equal(x,args[0].v));return i<0?NIL:new Some(i+(a.off||0))});
         case "lastIndex":return M((vals,args)=>{let i=-1;for(let k=it.length-1;k>=0;k--)if(args[0].label==="where"||args[0].v instanceof Fn?truth(callFn(args[0].v,[{v:it[k]}],line)):equal(it[k],args[0].v)){i=k;break}return i<0?NIL:new Some(i+(a.off||0))});
+        case "split":return M((vals,args)=>{const sep=args.find(a=>a.label==="separator"),ws=args.find(a=>a.label==="whereSeparator"||!a.label&&a.v instanceof Fn);
+          const isSep=x=>sep?equal(x,sep.v):truth(callFn(ws.v,[{v:x}],line));const parts=[];let cur=[];
+          for(const x of it){if(isSep(x)){if(cur.length)parts.push(new Arr(cur,a.et));cur=[]}else cur.push(x)}if(cur.length)parts.push(new Arr(cur,a.et));return new Arr(parts,{k:"arr",el:a.et})});
         case "starts":return M(([x])=>{const o=[...iterate(x,line)];return o.length<=it.length&&o.every((y,i)=>equal(it[i],y))});
         case "elementsEqual":return M(([x])=>{const o=[...iterate(x,line)];return o.length===it.length&&o.every((y,i)=>equal(it[i],y))});
         case "count(where:)":break;
