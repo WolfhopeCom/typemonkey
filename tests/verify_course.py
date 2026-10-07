@@ -79,6 +79,8 @@ CHECK = r"""async () => {
     for (const b of used) if (!s.blocks.includes(b)) R.push(`${x.l.id} step ${i}: solution needs block ${b} that isn't offered`);
     for (const p of JSON.stringify(s.solution).match(/"rep":(\d+)/g) || []) { const n = +p.split(":")[1]; if (n < 2 || n > 5) R.push(`${x.l.id} step ${i}: repeat ${n} is outside 2–5`); }
     if (s.start && simulate(s.grid, s.dir, s.start).result === "win") R.push(`${x.l.id} step ${i}: buggy starter already wins`);
+    const plus = [...s.solution, "fwd"]; if (simulate(s.grid, s.dir, plus).result === "win") R.push(`${x.l.id} step ${i}: adding an extra Forward still wins`);
+    const plusTurn = [...s.solution, "left"]; if (simulate(s.grid, s.dir, plusTurn).result === "win") R.push(`${x.l.id} step ${i}: adding an extra turn still wins`);
   }
   // Every course: structure sanity
   for (const c of COURSES) for (const x of flat(c)) {

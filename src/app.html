@@ -783,34 +783,46 @@ const BLOCKS={fwd:{icon:"👣",label:"Forward"},left:{icon:"↺",label:"Turn lef
 const isBox=b=>typeof b==="object";
 function mazeInfo(g){let start;const goals=[];g.forEach((row,y)=>[...row].forEach((ch,x)=>{if(ch==="S")start=[x,y];if(ch==="B")goals.push([x,y])}));return {start,goal:goals[0],goals,w:g[0].length,h:g.length}}
 const blockCount=prog=>prog.reduce((n,b)=>n+(isBox(b)?1+b.body.length:1),0);
-/* runs a program; path entries are [x, y, dir, bump?, eatenKey?] */
+/* runs a program; path entries are [x, y, dir, bump?, eatenKey?]
+   The program must end exactly when the last banana is eaten: any move or turn after that is "extra".
+   (Repeat until 🍌 stops by itself the moment the last banana is eaten.) */
 function simulate(grid,dir,prog){
-  const m=mazeInfo(grid);let [x,y]=m.start,d=dir;const path=[[x,y,d]];const left=new Set(m.goals.map(g=>g.join(",")));let steps=0;
+  const m=mazeInfo(grid);let [x,y]=m.start,d=dir;const path=[[x,y,d]];const left=new Set(m.goals.map(g=>g.join(",")));let steps=0,won=false;
   const treeAhead=()=>{const [dx,dy]=DIRS[d];const ch=(grid[y+dy]||"")[x+dx];return ch===undefined||ch==="#"};
   const one=t=>{
     if(++steps>500)return "loop";
-    if(t==="left")d=LEFT[d];
-    else if(t==="right")d=RIGHT[d];
-    else if(t==="ifR"||t==="ifL"){if(!treeAhead())return null;d=t==="ifR"?RIGHT[d]:LEFT[d]}
+    if(t==="ifR"||t==="ifL"){if(!treeAhead())return null}
+    if(won){  // TypeMonkey already has every banana, so this block is one too many
+      if(t==="fwd"&&!treeAhead()){const [dx,dy]=DIRS[d];x+=dx;y+=dy;path.push([x,y,d])}
+      else if(t==="fwd")path.push([x,y,d,"bump"]);
+      else{d=(t==="left"||t==="ifL")?LEFT[d]:RIGHT[d];path.push([x,y,d])}
+      return "extra";
+    }
+    if(t==="left"||t==="ifL")d=LEFT[d];
+    else if(t==="right"||t==="ifR")d=RIGHT[d];
     else{
       if(treeAhead()){path.push([x,y,d,"bump"]);return "wall"}
       const [dx,dy]=DIRS[d];x+=dx;y+=dy;const k=x+","+y;
-      if(left.has(k)){left.delete(k);path.push([x,y,d,null,k]);return left.size?null:"win"}
+      if(left.has(k)){left.delete(k);path.push([x,y,d,null,k]);if(!left.size){won=true;return "won"}return null}
     }
     path.push([x,y,d]);return null;
   };
-  const runList=list=>{
+  const runList=(list,inUntil)=>{
     for(const b of list){
       let r=null;
       if(isBox(b)){
-        if(b.until){if(!b.body.length)return "loop";let guard=0;while(left.size){if(++guard>80)return "loop";r=runList(b.body);if(r)return r}}
-        else for(let k=0;k<b.rep;k++){r=runList(b.body);if(r)return r}
-      }else r=one(b);
+        if(b.until){
+          if(won){r="extra";path.push([x,y,d,"bump"])}
+          else{if(!b.body.length)return "loop";let guard=0;
+            while(!won){if(++guard>80)return "loop";r=runList(b.body,true);if(r==="won"){r=null;break}if(r)return r}}
+        }else for(let k=0;k<b.rep;k++){r=runList(b.body,inUntil);if(r==="won"){if(inUntil)return "won";r=null;continue}if(r)return r}
+      }else{r=one(b);if(r==="won"){if(inUntil)return "won";r=null}}
       if(r)return r;
     }
     return null;
   };
-  return {path,result:runList(prog)||"short"};
+  const r=runList(prog,false);
+  return {path,result:r||(won?"win":"short")};
 }
 function maze(s){
   const m=mazeInfo(s.grid);let prog=JSON.parse(JSON.stringify(s.start||[]));let open=null,running=false,fails=0,won=false;
@@ -851,7 +863,7 @@ function maze(s){
       if(result==="win"&&!tooMany){won=true;award(15,3);$("#mface").innerHTML=monkey("cheer");$("#fb").innerHTML=`<div class="feedback good">🍌 ${nB>1?"All bananas collected!":"Banana reached!"} ${esc(s.win||pick(WINS))}</div>`;
         $("#bud").innerHTML=buddy("YES! Your program worked!","cheer");["run","undo","clr","hint"].forEach(i=>$("#"+i).hidden=true);$("#go").hidden=false;return}
       fails++;$("#mface").innerHTML=monkey("oops");setTimeout(()=>{const f=$("#mface");if(f)f.innerHTML=monkey("happy")},900);
-      const msg=result==="win"?`You got there, but used ${blockCount(prog)} blocks. Can you do it with ${s.max} or fewer? Try a Repeat block!`:result==="wall"?"Bonk! TypeMonkey bumped into a tree. Find the step that went wrong and fix it.":result==="loop"?"TypeMonkey kept going around and around! Your repeat never got him to every banana.":"So close! TypeMonkey stopped before reaching the banana. Add more steps.";
+      const msg=result==="win"?`You got there, but used ${blockCount(prog)} blocks. Can you do it with ${s.max} or fewer? Try a Repeat block!`:result==="wall"?"Bonk! TypeMonkey bumped into a tree. Find the step that went wrong and fix it.":result==="loop"?"TypeMonkey kept going around and around! Your repeat never got him to every banana.":result==="extra"?"Too many steps! TypeMonkey got the banana, then kept going. A program has to stop at exactly the right spot. Remove the extra blocks.":"So close! TypeMonkey stopped before reaching the banana. Add more steps.";
       $("#fb").innerHTML=`<div class="feedback bad">${msg}</div>`;
       $("#bud").innerHTML=buddy(fails>=3?"Want a peek? Tap “Show me”.":"Bugs are normal! Every coder fixes their programs.","oops");
       if(fails>=2&&s.solution)$("#hint").hidden=false;

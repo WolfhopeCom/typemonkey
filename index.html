@@ -41683,16 +41683,16 @@ const JR_UNIT2={name:"Loops",lessons:[
  {type:"maze",title:"Use a loop",grid:["S....B"],dir:"E",blocks:[JF,"rep"],max:2,solution:[jrep(5,JF)],say:"Only 2 blocks allowed! Use Repeat."},
  {type:"quiz",q:"Repeat 3 times: Forward. How many steps forward is that?",opts:["3","1","4"],a:0,why:"The block inside runs 3 times."},
  {type:"maze",title:"The long way round",grid:["S....","####.","B...."],dir:"E",blocks:[JF,JL,JRT,"rep"],max:8,solution:[jrep(4,JF),JRT,jrep(2,JF),JRT,jrep(4,JF)],say:"You can use more than one Repeat!"},
- {type:"maze",title:"Staircase",grid:["S.###","#..##","##..#","###.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(4,JF,JRT,JF,JL)],say:"Each stair is the same: forward, turn, forward, turn. Loop it!"},
+ {type:"maze",title:"Staircase",grid:["S####","..###","#..##","##..#","###.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(4,JRT,JF,JL,JF)],say:"Each stair is the same: turn, step, turn, step. Loop it!"},
  {type:"done"}]},
 {id:"jr5",title:"Loop patterns",sub:"spot the part that repeats",steps:[
  {type:"talk",title:"Find the pattern",mood:"think",
   body:`<p>Before you build, look at the path. Do you see a shape that happens again and again? That's the part to put inside your Repeat.</p>`,
   say:"Coders call this pattern-spotting. It's a big part of thinking like a programmer."},
  {type:"quiz",q:"Which part repeats in: Forward, Turn, Forward, Turn, Forward, Turn?",opts:["Forward, Turn","Forward","Turn, Turn"],a:0,why:"Forward, Turn happens 3 times. So: Repeat 3 times: Forward, Turn."},
- {type:"maze",title:"Climb up",grid:["###.B","##..#","#..##","S.###"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(4,JF,JL,JF,JRT)]},
- {type:"maze",title:"Around the pond",grid:["S..","##.","B.."],dir:"E",blocks:[JF,JL,JRT,"rep"],max:4,solution:[jrep(3,JF,JF,JRT)],say:"Walk two, turn. Walk two, turn. See it?"},
- {type:"maze",title:"Broken loop",grid:["S.####","#..###","##..##","###..#","####.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,start:[jrep(4,JF,JRT,JF,JL)],solution:[jrep(5,JF,JRT,JF,JL)],say:"This loop has a bug! It doesn't repeat enough times."},
+ {type:"maze",title:"Climb up",grid:["###.B","##..#","#..##","..###","S####"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(4,JL,JF,JRT,JF)],say:"Find the pattern that repeats on every step."},
+ {type:"maze",title:"Around the pond",grid:["S..","##.","B.."],dir:"N",blocks:[JF,JL,JRT,"rep"],max:4,solution:[jrep(3,JRT,JF,JF)],say:"I'm facing up this time! Turn, walk two. Turn, walk two. See it?"},
+ {type:"maze",title:"Broken loop",grid:["S#####","..####","#..###","##..##","###..#","####.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,start:[jrep(4,JRT,JF,JL,JF)],solution:[jrep(5,JRT,JF,JL,JF)],say:"This loop has a bug! It doesn't repeat enough times."},
  {type:"done"}]},
 {id:"jr6",title:"Jungle adventure",sub:"bigger mazes, all your skills",project:true,steps:[
  {type:"talk",title:"Into the jungle!",mood:"cheer",
@@ -41700,7 +41700,7 @@ const JR_UNIT2={name:"Loops",lessons:[
   say:"I believe in you!"},
  {type:"maze",title:"River bend",grid:["S...#","###.#","#B..#"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:8,solution:[jrep(3,JF),JRT,jrep(2,JF),JRT,jrep(2,JF)]},
  {type:"maze",title:"Monkey bridge",grid:["S..#..","#.##.#","#....B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:7,solution:[JF,JRT,jrep(2,JF),JL,jrep(4,JF)]},
- {type:"maze",title:"Giant stairs",grid:["S.####","#..###","##..##","###..#","####.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(5,JF,JRT,JF,JL)]},
+ {type:"maze",title:"Giant stairs",grid:["S#####","..####","#..###","##..##","###..#","####.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(5,JRT,JF,JL,JF)]},
  {type:"done"}]}
 ]};
 
@@ -41728,8 +41728,8 @@ const JR_UNIT3={name:"Think like a coder",lessons:[
   body:`<p>This is it: the Banana Quest! Three tricky mazes stand between me and the Golden Banana. Use sequences, loops and debugging. You've got this!</p>`,
   say:"Ready? Let's go!"},
  {type:"maze",title:"The canyon",grid:["S.#B","#.#.","#..."],dir:"E",blocks:[JF,JL,JRT,"rep"],max:10,solution:[JF,JRT,jrep(2,JF),JL,jrep(2,JF),JL,jrep(2,JF)]},
- {type:"maze",title:"Buggy temple",grid:["S...","###.","###.","B..."],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,start:[jrep(3,JF,JF,JF,JL)],solution:[jrep(3,JF,JF,JF,JRT)],say:"The temple's program has a bug. Find it!"},
- {type:"maze",title:"The Golden Banana",grid:["S.####","#..###","##..##","###..#","####.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(5,JF,JRT,JF,JL)],win:"You found the Golden Banana! You're a real coder now!"},
+ {type:"maze",title:"Buggy temple",grid:["S...","###.","###.","B..."],dir:"N",blocks:[JF,JL,JRT,"rep"],max:5,start:[jrep(3,JL,JF,JF,JF)],solution:[jrep(3,JRT,JF,JF,JF)],say:"The temple's program has a bug. Find it!"},
+ {type:"maze",title:"The Golden Banana",grid:["S#####","..####","#..###","##..##","###..#","####.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(5,JRT,JF,JL,JF)],win:"You found the Golden Banana! You're a real coder now!"},
  {type:"done"}]}
 ]};
 
@@ -41741,7 +41741,7 @@ const JR_UNIT4={name:"Smart monkey",lessons:[
  {type:"maze",title:"Banana row",grid:["SB.B"],dir:"E",blocks:[JF],solution:[JF,JF,JF],say:"Two bananas in a row. Easy start!"},
  {type:"quiz",q:"In a banana hunt, when is the puzzle finished?",opts:["When ALL the bananas are collected","After the first banana","After 10 steps"],a:0,why:"Every banana counts! Leave one behind and the puzzle isn't done."},
  {type:"maze",title:"There and back",grid:["S.B.","###.","B..."],dir:"E",blocks:[JF,JL,JRT,"rep"],max:8,solution:[jrep(3,JF),JRT,jrep(2,JF),JRT,jrep(3,JF)],say:"One banana up top, one at the bottom. Go get 'em both!"},
- {type:"maze",title:"Banana stairs",grid:["S.###","#B.##","##B.#","###.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(4,JF,JRT,JF,JL)],say:"A banana on every step! Can you loop it?"},
+ {type:"maze",title:"Banana stairs",grid:["S####","B.###","#.B##","##.B#","###.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(4,JRT,JF,JL,JF)],say:"A banana on every step! Can you loop it?"},
  {type:"done"}]},
 {id:"jr11",title:"Repeat until",sub:"loops that know when to stop",steps:[
  {type:"talk",title:"Repeat until 🍌",mood:"think",
@@ -41750,7 +41750,7 @@ const JR_UNIT4={name:"Smart monkey",lessons:[
  {type:"maze",title:"No counting needed",grid:["S......B"],dir:"E",blocks:[JF,"until"],max:2,solution:[juntil(JF)],say:"Seven squares? Don't count them. Let the loop do it!"},
  {type:"maze",title:"Long way down",grid:["S",".",".",".",".",".","B"],dir:"S",blocks:[JF,"until"],max:2,solution:[juntil(JF)]},
  {type:"quiz",q:"When does Repeat until 🍌 stop?",opts:["When every banana is collected","After exactly 3 times","Never"],a:0,why:"It checks after each step: bananas left? Keep going. All gone? Stop."},
- {type:"maze",title:"Endless stairs",grid:["S.####","#..###","##..##","###..#","####.B"],dir:"E",blocks:[JF,JL,JRT,"until"],max:5,solution:[juntil(JF,JRT,JF,JL)],say:"Same stair pattern as before, but now you don't need to count the steps."},
+ {type:"maze",title:"Endless stairs",grid:["S#####","..####","#..###","##..##","###..#","####.B"],dir:"E",blocks:[JF,JL,JRT,"until"],max:5,solution:[juntil(JRT,JF,JL,JF)],say:"Same stair pattern as before, but now you don't need to count the steps."},
  {type:"done"}]},
 {id:"jr12",title:"Tree ahead?",sub:"blocks that make choices",steps:[
  {type:"talk",title:"Smart blocks",mood:"cheer",
@@ -43939,34 +43939,46 @@ const BLOCKS={fwd:{icon:"👣",label:"Forward"},left:{icon:"↺",label:"Turn lef
 const isBox=b=>typeof b==="object";
 function mazeInfo(g){let start;const goals=[];g.forEach((row,y)=>[...row].forEach((ch,x)=>{if(ch==="S")start=[x,y];if(ch==="B")goals.push([x,y])}));return {start,goal:goals[0],goals,w:g[0].length,h:g.length}}
 const blockCount=prog=>prog.reduce((n,b)=>n+(isBox(b)?1+b.body.length:1),0);
-/* runs a program; path entries are [x, y, dir, bump?, eatenKey?] */
+/* runs a program; path entries are [x, y, dir, bump?, eatenKey?]
+   The program must end exactly when the last banana is eaten: any move or turn after that is "extra".
+   (Repeat until 🍌 stops by itself the moment the last banana is eaten.) */
 function simulate(grid,dir,prog){
-  const m=mazeInfo(grid);let [x,y]=m.start,d=dir;const path=[[x,y,d]];const left=new Set(m.goals.map(g=>g.join(",")));let steps=0;
+  const m=mazeInfo(grid);let [x,y]=m.start,d=dir;const path=[[x,y,d]];const left=new Set(m.goals.map(g=>g.join(",")));let steps=0,won=false;
   const treeAhead=()=>{const [dx,dy]=DIRS[d];const ch=(grid[y+dy]||"")[x+dx];return ch===undefined||ch==="#"};
   const one=t=>{
     if(++steps>500)return "loop";
-    if(t==="left")d=LEFT[d];
-    else if(t==="right")d=RIGHT[d];
-    else if(t==="ifR"||t==="ifL"){if(!treeAhead())return null;d=t==="ifR"?RIGHT[d]:LEFT[d]}
+    if(t==="ifR"||t==="ifL"){if(!treeAhead())return null}
+    if(won){  // TypeMonkey already has every banana, so this block is one too many
+      if(t==="fwd"&&!treeAhead()){const [dx,dy]=DIRS[d];x+=dx;y+=dy;path.push([x,y,d])}
+      else if(t==="fwd")path.push([x,y,d,"bump"]);
+      else{d=(t==="left"||t==="ifL")?LEFT[d]:RIGHT[d];path.push([x,y,d])}
+      return "extra";
+    }
+    if(t==="left"||t==="ifL")d=LEFT[d];
+    else if(t==="right"||t==="ifR")d=RIGHT[d];
     else{
       if(treeAhead()){path.push([x,y,d,"bump"]);return "wall"}
       const [dx,dy]=DIRS[d];x+=dx;y+=dy;const k=x+","+y;
-      if(left.has(k)){left.delete(k);path.push([x,y,d,null,k]);return left.size?null:"win"}
+      if(left.has(k)){left.delete(k);path.push([x,y,d,null,k]);if(!left.size){won=true;return "won"}return null}
     }
     path.push([x,y,d]);return null;
   };
-  const runList=list=>{
+  const runList=(list,inUntil)=>{
     for(const b of list){
       let r=null;
       if(isBox(b)){
-        if(b.until){if(!b.body.length)return "loop";let guard=0;while(left.size){if(++guard>80)return "loop";r=runList(b.body);if(r)return r}}
-        else for(let k=0;k<b.rep;k++){r=runList(b.body);if(r)return r}
-      }else r=one(b);
+        if(b.until){
+          if(won){r="extra";path.push([x,y,d,"bump"])}
+          else{if(!b.body.length)return "loop";let guard=0;
+            while(!won){if(++guard>80)return "loop";r=runList(b.body,true);if(r==="won"){r=null;break}if(r)return r}}
+        }else for(let k=0;k<b.rep;k++){r=runList(b.body,inUntil);if(r==="won"){if(inUntil)return "won";r=null;continue}if(r)return r}
+      }else{r=one(b);if(r==="won"){if(inUntil)return "won";r=null}}
       if(r)return r;
     }
     return null;
   };
-  return {path,result:runList(prog)||"short"};
+  const r=runList(prog,false);
+  return {path,result:r||(won?"win":"short")};
 }
 function maze(s){
   const m=mazeInfo(s.grid);let prog=JSON.parse(JSON.stringify(s.start||[]));let open=null,running=false,fails=0,won=false;
@@ -44007,7 +44019,7 @@ function maze(s){
       if(result==="win"&&!tooMany){won=true;award(15,3);$("#mface").innerHTML=monkey("cheer");$("#fb").innerHTML=`<div class="feedback good">🍌 ${nB>1?"All bananas collected!":"Banana reached!"} ${esc(s.win||pick(WINS))}</div>`;
         $("#bud").innerHTML=buddy("YES! Your program worked!","cheer");["run","undo","clr","hint"].forEach(i=>$("#"+i).hidden=true);$("#go").hidden=false;return}
       fails++;$("#mface").innerHTML=monkey("oops");setTimeout(()=>{const f=$("#mface");if(f)f.innerHTML=monkey("happy")},900);
-      const msg=result==="win"?`You got there, but used ${blockCount(prog)} blocks. Can you do it with ${s.max} or fewer? Try a Repeat block!`:result==="wall"?"Bonk! TypeMonkey bumped into a tree. Find the step that went wrong and fix it.":result==="loop"?"TypeMonkey kept going around and around! Your repeat never got him to every banana.":"So close! TypeMonkey stopped before reaching the banana. Add more steps.";
+      const msg=result==="win"?`You got there, but used ${blockCount(prog)} blocks. Can you do it with ${s.max} or fewer? Try a Repeat block!`:result==="wall"?"Bonk! TypeMonkey bumped into a tree. Find the step that went wrong and fix it.":result==="loop"?"TypeMonkey kept going around and around! Your repeat never got him to every banana.":result==="extra"?"Too many steps! TypeMonkey got the banana, then kept going. A program has to stop at exactly the right spot. Remove the extra blocks.":"So close! TypeMonkey stopped before reaching the banana. Add more steps.";
       $("#fb").innerHTML=`<div class="feedback bad">${msg}</div>`;
       $("#bud").innerHTML=buddy(fails>=3?"Want a peek? Tap “Show me”.":"Bugs are normal! Every coder fixes their programs.","oops");
       if(fails>=2&&s.solution)$("#hint").hidden=false;

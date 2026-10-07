@@ -41,16 +41,16 @@ const JR_UNIT2={name:"Loops",lessons:[
  {type:"maze",title:"Use a loop",grid:["S....B"],dir:"E",blocks:[JF,"rep"],max:2,solution:[jrep(5,JF)],say:"Only 2 blocks allowed! Use Repeat."},
  {type:"quiz",q:"Repeat 3 times: Forward. How many steps forward is that?",opts:["3","1","4"],a:0,why:"The block inside runs 3 times."},
  {type:"maze",title:"The long way round",grid:["S....","####.","B...."],dir:"E",blocks:[JF,JL,JRT,"rep"],max:8,solution:[jrep(4,JF),JRT,jrep(2,JF),JRT,jrep(4,JF)],say:"You can use more than one Repeat!"},
- {type:"maze",title:"Staircase",grid:["S.###","#..##","##..#","###.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(4,JF,JRT,JF,JL)],say:"Each stair is the same: forward, turn, forward, turn. Loop it!"},
+ {type:"maze",title:"Staircase",grid:["S####","..###","#..##","##..#","###.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(4,JRT,JF,JL,JF)],say:"Each stair is the same: turn, step, turn, step. Loop it!"},
  {type:"done"}]},
 {id:"jr5",title:"Loop patterns",sub:"spot the part that repeats",steps:[
  {type:"talk",title:"Find the pattern",mood:"think",
   body:`<p>Before you build, look at the path. Do you see a shape that happens again and again? That's the part to put inside your Repeat.</p>`,
   say:"Coders call this pattern-spotting. It's a big part of thinking like a programmer."},
  {type:"quiz",q:"Which part repeats in: Forward, Turn, Forward, Turn, Forward, Turn?",opts:["Forward, Turn","Forward","Turn, Turn"],a:0,why:"Forward, Turn happens 3 times. So: Repeat 3 times: Forward, Turn."},
- {type:"maze",title:"Climb up",grid:["###.B","##..#","#..##","S.###"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(4,JF,JL,JF,JRT)]},
- {type:"maze",title:"Around the pond",grid:["S..","##.","B.."],dir:"E",blocks:[JF,JL,JRT,"rep"],max:4,solution:[jrep(3,JF,JF,JRT)],say:"Walk two, turn. Walk two, turn. See it?"},
- {type:"maze",title:"Broken loop",grid:["S.####","#..###","##..##","###..#","####.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,start:[jrep(4,JF,JRT,JF,JL)],solution:[jrep(5,JF,JRT,JF,JL)],say:"This loop has a bug! It doesn't repeat enough times."},
+ {type:"maze",title:"Climb up",grid:["###.B","##..#","#..##","..###","S####"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(4,JL,JF,JRT,JF)],say:"Find the pattern that repeats on every step."},
+ {type:"maze",title:"Around the pond",grid:["S..","##.","B.."],dir:"N",blocks:[JF,JL,JRT,"rep"],max:4,solution:[jrep(3,JRT,JF,JF)],say:"I'm facing up this time! Turn, walk two. Turn, walk two. See it?"},
+ {type:"maze",title:"Broken loop",grid:["S#####","..####","#..###","##..##","###..#","####.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,start:[jrep(4,JRT,JF,JL,JF)],solution:[jrep(5,JRT,JF,JL,JF)],say:"This loop has a bug! It doesn't repeat enough times."},
  {type:"done"}]},
 {id:"jr6",title:"Jungle adventure",sub:"bigger mazes, all your skills",project:true,steps:[
  {type:"talk",title:"Into the jungle!",mood:"cheer",
@@ -58,7 +58,7 @@ const JR_UNIT2={name:"Loops",lessons:[
   say:"I believe in you!"},
  {type:"maze",title:"River bend",grid:["S...#","###.#","#B..#"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:8,solution:[jrep(3,JF),JRT,jrep(2,JF),JRT,jrep(2,JF)]},
  {type:"maze",title:"Monkey bridge",grid:["S..#..","#.##.#","#....B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:7,solution:[JF,JRT,jrep(2,JF),JL,jrep(4,JF)]},
- {type:"maze",title:"Giant stairs",grid:["S.####","#..###","##..##","###..#","####.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(5,JF,JRT,JF,JL)]},
+ {type:"maze",title:"Giant stairs",grid:["S#####","..####","#..###","##..##","###..#","####.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(5,JRT,JF,JL,JF)]},
  {type:"done"}]}
 ]};
 
@@ -86,8 +86,8 @@ const JR_UNIT3={name:"Think like a coder",lessons:[
   body:`<p>This is it: the Banana Quest! Three tricky mazes stand between me and the Golden Banana. Use sequences, loops and debugging. You've got this!</p>`,
   say:"Ready? Let's go!"},
  {type:"maze",title:"The canyon",grid:["S.#B","#.#.","#..."],dir:"E",blocks:[JF,JL,JRT,"rep"],max:10,solution:[JF,JRT,jrep(2,JF),JL,jrep(2,JF),JL,jrep(2,JF)]},
- {type:"maze",title:"Buggy temple",grid:["S...","###.","###.","B..."],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,start:[jrep(3,JF,JF,JF,JL)],solution:[jrep(3,JF,JF,JF,JRT)],say:"The temple's program has a bug. Find it!"},
- {type:"maze",title:"The Golden Banana",grid:["S.####","#..###","##..##","###..#","####.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(5,JF,JRT,JF,JL)],win:"You found the Golden Banana! You're a real coder now!"},
+ {type:"maze",title:"Buggy temple",grid:["S...","###.","###.","B..."],dir:"N",blocks:[JF,JL,JRT,"rep"],max:5,start:[jrep(3,JL,JF,JF,JF)],solution:[jrep(3,JRT,JF,JF,JF)],say:"The temple's program has a bug. Find it!"},
+ {type:"maze",title:"The Golden Banana",grid:["S#####","..####","#..###","##..##","###..#","####.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(5,JRT,JF,JL,JF)],win:"You found the Golden Banana! You're a real coder now!"},
  {type:"done"}]}
 ]};
 
@@ -99,7 +99,7 @@ const JR_UNIT4={name:"Smart monkey",lessons:[
  {type:"maze",title:"Banana row",grid:["SB.B"],dir:"E",blocks:[JF],solution:[JF,JF,JF],say:"Two bananas in a row. Easy start!"},
  {type:"quiz",q:"In a banana hunt, when is the puzzle finished?",opts:["When ALL the bananas are collected","After the first banana","After 10 steps"],a:0,why:"Every banana counts! Leave one behind and the puzzle isn't done."},
  {type:"maze",title:"There and back",grid:["S.B.","###.","B..."],dir:"E",blocks:[JF,JL,JRT,"rep"],max:8,solution:[jrep(3,JF),JRT,jrep(2,JF),JRT,jrep(3,JF)],say:"One banana up top, one at the bottom. Go get 'em both!"},
- {type:"maze",title:"Banana stairs",grid:["S.###","#B.##","##B.#","###.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(4,JF,JRT,JF,JL)],say:"A banana on every step! Can you loop it?"},
+ {type:"maze",title:"Banana stairs",grid:["S####","B.###","#.B##","##.B#","###.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(4,JRT,JF,JL,JF)],say:"A banana on every step! Can you loop it?"},
  {type:"done"}]},
 {id:"jr11",title:"Repeat until",sub:"loops that know when to stop",steps:[
  {type:"talk",title:"Repeat until 🍌",mood:"think",
@@ -108,7 +108,7 @@ const JR_UNIT4={name:"Smart monkey",lessons:[
  {type:"maze",title:"No counting needed",grid:["S......B"],dir:"E",blocks:[JF,"until"],max:2,solution:[juntil(JF)],say:"Seven squares? Don't count them. Let the loop do it!"},
  {type:"maze",title:"Long way down",grid:["S",".",".",".",".",".","B"],dir:"S",blocks:[JF,"until"],max:2,solution:[juntil(JF)]},
  {type:"quiz",q:"When does Repeat until 🍌 stop?",opts:["When every banana is collected","After exactly 3 times","Never"],a:0,why:"It checks after each step: bananas left? Keep going. All gone? Stop."},
- {type:"maze",title:"Endless stairs",grid:["S.####","#..###","##..##","###..#","####.B"],dir:"E",blocks:[JF,JL,JRT,"until"],max:5,solution:[juntil(JF,JRT,JF,JL)],say:"Same stair pattern as before, but now you don't need to count the steps."},
+ {type:"maze",title:"Endless stairs",grid:["S#####","..####","#..###","##..##","###..#","####.B"],dir:"E",blocks:[JF,JL,JRT,"until"],max:5,solution:[juntil(JRT,JF,JL,JF)],say:"Same stair pattern as before, but now you don't need to count the steps."},
  {type:"done"}]},
 {id:"jr12",title:"Tree ahead?",sub:"blocks that make choices",steps:[
  {type:"talk",title:"Smart blocks",mood:"cheer",
