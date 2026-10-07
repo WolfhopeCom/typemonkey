@@ -71,11 +71,11 @@ CHECK = r"""async () => {
   for (const x of flat(jr)) for (const [i, s] of (x.l.steps || []).entries()) if (s.type === "maze") {
     const w = s.grid[0].length;
     if (!s.grid.every(r => r.length === w)) R.push(`${x.l.id} step ${i}: grid rows differ in length`);
-    const m = mazeInfo(s.grid); if (!m.start || !m.goal) { R.push(`${x.l.id} step ${i}: missing S or B`); continue; }
+    const m = mazeInfo(s.grid); if (!m.start || !m.goals.length) { R.push(`${x.l.id} step ${i}: missing S or B`); continue; }
     const sol = simulate(s.grid, s.dir, s.solution);
     if (sol.result !== "win") R.push(`${x.l.id} step ${i}: solution doesn't reach the banana (${sol.result})`);
     if (s.max && blockCount(s.solution) > s.max) R.push(`${x.l.id} step ${i}: solution uses ${blockCount(s.solution)} blocks, max ${s.max}`);
-    const used = new Set(JSON.stringify(s.solution).match(/fwd|left|right/g)); if (JSON.stringify(s.solution).includes("rep")) used.add("rep");
+    const js = JSON.stringify(s.solution); const used = new Set(js.match(/"(fwd|left|right|ifR|ifL)"/g).map(t => t.slice(1, -1))); if (js.includes('"rep"')) used.add("rep"); if (js.includes('"until"')) used.add("until");
     for (const b of used) if (!s.blocks.includes(b)) R.push(`${x.l.id} step ${i}: solution needs block ${b} that isn't offered`);
     for (const p of JSON.stringify(s.solution).match(/"rep":(\d+)/g) || []) { const n = +p.split(":")[1]; if (n < 2 || n > 5) R.push(`${x.l.id} step ${i}: repeat ${n} is outside 2–5`); }
     if (s.start && simulate(s.grid, s.dir, s.start).result === "win") R.push(`${x.l.id} step ${i}: buggy starter already wins`);

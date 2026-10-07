@@ -1,7 +1,7 @@
 /* TypeMonkey Jr. · ages 7–12 · no typing. Maze steps: grid rows use # tree, . path, S start, B banana.
    dir is the starting direction (N/E/S/W). blocks are the buttons offered. start pre-fills a (buggy) program.
    solution must reach the banana within max blocks (checked by tests/verify_course.py). */
-const JF="fwd",JL="left",JRT="right",jrep=(n,...body)=>({rep:n,body});
+const JF="fwd",JL="left",JRT="right",JIFR="ifR",JIFL="ifL",jrep=(n,...body)=>({rep:n,body}),juntil=(...body)=>({until:true,body});
 
 const JR_UNIT1={name:"Monkey moves",free:true,lessons:[
 {id:"jr1",title:"First steps",sub:"a program is a list of steps",steps:[
@@ -91,4 +91,44 @@ const JR_UNIT3={name:"Think like a coder",lessons:[
  {type:"done"}]}
 ]};
 
-const COURSE_JR={id:"jr",name:"TypeMonkey Jr.",blurb:"Puzzle adventures for ages 7–12. Snap blocks together to guide TypeMonkey to his bananas. No typing needed! Unit 1 is free.",units:[JR_UNIT1,JR_UNIT2,JR_UNIT3]};
+const JR_UNIT4={name:"Smart monkey",lessons:[
+{id:"jr10",title:"Banana hunt",sub:"collect every banana",steps:[
+ {type:"talk",title:"So many bananas!",mood:"cheer",
+  body:`<p>Some mazes have <b>lots</b> of bananas. I won't stop until I've eaten every single one! Plan a path that passes through all of them.</p>`,
+  say:"Watch them disappear as I gobble them up. Nom nom!"},
+ {type:"maze",title:"Banana row",grid:["SB.B"],dir:"E",blocks:[JF],solution:[JF,JF,JF],say:"Two bananas in a row. Easy start!"},
+ {type:"quiz",q:"In a banana hunt, when is the puzzle finished?",opts:["When ALL the bananas are collected","After the first banana","After 10 steps"],a:0,why:"Every banana counts! Leave one behind and the puzzle isn't done."},
+ {type:"maze",title:"There and back",grid:["S.B.","###.","B..."],dir:"E",blocks:[JF,JL,JRT,"rep"],max:8,solution:[jrep(3,JF),JRT,jrep(2,JF),JRT,jrep(3,JF)],say:"One banana up top, one at the bottom. Go get 'em both!"},
+ {type:"maze",title:"Banana stairs",grid:["S.###","#B.##","##B.#","###.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(4,JF,JRT,JF,JL)],say:"A banana on every step! Can you loop it?"},
+ {type:"done"}]},
+{id:"jr11",title:"Repeat until",sub:"loops that know when to stop",steps:[
+ {type:"talk",title:"Repeat until 🍌",mood:"think",
+  body:`<p>The <b>Repeat until 🍌</b> block keeps repeating the blocks inside it until every banana is collected. You don't even have to count!</p><p>Real programs do this all the time: "keep downloading <b>until</b> the file is done."</p>`,
+  say:"Put Forward inside it and watch me go."},
+ {type:"maze",title:"No counting needed",grid:["S......B"],dir:"E",blocks:[JF,"until"],max:2,solution:[juntil(JF)],say:"Seven squares? Don't count them. Let the loop do it!"},
+ {type:"maze",title:"Long way down",grid:["S",".",".",".",".",".","B"],dir:"S",blocks:[JF,"until"],max:2,solution:[juntil(JF)]},
+ {type:"quiz",q:"When does Repeat until 🍌 stop?",opts:["When every banana is collected","After exactly 3 times","Never"],a:0,why:"It checks after each step: bananas left? Keep going. All gone? Stop."},
+ {type:"maze",title:"Endless stairs",grid:["S.####","#..###","##..##","###..#","####.B"],dir:"E",blocks:[JF,JL,JRT,"until"],max:5,solution:[juntil(JF,JRT,JF,JL)],say:"Same stair pattern as before, but now you don't need to count the steps."},
+ {type:"done"}]},
+{id:"jr12",title:"Tree ahead?",sub:"blocks that make choices",steps:[
+ {type:"talk",title:"Smart blocks",mood:"cheer",
+  body:`<p>The purple blocks make a <b>choice</b>. <b>Tree ahead? Turn right</b> means: IF there's a tree in front of me, turn right. If there isn't, do nothing.</p><p>Put one inside <b>Repeat until 🍌</b> with a Forward, and I can find my own way around corners!</p>`,
+  say:"This is how robot vacuums find their way around a room!"},
+ {type:"maze",title:"Around the bend",grid:["S...","###.","###.","###B"],dir:"E",blocks:[JF,JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],say:"Try: Repeat until 🍌 with Tree ahead? Turn right, then Forward inside."},
+ {type:"quiz",q:"The rule is: IF a tree is ahead THEN turn right. There's NO tree ahead. What does TypeMonkey do?",opts:["Nothing, he skips the turn","He turns right anyway","He stops forever"],a:0,why:"The IF part is false, so the turn doesn't happen."},
+ {type:"maze",title:"Left this time",grid:["###B","###.","###.","S..."],dir:"E",blocks:[JF,JIFL,"until"],max:3,solution:[juntil(JIFL,JF)]},
+ {type:"maze",title:"The spiral",grid:["S....","####.","B...."],dir:"E",blocks:[JF,JL,JRT,JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],say:"You could count every step... or let the smart block figure it out!"},
+ {type:"done"}]},
+{id:"jr13",title:"Maze master",sub:"the ultimate challenge",project:true,steps:[
+ {type:"talk",title:"Final challenge!",mood:"cheer",
+  body:`<p>You've learned sequences, loops, repeat-until and choices. These last mazes use <b>everything</b>. Take your time, plan, test, and fix. That's what real coders do!</p>`,
+  say:"I believe in you, Maze Master!"},
+ {type:"maze",title:"Banana loop-de-loop",grid:["SB..B","####.","B..B."],dir:"E",blocks:[JF,JL,JRT,JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],say:"Four bananas, one tiny program. Can you do it in 3 blocks?"},
+ {type:"maze",title:"The zigzag boss",grid:["S..#","##.#","##.B"],dir:"E",blocks:[JF,JIFR,JIFL,"until"],max:5,
+  body:`<p>Tricky! At the second corner, turning right hits a tree. Hint: if turning right doesn't work, turning left <b>twice</b> faces the other way.</p>`,
+  solution:[juntil(JIFR,JIFL,JIFL,JF)],say:"Think about what happens at each corner."},
+ {type:"maze",title:"The Golden Grove",grid:["SB...","####B","B...."],dir:"E",blocks:[JF,JL,JRT,"rep",JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],win:"You're officially a Maze Master! 🏆"},
+ {type:"done"}]}
+]};
+
+const COURSE_JR={id:"jr",name:"TypeMonkey Jr.",blurb:"Puzzle adventures for ages 7–12. Snap blocks together to guide TypeMonkey to his bananas. No typing needed! Unit 1 is free.",units:[JR_UNIT1,JR_UNIT2,JR_UNIT3,JR_UNIT4]};
