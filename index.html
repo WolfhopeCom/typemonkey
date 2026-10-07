@@ -52948,7 +52948,7 @@ function home(){
     <section class="hero"><h1>Learn to code, one banana at a time.</h1><p>Bite-size lessons, real code you run yourself, quizzes and mini-games. Built for all ages and experience levels.</p></section>
     ${buddy(greet,resume?"cheer":"happy")}
     ${nu?`<button class="continue" id="cont"><span class="cicon" aria-hidden="true">▶</span><span class="ctext"><small>${resume?"Pick up where you left off":S.done.length?"Continue":"Start here"} · ${esc(js.name)}</small><b>${esc(nu.l.title)}</b><span>${resume?`Step ${resume.step+1} of ${nu.l.steps.length-1} · saved`:`Unit ${nu.ui+1} · ${esc(nu.u.name)}`}</span></span><span class="cgo">${resume?"Resume":S.done.length?"Continue":"Start"}</span></button>`:nextPro?`<div class="row"><button class="btn banana" id="unl">See the full course</button></div>`:""}
-    <button class="daily ${dailyDoneToday()?"done":""}" id="daily"><span class="dicon">🎯</span><span class="dtext"><b>${dailyDoneToday()?"Daily challenge done!":"Daily challenge"}</b><span>${dailyDoneToday()?`Come back tomorrow for a new one · 🔥 ${(S.daily||{}).streak||1}-day daily streak`:`3 quick questions · bonus bananas${(S.daily||{}).streak?` · keep your ${(S.daily||{}).streak}-day streak going`:""}`}</span></span><span class="pill ${dailyDoneToday()?"ok":"kid"}">${dailyDoneToday()?"✓":"+10 🍌"}</span></button>
+    <button class="daily ${dailyDoneToday()?"done":""}" id="daily"><span class="dicon">🎯</span><span class="dtext"><b>${dailyDoneToday()?"Daily challenge done!":"Daily challenge"}</b><span>${dailyDoneToday()?`Come back tomorrow for a new one · 🔥 ${(S.daily||{}).streak||1}-day daily streak`:`3 fresh challenges, new every day · bonus bananas${(S.daily||{}).streak?` · keep your ${(S.daily||{}).streak}-day streak going`:""}`}</span></span><span class="pill ${dailyDoneToday()?"ok":"kid"}">${dailyDoneToday()?"✓":"+10 🍌"}</span></button>
     <div class="tools">
       <button class="tool" id="review"><b>🧠 Review${dueCount()?` <span class="due">${dueCount()}</span>`:""}</b><span>${dueCount()?"Questions you missed are ready to try again":reviewSize()?"All caught up! Missed questions come back here":"Questions you miss come back here later"}</span></button>
       <button class="tool" id="play"><b>›_ Playground</b><span>Write any code you want and run it</span></button>
@@ -53040,7 +53040,7 @@ function shell(inner){
   $("#quit").onclick=()=>cur.review||cur.daily?home():coursePage(cur.c.id);
   $("#foot").innerHTML="";window.scrollTo(0,0);
 }
-function next(){cur.step++;renderStep()}
+function next(){if(cur&&cur.daily){const st=cur.l.steps[cur.step];if(st&&st.type!=="quiz"&&st.type!=="done"){cur.earned.total++;cur.earned.right++}}cur.step++;renderStep()}
 const inputBox=(id,val)=>`<details class="stdin" ${val?"open":""}><summary>⌨️ Input <span>(what the player types)</span></summary><textarea id="in-${id}" rows="2" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="Type what the user would type, one answer per line" aria-label="Program input">${esc(val||"")}</textarea></details>`;
 function editorBlock(id,code,runnable,file,input){
   const wantsIn=runnable&&runnable!=="web"&&runnable!=="sql"&&(input||/\b(input|ReadLine|Scanner|readLine|prompt|cin)\b/.test(code));
@@ -53170,7 +53170,7 @@ function codeStep(s){
 }
 function quiz(s){
   const order=shuffle(s.opts.map((o,i)=>i));
-  shell(`<div class="card"><div class="label">${s._from?`${cur.daily?`Daily challenge · ${cur.step+1} of ${cur.l.steps.length-1}`:"Review"} · from ${esc(s._from)}`:"Quick quiz · +10 XP"}</div>${todo(s.code?"Read the code, then pick one answer.":"Pick one answer.")}<h2 style="font-size:1.35rem">${s.q}</h2>${s.code?`<div class="editor"><pre>${esc(s.code)}</pre></div>`:""}
+  shell(`<div class="card"><div class="label">${s._from?`${cur.daily?`Daily challenge · ${cur.step+1} of ${cur.l.steps.length-1}`:"Review"} · ${s._fresh?"":"from "}${esc(s._from)}`:"Quick quiz · +10 XP"}</div>${todo(s.code?"Read the code, then pick one answer.":"Pick one answer.")}<h2 style="font-size:1.35rem">${s.q}</h2>${s.code?`<div class="editor"><pre>${esc(s.code)}</pre></div>`:""}
     <div class="opts">${order.map(i=>`<button class="opt ${s.mono?"mono":""}" data-i="${i}">${esc(s.opts[i])}</button>`).join("")}</div><div id="fb"></div></div>
     <div id="bud">${buddy("Take your best guess!","think")}</div><div class="row"><button class="btn" id="go" hidden>Continue</button></div>`);
   $$(".opt").forEach(b=>b.onclick=()=>{
@@ -53902,21 +53902,96 @@ function reviewDone(){
 function seeded(seed){let h=2166136261>>>0;for(const ch of seed){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)>>>0}
   return ()=>{h^=h<<13;h>>>=0;h^=h>>>17;h^=h<<5;h>>>=0;return h/4294967296}}
 const dailyDoneToday=()=>(S.daily||{}).last===dayStr(new Date());
+/* ---------- Daily challenge: brand-new every day, sized to where you are ----------
+   Coders (JavaScript / Build a Game / Python): two freshly generated "what does this print?" puzzles and one
+   small code task, with numbers that change daily. Difficulty follows how many lessons you've finished.
+   Other languages: the hardest "what prints" rounds and a real code challenge from your latest lessons.
+   TypeMonkey Jr. only: a newly built maze, dance and banana box each day. */
+const DPICK=(r,a)=>a[Math.floor(r()*a.length)];
+const DINT=(r,lo,hi)=>lo+Math.floor(r()*(hi-lo+1));
+const doneIn=c=>flat(c).filter(x=>S.done.includes(x.l.id)).length;
+const dailyLevel=c=>{const n=doneIn(c);return n<4?1:n<10?2:3};
+const DQ=[
+ [1,r=>{const a=DINT(r,3,9),b=DINT(r,2,6),c=DINT(r,1,9);return {js:`let x = ${a};\nx = x * ${b};\nx = x - ${c};\nconsole.log(x);`,py:`x = ${a}\nx = x * ${b}\nx = x - ${c}\nprint(x)`,ans:a*b-c,wrong:[a*(b-c),a*b+c,a+b-c]}}],
+ [1,r=>{const nm=DPICK(r,["Mo","Kiki","Zip","Bo"]),a=DINT(r,2,9),b=DINT(r,2,9);return {js:`let name = "${nm}";\nlet n = ${a};\nconsole.log(name + " has " + (n + ${b}) + " bananas");`,py:`name = "${nm}"\nn = ${a}\nprint(name + " has " + str(n + ${b}) + " bananas")`,ans:`${nm} has ${a+b} bananas`,wrong:[`${nm} has ${a}${b} bananas`,`name has ${a+b} bananas`,`${nm} has ${a} bananas`]}}],
+ [1,r=>{const A=DINT(r,2,8),B=A+DINT(r,1,5);return {js:`let a = ${A};\nlet b = ${B};\na = b;\nb = a + 1;\nconsole.log(a, b);`,py:`a = ${A}\nb = ${B}\na = b\nb = a + 1\nprint(a, b)`,ans:`${B} ${B+1}`,wrong:[`${A} ${B+1}`,`${B} ${A+1}`,`${A} ${B}`]}}],
+ [2,r=>{const s=DPICK(r,[95,90,89,72,70,69,55]),g=x=>x>=90?"A":x>=70?"B":"C";return {js:`let score = ${s};\nif (score >= 90) {\n  console.log("A");\n} else if (score >= 70) {\n  console.log("B");\n} else {\n  console.log("C");\n}`,py:`score = ${s}\nif score >= 90:\n    print("A")\nelif score >= 70:\n    print("B")\nelse:\n    print("C")`,ans:g(s),wrong:["A","B","C","Nothing"].filter(x=>x!==g(s))}}],
+ [2,r=>{const n=DINT(r,4,9),sum=n*(n+1)/2;return {js:`let total = 0;\nfor (let i = 1; i <= ${n}; i++) {\n  total += i;\n}\nconsole.log(total);`,py:`total = 0\nfor i in range(1, ${n+1}):\n    total += i\nprint(total)`,ans:sum,wrong:[sum-n,sum+n+1,n]}}],
+ [2,r=>{const n=DINT(r,7,15),k=DINT(r,2,4),cnt=Math.ceil(n/k);return {js:`let count = 0;\nfor (let i = 0; i < ${n}; i += ${k}) {\n  count += 1;\n}\nconsole.log(count);`,py:`count = 0\nfor i in range(0, ${n}, ${k}):\n    count += 1\nprint(count)`,ans:cnt,wrong:[cnt+1,cnt-1,n]}}],
+ [2,r=>{const N=DPICK(r,[10,20,30,50,100]);let x=1,st=0;while(x<N){x*=2;st++}return {js:`let x = 1;\nlet steps = 0;\nwhile (x < ${N}) {\n  x = x * 2;\n  steps += 1;\n}\nconsole.log(steps, x);`,py:`x = 1\nsteps = 0\nwhile x < ${N}:\n    x = x * 2\n    steps += 1\nprint(steps, x)`,ans:`${st} ${x}`,wrong:[`${st-1} ${x/2}`,`${st+1} ${x*2}`,`${st} ${N}`]}}],
+ [3,r=>{const a=[0,0,0,0,0].map(()=>DINT(r,1,9));return {js:`let nums = [${a.join(", ")}];\nconsole.log(nums[1] + nums[nums.length - 1]);`,py:`nums = [${a.join(", ")}]\nprint(nums[1] + nums[-1])`,ans:a[1]+a[4],wrong:[a[0]+a[4],a[1]+a[3],a[0]+a[3],a[1]+a[4]+1]}}],
+ [3,r=>{const n=DINT(r,2,6),f=x=>x*2+1;return {js:`function f(x) {\n  return x * 2 + 1;\n}\nconsole.log(f(f(${n})));`,py:`def f(x):\n    return x * 2 + 1\n\nprint(f(f(${n})))`,ans:f(f(n)),wrong:[f(n),f(n)*2,n*4+1]}}],
+ [3,r=>{const w=DPICK(r,["banana","monkey","jungle","coconut","parrot"]);return {js:`let w = "${w}";\nconsole.log(w.length, w.toUpperCase()[0]);`,py:`w = "${w}"\nprint(len(w), w.upper()[0])`,ans:`${w.length} ${w[0].toUpperCase()}`,wrong:[`${w.length-1} ${w[0].toUpperCase()}`,`${w.length} ${w[0]}`,`${w.length+1} ${w[0].toUpperCase()}`]}}],
+ [3,r=>{const a=[0,0,0,0,0,0].map(()=>DINT(r,1,20)),ev=a.filter(x=>x%2===0).length;return {js:`let nums = [${a.join(", ")}];\nlet count = 0;\nfor (let n of nums) {\n  if (n % 2 === 0) {\n    count += 1;\n  }\n}\nconsole.log(count);`,py:`nums = [${a.join(", ")}]\ncount = 0\nfor n in nums:\n    if n % 2 == 0:\n        count += 1\nprint(count)`,ans:ev,wrong:[6-ev,ev+1,ev+2]}}],
+];
+const DCODE=[
+ [1,r=>{const n=DINT(r,3,12);return {title:"Double bananas",task:`Make a variable ${C("bananas")} set to ${n}, then print double that number.`,out:[String(n*2)],use:[[/bananas/,"Make a variable called bananas."]],js:`let bananas = ${n};\nconsole.log(bananas * 2);`,py:`bananas = ${n}\nprint(bananas * 2)`}}],
+ [1,r=>{const nm=DPICK(r,["Mo","Kiki","Zip"]),f=DPICK(r,["mango","banana","kiwi"]);return {title:"Snack time",task:`Make ${C("name")} set to ${C('"'+nm+'"')} and ${C("snack")} set to ${C('"'+f+'"')}, then print ${C(nm+" loves "+f+"!")} using both variables.`,out:[`${nm} loves ${f}!`],use:[[/name/,"Use the name variable."],[/snack/,"Use the snack variable."]],js:`let name = "${nm}";\nlet snack = "${f}";\nconsole.log(name + " loves " + snack + "!");`,py:`name = "${nm}"\nsnack = "${f}"\nprint(name + " loves " + snack + "!")`}}],
+ [2,r=>{const a=DINT(r,2,5),b=a+DINT(r,3,5);return {title:"Count up",task:`Use a loop to print the numbers from ${a} to ${b}, one per line.`,out:Array.from({length:b-a+1},(_,i)=>String(a+i)),use:[[/for|while/,"Use a loop."]],js:`for (let i = ${a}; i <= ${b}; i++) {\n  console.log(i);\n}`,py:`for i in range(${a}, ${b+1}):\n    print(i)`}}],
+ [2,r=>{const n=DINT(r,5,12);return {title:"Banana total",task:`Use a loop to add up every number from 1 to ${n}, then print the total.`,out:[String(n*(n+1)/2)],use:[[/for|while/,"Add them up in a loop."]],js:`let total = 0;\nfor (let i = 1; i <= ${n}; i++) {\n  total += i;\n}\nconsole.log(total);`,py:`total = 0\nfor i in range(1, ${n+1}):\n    total += i\nprint(total)`}}],
+ [3,r=>{const n=DINT(r,3,15);return {title:"Triple it",task:`Write a function ${C("triple")} that returns its number times 3, then print ${C("triple("+n+")")}.`,out:[String(3*n)],use:[[/function\s+triple|def\s+triple|triple\s*=/,"Make a function called triple."],[/return/,"Send the answer back with return."]],js:`function triple(x) {\n  return x * 3;\n}\nconsole.log(triple(${n}));`,py:`def triple(x):\n    return x * 3\n\nprint(triple(${n}))`}}],
+ [3,r=>{const a=[0,0,0,0,0,0].map(()=>DINT(r,1,40));return {title:"Find the biggest",task:`Use a loop to find the biggest number in ${C("nums")} and print it.`,out:[String(Math.max(...a))],use:[[/for|while/,"Check each number in a loop."]],start:{js:`let nums = [${a.join(", ")}];\n`,py:`nums = [${a.join(", ")}]\n`},js:`let nums = [${a.join(", ")}];\nlet best = nums[0];\nfor (let n of nums) {\n  if (n > best) best = n;\n}\nconsole.log(best);`,py:`nums = [${a.join(", ")}]\nbest = nums[0]\nfor n in nums:\n    if n > best:\n        best = n\nprint(best)`}}],
+];
+function dailyOpts(ans,wrong){const A=String(ans),seen=new Set([A]),o=[A];for(const w of wrong){const s=String(w);if(!seen.has(s)&&o.length<4){seen.add(s);o.push(s)}}let k=2;while(o.length<3){const s=String((+A||0)+k++);if(!seen.has(s)){seen.add(s);o.push(s)}}return o}
+function pickLeveled(r,bank,L,n){const pool=bank.filter(([l])=>l===L),lower=bank.filter(([l])=>l<L);const out=[];const src=[...pool];
+  while(out.length<n&&(src.length||lower.length)){const from=src.length&&(out.length===0||!lower.length||r()<.7)?src:lower;out.push(from.splice(Math.floor(r()*from.length),1)[0][1])}return out}
+function dailyCoder(r,c){
+  const lang=c.id==="py"?"py":"js",L=dailyLevel(c),tag={1:"warm-up",2:"challenge",3:"brain-buster"}[L];
+  const qs=pickLeveled(r,DQ,L,2).map(g=>{const q=g(r);return {type:"quiz",q:"What does this print?",code:q[lang],opts:dailyOpts(q.ans,q.wrong),a:0,mono:true,why:`It prints ${q.ans}. Follow it line by line, keeping track of each variable.`,_course:c,_from:"Today's "+tag,_fresh:true}});
+  const t=pickLeveled(r,DCODE,L,1)[0](r);const cm=lang==="py"?"#":"//";
+  const code={type:"code",title:"🎯 Daily code: "+t.title,body:`<p>${t.task}</p>`,start:(t.start?t.start[lang]:"")+`${cm} Your code here\n`,hint:t[lang],out:t.out,use:t.use,_course:c,_from:"Today's "+tag};
+  return [...qs,code];
+}
+function dailyFromLessons(r,c){  // other languages: the newest things you've learned, with a real code challenge
+  const done=flat(c).filter(x=>x.l.steps&&S.done.includes(x.l.id));const L=done.length?done:flat(c).filter(x=>x.l.steps).slice(0,1);
+  const recent=L.slice(-4),pools=[];recent.forEach(x=>(x.l.pool||[]).forEach((p,j)=>pools.push({l:x.l,j})));
+  const out=[];for(let k=0;k<2&&pools.length;k++){const pk=pools.splice(Math.floor(r()*pools.length),1)[0],p=pk.l.pool[pk.j];
+    out.push({type:"quiz",q:"What does this print?",code:p[0],opts:[...p[1]],a:0,mono:true,why:`It prints ${p[1][0].includes("\n")?"those lines":p[1][0]}.`,_course:c,_from:pk.l.title,_src:{key:pk.l.id+"#p"+pk.j,item:{kind:"pool",lid:pk.l.id,j:pk.j}}})}
+  const codes=[];L.slice(-6).forEach(x=>x.l.steps.forEach(s=>{if(s.type==="code"&&!s.final&&!s.tests)codes.push({s,l:x.l})}));
+  if(codes.length){const pk=DPICK(r,codes);out.push({...pk.s,title:"🎯 Daily code: "+pk.s.title,_course:c,_from:pk.l.title})}
+  return out;
+}
+/* --- fresh TypeMonkey Jr. puzzles --- */
+function genMaze(r,lvl){
+  const W=lvl===1?5:6,H=lvl===1?3:5,len=lvl===1?DINT(r,3,5):lvl===2?DINT(r,5,7):DINT(r,7,10),tmax=lvl===1?1:lvl===2?3:6;
+  const D=[[1,0],[0,1],[-1,0],[0,-1]],DN=["E","S","W","N"];
+  for(let tries=0;tries<400;tries++){
+    let x=DINT(r,0,W-1),y=DINT(r,0,H-1),d=DINT(r,0,3),turns=0,ok=true;const path=[[x,y]],seen=new Set([x+","+y]);
+    const free=(nx,ny,px,py)=>nx>=0&&ny>=0&&nx<W&&ny<H&&!seen.has(nx+","+ny)&&D.every(([dx,dy])=>{const k=(nx+dx)+","+(ny+dy);return !seen.has(k)||(nx+dx===px&&ny+dy===py)});
+    while(path.length<=len){
+      const opts=[d,(d+1)%4,(d+3)%4].filter(nd=>free(x+D[nd][0],y+D[nd][1],x,y));
+      if(!opts.length){ok=false;break}
+      let nd;if(opts.includes(d)&&(turns>=tmax||r()<.6||path.length===1))nd=d;else{const t=opts.filter(o=>o!==d);if(!t.length||turns>=tmax){if(!opts.includes(d)){ok=false;break}nd=d}else{nd=DPICK(r,t);turns++}}
+      if(path.length===1)d=nd;  // first move sets the starting direction
+      d=nd;x+=D[d][0];y+=D[d][1];path.push([x,y]);seen.add(x+","+y);
+    }
+    if(!ok||(lvl>1&&turns<1))continue;
+    const g=Array.from({length:H},()=>Array(W).fill("#"));path.forEach(([px,py])=>g[py][px]=".");g[path[0][1]][path[0][0]]="S";const e=path[path.length-1];g[e[1]][e[0]]="B";
+    const first=D.findIndex(([dx,dy])=>path[0][0]+dx===path[1][0]&&path[0][1]+dy===path[1][1]);let f=first;const sol=[];
+    for(let i=1;i<path.length;i++){const nd=D.findIndex(([dx,dy])=>path[i-1][0]+dx===path[i][0]&&path[i-1][1]+dy===path[i][1]);if(nd!==f){sol.push(nd===(f+1)%4?"right":"left");f=nd}sol.push("fwd")}
+    return {type:"maze",title:"🎯 Today's maze",grid:g.map(row=>row.join("")),dir:DN[first],blocks:lvl===1?["fwd","left","right"]:["fwd","left","right","rep"],solution:sol,say:"A brand-new maze, made just for today!"};
+  }
+  return {type:"maze",title:"🎯 Today's maze",grid:["S...B"],dir:"E",blocks:["fwd"],solution:["fwd","fwd","fwd","fwd"]};
+}
+function genDance(r,lvl){
+  const all=["clap","jump","spin","wave","wiggle"];const moves=[...all].sort(()=>r()-.5).slice(0,lvl===1?3:lvl===2?4:5);
+  if(lvl===1){const t=[0,0,0].map(()=>DPICK(r,moves));return {type:"dance",title:"🎯 Today's dance",moves,target:t,solution:{pattern:t},say:"A new dance just for today. Watch it first!"}}
+  const n=lvl===2?2:3,p=[];while(p.length<n){const m=DPICK(r,moves);if(p[p.length-1]!==m)p.push(m)}const times=lvl===2?3:DINT(r,2,3);
+  return {type:"dance",title:"🎯 Today's dance",loop:true,moves,target:Array.from({length:times},()=>p).flat(),solution:{pattern:p,times},say:"Find the part that repeats!"};
+}
+function genBox(r,lvl){
+  const ops=lvl===1?["+1","+2"]:lvl===2?["+1","+2","+5"]:["+1","+5","x2"],start=lvl===3?1:0,n=lvl===1?3:lvl===2?3:DINT(r,3,4);
+  const seq=[];let v=start;while(seq.length<n){const o=DPICK(r,ops);if(o==="x2"&&v===0)continue;seq.push(o);v=BOXOPS[o](v)}
+  return {type:"box",title:"🎯 Today's banana box",body:`<p>Make the box hold exactly <b>${v}</b>${lvl>1?` in <b>${n}</b> taps or fewer`:""}.</p>`,name:"bananas",startVal:start,goal:v,ops,max:lvl>1?n:undefined,solution:seq};
+}
+function dailyJr(r,c){const n=doneIn(c),lvl=n<4?1:n<10?2:3;return [genMaze(r,lvl),genDance(r,lvl),genBox(r,lvl)].map(s=>({...s,_course:c}))}
 function dailySteps(){
   const rnd=seeded("typemonkey-"+dayStr(new Date()));
-  const started=(S.stats.started||[]).filter(id=>{const c=courseById(id);return c&&c.units&&!c.kids});
-  const cids=started.length?started:((S.stats.started||[]).includes("jr")?["jr"]:["js"]);
-  const cands=[];
-  for(const cid of cids){const c=courseById(cid);for(const x of flat(c)){
-    if(!x.l.steps||!(S.done.includes(x.l.id)||x.idx<2))continue;
-    (x.l.pool||[]).forEach((p,j)=>cands.push({kind:"pool",c,l:x.l,j}));
-    x.l.steps.forEach((q,i)=>{if(q.type==="quiz")cands.push({kind:"step",c,l:x.l,i})});
-  }}
-  const picks=[];while(picks.length<3&&cands.length){picks.push(cands.splice(Math.floor(rnd()*cands.length),1)[0])}
-  return picks.map(pk=>{
-    if(pk.kind==="pool"){const p=pk.l.pool[pk.j];return {type:"quiz",q:"What does this print?",code:p[0],opts:[...p[1]],a:0,mono:true,why:`It prints ${p[1][0].includes("\n")?"those lines":p[1][0]}.`,_course:pk.c,_from:pk.l.title,_src:{key:pk.l.id+"#p"+pk.j,item:{kind:"pool",lid:pk.l.id,j:pk.j}}}}
-    return {...pk.l.steps[pk.i],_course:pk.c,_from:pk.l.title,_src:{key:pk.l.id+"#"+pk.i,item:{kind:"step",lid:pk.l.id,i:pk.i}}};
-  });
+  const started=(S.stats.started||[]).filter(id=>{const c=courseById(id);return c&&c.units&&!c.kids&&!c.extra});
+  const jrOnly=!started.length&&(S.stats.started||[]).includes("jr");
+  if(jrOnly)return dailyJr(rnd,courseById("jr"));
+  const last=courseById(S.lastCourse);const c=last&&started.includes(last.id)?last:courseById(started.length?started[started.length-1]:"js");
+  return ["js","game","py"].includes(c.id)?dailyCoder(rnd,c):dailyFromLessons(rnd,c);
 }
 function startDaily(){SFX.stopMusic();
   if(dailyDoneToday()){toast("You already did today's challenge. A new one unlocks tomorrow!");return}
