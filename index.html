@@ -53015,7 +53015,7 @@ function renderStep(){
   const T={talk,code:codeStep,bug:codeStep,quiz,fill,order,maze,dance,sort:sorter,box:boxGame,predict,build:builder,game:gameIntro,done:finish}[s.type];T(s,R);
 }
 /* For TypeMonkey Jr.: read the card out loud for kids who are still learning to read */
-const canSpeak=typeof window!=="undefined"&&"speechSynthesis" in window&&typeof SpeechSynthesisUtterance!=="undefined";
+const canSpeak=false; // read-aloud turned off (owner preference); the code paths below stay inert
 function readAloudBtn(){return cur&&cur.c&&cur.c.kids&&canSpeak?`<button class="btn ghost sm readaloud" id="say" type="button">🔊 Read to me</button>`:""}
 function wireReadAloud(){const b=$("#say");if(!b)return;b.onclick=()=>{try{speechSynthesis.cancel();const card=document.querySelector(".card");const t=[...card.querySelectorAll("h2,p")].map(x=>x.textContent).join(". ");const bub=document.querySelector("#bud .bubble,.bubble");const u=new SpeechSynthesisUtterance(t+(bub?". "+bub.textContent:""));u.rate=.92;u.pitch=1.15;speechSynthesis.speak(u)}catch(e){toast("Reading out loud isn't available on this device")}}}
 function bananaBurst(){if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;const box=document.createElement("div");box.className="burst";box.setAttribute("aria-hidden","true");

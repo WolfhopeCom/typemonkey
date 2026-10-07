@@ -28,7 +28,7 @@ All code challenges are graded by running the learner's code (with changed value
 
 Also included:
 
-- **TypeMonkey Jr. help:** a clear goal line on every puzzle with read-aloud, kind "oops" messages, step-by-step hints that glow on the block to fix, a gentle "can you make it shorter?" nudge, and the kid's blocks shown as real code after each win.
+- **TypeMonkey Jr. help:** a clear goal line on every puzzle, kind "oops" messages, step-by-step hints that glow on the block to fix, a gentle "can you make it shorter?" nudge, and the kid's blocks shown as real code after each win.
 - **Playground:** free coding in every language, with an input box for programs that ask questions.
 - **Review:** missed questions come back with spaced repetition.
 - **Shop & badges:** spend bananas on outfits for TypeMonkey; earn badges.
