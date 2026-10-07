@@ -125,6 +125,14 @@ def main():
                 continue
             seen.add(code)
             programs.append((w, code))
+        # code quizzes verify_swift doesn't run ("Is this valid Swift?", "Why does this fail?"): TypeMonkey must
+        # agree with real Swift on whether they compile, so the lesson's explanation matches what learners see
+        for unit in VS.load()["units"]:
+            for l in unit["lessons"]:
+                for i, s in enumerate(l["steps"]):
+                    if s["type"] == "quiz" and s.get("code") and s["code"] not in seen:
+                        seen.add(s["code"])
+                        programs.append((f"{l['id']} step {i} quiz code", s["code"]))
     problems, unsupported = compare(swiftc, programs)
     for p in problems:
         print("✖", p)
