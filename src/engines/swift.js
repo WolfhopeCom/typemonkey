@@ -68,6 +68,7 @@ const TMSwift=(()=>{
         const s=src.slice(i,j).replace(/_/g,"");push("num",dbl?new D(parseFloat(s)):parseInt(s,10));i=j;continue;
       }
       if(/[A-Za-z_$]/.test(c)){let j=i+1;while(j<src.length&&/[A-Za-z0-9_]/.test(src[j]))j++;const w=src.slice(i,j);i=j;push(KW.has(w)?"kw":"id",w);continue}
+      if(c==="\\"&&(src[i+1]==="."||/[A-Z]/.test(src[i+1]||""))){push("op","\\");i++;continue}
       if(c==="`"){const j=src.indexOf("`",i+1);push("id",src.slice(i+1,j));i=j+1;continue}
       const ops=["...","..<","===","!==","&&","||","==","!=","<=",">=","+=","-=","*=","/=","%=","->","??","<<",">>"];
       const op=ops.find(o=>src.startsWith(o,i));
@@ -137,6 +138,9 @@ const TMSwift=(()=>{
         case "defer":{p++;return {k:"defer",body:block()}}
         case "typealias":{p++;const n=ident();skipGenerics();expect("=");aliases[n]=parseType();endStmt();return {k:"empty"}}
       }
+      if(peek().k==="id"&&peek().v==="subscript"&&is("(",1)){p++;const params=paramList();params.forEach(q=>{if(!q.twoNames)q.label=null});expect("->");const ret=parseType();
+        let acc;const save=p;p++;if(is("get")||is("set")){p=save;acc=accessorBlock()}else{p=save;acc={get:block()}}
+        return {k:"subscript",params,ret,get:acc.get,set:acc.set,setName:acc.setName||"newValue",line,mods}}
       const e=expr();
       const op=peek();
       if(op.k==="op"&&["=","+=","-=","*=","/=","%="].includes(op.v)){p++;const r=expr();endStmt();return {k:"assign",op:op.v,l:e,r,line}}
@@ -195,12 +199,12 @@ const TMSwift=(()=>{
         expect(":");let inout=false;if(accept("inout"))inout=true;
         const type=parseType();let variadic=false;if(accept("..."))variadic=true;
         let def=null;if(accept("="))def=expr();
-        ps.push({label:a==="_"?null:a,name:b||a,type,def,inout,variadic});
+        ps.push({label:a==="_"?null:a,name:b||a,type,def,inout,variadic,twoNames:!!b});
       }while(accept(","));
       expect(")");return ps;
     }
     function parseType(){
-      let t;
+      let t;while(is("@")){p++;ident()}
       if(accept("[")){const a=parseType();if(accept(":")){const b=parseType();expect("]");t={k:"dict",key:a,val:b}}else{expect("]");t={k:"arr",el:a}}}
       else if(accept("(")){const items=[],labels=[];if(!is(")"))do{let lb=null;if(peek().k==="id"&&is(":",1)){lb=peek().v;p+=2}labels.push(lb);items.push(parseType())}while(accept(","));expect(")");
         if(accept("throws")){}
@@ -219,11 +223,11 @@ const TMSwift=(()=>{
     }
     function typeDecl(){
       const kind=peek().v;const line=peek().line;p++;const name=ident();
-      skipGenerics();
+      const generics=[];if(is("<")){const save=p;p++;let d=1;while(d>0&&peek().k!=="eof"){if(d===1&&peek().k==="id"&&(is(",",-1)||is("<",-1)))generics.push(peek().v);if(is("<"))d++;else if(is(">"))d--;else if(is(">>"))d-=2;p++}if(d>0)p=save}
       const inherits=[];if(accept(":"))do{let n=ident();while(accept("."))n+="."+ident();skipGenerics();inherits.push(n)}while(accept(","));
       skipWhere();
       expect("{");
-      const d={k:"type",kind,name,inherits,members:[],cases:[],line};
+      const d={k:"type",kind,name,inherits,members:[],cases:[],line,generics};
       while(!is("}")){
         skipSemis();if(is("}"))break;
         if(peek().k==="eof")fail(`the ${kind} ${name} is missing its closing }`);
@@ -308,7 +312,7 @@ const TMSwift=(()=>{
           if(t.v==="is"){l={k:"is",e:l,type:parseType(),line:t.line};continue}
           if(t.v==="as"){let mode="as";if(is("?")){p++;mode="as?"}else if(is("!")){p++;mode="as!"}l={k:"as",e:l,type:parseType(),mode,line:t.line};continue}
           if(t.v==="??"){const r=binary(lvl);l={k:"bin",op:"??",l,r,line:t.line};continue}
-          if((t.v==="..."||t.v==="..<")&&(peek().nl||is(")")||is("]")||is(",")||is("{"))){l={k:"range",lo:l,hi:null,closed:t.v==="...",line:t.line};continue}
+          if((t.v==="..."||t.v==="..<")&&(peek().nl||is(")")||is("]")||is(",")||is("{")||is(":"))){l={k:"range",lo:l,hi:null,closed:t.v==="...",line:t.line};continue}
           const r=binary(lvl+1);
           l=(t.v==="..."||t.v==="..<")?{k:"range",lo:l,hi:r,closed:t.v==="...",line:t.line}:{k:"bin",op:t.v,l,r,line:t.line};
           continue;
@@ -329,14 +333,14 @@ const TMSwift=(()=>{
       for(;;){
         const t=peek();
         if(t.k==="op"&&t.v==="("&&!t.nl){p++;const a=callArgs(")");e={k:"call",f:e,args:a,line:t.line};
-          if(is("{")&&!noTrailing&&!peek().nl)e.args.push({label:null,e:closure()});continue}
+          if(is("{")&&!noTrailing&&!peek().nl)e.args.push({label:null,e:closure(),trailing:true});continue}
         if(t.k==="op"&&t.v==="["&&!t.nl&&!t.space){p++;const a=callArgs("]");e={k:"index",e,args:a,line:t.line};continue}
         if(t.k==="op"&&t.v==="."&&(peek(1).k==="id"||peek(1).k==="kw"||peek(1).k==="num")){p++;
           if(peek().k==="num"){const n=peek().v;p++;if(n instanceof D){const [a,b]=String(n.v).split(".");e={k:"member",e:{k:"member",e,name:a,line:t.line},name:b,line:t.line}}else e={k:"member",e,name:String(n),line:t.line};continue}
           const name=peek().v;p++;e={k:"member",e,name,line:t.line};continue}
         if(t.k==="op"&&t.v==="!"&&!t.space){p++;e={k:"force",e,line:t.line};continue}
         if(t.k==="op"&&t.v==="?"&&!t.space&&(is(".",1)||is("[",1)||is("(",1)&&!peek(1).space||peek(1).k==="op"&&["=","+=","-=","*=","/=","%="].includes(peek(1).v))){p++;e={k:"optchain",e,line:t.line};continue}
-        if(t.k==="op"&&t.v==="{"&&!noTrailing&&!t.nl&&(e.k==="name"||e.k==="member")){e={k:"call",f:e,args:[{label:null,e:closure()}],line:t.line};continue}
+        if(t.k==="op"&&t.v==="{"&&!noTrailing&&!t.nl&&(e.k==="name"||e.k==="member")){e={k:"call",f:e,args:[{label:null,e:closure(),trailing:true}],line:t.line};continue}
         return e;
       }
     }
@@ -408,9 +412,15 @@ const TMSwift=(()=>{
         expect("]");noTrailing=sv;return {k:"arrlit",items,line:t.line};
       }
       if(t.k==="op"&&t.v==="{")return closure();
+      // key paths: \.name, \.1, \Item.price
+      if(t.k==="op"&&t.v==="\\"){p++;const path=[];if(peek().k==="id")path.push(ident());while(is(".")&&(peek(1).k==="id"||peek(1).k==="num"||peek(1).k==="kw")){p++;const tk=peek();p++;path.push(tk.v instanceof D?String(tk.v.v):String(tk.v))}
+        while(path.length>1&&/^[A-Z]/.test(path[0]))path.shift();return {k:"keypath",path,line:t.line}}
+      // if and switch can give a value: let x = if a { 1 } else { 2 }
+      if(t.k==="kw"&&t.v==="switch")return {k:"switchx",s:switchStmt(),line:t.line};
+      if(t.k==="kw"&&t.v==="if")return {k:"ifx",s:ifStmt(),line:t.line};
       if(t.k==="op"&&t.v==="."&&peek(1).k==="id"){p++;return {k:"implicit",name:ident(),line:t.line}}
       if(t.k==="id"){p++;
-        if(is("<")&&!peek().space&&/^[A-Z]/.test(t.v)){const save=p;try{p++;const args=[];do args.push(parseType());while(accept(","));expect(">");if(is("(")){if(t.v==="Array"&&is(")",1)){p+=2;return {k:"emptyof",type:{k:"arr",el:args[0]}}}if(t.v==="Dictionary"&&is(")",1)){p+=2;return {k:"emptyof",type:{k:"dict",key:args[0],val:args[1]}}}if(t.v==="Set"&&is(")",1)){p+=2;return {k:"emptyof",type:{k:"set",el:args[0]}}}return {k:"name",v:t.v,line:t.line}}if(is(".")&&!["Array","Dictionary","Set"].includes(t.v))return {k:"name",v:t.v,line:t.line}}catch(e){}p=save}
+        if(is("<")&&!peek().space&&/^[A-Z]/.test(t.v)){const save=p;try{p++;const args=[];do args.push(parseType());while(accept(","));expect(">");if(is("(")){if(t.v==="Array"&&is(")",1)){p+=2;return {k:"emptyof",type:{k:"arr",el:args[0]}}}if(t.v==="Dictionary"&&is(")",1)){p+=2;return {k:"emptyof",type:{k:"dict",key:args[0],val:args[1]}}}if(t.v==="Set"&&is(")",1)){p+=2;return {k:"emptyof",type:{k:"set",el:args[0]}}}return {k:"name",v:t.v,line:t.line,targs:args}}if(is(".")&&!["Array","Dictionary","Set"].includes(t.v))return {k:"name",v:t.v,line:t.line}}catch(e){}p=save}
         return {k:"name",v:t.v,line:t.line};
       }
       if(t.k==="op"&&t.v==="#")fail(`line ${t.line}: # directives aren't supported in TypeMonkey's runner yet`,"NotSupported");
@@ -524,24 +534,33 @@ const TMSwift=(()=>{
       if(v instanceof ECase){
         // inside an array, optional, tuple or struct Swift writes the full name: main.Dir.north
         const d=findDesc(v);if(d!==null)return d;
-        const q=inner?"main."+v.type.name+".":"";
+        const q=inner?"main."+(v.type.qname||v.type.name)+".":"";
         if(v.vals){const cd=v.type.cases.find(c=>c.name===v.name);const lab=i=>cd.assoc[i]&&cd.assoc[i].label?cd.assoc[i].label+": ":"";
           if(v.vals.length===1&&!lab(0)&&v.vals[0] instanceof Tup)return q+v.name+desc(v.vals[0],true);
           return q+v.name+"("+v.vals.map((x,i)=>lab(i)+desc(x,true)).join(", ")+")"}
         return q+v.name}
       if(v instanceof Obj){
         const d=findDesc(v);if(d!==null)return d;
-        if(v.type.kind==="struct")return (inner?"main.":"")+v.type.name+"("+v.type.stored.map(f=>f.name+": "+desc(v.f[f.name],true)).join(", ")+")";
+        if(v.type.kind==="struct")return (inner?"main."+(v.type.qname||v.type.name):v.type.name)+genArgs(v)+"("+v.type.stored.map(f=>f.name+": "+desc(v.f[f.name],true)).join(", ")+")";
         return "main."+v.type.name;
       }
       if(v instanceof Fn)return "(Function)";
       return String(v);
     }
     function findDesc(o){
-      if(!conformsAny(o.type,["CustomStringConvertible","Error","LocalizedError"])||!findProp(o.type,"description"))return null;
+      if(!conformsAny(o.type,["CustomStringConvertible"]))return null;
       const pr=findProp(o.type,"description");if(!pr)return null;
+      if(o instanceof ECase){if(!pr.computed)return null;const ce=new Env(globals);ce.self=o;ce.selfType=o.type;return desc(runBody(pr.computed.get,ce,true))}
       return desc(getProp(o,"description",0));
     }
+    // Pair<Int, String>(first: 1, second: "one"): a generic struct prints its type arguments
+    function genArgs(o){const g=o.type.generics;if(!g||!g.length)return "";
+      return "<"+g.map((G,i)=>{if(o.targs&&o.targs[i])return tyName(o.targs[i]);
+        for(const s of storedAll(o.type)){const t=s.type,v=o.f[s.name];if(!t||v===undefined)continue;
+          if(t.k==="name"&&t.name===G)return runtimeType(v);
+          if(t.k==="opt"&&t.of.k==="name"&&t.of.name===G&&v instanceof Some)return runtimeType(v.v);
+          if(t.k==="arr"&&t.el.k==="name"&&t.el.name===G&&v instanceof Arr&&v.items.length)return runtimeType(v.items[0])}
+        return "Any"}).join(", ")+">"}
     function conformsAny(ty,names){for(let t=ty;t;t=t.sup)if(t.inherits.some(n=>names.includes(n)))return true;return false}
 
     /* ----- user types ----- */
@@ -555,7 +574,7 @@ const TMSwift=(()=>{
         addMembers(target,d.members,true);return;
       }
       if(types[d.name])fail(`line ${d.line}: invalid redeclaration of '${d.name}'`);
-      const ty=newTy(d.name,d.kind,d.cases,d.line);ty.inherits=d.inherits.slice();
+      const ty=newTy(d.name,d.kind,d.cases,d.line);ty.inherits=d.inherits.slice();ty.generics=d.generics;
       types[d.name]=ty;
       addMembers(ty,d.members,false);
     }
@@ -573,7 +592,7 @@ const TMSwift=(()=>{
             if(isStatic){ty.statics[name]={decl:dd,isLet:m.isLet,ready:false};continue}
             if(dd.getter){ty.computed[name]=dd.getter;continue}
             if(isExt)fail(`line ${m.line}: extensions can't add stored properties (only computed ones)`);
-            ty.stored.push({name,type:dd.type,init:dd.init,isLet:m.isLet});
+            ty.stored.push({name,type:dd.type,init:dd.init,isLet:m.isLet,lazy:m.mods.includes("lazy")});
             if(dd.observers)ty.observers[name]=dd.observers;
           }
         }else if(m.k==="func"){
@@ -582,14 +601,15 @@ const TMSwift=(()=>{
           if(m.name==="init"){f.fromExt=isExt;ty.inits.push(f);continue}
           const bag=isStatic?ty.staticMethods:ty.kind==="protocol"?(protoDefaults[ty.name]||(protoDefaults[ty.name]=Object.create(null))):ty.methods;
           if(bag[m.name]){(bag[m.name].overloads||(bag[m.name].overloads=[bag[m.name]])).push(f)}else bag[m.name]=f;
-        }else if(m.k==="type"){declareType(m)}
+        }else if(m.k==="type"){declareType(m);types[m.name].qname=(ty.qname||ty.name)+"."+m.name;(ty.nested||(ty.nested=Object.create(null)))[m.name]=true}
         else if(m.k==="empty"){}
+        else if(m.k==="subscript"){ty.subscript={...m,owner:ty}}
         else fail(`line ${m.line||"?"}: only properties, methods and initializers can go inside a type here`);
       }
     }
     function linkTypes(){
       for(const ty of Object.values(types)){
-        if(ty.kind==="class"&&!ty.inits.length&&ty.stored.some(s=>!s.init&&!(s.type&&s.type.k==="opt")))fail(`line ${ty.line}: class '${ty.name}' has no initializers. Give every property a starting value, or write an init`);
+        if(ty.kind==="class"&&!ty.inits.length&&ty.stored.some(s=>!s.init&&!s.lazy&&!(s.type&&s.type.k==="opt")))fail(`line ${ty.line}: class '${ty.name}' has no initializers. Give every property a starting value, or write an init`);
         if(ty.kind==="class"&&ty.inherits.length&&types[ty.inherits[0]]&&types[ty.inherits[0]].kind==="class")ty.sup=types[ty.inherits[0]];
         if(ty.kind==="struct"&&ty.inherits.some(n=>types[n]&&types[n].kind==="class"))fail(`line ${ty.line}: a struct can't inherit from a class (only classes can)`);
         if(ty.kind==="enum"){
@@ -609,10 +629,13 @@ const TMSwift=(()=>{
       if(n in o.f)return o.f[n];
       const pr=findProp(o.type,n);
       if(pr&&pr.computed){const e=new Env(globals);e.self=o;e.selfType=pr.owner;return runBody(pr.computed.get,e,true)}
+      // lazy var: worked out the first time it's used
+      const lz=storedAll(o.type).find(s=>s.name===n&&s.lazy);
+      if(lz){const e=new Env(globals);e.self=o;e.selfType=o.type;return o.f[n]=conform(copy(ev(lz.init,e)),lz.type,line,isLitE(lz.init))}
       return undefined;
     }
     function staticGet(ty,n,line){
-      for(let t=ty;t;t=t.sup){const s=t.statics[n];if(s){if(!s.ready){s.ready=true;const e=new Env(globals);e.selfType=t;s.v=s.decl.init?conform(ev(s.decl.init,e),s.decl.type,line,isLitE(s.decl.init)):NIL;if(s.decl.getter){s.computed=s.decl.getter}}if(s.computed){const e=new Env(globals);e.selfType=t;return runBody(s.computed.get,e,true)}return s}}
+      for(let t=ty;t;t=t.sup){const s=t.statics[n];if(s){if(!s.ready){s.ready=true;const e=new Env(globals);e.selfType=t;s.v=s.decl.init?conform(ev(s.decl.init,e),s.decl.type,line,isLitE(s.decl.init)):NIL;if(s.decl.getter){s.computed=s.decl.getter}}if(s.computed){const e=new Env(globals);e.selfType=t;return {v:runBody(s.computed.get,e,true),isLet:true}}return s}}
       return null;
     }
     function construct(ty,args,line){
@@ -625,7 +648,7 @@ const TMSwift=(()=>{
         if(ty.kind==="class"){
           if(args.length)fail(`line ${line}: argument passed to call that takes no arguments (give ${ty.name} an init)`);
           initStored(o,ty,line);
-          for(const s of storedAll(ty))if(!(s.name in o.f))fail(`line ${ty.line}: class '${ty.name}' has no initializers (property '${s.name}' needs a default value or an init)`);
+          for(const s of storedAll(ty))if(!(s.name in o.f)&&!s.lazy)fail(`line ${ty.line}: class '${ty.name}' has no initializers (property '${s.name}' needs a default value or an init)`);
           return o;
         }
         memberwise(o,ty,args,line);
@@ -652,6 +675,7 @@ const TMSwift=(()=>{
     function initStored(o,ty,line,memberwise){
       const chain=[];for(let t=ty;t;t=t.sup)chain.unshift(t);
       for(const t of chain)for(const s of t.stored){
+        if(s.lazy)continue;
         if(s.init){const e=new Env(globals);o.f[s.name]=conform(copy(ev(s.init,e)),s.type,line,isLitE(s.init));}
         else if(s.type&&s.type.k==="opt")o.f[s.name]=NIL;
       }
@@ -660,7 +684,7 @@ const TMSwift=(()=>{
       const e=new Env(globals);e.self=o;e.selfType=init.owner;e.mutSelf=true;e.inInit=true;
       bindArgs(init,args,e,line);
       runBody(init.body,e,false);
-      if(init.owner.kind!=="class"||true)for(const s of storedAll(o.type))if(!(s.name in o.f))fail(`line ${init.line}: return from initializer without initializing all stored properties (self.${s.name} isn't set)`);
+      for(const s of storedAll(o.type))if(!(s.name in o.f)&&!s.lazy)fail(`line ${init.line}: return from initializer without initializing all stored properties (self.${s.name} isn't set)`);
     }
 
     /* ----- functions ----- */
@@ -673,13 +697,15 @@ const TMSwift=(()=>{
       const score=f=>f.params.reduce((s,pr,i)=>{const a=args[i];if(!a)return s;const tn=pr.type&&pr.type.k==="name"?pr.type.name:null;const at=typeOfV(a.v);return s+(tn===at?2:tn==="Double"&&at==="Int"&&a.lit?1:tn&&tn!==at?-5:0)},0);
       return fits.sort((a,b)=>score(b)-score(a))[0];
     }
-    function labelsFit(params,args){let i=0;for(const pr of params){if(pr.variadic)return true;const a=args[i];if(a&&(a.label||null)===pr.label){i++;continue}if(pr.def)continue;return false}return i===args.length}
+    // a trailing closure { ... } fills the next parameter that takes a function, whatever its label
+    const trailFits=(a,pr)=>a&&a.trailing&&!a.label&&(!pr.type||pr.type.k==="fn"||pr.type.k==="opt"&&pr.type.of.k==="fn");
+    function labelsFit(params,args){let i=0;for(const pr of params){if(pr.variadic)return true;const a=args[i];if(a&&((a.label||null)===pr.label||trailFits(a,pr))){i++;continue}if(pr.def)continue;return false}return i===args.length}
     function bindArgs(f,args,env,line){
       let i=0;const ps=f.params;
       for(const pr of ps){
         const a=args[i];
         if(pr.variadic){const rest=args.slice(i).map(x=>conform(x.v,pr.type,line,x.lit,"convert value"));env.vars.set(pr.name,cell(new Arr(rest,pr.type),{k:"arr",el:pr.type},true));i=args.length;continue}
-        if(a&&(a.label||null)===pr.label){
+        if(a&&((a.label||null)===pr.label||trailFits(a,pr))){
           let v;
           if(pr.inout){if(!a.ref)fail(`line ${line}: passing value of type '${typeOfV(a.v)}' to an inout parameter requires an explicit '&'`);env.vars.set(pr.name,a.ref);i++;continue}
           if(a.ref)fail(`line ${line}: '&' can only be used with inout parameters`);
@@ -730,10 +756,20 @@ const TMSwift=(()=>{
       if(r!==undefined&&r!==null&&!(r instanceof Tup&&!r.items.length)&&fn.body.length>0&&!fn.implicitVoid)fail(`line ${fn.line}: unexpected non-void return value in void function`);
       return r;
     }
+    function findSub(ty){for(let t=ty;t;t=t.sup)if(t.subscript)return t.subscript;return null}
+    // if / switch used as a value: each branch is a single expression
+    function exprSwitch(s,env){const v=ev(s.subject,env);for(const c of s.cases){if(c.def)continue;const e2=new Env(env);if(c.pats.some(p2=>match(p2,v,e2))&&(!c.where||truth(ev(c.where,e2))))return branchVal(c.body,e2,s.line)}
+      const d=s.cases.find(c=>c.def);if(d)return branchVal(d.body,new Env(env),s.line);fail(`line ${s.line}: switch must be exhaustive. Add a default: case`)}
+    function exprIf(s,env){const e2=new Env(env);if(conds(s.conds,e2,s.line))return branchVal(s.body,e2,s.line);if(!s.els)fail(`line ${s.line}: 'if' must have an unconditional 'else' to be used as an expression`);
+      if(s.els.length===1&&s.els[0].k==="if")return exprIf(s.els[0],env);return branchVal(s.els,new Env(env),s.line)}
+    function branchVal(body,env,line){if(body.length===1){const st=body[0];if(st.k==="expr")return ev(st.e,env);if(st.k==="if")return exprIf(st,env);if(st.k==="switch")return exprSwitch(st,env);if(st.k==="throw")exec(st,env)}
+      fail(`line ${line}: each branch of an if or switch that gives a value must be a single value`)}
+    const exprBranches=st=>st.k==="expr"||st.k==="throw"||st.k==="if"&&st.els&&st.body.length===1&&exprBranches(st.body[0])&&st.els.length===1&&exprBranches(st.els[0])||st.k==="switch"&&st.cases.every(c=>c.body.length===1&&exprBranches(c.body[0]));
     function runBody(body,env,implicit,voidFn){
       // a single expression is returned automatically (closures, functions, getters)
       try{
         if(implicit&&body.length===1&&body[0].k==="expr"&&!voidFn)return ev(body[0].e,env);
+        if(implicit&&body.length===1&&!voidFn&&(body[0].k==="if"||body[0].k==="switch")&&exprBranches(body[0]))return body[0].k==="if"?exprIf(body[0],env):exprSwitch(body[0],env);
         if(implicit&&body.length===1&&body[0].k==="expr"&&voidFn){ev(body[0].e,env);return undefined}
         execList(body,env);return undefined;
       }catch(x){if(x instanceof Ret)return x.v;throw x}
@@ -836,10 +872,15 @@ const TMSwift=(()=>{
               if(st){if(st.isLet&&!(env.inInit&&o===env.self))fail(`line ${e.line}: cannot assign to property: '${e.name}' is a 'let' constant`);
                 if(!viaClass)checkMutable(base,e.line,e.name);
                 const old=o.f[e.name];const nv=conform(v,st.type||typeFromV(old),e.line,false,"assign value");
-                const obs=ty.observers[e.name];const runObs=obs&&!(env.inInit&&o===env.self);
-                if(runObs&&obs.willSet){const oe=new Env(globals);oe.self=o;oe.selfType=ty;oe.mutSelf=true;oe.vars.set(obs.willSet.name,cell(nv,null,true));execList(obs.willSet.body,oe)}
-                o.f[e.name]=nv;
-                if(runObs&&obs.didSet){const oe=new Env(globals);oe.self=o;oe.selfType=ty;oe.mutSelf=true;oe.vars.set(obs.didSet.name,cell(old,null,true));execList(obs.didSet.body,oe)}
+                // willSet / didSet (not while one of them is already running for this property)
+                const obs=ty.observers[e.name];const busy=o.obsBusy||(o.obsBusy=new Set());const runObs=obs&&!(env.inInit&&o===env.self)&&!busy.has(e.name);
+                if(!runObs){o.f[e.name]=nv;return}
+                busy.add(e.name);
+                try{
+                  if(obs.willSet){const oe=new Env(globals);oe.self=o;oe.selfType=ty;oe.mutSelf=true;oe.vars.set(obs.willSet.name,cell(nv,null,true));execList(obs.willSet.body,oe)}
+                  o.f[e.name]=nv;
+                  if(obs.didSet){const oe=new Env(globals);oe.self=o;oe.selfType=ty;oe.mutSelf=true;oe.vars.set(obs.didSet.name,cell(old,null,true));execList(obs.didSet.body,oe)}
+                }finally{busy.delete(e.name)}
                 return}
               const comp=pr.computed;if(!comp.set)fail(`line ${e.line}: cannot assign to property: '${e.name}' is a get-only property`);
               const ce=new Env(globals);ce.self=o;ce.selfType=pr.owner;ce.mutSelf=true;ce.vars.set(comp.setName,cell(v,null,true));execList(comp.set,ce)},
@@ -853,6 +894,11 @@ const TMSwift=(()=>{
           if(base.optional&&base.get()===NIL)return NILCHAIN;
           const b=base.get();
           const args=e.args.map(a=>({label:a.label,v:ev(a.e,env)}));
+          // subscript(...) written in your own type
+          if((b instanceof Obj||b instanceof ECase)&&findSub(b.type)){const sub=findSub(b.type);
+            const subEnv=()=>{const se=new Env(globals);se.self=base.get();se.selfType=sub.owner;se.mutSelf=true;bindArgs(sub,args,se,e.line);return se};
+            return {get:()=>conform(runBody(sub.get,subEnv(),true),sub.ret,e.line,false,"convert return expression"),
+              set:v=>{if(!sub.set)fail(`line ${e.line}: cannot assign through subscript: it is get-only`);if(!(b instanceof Obj&&b.type.kind==="class"))checkMutable(base,e.line);const se=subEnv();se.vars.set(sub.setName,cell(v,null,true));execList(sub.set,se)},root:base.root,parent:base}}
           if(b instanceof Arr){const i=args[0].v;const off=b.off||0;
             // a slice (a[2...]) keeps the indexes of the array it came from
             if(i instanceof Range){const lo=i.lo===null?off:i.lo,hi=i.hi===null?off+b.items.length:i.closed?i.hi+1:i.hi;
@@ -936,6 +982,9 @@ const TMSwift=(()=>{
         case "optchain":{const v=ev(e.e,env);if(v===NIL)return NIL;if(!(v instanceof Some))fail(`line ${e.line}: cannot use optional chaining on non-optional value of type '${typeOfV(v)}'`);return v.v}
         case "call":return call(e,env);
         case "closure":return new Fn({closure:true,params:e.params,body:e.body,env,dollars:e.dollars});
+        case "keypath":return new Fn({builtin:([v],args,line)=>e.path.reduce((acc,n)=>n==="self"?acc:memberOf(acc,n,{line:e.line,e:{k:"lit",v:acc}},env),v)});
+        case "switchx":return exprSwitch(e.s,env);
+        case "ifx":return exprIf(e.s,env);
         case "implicit":return implicitMember(e.name,e.line);
         case "try":{
           if(e.mode==="try?"){try{const v=ev(e.e,env);return v instanceof Some||v===NIL?v:new Some(v)}catch(x){if(x instanceof Thrown)return NIL;throw x}}
@@ -1035,6 +1084,7 @@ const TMSwift=(()=>{
       if(b&&b.isType){const ty=b.ty;
         if(ty.kind==="enum"){const c=ty.caseVals.find(c=>c.name===n);if(c){const cd=ty.cases.find(x=>x.name===n);if(cd.assoc)return caseMaker(ty,cd);return c}
           if(n==="allCases"){if(!ty.inherits.includes("CaseIterable"))fail(`line ${line}: type '${ty.name}' has no member 'allCases' (add : CaseIterable)`);return new Arr(ty.caseVals.slice(),{k:"name",name:ty.name})}}
+        if(ty.nested&&ty.nested[n])return {isType:true,ty:types[n]};
         const s=staticGet(ty,n,line);if(s)return s.v;
         for(let t=ty;t;t=t.sup){const sm=t.staticMethods[n];if(sm)return new Fn({decl:sm,self:null,selfType:t})}
         if(n==="init")return new Fn({builtin:(vals,args,ln)=>construct(ty,ty.kind==="enum"&&args.length===1&&!args[0].label?[{...args[0],label:"rawValue"}]:args,ln)});
@@ -1049,6 +1099,7 @@ const TMSwift=(()=>{
         const m=findMethod(b.type,n);
         if(m){let mutable=true;if(b.type.kind==="struct"&&m.mutating){try{const lv=lval(e.e,env);checkMutable(lv,line);mutable=true}catch(x){if(x instanceof SErr&&x.kind==="CompileError")fail(`line ${line}: cannot use mutating member on immutable value: '${e.e.k==="name"?e.e.v:"value"}' is a 'let' constant`);throw x}}
           return new Fn({decl:m,self:b,selfType:m.owner.kind==="protocol"?b.type:m.owner,mutable})}
+        if(storedAll(b.type).some(s=>s.name===n&&s.lazy))return getProp(b,n,line);
         if(storedAll(b.type).some(s=>s.name===n))fail(`line ${line}: '${n}' used before being initialized`);
         fail(`line ${line}: value of type '${b.type.name}' has no member '${n}'`)}
       if(b instanceof ECase){
@@ -1072,7 +1123,7 @@ const TMSwift=(()=>{
       return e.args.map(a=>{
         if(a.e.k==="inout"){const lv=lval(a.e.e,env);checkMutable(lv,e.line);const ref={get v(){return lv.get()},set v(x){lv.set(x)},isLet:false};return {label:a.label,v:lv.get(),ref,lit:false}}
         const v=ev(a.e,env);
-        return {label:a.label,v:e.args.length>1&&(v instanceof Arr||v instanceof Dict||v instanceof SetV||v instanceof Obj&&v.type.kind==="struct")?copy(v):v,lit:isLitE(a.e)||a.e.k==="lit"};
+        return {label:a.label,trailing:a.trailing,v:e.args.length>1&&(v instanceof Arr||v instanceof Dict||v instanceof SetV||v instanceof Obj&&v.type.kind==="struct")?copy(v):v,lit:isLitE(a.e)||a.e.k==="lit"};
       });
     }
     function call(e,env){
@@ -1104,7 +1155,7 @@ const TMSwift=(()=>{
         for(const x of items)if(truth(callFn(fn,[{v:x}],e.line)))return new Some(x);return NIL}
       // Type(...) construct, or a builtin conversion
       if(f.k==="name"&&!env.find(f.v)&&!(env.self&&findMethod(env.self.type,f.v))){
-        if(types[f.v])return construct(types[f.v],argList(e,env),e.line);
+        if(types[f.v]){const o=construct(types[f.v],argList(e,env),e.line);if(f.targs&&o instanceof Obj)o.targs=f.targs;return o}
         const conv=CONV[f.v];if(conv)return conv(argList(e,env),e.line,e);
       }
       if(f.k==="member"&&f.e.k==="name"&&types[f.e.v]&&f.name==="init"&&!env.find(f.e.v))return construct(types[f.e.v],argList(e,env),e.line);
@@ -1302,10 +1353,10 @@ const TMSwift=(()=>{
       r=copy(r);
       if(lv.cell){const t=lv.cell.type;if(t)r=conform(r,t,s.line,s.op==="="&&isLitE(s.r)||(r instanceof Arr&&r.lit),"assign value");else if(lv.cell.v!==undefined&&!lv.cell.unset){const old=lv.cell.v;if(old!==null&&!(old instanceof Fn)&&typeOfV(old)!==typeOfV(r)&&!(isNumV(old)&&isNumV(r))&&!(old instanceof Some||old===NIL))fail(`line ${s.line}: cannot assign value of type '${typeOfV(r)}' to type '${typeOfV(old)}'`);if(old instanceof D&&typeof r==="number"&&isLitE(s.r))r=new D(r);else if(isNumV(old)&&isNumV(r)&&(old instanceof D)!==(r instanceof D))fail(`line ${s.line}: cannot assign value of type '${typeOfV(r)}' to type '${typeOfV(old)}'`);if((old instanceof Some||old===NIL)&&!(r instanceof Some||r===NIL))r=new Some(r)}
         lv.set(r);return}
-      if(s.l.k==="member"||s.l.k==="index"||s.l.k==="force"||s.l.k==="optchain"){
-        if(s.l.k==="member"&&isLitE(s.r)&&typeof r==="number"){const cur=(()=>{try{return lv.get()}catch(e){return undefined}})();if(cur instanceof D)r=new D(r);else if(cur instanceof Some&&cur.v instanceof D)r=new D(r)}
+      if(s.l.k==="member"||s.l.k==="name"||s.l.k==="index"||s.l.k==="force"||s.l.k==="optchain"){
+        if((s.l.k==="member"||s.l.k==="name")&&isLitE(s.r)&&typeof r==="number"){const cur=(()=>{try{return lv.get()}catch(e){return undefined}})();if(cur instanceof D)r=new D(r);else if(cur instanceof Some&&cur.v instanceof D)r=new D(r)}
         if(s.l.k==="index"&&isLitE(s.r)&&typeof r==="number"){const b=lval(s.l.e,env).get();if(b instanceof Arr&&b.et&&b.et.k==="name"&&b.et.name==="Double")r=new D(r);if(b instanceof Dict&&b.vt&&b.vt.k==="name"&&b.vt.name==="Double")r=new D(r)}
-        if(s.l.k==="member"){const cur=(()=>{try{return lv.get()}catch(e){return undefined}})();if((cur instanceof Some||cur===NIL)&&!(r instanceof Some||r===NIL))r=new Some(r)}
+        if(s.l.k==="member"||s.l.k==="name"){const cur=(()=>{try{return lv.get()}catch(e){return undefined}})();if((cur instanceof Some||cur===NIL)&&!(r instanceof Some||r===NIL))r=new Some(r)}
         lv.set(r);return}
       lv.set(r);
     }
@@ -1390,8 +1441,10 @@ const TMSwift=(()=>{
     };
     for(const n in IRANGE)BUILTINS[n]={isTypeName:n,ns:{max:IRANGE[n][1],min:IRANGE[n][0]}};
     // the names type(of:) prints: Array<Int>, Optional<String>, Dictionary<String, Int>
+    function tyName(t){if(!t)return "Any";switch(t.k){case "name":return t.args&&t.args.length?t.name+"<"+t.args.map(tyName).join(", ")+">":t.name;case "arr":return "Array<"+tyName(t.el)+">";case "dict":return "Dictionary<"+tyName(t.key)+", "+tyName(t.val)+">";case "opt":return "Optional<"+tyName(t.of)+">";case "set":return "Set<"+tyName(t.el)+">";case "tuple":return "("+t.items.map(tyName).join(", ")+")"}return "Any"}
     function runtimeType(v){
-      const T=t=>{if(!t)return "Any";switch(t.k){case "name":return t.args&&t.args.length?t.name+"<"+t.args.map(T).join(", ")+">":t.name;case "arr":return "Array<"+T(t.el)+">";case "dict":return "Dictionary<"+T(t.key)+", "+T(t.val)+">";case "opt":return "Optional<"+T(t.of)+">";case "set":return "Set<"+T(t.el)+">";case "tuple":return "("+t.items.map(T).join(", ")+")"}return "Any"};
+      const T=tyName;
+      if(v instanceof Obj)return v.type.name+genArgs(v);
       if(v instanceof Some)return "Optional<"+runtimeType(v.v)+">";
       if(v instanceof Arr)return "Array<"+(v.et?T(v.et):v.items.length?runtimeType(v.items[0]):"Any")+">";
       if(v instanceof Dict)return "Dictionary<"+(v.kt?T(v.kt):"Any")+", "+(v.vt?T(v.vt):"Any")+">";
@@ -1558,6 +1611,9 @@ const TMSwift=(()=>{
         case "reduce":return M((vals,args)=>{const f=args[1].v;let acc=args[0].v;if(typeof acc==="number"&&args[0].lit&&it.some(x=>x instanceof D))acc=new D(acc);
           // reduce(into:) hands the closure an inout accumulator
           if(args[0].label==="into"){const c=cell(copy(acc),null,false);for(const x of it)callFn(f,[{v:c.v,ref:c},{v:x}],line);return c.v}
+          // reduce(0) { $0 + $1.price }: Swift reads the 0 as 0.0 when the closure works with Doubles
+          if(typeof acc==="number"&&args[0].lit&&it.length){try{acc=callFn(f,[{v:acc},{v:it[0]}],line)}catch(x){if(!(x instanceof SErr&&x.kind==="CompileError"&&/'Int' and 'Double'|'Double' and 'Int'/.test(x.message)))throw x;acc=callFn(f,[{v:new D(acc)},{v:it[0]}],line)}
+            for(let i=1;i<it.length;i++)acc=callFn(f,[{v:acc},{v:it[i]}],line);return acc}
           for(const x of it){acc=callFn(f,[{v:acc},{v:x}],line)}return acc});
         case "forEach":return M((vals,args)=>{const f=fnArg(args);for(const x of it)callFn(f,[{v:x}],line);return undefined});
         case "enumerated":return M(()=>new Arr(it.map((x,i)=>new Tup([i,x],["offset","element"])),null));
