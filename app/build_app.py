@@ -57,7 +57,41 @@ def add_platforms():
 
 # ---------- native settings (safe to run every build) ----------
 
+PODFILE_FIX = """
+  installer.pods_project.targets.each do |t|
+    t.build_configurations.each do |c|
+      c.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+      c.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = 'NO'
+      c.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
+      c.build_settings['OTHER_CFLAGS'] = '$(inherited) -Wno-quoted-include-in-framework-header -Wno-error'
+    end
+  end"""
+
+
+def patch_podfile():
+    """Newer Xcode versions turn Capacitor's 'double-quoted include in framework header' warnings into errors and
+    reject iOS 14 targets. Raise the minimum to iOS 15 and silence that one check for the Pods."""
+    pod = IOS / "App" / "Podfile"
+    if not pod.exists():
+        return
+    s = pod.read_text()
+    new = s.replace("platform :ios, '14.0'", "platform :ios, '15.0'")
+    if "quoted-include" not in new and "assertDeploymentTarget(installer)" in new:
+        new = new.replace("assertDeploymentTarget(installer)", "assertDeploymentTarget(installer)" + PODFILE_FIX, 1)
+    if new != s:
+        pod.write_text(new)
+        print("patched ios/App/Podfile (iOS 15 minimum, quoted-include check off)")
+    proj = IOS / "App" / "App.xcodeproj" / "project.pbxproj"
+    if proj.exists():
+        p = proj.read_text()
+        q = p.replace("IPHONEOS_DEPLOYMENT_TARGET = 14.0;", "IPHONEOS_DEPLOYMENT_TARGET = 15.0;")
+        if q != p:
+            proj.write_text(q)
+            print("set the App target's iOS Deployment Target to 15.0")
+
+
 def patch_ios():
+    patch_podfile()
     plist = IOS / "App" / "App" / "Info.plist"
     if not plist.exists():
         return
