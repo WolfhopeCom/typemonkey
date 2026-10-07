@@ -560,6 +560,7 @@ const RUNNERS={
   py:c=>runPython(c),
   cs:c=>Promise.resolve(linesOf(TMC.run(c,"cs"))),
   cpp:c=>Promise.resolve(linesOf(TMC.run(c,"cpp"))),
+  java:c=>Promise.resolve(linesOf(TMC.run(c,"java"))),
   sql:c=>{const r=TMSQL.run(c,ZOO_TABLES);if(!r.ok)return Promise.resolve([["err",r.error]]);const o=TMSQL.text(r).split("\n").map(l=>["log",l]);o.table=r;return Promise.resolve(o)}
 };
 const kindOf=c=>c.runnable===true?"js":c.runnable;
@@ -571,7 +572,7 @@ function paintConsole(el,out,hint){
   }
   el.innerHTML=out.length?out.map(([k,v])=>`<div class="${k==="err"?"err":""}">${k==="err"?"✖ ":"› "}${esc(v)}</div>`).join(""):`<span class="dim">(nothing printed${hint?". "+hint:""})</span>`;
 }
-const PRINT_HINT={js:"Try console.log",py:"Try print()",cs:"Try Console.WriteLine",cpp:"Try std::cout <<",sql:"Try a SELECT"};
+const PRINT_HINT={js:"Try console.log",py:"Try print()",cs:"Try Console.WriteLine",cpp:"Try std::cout <<",java:"Try System.out.println",sql:"Try a SELECT"};
 
 /* ---------- Grading code challenges ---------- */
 const norm=l=>{l=String(l).trim();return /^[\[{]/.test(l)?l.replace(/\s+/g,""):l};
@@ -648,6 +649,7 @@ const COURSES=[
   {...COURSE_SQL,tag:"SELECT 'hi';",runnable:"sql",lang:"query.sql",rushHint:"Each result row is on its own line, columns split by |."},
   {...COURSE_CS,tag:'Console.WriteLine("hi");',runnable:"cs",lang:"Program.cs"},
   {...COURSE_CPP,tag:'std::cout << "hi";',runnable:"cpp",lang:"main.cpp"},
+  {...COURSE_JAVA,tag:'System.out.println("hi");',runnable:"java",lang:"Main.java"},
   {...COURSE_JR,tag:"puzzles for ages 7–12",kids:true,lang:"TypeMonkey moves"}
 ];
 const courseById=id=>COURSES.find(c=>c.id===id);
@@ -672,7 +674,7 @@ function home(){
   const nextPro=!nu&&flat(js).find(x=>x.l.steps&&status(js,x)==="pro");
   const greet=resume?`Welcome back! You were in the middle of ${Q(nu.l.title)}`:
     nextPro?`You finished every free JavaScript lesson! Unlock the full course to keep going with ${Q(nextPro.l.title)}`:
-    S.done.length?(nu?`Nice to see you! Next up: ${Q(nu.l.title)}`:"You've finished JavaScript! Try C# or C++ next, or build something in the Playground."):"Hey! I'm TypeMonkey, your coding buddy. Let's write your first line of code.";
+    S.done.length?(nu?`Nice to see you! Next up: ${Q(nu.l.title)}`:"You've finished JavaScript! Try Java, C# or C++ next, or build something in the Playground."):"Hey! I'm TypeMonkey, your coding buddy. Let's write your first line of code.";
   $("#screen").innerHTML=`<div class="stack">
     <section class="hero"><h1>Learn to code, one banana at a time.</h1><p>Bite-size lessons, real code you run yourself, quizzes and mini-games. Built for all ages and experience levels.</p></section>
     ${buddy(greet,resume?"cheer":"happy")}
@@ -1314,6 +1316,7 @@ const PLAY={
   py:{name:"Python",file:"main.py",run:"py",start:`name = "TypeMonkey"\nfor i in range(1, 4):\n    print(f"{name} says ook #{i}")\n`},
   sql:{name:"SQL",file:"query.sql",run:"sql",start:`-- The TypeMonkey Zoo database has 3 tables: animals, keepers, snacks\nSELECT a.name, k.name AS keeper\nFROM animals a\nLEFT JOIN keepers k ON a.keeper_id = k.id\nORDER BY a.name;\n`},
   cs:{name:"C#",file:"Program.cs",run:"cs",start:`using System;\n\nclass Program {\n  static void Main() {\n    for (int i = 1; i <= 3; i++) {\n      Console.WriteLine($"TypeMonkey says ook #{i}");\n    }\n  }\n}\n`},
+  java:{name:"Java",file:"Main.java",run:"java",start:`public class Main {\n  public static void main(String[] args) {\n    for (int i = 1; i <= 3; i++) {\n      System.out.println("TypeMonkey says ook #" + i);\n    }\n  }\n}\n`},
   cpp:{name:"C++",file:"main.cpp",run:"cpp",start:`#include <iostream>\n\nint main() {\n  for (int i = 1; i <= 3; i++) {\n    std::cout << "TypeMonkey says ook #" << i << "\\n";\n  }\n  return 0;\n}\n`}
 };
 function playground(lang="js"){
