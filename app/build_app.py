@@ -87,6 +87,8 @@ def patch_podfile():
         q = p.replace("IPHONEOS_DEPLOYMENT_TARGET = 14.0;", "IPHONEOS_DEPLOYMENT_TARGET = 15.0;")
         # Xcode's user-script sandbox blocks CocoaPods' "[CP] Embed Pods Frameworks" step (PhaseScriptExecution failed)
         q = q.replace("ENABLE_USER_SCRIPT_SANDBOXING = YES;", "ENABLE_USER_SCRIPT_SANDBOXING = NO;")
+        # Version 1 is iPhone only (iPads can still run it in iPhone mode): fewer screenshots and checks for review
+        q = q.replace('TARGETED_DEVICE_FAMILY = "1,2";', "TARGETED_DEVICE_FAMILY = 1;")
         if "ENABLE_USER_SCRIPT_SANDBOXING" not in q:
             q = q.replace("IPHONEOS_DEPLOYMENT_TARGET = 15.0;", "IPHONEOS_DEPLOYMENT_TARGET = 15.0;\n\t\t\t\tENABLE_USER_SCRIPT_SANDBOXING = NO;")
         if q != p:
