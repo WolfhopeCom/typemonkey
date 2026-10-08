@@ -46,7 +46,9 @@ button{font:inherit;cursor:pointer}
 @media (max-width:520px){.brand .word{display:none}}
 .stats{min-width:0}.stat{min-width:0;flex-shrink:1}
 /* app feel: never slide sideways, no double-tap zoom */
-html{overflow-x:hidden}html,body{max-width:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{overflow-x:clip;touch-action:manipulation}
+html{overflow-x:hidden;background:var(--bg);overscroll-behavior-y:none}body{overscroll-behavior-y:none}
+/* iPhone: a solid strip behind the clock/battery so page content never shows above the top bar while scrolling */
+body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:50;pointer-events:none}html,body{max-width:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{overflow-x:clip;touch-action:manipulation}
 
 .buddy{display:flex;gap:12px;align-items:flex-end}
 .buddy .tm{width:88px;height:88px;flex:none}
@@ -53040,7 +53042,7 @@ function home(){
       return `<button class="course ${c.id==="js"?"live":""} ${c.kids?"kids":""}" data-c="${c.id}"><span class="pill ${d===n&&n===all?"ok":c.kids&&!d?"kid":"go"}">${d===n&&n===all?"Complete":d?"In progress":c.id==="js"?"Start here":c.kids?"Kids section":"New"}</span>
         <h3>${c.name}</h3><span class="tag">${esc(c.tag)}</span><span class="meta">${c.units.length} units · ${n} lessons${all>n?" (more coming)":""}</span>
         <div class="mini"><span style="width:${n?d/n*100:0}%"></span></div></button>`}).join("")}</div>
-    ${S.pro?`<div class="unlocked">✓ Full version unlocked. Thanks for supporting TypeMonkey!</div>`:`<div class="paywall"><div><h3>Unlock the full version</h3><p>All ${COURSES.reduce((n,c)=>n+countLessons(c)[1],0)} lessons in all ${COURSES.filter(c=>!c.extra).length} courses, every Build Project and Bug Lab level, and everything we add later. One-time purchase, no subscription.</p></div><button class="btn banana" id="homebuy">Unlock · $4.99</button></div>`}
+    ${S.pro?`<div class="unlocked">✓ Full version unlocked. Thanks for supporting TypeMonkey!</div>`:`<div class="paywall"><div><h3>Unlock the full version</h3><p>All ${COURSES.reduce((n,c)=>n+countLessons(c)[1],0)} lessons in all ${COURSES.filter(c=>!c.extra).length} courses, every Build Project and Bug Lab level, and everything we add later. One-time purchase, no subscription.</p></div><button class="btn banana" id="homebuy">Unlock · ${STORE.price}</button></div>`}
     <div class="label">Rewards</div>
     <div class="tools">
       <button class="tool" id="shop"><b>🛍️ Shop</b><span>Spend bananas on outfits for TypeMonkey</span></button>
@@ -53060,7 +53062,35 @@ function foot(){
    <div class="row"><button class="linkbtn" id="terms">Terms</button><button class="linkbtn" id="privacy">Privacy</button><button class="linkbtn" id="fbackup">Back up progress</button><button class="linkbtn" id="fset">Settings</button></div>`;
   $("#terms").onclick=()=>legalPage("terms");$("#privacy").onclick=()=>legalPage("privacy");$("#fset").onclick=settingsPage;$("#fbackup").onclick=backupPage;
 }
-function unlockFull(after){grownUpGate(()=>{S.pro=true;save();toast("Demo unlock: everything is open. In the real app this is the App Store / Google Play purchase.");after&&after()})}
+/* ---------- The one-time "unlock everything" purchase ----------
+   In the iPhone / Android app this goes through the App Store / Google Play (plugin @capgo/native-purchases,
+   no outside server). On the web it stays a demo unlock. Always behind the grown-up check. */
+const IAP_ID="typemonkey_full_unlock";
+const STORE={price:"$4.99",native:false};
+function nativeStore(){try{const C=window.Capacitor;return C&&C.isNativePlatform&&C.isNativePlatform()&&C.Plugins&&C.Plugins.NativePurchases||null}catch(e){return null}}
+const ownsUnlock=list=>(list||[]).some(p=>p&&p.productIdentifier===IAP_ID&&(p.purchaseState==null||/^(purchased|1)$/i.test(String(p.purchaseState))));
+async function storeCheck(){const np=nativeStore();if(!np)return false;
+  try{const {purchases}=await np.getPurchases({productType:"inapp"});if(ownsUnlock(purchases)){if(!S.pro){S.pro=true;save();rerender&&rerender()}return true}}catch(e){}
+  return false}
+async function storeInit(){const np=nativeStore();if(!np)return;STORE.native=true;
+  try{const {products}=await np.getProducts({productIdentifiers:[IAP_ID],productType:"inapp"});const pr=products&&products.find(x=>x.identifier===IAP_ID||x.productIdentifier===IAP_ID)||products&&products[0];
+    if(pr&&pr.priceString){STORE.price=pr.priceString;if(!S.pro&&rerender)rerender()}}catch(e){}
+  storeCheck()}
+function unlockFull(after){grownUpGate(async()=>{
+  const np=nativeStore();
+  if(!np){S.pro=true;save();toast("Demo unlock: everything is open. In the app this is the App Store / Google Play purchase.");after&&after();return}
+  toast("Opening the store…");
+  try{const t=await np.purchaseProduct({productIdentifier:IAP_ID,productType:"inapp",quantity:1,autoAcknowledgePurchases:true});
+    if(t&&(t.transactionId||t.productIdentifier===IAP_ID)||await storeCheck()){S.pro=true;save();sfx("complete");toast("Thank you! Everything is unlocked 🎉");after&&after()}}
+  catch(e){const m=String(e&&(e.message||e.code)||e);
+    if(await storeCheck()){toast("Everything is unlocked 🎉");after&&after();return}
+    toast(/cancel/i.test(m)?"No problem. Nothing was charged.":"The purchase didn't go through. Please try again later.")}
+})}
+async function restoreFull(after){const np=nativeStore();
+  if(!np){toast(S.pro?"Your purchase is already active.":"In the app this checks the App Store / Google Play for your purchase.");return}
+  toast("Checking your purchases…");
+  try{await np.restorePurchases()}catch(e){}
+  const own=await storeCheck();toast(own||S.pro?"Purchase restored! Everything is unlocked 🎉":"No purchase found for this account.");if(own)after&&after()}
 let rerender=home;
 function setMode(){}
 
@@ -53096,7 +53126,7 @@ function coursePage(cid){
           <span class="t">${isNext?`<span class="nexttag">${c.pickAny?"⭐ Recommended next":"👉 Next up"}</span>`:""}<b>${x.l.title}</b><span>${res?`Step ${S.progress[x.l.id].step+1} of ${x.l.steps.length-1} · saved`:x.l.sub}</span></span>
           <span class="pill ${st==="open"||res?"go":st==="done"?"ok":""}">${res?"Resume":{done:"Replay",open:"Play",pro:"Pro",locked:"🔒",soon:"Soon"}[st]}</span></button>
           ${res?`<button class="linkbtn" data-restart="${x.l.id}">Start “${x.l.title}” over</button>`:""}`}).join(""):pathHTML(c,L,ui,nuId)}</div></div>`).join("")}
-    ${S.pro?"":`<div class="paywall"><div><h3>Unlock all of TypeMonkey</h3><p>Every unit in every language, plus future courses and bonus games. One-time purchase.</p></div><button class="btn banana" id="buy">Unlock · $4.99</button></div>`}
+    ${S.pro?"":`<div class="paywall"><div><h3>Unlock all of TypeMonkey</h3><p>Every unit in every language, plus future courses and bonus games. One-time purchase.</p></div><button class="btn banana" id="buy">Unlock · ${STORE.price}</button></div>`}
   </div>`;
   $("#back").onclick=home;
   if($("#ccont"))$("#ccont").onclick=()=>startLesson(nuId);
@@ -54233,7 +54263,7 @@ function settingsPage(){SFX.stopMusic();
       <div class="setrow"><b>Calm mode <small>less motion</small></b>${seg("calm",st.calm?"on":"off",[["off","Off"],["on","On"]])}</div>
     </div>
     <div class="card setlist">
-      <div class="setrow"><b>${S.pro?"✓ Full version unlocked":"Full version <small>one-time $4.99</small>"}</b><div class="setbtns">${S.pro?"":`<button class="btn banana sm" id="sbuy">Unlock</button>`}<button class="btn ghost sm" id="restore">Restore</button></div></div>
+      <div class="setrow"><b>${S.pro?"✓ Full version unlocked":"Full version <small>one-time ${STORE.price}</small>"}</b><div class="setbtns">${S.pro?"":`<button class="btn banana sm" id="sbuy">Unlock</button>`}<button class="btn ghost sm" id="restore">Restore</button></div></div>
       <div class="setrow"><b>Progress <small>${S.done.length} lessons · ${S.xp} XP · ${S.bananas} 🍌</small></b><div class="setbtns"><button class="btn sm" id="sbackup">Back up</button><button class="btn ghost sm" id="reset">Reset…</button></div></div>
       <div id="confirm"></div>
     </div>
@@ -54244,7 +54274,7 @@ function settingsPage(){SFX.stopMusic();
   const bindSeg=(id,fn)=>$$(`#${id} button`).forEach(b=>b.onclick=()=>{fn(b.dataset.v);save();applySettings();settingsPage()});
   bindSeg("theme",v=>st.theme=v);bindSeg("text",v=>st.text=v);bindSeg("calm",v=>st.calm=v==="on");bindSeg("sound",v=>{st.sound=v==="on";if(st.sound)setTimeout(()=>sfx("correct"),40);else SFX.stopMusic(true)});bindSeg("music",v=>{st.music=v==="on";if(!st.music)SFX.stopMusic(true)});
   if($("#sbuy"))$("#sbuy").onclick=()=>unlockFull(settingsPage);
-  $("#restore").onclick=()=>toast(S.pro?"Your purchase is already active.":"In the real app this checks the App Store / Google Play for your purchase. Nothing to restore in the demo.");
+  $("#restore").onclick=()=>restoreFull(settingsPage);
   $("#sbackup").onclick=backupPage;
   $("#sterms").onclick=()=>legalPage("terms");$("#sprivacy").onclick=()=>legalPage("privacy");
   $("#reset").onclick=()=>{$("#confirm").innerHTML=`<div class="feedback bad"><b>Erase everything?</b> This can't be undone.<div class="row" style="margin-top:8px"><button class="btn sm" id="yes">Erase everything</button><button class="btn ghost sm" id="no">Keep my progress</button></div></div>`;
@@ -54401,6 +54431,7 @@ $("#homeBtn").onclick=home;$("#gearBtn").onclick=settingsPage;
 $("#sndBtn").onclick=()=>{S.settings.sound=S.settings.sound===false;save();if(!S.settings.sound)SFX.stopMusic(true);else if(cur&&cur.l&&$(".lessonbar"))setTimeout(()=>jrMusic(cur.l.steps[cur.step]),60);toast(S.settings.sound?"Sounds on 🔊":"Sounds off 🔇");if(S.settings.sound)setTimeout(()=>sfx("correct"),40);if(rerender===settingsPage)settingsPage()};
 try{addWarmups()}catch(e){console.warn(e)}
 renderStats();home();
+try{storeInit()}catch(e){}   // App Store / Google Play: real price + already-bought check (does nothing on the web)
 </script>
 
 </body>
