@@ -1,271 +1,1007 @@
-/* deep-python: Python Units 8–9 (launch depth). More hands-on practice: text processing, loop patterns,
-   comprehensions, functions, objects, inheritance and error handling, each unit ending in a project. */
+/* deep-python: launch depth units. Python Unit 8 (text & lists workshop) and Unit 9 (objects & safe code).
+   Lots of small, scaffolded challenges; each unit starts with a gentle warm-up and ends with a project. */
 
-COURSE_PY.units.push({name:"Text & data workshop",lessons:[
-{id:"py25",title:"String toolkit",sub:"split, join, replace, find",steps:[
- {type:"talk",title:"Chop and glue",
-  body:`<p>${C(".split()")} chops text into a list of pieces. With no argument it splits on spaces; give it ${C('","')} to split on commas. ${C('" ".join(list)')} glues a list back together with whatever text you pick in between.</p>`,
-  demo:`line = "banana,mango,kiwi"\nfruits = line.split(",")\nprint(fruits)\nprint(" + ".join(fruits))\nwords = "the quick brown monkey".split()\nprint(len(words))`,
-  say:"Output: ['banana', 'mango', 'kiwi'], then banana + mango + kiwi, then 4."},
- {type:"talk",title:"Search and replace",mood:"think",
-  body:`<p>More string tools:</p><ul><li>${C(".count(x)")} says how many times x appears</li><li>${C(".replace(old, new)")} swaps text</li><li>${C(".find(x)")} gives the position of x, or ${C("-1")} if it's not there</li><li>${C(".startswith()")} and ${C(".endswith()")} check the ends</li></ul>`,
-  demo:`msg = "I love bananas. Bananas are the best!"\nprint(msg.lower().count("banana"))\nprint(msg.replace("bananas", "mangos"))\nprint(msg.find("love"))\nprint(msg.find("pizza"))\nprint("photo.png".endswith(".png"))`,
-  say:"Output: 2, the swapped sentence, 2, -1, True. Notice replace is case-sensitive: \"Bananas\" stayed!"},
- {type:"quiz",q:"What does this print?",code:`print("-".join(["a", "b", "c"]))`,opts:["a-b-c","abc","-a-b-c-"],a:0,mono:true,why:"join puts the dash only BETWEEN the items."},
- {type:"fill",title:"How many words?",body:`<p>Break the sentence into words, then count them.</p>`,code:`words = "go bananas go".[0]()\nprint(len(words))`,blanks:["split"],tokens:["split","join","strip","count"],why:"split() turns the text into ['go', 'bananas', 'go'], which has 3 items.",out:"3"},
- {type:"code",title:"Initials",body:`<p>Print the initials of ${C("name")} with dots, like ${C("A.L.K.")}. Split the name into words, grab the first letter of each, and join them with ${C('"."')}.</p>`,
-  start:`name = "Ada Lovelace King"\n`,use:[[/\.split\s*\(/,"Break the name into words with .split()."]],out:["A.L.K."],variants:[[/"Ada Lovelace King"/,'"Mo Banana"',["M.B."]]],
-  hint:`name = "Ada Lovelace King"\nletters = [word[0] for word in name.split()]\nprint(".".join(letters) + ".")`},
- {type:"quiz",q:"What does this print?",code:`print("ook ook eek".replace("ook", "ah", 1))`,opts:["ah ook eek","ah ah eek","ook ook eek"],a:0,mono:true,why:"The third argument, 1, means replace only the first match."},
- {type:"code",title:"Make a handle",body:`<p>Ask ${C('input("Username: ")')}. Strip the spaces off the ends, make it lowercase, and turn the spaces in the middle into underscores. Print it like ${C("Your handle: @mo_the_monkey")}.</p>`,
-  start:`name = input("Username: ")\n`,input:"  Mo The Monkey ",
-  use:[[/\.strip\s*\(/,"Remove the extra spaces at the ends with .strip()."],[/\.replace\s*\(/,"Swap spaces for underscores with .replace(\" \", \"_\")."]],
-  tests:[{input:"  Mo The Monkey ",out:["Your handle: @mo_the_monkey"]},{input:"Banana King",out:["Your handle: @banana_king"]}],
-  hint:`name = input("Username: ")\nhandle = name.strip().lower().replace(" ", "_")\nprint(f"Your handle: @{handle}")`},
+COURSE_PY.units.push({name:"Text & list workshop",lessons:[
+{id:"py25",title:"Warm-up: loops & lists",sub:"a gentle practice round",steps:[
+ {type:"talk",title:"Welcome back!",mood:"cheer",
+  body:`<p>Let's warm up with something you already know: a ${C("for")} loop walks through a list, one item at a time.</p><p>Everything indented under the loop runs once for each item.</p>`,
+  demo:`snacks = ["banana", "mango", "kiwi"]
+for snack in snacks:
+    print("I like", snack)`,
+  say:"Output: I like banana, I like mango, I like kiwi. Three items, three lines."},
+ {type:"code",title:"Say hi to everyone",body:`<p>The loop is ready. Replace ${C("pass")} with one ${C("print")} line so it says hi to each friend:</p><ul><li>${C("Hi, Mo!")}</li><li>${C("Hi, Ava!")}</li><li>${C("Hi, Leo!")}</li></ul>`,
+  start:`friends = ["Mo", "Ava", "Leo"]
+for name in friends:
+    pass  # print Hi, then the name, then !
+`,use:[[/print\s*\(/,"Print inside the loop with print(...)."]],out:["Hi, Mo!","Hi, Ava!","Hi, Leo!"],
+  hint:`friends = ["Mo", "Ava", "Leo"]
+for name in friends:
+    print(f"Hi, {name}!")`},
+ {type:"talk",title:"Adding up as you go",
+  body:`<p>To add up a list, start a <b>total</b> at 0 and add each item to it inside the loop. ${C("total += n")} is short for ${C("total = total + n")}.</p>`,
+  demo:`coins = [2, 5, 1]
+total = 0
+for n in coins:
+    total += n
+print(total)`,
+  say:"Output: 8. (Python's sum(coins) does the same thing in one go!)"},
+ {type:"code",title:"Banana total",body:`<p>Each number is how many bananas a monkey picked. Replace ${C("pass")} with a line that adds ${C("b")} to ${C("total")}, so the program prints ${C("14")}.</p>`,
+  start:`bananas = [3, 5, 2, 4]
+total = 0
+for b in bananas:
+    pass  # add b to total
+print(total)
+`,use:[[/total\s*\+=\s*b|total\s*=\s*total\s*\+\s*b/,"Add each b to the total with total += b"]],out:["14"],
+  hint:`bananas = [3, 5, 2, 4]
+total = 0
+for b in bananas:
+    total += b
+print(total)`},
+ {type:"talk",title:"Counting with if",mood:"think",
+  body:`<p>Put an ${C("if")} inside the loop to count only <b>some</b> items. Here we count the ripe bananas (ripeness 7 or more).</p>`,
+  demo:`ripeness = [3, 8, 9, 5, 7]
+ripe = 0
+for r in ripeness:
+    if r >= 7:
+        ripe += 1
+print(ripe)`,
+  say:"Output: 3. Only 8, 9 and 7 pass the if."},
+ {type:"quiz",q:"What does this print?",code:`nums = [1, 2, 3]
+count = 0
+for n in nums:
+    if n > 1:
+        count += 1
+print(count)`,opts:["2","3","1"],a:0,mono:true,why:"Only 2 and 3 are bigger than 1, so count goes up twice."},
+ {type:"code",title:"Big scores",body:`<p>Count how many scores are <b>70 or more</b>. Replace ${C("pass")} with an ${C("if")} that adds 1 to ${C("count")}. The answer should be ${C("3")}.</p>`,
+  start:`scores = [40, 85, 92, 60, 77]
+count = 0
+for s in scores:
+    pass  # if s is 70 or more, add 1 to count
+print(count)
+`,use:[[/if\s+\S/,"Use an if inside the loop, like: if s >= 70:"]],out:["3"],
+  hint:`scores = [40, 85, 92, 60, 77]
+count = 0
+for s in scores:
+    if s >= 70:
+        count += 1
+print(count)`},
  {type:"game"},{type:"done"}],
- pool:[
-  [`print("a b c".split())`,["['a', 'b', 'c']","a b c","['abc']"]],
-  [`print("x".join("abc"))`,["axbxc","xabcx","abcx"]],
-  [`print("banana".count("a"))`,["3","2","1"]],
-  [`print("monkey".find("k"))`,["3","2","-1"]],
-  [`print("hi.txt".startswith("hi"))`,["True","False","hi"]],
-  [`print("2-4-6".split("-")[1])`,["4","2","-"]]
- ]},
-{id:"py26",title:"Loop patterns",sub:"zip, totals, best-so-far, loops in loops",steps:[
- {type:"talk",title:"Two lists side by side",
-  body:`<p>${C("zip()")} walks through two lists at the same time, handing you one item from each on every lap. Perfect when one list has names and another has prices.</p>`,
-  demo:`items = ["banana", "mango", "kiwi"]\nprices = [2, 3, 4]\nfor item, price in zip(items, prices):\n    print(f"{item} costs {price} coins")`,
-  say:"Output: banana costs 2 coins, mango costs 3 coins, kiwi costs 4 coins."},
- {type:"talk",title:"Three handy patterns",mood:"think",
-  body:`<p>Most loops do one of these jobs:</p><ul><li><b>Total:</b> start at 0 and keep adding</li><li><b>Count:</b> start at 0 and add 1 when something is true</li><li><b>Best so far:</b> remember the biggest (or smallest) you've seen</li></ul>`,
-  demo:`temps = [18, 25, 31, 22, 29]\ntotal = 0\nhot_days = 0\nhottest = temps[0]\nfor t in temps:\n    total += t\n    if t > 25:\n        hot_days += 1\n    if t > hottest:\n        hottest = t\nprint(total / len(temps))\nprint(hot_days)\nprint(hottest)`,
-  say:"Output: 25.0 (the average), 2 hot days, and 31 was the hottest."},
- {type:"quiz",q:"What does this print?",code:`for a, b in zip([1, 2], ["x", "y"]):\n    print(b, a)`,opts:["x 1 y 2","1 x 2 y","x y 1 2"],a:0,mono:true,why:"Each lap pairs 1 with x, then 2 with y, and prints b before a."},
- {type:"code",title:"Shopping receipt",body:`<p>Use ${C("zip()")} to print one line per item, like ${C("banana x3 = 6")} (quantity times price), and then ${C("Total: 15")}.</p>`,
-  start:`items = ["banana", "mango", "kiwi"]\nqty = [3, 1, 4]\nprice = [2, 5, 1]\n# print each line, then the total\n`,
-  use:[[/zip\s*\(/,"Walk the lists together with zip()."]],out:["banana x3 = 6","mango x1 = 5","kiwi x4 = 4","Total: 15"],
-  hint:`items = ["banana", "mango", "kiwi"]\nqty = [3, 1, 4]\nprice = [2, 5, 1]\ntotal = 0\nfor item, q, p in zip(items, qty, price):\n    cost = q * p\n    total += cost\n    print(f"{item} x{q} = {cost}")\nprint(f"Total: {total}")`},
- {type:"talk",title:"Loops inside loops",
-  body:`<p>Put one loop inside another and the inner loop runs <b>completely</b> on every lap of the outer one. That's how you make grids, tables and game boards.</p>`,
-  demo:`for row in range(1, 4):\n    line = ""\n    for col in range(1, 4):\n        line += str(row * col) + " "\n    print(line)`,
-  say:"A mini times table: 1 2 3, then 2 4 6, then 3 6 9."},
- {type:"fill",title:"Pair them up",body:`<p>Print each name next to its score.</p>`,code:`names = ["Ava", "Leo"]\nscores = [9, 7]\nfor n, s in [0](names, scores):\n    print(n, s)`,blanks:["zip"],tokens:["zip","enumerate","range","len"],why:"zip pairs Ava with 9 and Leo with 7.",out:"Ava 9 Leo 7"},
- {type:"code",title:"Vote counter",body:`<p>The monkeys voted for their favorite fruit. Count the votes in a dictionary, then find the fruit with the most and print ${C("Winner: mango with 3 votes")}.</p>`,
-  start:`votes = ["mango", "kiwi", "mango", "banana", "kiwi", "mango"]\n`,
-  use:[[/\{\s*\}|dict\s*\(/,"Start with an empty dictionary: counts = {}"]],out:["Winner: mango with 3 votes"],
-  hint:`votes = ["mango", "kiwi", "mango", "banana", "kiwi", "mango"]\ncounts = {}\nfor v in votes:\n    counts[v] = counts.get(v, 0) + 1\nwinner = ""\nbest = 0\nfor fruit, n in counts.items():\n    if n > best:\n        winner = fruit\n        best = n\nprint(f"Winner: {winner} with {best} votes")`},
+ pool:[[`for x in [1, 2, 3]:
+    print(x * 2)`,["2 4 6","1 2 3","6"]],[`total = 0
+for n in [4, 6]:
+    total += n
+print(total)`,["10","46","6"]],[`print(len(["a", "b", "c"]))`,["3","2","abc"]],[`nums = [5, 1, 7]
+print(max(nums) - min(nums))`,["6","4","7"]],[`for c in "hi":
+    print(c)`,["h i","hi","i h"]]]},
+
+{id:"py26",title:"String toolkit",sub:"upper, count, replace, strip",steps:[
+ {type:"talk",title:"Strings have tools built in",
+  body:`<p>Every string comes with handy <b>methods</b>. You call them with a dot: ${C("word.upper()")}.</p><ul><li>${C(".upper()")} SHOUTS</li><li>${C(".count(\"a\")")} counts letters</li><li>${C(".replace(\"a\", \"o\")")} swaps text</li></ul>`,
+  demo:`word = "banana"
+print(word.upper())
+print(word.count("a"))
+print(word.replace("a", "o"))`,
+  say:"Output: BANANA, 3, bonono. The original word doesn't change; each method gives you a new string."},
+ {type:"code",title:"Shout it",body:`<p>Change the print line so it prints ${C("msg")} in capitals: ${C("OOK OOK")}. Add ${C(".upper()")} after ${C("msg")}.</p>`,
+  start:`msg = "ook ook"
+print(msg)
+`,use:[[/\.upper\s*\(/,"Use .upper() to make it capitals."]],out:["OOK OOK"],
+  hint:`msg = "ook ook"
+print(msg.upper())`},
+ {type:"talk",title:"Checking text",mood:"think",
+  body:`<p>Want to know if text contains something? Use ${C("in")}. To check the start or end, use ${C(".startswith()")} and ${C(".endswith()")}. They all give ${C("True")} or ${C("False")}.</p>`,
+  demo:`email = "mo@jungle.com"
+print("@" in email)
+print(email.endswith(".com"))
+print(email.startswith("ava"))`,
+  say:"Output: True, True, False."},
+ {type:"quiz",q:"What does this print?",code:`print("banana".startswith("ban"))`,opts:["True","False","ban"],a:0,mono:true,why:"\"banana\" does start with \"ban\"."},
+ {type:"fill",title:"Swap a letter",body:`<p>Turn ${C("jungle")} into ${C("bungle")}.</p>`,code:`word = "jungle"
+print(word.[0]("j", "b"))`,blanks:["replace"],tokens:["replace","swap","upper","count"],why:"replace(old, new) swaps every j for a b.",out:"bungle"},
+ {type:"code",title:"Count the a's",body:`<p>Print how many times the letter ${C("a")} appears in ${C("text")}. Use ${C("text.count(\"a\")")}. You should see ${C("6")}.</p>`,
+  start:`text = "a monkey ate a banana"
+# print how many times "a" appears
+`,use:[[/\.count\s*\(/,"Use .count(\"a\")."]],out:["6"],
+  hint:`text = "a monkey ate a banana"
+print(text.count("a"))`},
+ {type:"talk",title:"Tidy up messy text",
+  body:`<p>When people type, they add extra spaces and forget capitals. ${C(".strip()")} trims spaces off both ends and ${C(".title()")} Capitalizes Each Word. You can chain them!</p>`,
+  demo:`raw = "   mo the monkey   "
+print(raw.strip().title())`,
+  say:"Output: Mo The Monkey"},
+ {type:"code",title:"Name tidier",body:`<p>The player types their name, maybe messily, like ${C("  kiki  ")}. Tidy it with ${C(".strip()")} and ${C(".title()")} so the program prints ${C("Welcome, Kiki!")}.</p><p>Tip: add them to the end of the ${C("input(...)")} line.</p>`,
+  start:`name = input("Your name: ")
+print(f"Welcome, {name}!")
+`,use:[[/\.strip\s*\(/,"Trim the spaces with .strip()."],[/\.title\s*\(/,"Add capitals with .title()."]],tests:[{input:"  kiki  ",out:["Welcome, Kiki!"]},{input:"ava",out:["Welcome, Ava!"]}],
+  input:"  kiki  ",
+  hint:`name = input("Your name: ").strip().title()
+print(f"Welcome, {name}!")`},
  {type:"game"},{type:"done"}],
- pool:[
-  [`print(list(zip([1, 2], "ab")))`,["[(1, 'a'), (2, 'b')]","[1, 2, 'a', 'b']","[(1, 2), ('a', 'b')]"]],
-  [`best = 0\nfor n in [4, 9, 2]:\n    if n > best:\n        best = n\nprint(best)`,["9","2","4"]],
-  [`c = 0\nfor w in ["hi", "yo", "hey"]:\n    if len(w) == 2:\n        c += 1\nprint(c)`,["2","3","1"]],
-  [`for i in range(2):\n    for j in range(2):\n        print(i, j)`,["0 0 0 1 1 0 1 1","0 0 1 1","0 1 0 1"]],
-  [`t = 0\nfor a, b in zip([1, 2], [10, 20]):\n    t += a * b\nprint(t)`,["50","33","30"]]
- ]},
-{id:"py27",title:"Comprehension power",sub:"dict comprehensions, if/else, sum()",steps:[
- {type:"talk",title:"Dictionary comprehensions",
-  body:`<p>Comprehensions work for dictionaries too! Use curly braces and a ${C("key: value")} pair: ${C("{key: value for item in things}")}.</p>`,
-  demo:`fruits = ["kiwi", "banana", "fig"]\nlengths = {f: len(f) for f in fruits}\nprint(lengths)\nprices = {"kiwi": 2, "banana": 1, "fig": 3}\ndoubled = {f: p * 2 for f, p in prices.items()}\nprint(doubled)`,
-  say:"Output: {'kiwi': 4, 'banana': 6, 'fig': 3}, then every price doubled."},
- {type:"talk",title:"Choices and totals",mood:"think",
-  body:`<p>Put ${C("A if test else B")} at the <b>front</b> to choose a value for every item. And ${C("sum()")}, ${C("any()")} and ${C("all()")} can take a comprehension without the square brackets.</p>`,
-  demo:`nums = [3, 8, 5, 12]\nprint(["big" if n > 6 else "small" for n in nums])\nprint(sum(n for n in nums if n > 4))\nprint(all(n > 0 for n in nums))`,
-  say:"Output: ['small', 'big', 'small', 'big'], then 25 (8 + 5 + 12), then True."},
- {type:"quiz",q:"What does this print?",code:`print({n: n * n for n in range(3)})`,opts:["{0: 0, 1: 1, 2: 4}","[0, 1, 4]","{1: 1, 2: 4, 3: 9}"],a:0,mono:true,why:"Curly braces with key: value make a dictionary. range(3) is 0, 1, 2."},
- {type:"fill",title:"Shout the long ones",body:`<p>Keep words longer than 2 letters, in capitals.</p>`,code:`words = ["hi", "monkey", "ok"]\nlong = [w.upper() [0] w in words [1] len(w) > 2]\nprint(long)`,blanks:["for","if"],tokens:["for","if","in","while"],why:"for picks each word; the if at the end filters.",out:"['MONKEY']"},
- {type:"code",title:"Celsius to Fahrenheit",body:`<p>Use one list comprehension to turn every Celsius temperature into Fahrenheit (${C("c * 9 / 5 + 32")}), then print the new list.</p>`,
-  start:`temps_c = [0, 25, 100]\n`,use:[[/\[[^\]]*\bfor\b/,"Build the list with a comprehension: [... for c in temps_c]"]],out:["[32.0, 77.0, 212.0]"],
-  hint:`temps_c = [0, 25, 100]\ntemps_f = [c * 9 / 5 + 32 for c in temps_c]\nprint(temps_f)`},
- {type:"code",title:"Stock check",body:`<p>Print a sorted list of the sold-out fruits (stock 0), then a dictionary of only the fruits still in stock. Use a comprehension for each.</p>`,
-  start:`stock = {"banana": 12, "mango": 0, "kiwi": 3, "fig": 0}\n`,
-  use:[[/\[[^\]]*\bfor\b/,"Make the sold-out list with a list comprehension."],[/\{[^}]*\bfor\b/,"Make the in-stock dictionary with a dict comprehension."]],out:["Sold out: ['fig', 'mango']","In stock: {'banana': 12, 'kiwi': 3}"],
-  hint:`stock = {"banana": 12, "mango": 0, "kiwi": 3, "fig": 0}\nsold_out = sorted([f for f, n in stock.items() if n == 0])\nin_stock = {f: n for f, n in stock.items() if n > 0}\nprint("Sold out:", sold_out)\nprint("In stock:", in_stock)`},
- {type:"quiz",q:"Which one builds a dictionary?",opts:["{w: len(w) for w in words}","[w: len(w) for w in words]","(w, len(w) for w in words)"],a:0,mono:true,why:"Curly braces plus key: value means dictionary."},
+ pool:[[`print("ook".upper())`,["OOK","ook","Ook"]],[`print("kiwi".count("i"))`,["2","1","3"]],[`print("cat".replace("c", "b"))`,["bat","cat","bct"]],[`print("  hi  ".strip() + "!")`,["hi!","  hi  !","hi !"]],[`print("ape" in "grape")`,["True","False","ape"]]]},
+
+{id:"py27",title:"split & join",sub:"turn text into lists and back",steps:[
+ {type:"talk",title:"split() breaks text up",
+  body:`<p>${C(".split()")} cuts a string at the spaces and gives you a <b>list of words</b>. Super useful for working with sentences!</p>`,
+  demo:`sentence = "monkeys love ripe bananas"
+words = sentence.split()
+print(words)
+print(len(words))`,
+  say:"Output: ['monkeys', 'love', 'ripe', 'bananas'] and 4."},
+ {type:"code",title:"Word count",body:`<p>Make ${C("words")} a list by adding ${C(".split()")} to the end of line 2. Then the program prints ${C("5")}, the number of words.</p>`,
+  start:`line = "the quick brown monkey jumps"
+words = line
+print(len(words))
+`,use:[[/\.split\s*\(/,"Split the line with .split()."]],out:["5"],
+  hint:`line = "the quick brown monkey jumps"
+words = line.split()
+print(len(words))`},
+ {type:"talk",title:"Split on anything",mood:"think",
+  body:`<p>Put a character inside the brackets to split on it instead of spaces. Data is often stored with commas, like ${C("Mo,12,banana")}.</p><p>You can unpack the pieces straight into variables.</p>`,
+  demo:`row = "Mo,12,banana"
+name, age, food = row.split(",")
+print(name)
+print(int(age) + 1)
+print(food)`,
+  say:"Output: Mo, 13, banana. The pieces are text, so we use int() to do maths with the age."},
+ {type:"quiz",q:"What does this print?",code:`parts = "a-b-c".split("-")
+print(len(parts))`,opts:["3","5","1"],a:0,mono:true,why:"Splitting on - gives ['a', 'b', 'c']: three pieces."},
+ {type:"talk",title:"join() glues a list together",mood:"cheer",
+  body:`<p>${C("join")} is the opposite of split. Write the glue first, then ${C(".join(list)")}.</p>`,
+  demo:`words = ["ook", "eek", "aah"]
+print(" ".join(words))
+print("-".join(words))`,
+  say:"Output: ook eek aah, then ook-eek-aah."},
+ {type:"fill",title:"Comma glue",body:`<p>Join the sounds with a comma and a space.</p>`,code:`words = ["ook", "eek", "aah"]
+print([0].join(words))`,blanks:[`", "`],tokens:[`", "`,"split","words","print"],why:"The glue string goes before .join().",out:"ook, eek, aah"},
+ {type:"code",title:"Reverse the words",body:`<p>The words are already split and reversed. Add one line that joins them with spaces and prints ${C("monkeys love bananas")}. Use ${C("\" \".join(words)")}.</p>`,
+  start:`sentence = "bananas love monkeys"
+words = sentence.split()
+words.reverse()
+# join the words with spaces and print them
+`,use:[[/\.join\s*\(/,"Glue the words back with \" \".join(words)."]],out:["monkeys love bananas"],
+  hint:`sentence = "bananas love monkeys"
+words = sentence.split()
+words.reverse()
+print(" ".join(words))`},
+ {type:"code",title:"Score cards",body:`<p>Each item looks like ${C("Mo:12")}. On the empty line, split ${C("item")} on ${C("\":\"")} into ${C("name")} and ${C("score")}. The program should print:</p><ul><li>${C("Mo scored 12")}</li><li>${C("Ava scored 30")}</li><li>${C("Leo scored 7")}</li></ul>`,
+  start:`data = ["Mo:12", "Ava:30", "Leo:7"]
+for item in data:
+    # split item on ":" into name and score
+
+    print(f"{name} scored {score}")
+`,use:[[/split\s*\(\s*["']:["']\s*\)/,"Split on the colon: item.split(\":\")"]],out:["Mo scored 12","Ava scored 30","Leo scored 7"],
+  hint:`data = ["Mo:12", "Ava:30", "Leo:7"]
+for item in data:
+    name, score = item.split(":")
+    print(f"{name} scored {score}")`},
  {type:"game"},{type:"done"}],
- pool:[
-  [`print([x * 10 for x in [1, 2, 3]])`,["[10, 20, 30]","[1, 2, 3]","60"]],
-  [`print({c: 1 for c in "aab"})`,["{'a': 1, 'b': 1}","{'a': 2, 'b': 1}","{'a': 1, 'a': 1, 'b': 1}"]],
-  [`print(sum(n for n in range(5)))`,["10","15","5"]],
-  [`print(["y" if n else "n" for n in [1, 0]])`,["['y', 'n']","['n', 'y']","['y', 'y']"]],
-  [`print(any(c.isdigit() for c in "ook7"))`,["True","False","7"]],
-  [`d = {"a": 1, "b": 2}\nprint({v: k for k, v in d.items()})`,["{1: 'a', 2: 'b'}","{'a': 1, 'b': 2}","[1, 2]"]]
- ]},
-{id:"py28",title:"Functions that do more",sub:"several return values, helpers, keyword arguments",steps:[
- {type:"talk",title:"Return several values",
-  body:`<p>A function can hand back more than one thing: separate them with commas. Python packs them into a tuple, and you can unpack them straight into variables.</p>`,
-  demo:`def min_max(nums):\n    return min(nums), max(nums)\n\nlow, high = min_max([7, 2, 9, 4])\nprint(low, high)\nprint(min_max([5]))`,
-  say:"Output: 2 9, then (5, 5)."},
- {type:"talk",title:"Helpers team up",mood:"think",
-  body:`<p>Big jobs are easier as small functions that call each other. A ${C("return")} early in a function is a neat way to handle a special case first.</p>`,
-  demo:`def is_vowel(ch):\n    return ch.lower() in "aeiou"\n\ndef count_vowels(text):\n    return sum(1 for ch in text if is_vowel(ch))\n\ndef describe(word):\n    if not word:\n        return "empty!"\n    return f"{word} has {count_vowels(word)} vowels"\n\nprint(describe("Banana"))\nprint(describe(""))`,
-  say:"Output: Banana has 3 vowels, then empty!"},
- {type:"quiz",q:"What does this print?",code:`def f(a, b=2, c=3):\n    return a + b * c\n\nprint(f(1, c=10))`,opts:["21","13","30"],a:0,mono:true,why:"a is 1, b keeps its default 2, and c is 10: 1 + 2 * 10 = 21."},
- {type:"code",title:"Stats helper",body:`<p>Finish ${C("stats(nums)")} so it returns <b>two</b> values: the total and the average.</p>`,
-  start:`def stats(nums):\n    # return the total AND the average\n    pass\n\ntotal, avg = stats([4, 8, 10, 8])\nprint(f"Total: {total}")\nprint(f"Average: {avg}")\n`,
-  use:[[/return[^\n]*,/,"Return both values separated by a comma."]],out:["Total: 30","Average: 7.5"],
-  hint:`def stats(nums):\n    total = sum(nums)\n    return total, total / len(nums)\n\ntotal, avg = stats([4, 8, 10, 8])\nprint(f"Total: {total}")\nprint(f"Average: {avg}")`},
- {type:"fill",title:"Name the argument",body:`<p>Call ${C("tag")} so it prints ${C("!ook!")}, choosing the argument by name.</p>`,code:`def tag(text, sym="*"):\n    return sym + text + sym\n\nprint(tag("ook", [0]="!"))`,blanks:["sym"],tokens:["sym","text","symbol","="],why:"sym=\"!\" replaces the default star.",out:"!ook!"},
- {type:"code",title:"Delivery fee",body:`<p>Write ${C("delivery(km, express=False)")}. It costs 2 coins per km, express doubles the price, and every delivery costs at least 5 coins (${C("max()")} helps).</p>`,
-  start:`def delivery(km, express=False):\n    pass\n\nprint(delivery(1))\nprint(delivery(4))\nprint(delivery(4, express=True))\nprint(delivery(1, express=True))\n`,
-  use:[[/express\s*=\s*False/,"Give express a default of False."],[/return/,"Return the cost."]],out:["5","8","16","5"],
-  hint:`def delivery(km, express=False):\n    cost = km * 2\n    if express:\n        cost *= 2\n    return max(cost, 5)\n\nprint(delivery(1))\nprint(delivery(4))\nprint(delivery(4, express=True))\nprint(delivery(1, express=True))`},
- {type:"quiz",q:"What does this print?",code:`def f():\n    return 1, 2\n\nx = f()\nprint(type(x).__name__)`,opts:["tuple","list","int"],a:0,mono:true,why:"Several return values travel together as one tuple."},
+ pool:[[`print("a b c".split())`,["['a', 'b', 'c']","abc","['a b c']"]],[`print("-".join(["x", "y"]))`,["x-y","xy","['x', 'y']"]],[`print(len("one two".split()))`,["2","7","1"]],[`a, b = "3,4".split(",")
+print(a + b)`,["34","7","3,4"]],[`print("".join(["o", "o", "k"]))`,["ook","o o k","['o', 'o', 'k']"]]]},
+
+{id:"py28",title:"Comprehension practice",sub:"build lists in one line",steps:[
+ {type:"talk",title:"The loop way vs the one-line way",
+  body:`<p>A <b>list comprehension</b> builds a new list in one line. Read it like English: "${C("n * 2")} <b>for</b> each ${C("n")} <b>in</b> nums".</p>`,
+  demo:`nums = [1, 2, 3]
+
+doubled = []
+for n in nums:
+    doubled.append(n * 2)
+print(doubled)
+
+print([n * 2 for n in nums])`,
+  say:"Both print [2, 4, 6]. The second one is the comprehension."},
+ {type:"code",title:"Triple it",body:`<p>Replace the empty ${C("[]")} with a comprehension that triples each number: ${C("[n * 3 for n in nums]")}. It should print ${C("[3, 6, 9, 12]")}.</p>`,
+  start:`nums = [1, 2, 3, 4]
+tripled = []
+print(tripled)
+`,use:[[/\[[^\]]*\bfor\b[^\]]*\bin\b/,"Use a list comprehension: [n * 3 for n in nums]"]],out:["[3, 6, 9, 12]"],
+  hint:`nums = [1, 2, 3, 4]
+tripled = [n * 3 for n in nums]
+print(tripled)`},
+ {type:"code",title:"Name lengths",body:`<p>Make a list of how long each name is. Fill the brackets with ${C("len(n) for n in names")}. It should print ${C("[2, 4, 3]")}.</p>`,
+  start:`names = ["Mo", "Kiki", "Leo"]
+lengths = []
+print(lengths)
+`,use:[[/len\s*\(\s*\w+\s*\)\s*for\b/,"Try: [len(n) for n in names]"]],out:["[2, 4, 3]"],
+  hint:`names = ["Mo", "Kiki", "Leo"]
+lengths = [len(n) for n in names]
+print(lengths)`},
+ {type:"talk",title:"Keep only some with if",mood:"think",
+  body:`<p>Add ${C("if")} at the end to keep only the items you want. This is called <b>filtering</b>.</p>`,
+  demo:`scores = [45, 80, 30, 95]
+passed = [s for s in scores if s >= 50]
+print(passed)`,
+  say:"Output: [80, 95]"},
+ {type:"quiz",q:"What does this print?",code:`print([n for n in [1, 2, 3, 4] if n % 2 == 0])`,opts:["[2, 4]","[1, 3]","[1, 2, 3, 4]"],a:0,mono:true,why:"n % 2 == 0 keeps only the even numbers."},
+ {type:"code",title:"Short words",body:`<p>Keep only the words with <b>4 letters or fewer</b>. Add ${C("if len(w) <= 4")} inside the brackets, after ${C("in words")}. It should print ${C("['fig', 'kiwi', 'yam']")}.</p>`,
+  start:`words = ["fig", "banana", "kiwi", "mango", "yam"]
+short = [w for w in words]
+print(short)
+`,use:[[/\bif\b/,"Add an if to the comprehension."]],out:["['fig', 'kiwi', 'yam']"],
+  hint:`words = ["fig", "banana", "kiwi", "mango", "yam"]
+short = [w for w in words if len(w) <= 4]
+print(short)`},
+ {type:"fill",title:"Name tags",body:`<p>Capitalize every name in one line.</p>`,code:`names = ["mo", "ava"]
+print([n.[0]() [1] n in names])`,blanks:["title","for"],tokens:["title","for","in","if"],why:"n.title() for each n in names.",out:"['Mo', 'Ava']"},
  {type:"game"},{type:"done"}],
- pool:[
-  [`def f(x):\n    return x, x * 2\n\na, b = f(3)\nprint(b)`,["6","3","(3, 6)"]],
-  [`def f(n):\n    if n > 5:\n        return "big"\n    return "small"\n\nprint(f(5))`,["small","big","None"]],
-  [`def f(a, b=1):\n    return a * b\n\nprint(f(4) + f(4, 2))`,["12","8","16"]],
-  [`def g(x):\n    return x + 1\n\ndef h(x):\n    return g(x) * 2\n\nprint(h(3))`,["8","7","6"]],
-  [`def f(s):\n    return s[0], s[-1]\n\nprint(f("monkey"))`,["('m', 'y')","my","['m', 'y']"]]
- ]},
-{id:"py29",title:"Project: Smoothie Shop",sub:"read orders, add them up, handle surprises",project:true,steps:[
- {type:"talk",title:"Open the shop",mood:"cheer",
-  body:`<p>TypeMonkey is opening a smoothie stand! Orders arrive as text like ${C('"mango,2"')}: a flavor and how many. You'll build a program that reads orders, checks the menu, and adds up the bill.</p>`,
-  demo:`menu = {"banana": 3, "mango": 4, "berry": 5}\nline = "mango,2"\nname, qty = line.split(",")\nprint(name, int(qty) * menu[name])`,
-  say:"Output: mango 8. split gives two pieces, and we unpack them into name and qty."},
- {type:"code",mission:"Step 1",title:"Read one order",body:`<p>Write ${C("parse(line)")} that returns the flavor (no spaces, lowercase) and the amount as an ${C("int")}.</p>`,
-  start:`def parse(line):\n    pass\n\nprint(parse("mango,2"))\nprint(parse(" Banana , 3"))\n`,
-  use:[[/\.split\s*\(/,"Split the line on the comma."],[/int\s*\(/,"Turn the amount into a number with int()."]],out:["('mango', 2)","('banana', 3)"],
-  hint:`def parse(line):\n    name, qty = line.split(",")\n    return name.strip().lower(), int(qty)\n\nprint(parse("mango,2"))\nprint(parse(" Banana , 3"))`},
- {type:"quiz",q:"Why do we need int(qty)? What does this print?",code:`print("2" * 3)`,opts:["222","6","Error"],a:0,mono:true,why:"Text times 3 repeats the text. You need a real number to do math."},
- {type:"code",mission:"Step 2",title:"Print the bill",body:`<p>Go through ${C("orders")}, print each like ${C("2 x banana = 6")}, then ${C("Total: 25")}.</p>`,
-  start:`menu = {"banana": 3, "mango": 4, "berry": 5}\norders = ["banana,2", "mango,1", "berry,3"]\n\ndef parse(line):\n    name, qty = line.split(",")\n    return name.strip().lower(), int(qty)\n\n# print the bill\n`,
-  use:[[/\bfor\b/,"Loop through the orders."]],out:["2 x banana = 6","1 x mango = 4","3 x berry = 15","Total: 25"],
-  hint:`menu = {"banana": 3, "mango": 4, "berry": 5}\norders = ["banana,2", "mango,1", "berry,3"]\n\ndef parse(line):\n    name, qty = line.split(",")\n    return name.strip().lower(), int(qty)\n\ntotal = 0\nfor line in orders:\n    name, qty = parse(line)\n    cost = qty * menu[name]\n    total += cost\n    print(f"{qty} x {name} = {cost}")\nprint(f"Total: {total}")`},
- {type:"talk",title:"Surprise orders",mood:"think",
-  body:`<p>Real customers ask for things you don't sell! Check with ${C("in")} before looking up the price, and use ${C("continue")} to skip to the next order. A ${C("while True")} loop with ${C("break")} keeps the shop open until someone types ${C("done")}.</p>`,
-  input:"banana,1\npizza,2\ndone",demo:`menu = {"banana": 3, "mango": 4, "berry": 5}\nwhile True:\n    line = input("Order: ")\n    if line == "done":\n        break\n    name = line.split(",")[0]\n    if name not in menu:\n        print("We don't sell", name)\n        continue\n    print("Yum,", name)`,
-  say:"Change the orders in the Input box and run it again!"},
- {type:"code",final:true,title:"Run the Smoothie Shop",body:`<p>Keep asking ${C('input("Order: ")')} until the customer types ${C("done")}. For each order:</p><ul><li>not on the menu: print ${C("Sorry, no kiwi today!")}</li><li>otherwise: print ${C("Added 2 x banana")} and add it to the bill</li></ul><p>At the end print ${C("Total: 10 coins")}.</p>`,
-  start:`menu = {"banana": 3, "mango": 4, "berry": 5}\n# keep taking orders until "done"\n`,input:"banana,2\nmango,1\ndone",
-  use:[[/while/,"Keep taking orders in a while loop."],[/input\s*\(/,"Read each order with input()."]],
-  tests:[{input:"banana,2\nmango,1\ndone",out:["Added 2 x banana","Added 1 x mango","Total: 10 coins"]},{input:"kiwi,1\nberry,2\ndone",out:["Sorry, no kiwi today!","Added 2 x berry","Total: 10 coins"]},{input:"done",out:["Total: 0 coins"]}],
-  hint:`menu = {"banana": 3, "mango": 4, "berry": 5}\ntotal = 0\nwhile True:\n    line = input("Order: ")\n    if line.strip().lower() == "done":\n        break\n    name, qty = line.split(",")\n    name = name.strip().lower()\n    qty = int(qty)\n    if name not in menu:\n        print(f"Sorry, no {name} today!")\n        continue\n    total += menu[name] * qty\n    print(f"Added {qty} x {name}")\nprint(f"Total: {total} coins")`},
- {type:"talk",title:"The finished shop",mood:"cheer",
-  body:`<p>Here's a fancier version that also lists the order at the end and gives a discount on big orders. Try your own orders in the Input box!</p>`,
-  input:"banana,2\nkiwi,1\nberry,3\ndone",demo:`menu = {"banana": 3, "mango": 4, "berry": 5}\nbasket = {}\nwhile True:\n    line = input("Order: ")\n    if line.strip().lower() == "done":\n        break\n    name, qty = line.split(",")\n    name = name.strip().lower()\n    if name not in menu:\n        print(f"Sorry, no {name} today!")\n        continue\n    basket[name] = basket.get(name, 0) + int(qty)\n\ntotal = sum(menu[n] * q for n, q in basket.items())\nfor n, q in basket.items():\n    print(f"{q} x {n}")\nif total >= 20:\n    total -= 2\n    print("Big order! 2 coins off.")\nprint(f"Total: {total} coins")`,
-  say:"Output ends with: Big order! 2 coins off. Total: 19 coins. You built a real ordering system! 🥤"},
+ pool:[[`print([x + 1 for x in [1, 2]])`,["[2, 3]","[1, 2]","[3]"]],[`print([c for c in "abc"])`,["['a', 'b', 'c']","abc","['abc']"]],[`print(len([n for n in range(10) if n > 6]))`,["3","4","10"]],[`print([w[0] for w in ["ook", "eek"]])`,["['o', 'e']","['ook', 'eek']","oe"]],[`print(sum([n * 2 for n in [1, 2, 3]]))`,["12","6","[2, 4, 6]"]]]},
+
+{id:"py29",title:"Project: Snack Shop Receipt",sub:"split, loops and f-strings together",project:true,steps:[
+ {type:"talk",title:"🏗️ Your mission",mood:"cheer",
+  body:`<p><b>Build a receipt printer for TypeMonkey's Snack Shop!</b> Customers order like ${C("banana,3")} (a snack and how many). Your program works out the cost of each line and the total.</p><p>We'll build it in small steps. First, here are the prices, stored in a dictionary.</p>`,
+  demo:`prices = {"banana": 0.5, "mango": 1.25, "kiwi": 0.75}
+print(prices["mango"])
+print(prices["banana"] * 3)`,
+  say:"Output: 1.25, then 1.5. Three bananas cost 1.5 coins."},
+ {type:"code",title:"Step 1: read one order",body:`<p>On the empty line, split ${C("order")} on ${C("\",\"")} into ${C("item")} and ${C("qty")}. The program should print ${C("2 x mango")}.</p>`,
+  start:`order = "mango,2"
+# split order into item and qty
+
+print(f"{qty} x {item}")
+`,use:[[/split\s*\(\s*["'],["']\s*\)/,"Split on the comma: order.split(\",\")"]],out:["2 x mango"],
+  hint:`order = "mango,2"
+item, qty = order.split(",")
+print(f"{qty} x {item}")`},
+ {type:"code",title:"Step 2: price one line",body:`<p>Work out the cost: the item's price times the quantity. ${C("qty")} is text, so use ${C("int(qty)")}. Replace the ${C("0")} so the program prints ${C("2 x mango: 2.50")}.</p><p>(${C(":.2f")} shows 2 decimal places, like money.)</p>`,
+  start:`prices = {"banana": 0.5, "mango": 1.25, "kiwi": 0.75}
+order = "mango,2"
+item, qty = order.split(",")
+cost = 0  # price of the item times int(qty)
+print(f"{qty} x {item}: {cost:.2f}")
+`,use:[[/prices\s*\[\s*item\s*\]/,"Look up the price with prices[item]."],[/int\s*\(\s*qty\s*\)/,"Turn qty into a number with int(qty)."]],out:["2 x mango: 2.50"],
+  hint:`prices = {"banana": 0.5, "mango": 1.25, "kiwi": 0.75}
+order = "mango,2"
+item, qty = order.split(",")
+cost = prices[item] * int(qty)
+print(f"{qty} x {item}: {cost:.2f}")`},
+ {type:"talk",title:"Many orders at once",mood:"think",
+  body:`<p>A whole order can be one line of text, with spaces between the snacks. ${C(".split()")} turns it into a list we can loop over.</p>`,
+  demo:`orders = "banana,3 kiwi,2 mango,1"
+for order in orders.split():
+    print(order)`,
+  say:"Output: banana,3 then kiwi,2 then mango,1."},
+ {type:"code",title:"Step 3: every line",body:`<p>The loop already splits each order and works out the cost. Add the print line so the receipt shows:</p><ul><li>${C("3 x banana: 1.50")}</li><li>${C("2 x kiwi: 1.50")}</li><li>${C("1 x mango: 1.25")}</li></ul>`,
+  start:`prices = {"banana": 0.5, "mango": 1.25, "kiwi": 0.75}
+orders = "banana,3 kiwi,2 mango,1"
+for order in orders.split():
+    item, qty = order.split(",")
+    cost = prices[item] * int(qty)
+    # print the line like: 3 x banana: 1.50
+`,use:[[/print\s*\(/,"Print each line inside the loop."]],out:["3 x banana: 1.50","2 x kiwi: 1.50","1 x mango: 1.25"],
+  hint:`prices = {"banana": 0.5, "mango": 1.25, "kiwi": 0.75}
+orders = "banana,3 kiwi,2 mango,1"
+for order in orders.split():
+    item, qty = order.split(",")
+    cost = prices[item] * int(qty)
+    print(f"{qty} x {item}: {cost:.2f}")`},
+ {type:"code",title:"Step 4: the total",body:`<p>Two small jobs: inside the loop, add ${C("cost")} to ${C("total")}. After the loop, print ${C("Total: 4.25")} using ${C('f"Total: {total:.2f}"')}.</p>`,
+  start:`prices = {"banana": 0.5, "mango": 1.25, "kiwi": 0.75}
+orders = "banana,3 kiwi,2 mango,1"
+total = 0
+for order in orders.split():
+    item, qty = order.split(",")
+    cost = prices[item] * int(qty)
+    print(f"{qty} x {item}: {cost:.2f}")
+    # add cost to total
+
+# print the total
+`,use:[[/total\s*\+=\s*cost|total\s*=\s*total\s*\+\s*cost/,"Add to the total with total += cost"]],out:["3 x banana: 1.50","2 x kiwi: 1.50","1 x mango: 1.25","Total: 4.25"],
+  hint:`prices = {"banana": 0.5, "mango": 1.25, "kiwi": 0.75}
+orders = "banana,3 kiwi,2 mango,1"
+total = 0
+for order in orders.split():
+    item, qty = order.split(",")
+    cost = prices[item] * int(qty)
+    print(f"{qty} x {item}: {cost:.2f}")
+    total += cost
+print(f"Total: {total:.2f}")`},
+ {type:"code",title:"Step 5: open the shop!",body:`<p>Now real customers type their orders, one per line, and type ${C("done")} to finish. The loop that asks is ready. Replace ${C("pass")} with the lines you wrote before: split the order, work out the cost, print the line and add it to the total.</p><p>If a customer types ${C("banana,3")}, ${C("kiwi,2")}, ${C("done")}, the program prints ${C("3 x banana: 1.50")}, ${C("2 x kiwi: 1.50")} and ${C("Total: 3.00")}.</p>`,
+  start:`prices = {"banana": 0.5, "mango": 1.25, "kiwi": 0.75}
+total = 0
+while True:
+    order = input("Order (or done): ")
+    if order == "done":
+        break
+    pass  # split, work out the cost, print the line, add to total
+
+print(f"Total: {total:.2f}")
+`,input:"banana,3\nkiwi,2\ndone",
+  use:[[/split\s*\(/,"Split each order on the comma."],[/total\s*\+=|total\s*=\s*total\s*\+/,"Add each cost to the total."]],
+  tests:[{input:"banana,3\nkiwi,2\ndone",out:["3 x banana: 1.50","2 x kiwi: 1.50","Total: 3.00"]},{input:"mango,4\ndone",out:["4 x mango: 5.00","Total: 5.00"]},{input:"done",out:["Total: 0.00"]}],
+  hint:`prices = {"banana": 0.5, "mango": 1.25, "kiwi": 0.75}
+total = 0
+while True:
+    order = input("Order (or done): ")
+    if order == "done":
+        break
+    item, qty = order.split(",")
+    cost = prices[item] * int(qty)
+    print(f"{qty} x {item}: {cost:.2f}")
+    total += cost
+
+print(f"Total: {total:.2f}")`},
+ {type:"talk",title:"🎉 The finished shop",mood:"cheer",
+  body:`<p>Here's a polished version that also handles snacks the shop doesn't sell. Change the orders in the Input box and run it again!</p>`,
+  input:"banana,3\npizza,1\nmango,2\ndone",demo:`prices = {"banana": 0.5, "mango": 1.25, "kiwi": 0.75}
+total = 0
+print("== TypeMonkey Snack Shop ==")
+while True:
+    order = input("Order (or done): ")
+    if order == "done":
+        break
+    item, qty = order.split(",")
+    if item not in prices:
+        print(f"Sorry, we don't sell {item}.")
+        continue
+    cost = prices[item] * int(qty)
+    print(f"{qty} x {item}: {cost:.2f}")
+    total += cost
+print(f"Total: {total:.2f}")
+print("Thanks for shopping!")`,
+  say:"You built a real receipt printer with split, loops, a dictionary and f-strings. Unit complete!"},
  {type:"done"}]}
 ]});
 
-COURSE_PY.units.push({name:"Objects & sturdy programs",lessons:[
-{id:"py30",title:"Objects in action",sub:"methods, __str__, lists of objects",steps:[
- {type:"talk",title:"Methods that change and report",
-  body:`<p>Methods can change an object's data <b>and</b> return an answer. This piggy bank refuses to spend coins it doesn't have.</p>`,
-  demo:`class PiggyBank:\n    def __init__(self, owner):\n        self.owner = owner\n        self.coins = 0\n\n    def add(self, n):\n        self.coins += n\n\n    def spend(self, n):\n        if n > self.coins:\n            return False\n        self.coins -= n\n        return True\n\npig = PiggyBank("Mo")\npig.add(10)\nprint(pig.spend(4))\nprint(pig.spend(50))\nprint(pig.coins)`,
-  say:"Output: True, False, 6."},
- {type:"talk",title:"Pretty printing with __str__",mood:"think",
-  body:`<p>Printing an object normally shows something ugly like ${C("<__main__.Fruit object>")}. Add a ${C("__str__")} method that returns text, and ${C("print()")} uses it instead.</p>`,
-  demo:`class Fruit:\n    def __init__(self, name, price):\n        self.name = name\n        self.price = price\n\n    def __str__(self):\n        return f"{self.name} ({self.price} coins)"\n\nf = Fruit("Mango", 4)\nprint(f)\nprint(str(f).upper())`,
-  say:"Output: Mango (4 coins), then MANGO (4 COINS)."},
- {type:"quiz",q:"What does this print?",code:`class M:\n    def __str__(self):\n        return "I am Mo"\n\nprint(M())`,opts:["I am Mo","M","None"],a:0,mono:true,why:"print() calls __str__ to get the text."},
- {type:"code",title:"Rectangle",body:`<p>Give ${C("Rect")} two methods: ${C("area()")} (width times height) and ${C("perimeter()")} (all four sides added up).</p>`,
-  start:`class Rect:\n    def __init__(self, width, height):\n        self.width = width\n        self.height = height\n\n    # add area() and perimeter() here\n\nr = Rect(3, 4)\nprint(r.area())\nprint(r.perimeter())\n`,
-  use:[[/def\s+area\s*\(\s*self/,"Add def area(self):"],[/def\s+perimeter\s*\(\s*self/,"Add def perimeter(self):"]],out:["12","14"],
-  hint:`class Rect:\n    def __init__(self, width, height):\n        self.width = width\n        self.height = height\n\n    def area(self):\n        return self.width * self.height\n\n    def perimeter(self):\n        return 2 * (self.width + self.height)\n\nr = Rect(3, 4)\nprint(r.area())\nprint(r.perimeter())`},
- {type:"talk",title:"A list of objects",
-  body:`<p>Objects can live in a list like anything else. Loop over them, or use ${C("max()")} with a ${C("key")} to find the one you want.</p>`,
-  demo:`class Pet:\n    def __init__(self, name, age):\n        self.name = name\n        self.age = age\n\npets = [Pet("Rex", 3), Pet("Kiki", 1), Pet("Bao", 5)]\nfor p in pets:\n    print(p.name, p.age)\noldest = max(pets, key=lambda p: p.age)\nprint("Oldest:", oldest.name)`,
-  say:"Output: each pet, then Oldest: Bao."},
- {type:"fill",title:"Make it printable",body:`<p>Pick the method that ${C("print()")} uses.</p>`,code:`class Dog:\n    def __init__(self, name):\n        self.name = name\n\n    def [0](self):\n        return "Dog named " + self.name\n\nprint(Dog("Rex"))`,blanks:["__str__"],tokens:["__str__","__init__","print","str"],why:"__str__ returns the text print() shows.",out:"Dog named Rex"},
- {type:"code",title:"Bank account",body:`<p>Build ${C("Account")}: it starts with 0 coins, ${C("deposit(n)")} adds coins, ${C("withdraw(n)")} takes them out but prints ${C("Not enough money!")} if there aren't enough, and printing it shows ${C("Mo: 15 coins")}.</p>`,
-  start:`class Account:\n    def __init__(self, owner):\n        self.owner = owner\n\na = Account("Mo")\na.deposit(20)\na.withdraw(5)\na.withdraw(100)\nprint(a)\n`,
-  use:[[/__str__/,"Add a __str__ method for printing."],[/def\s+withdraw/,"Add a withdraw method."]],out:["Not enough money!","Mo: 15 coins"],
-  hint:`class Account:\n    def __init__(self, owner):\n        self.owner = owner\n        self.coins = 0\n\n    def deposit(self, n):\n        self.coins += n\n\n    def withdraw(self, n):\n        if n > self.coins:\n            print("Not enough money!")\n            return\n        self.coins -= n\n\n    def __str__(self):\n        return f"{self.owner}: {self.coins} coins"\n\na = Account("Mo")\na.deposit(20)\na.withdraw(5)\na.withdraw(100)\nprint(a)`},
+COURSE_PY.units.push({name:"Objects & safe code",lessons:[
+{id:"py30",title:"Warm-up: functions",sub:"return values and defaults, gently",steps:[
+ {type:"talk",title:"A function is a recipe",mood:"cheer",
+  body:`<p>Quick warm-up! A function takes some <b>inputs</b> (parameters), does some work, and ${C("return")}s an answer.</p>`,
+  demo:`def add_bananas(a, b):
+    return a + b
+
+print(add_bananas(2, 3))`,
+  say:"Output: 5"},
+ {type:"code",title:"Area of a rectangle",body:`<p>Replace ${C("pass")} with ${C("return width * height")}. The program should print ${C("12")} and then ${C("25")}.</p>`,
+  start:`def area(width, height):
+    pass  # return width times height
+
+print(area(3, 4))
+print(area(5, 5))
+`,use:[[/return\s+\S/,"Give the answer back with return."]],out:["12","25"],
+  hint:`def area(width, height):
+    return width * height
+
+print(area(3, 4))
+print(area(5, 5))`},
+ {type:"talk",title:"return gives you a value to use",mood:"think",
+  body:`<p>${C("print")} only shows something. ${C("return")} hands the answer back, so you can store it or do more maths with it.</p>`,
+  demo:`def area(width, height):
+    return width * height
+
+room = area(2, 3)
+print(room + 1)
+print(area(room, 2))`,
+  say:"Output: 7, then 12."},
+ {type:"quiz",q:"What does this print?",code:`def f(n):
+    return n + 1
+
+print(f(f(1)))`,opts:["3","2","1"],a:0,mono:true,why:"f(1) is 2, then f(2) is 3."},
+ {type:"talk",title:"Default values",
+  body:`<p>Give a parameter a <b>default</b> with ${C("=")}. If the caller leaves it out, the default is used.</p>`,
+  demo:`def greet(name, greeting="Hello"):
+    return f"{greeting}, {name}!"
+
+print(greet("Mo"))
+print(greet("Ava", "Hey"))`,
+  say:"Output: Hello, Mo! then Hey, Ava!"},
+ {type:"code",title:"Star maker",body:`<p>${C("stars()")} is called with no number, so it crashes. Give ${C("n")} a default of 3 by changing the first line to ${C("def stars(n=3):")}. It should print ${C("***")} and then ${C("*****")}.</p>`,
+  start:`def stars(n):
+    return "*" * n
+
+print(stars())
+print(stars(5))
+`,use:[[/def\s+stars\s*\(\s*n\s*=\s*3\s*\)/,"Change the first line to def stars(n=3):"]],out:["***","*****"],
+  hint:`def stars(n=3):
+    return "*" * n
+
+print(stars())
+print(stars(5))`},
+ {type:"fill",title:"Friendly default",body:`<p>Make ${C("Hi")} the default greeting.</p>`,code:`def greet(name, greeting=[0]):
+    return f"{greeting}, {name}!"
+
+print(greet("Kai"))`,blanks:[`"Hi"`],tokens:[`"Hi"`,"print","return","name"],why:"greeting=\"Hi\" is used when no greeting is given.",out:"Hi, Kai!"},
  {type:"game"},{type:"done"}],
- pool:[
-  [`class A:\n    def __init__(self):\n        self.items = []\n\n    def add(self, x):\n        self.items.append(x)\n\na = A()\na.add(1)\na.add(2)\nprint(len(a.items))`,["2","1","0"]],
-  [`class P:\n    def __str__(self):\n        return "P!"\n\nprint(P())`,["P!","P","None"]],
-  [`class C:\n    def __init__(self, n):\n        self.n = n\n\n    def double(self):\n        return self.n * 2\n\nprint(C(4).double())`,["8","4","n * 2"]],
-  [`class S:\n    def __init__(self, v):\n        self.v = v\n\nxs = [S(3), S(7)]\nprint(sum(s.v for s in xs))`,["10","37","2"]],
-  [`class T:\n    def __init__(self):\n        self.on = True\n\nt = T()\nt.on = not t.on\nprint(t.on)`,["False","True","None"]]
- ]},
-{id:"py31",title:"Inheritance",sub:"classes that build on other classes",steps:[
- {type:"talk",title:"A family of classes",
-  body:`<p>Write ${C("class Monkey(Animal):")} and Monkey gets <b>everything</b> Animal has for free. It only needs to write what's different. Here each animal changes ${C("speak()")} but shares ${C("intro()")}.</p>`,
-  demo:`class Animal:\n    def __init__(self, name):\n        self.name = name\n\n    def speak(self):\n        return "..."\n\n    def intro(self):\n        return f"{self.name} says {self.speak()}"\n\nclass Monkey(Animal):\n    def speak(self):\n        return "Ook ook!"\n\nclass Snake(Animal):\n    def speak(self):\n        return "Hiss!"\n\nprint(Monkey("Mo").intro())\nprint(Snake("Sid").intro())\nprint(Animal("Blob").intro())`,
-  say:"Output: Mo says Ook ook!, Sid says Hiss!, Blob says ..."},
- {type:"talk",title:"super() for extra setup",mood:"think",
-  body:`<p>If the child needs its own ${C("__init__")}, call ${C("super().__init__(...)")} first so the parent can do its setup too. ${C("isinstance()")} checks what family an object belongs to.</p>`,
-  demo:`class Hero:\n    def __init__(self, name):\n        self.name = name\n        self.hp = 10\n\nclass Wizard(Hero):\n    def __init__(self, name, spell):\n        super().__init__(name)\n        self.spell = spell\n\nw = Wizard("Kai", "Banana Blast")\nprint(w.name, w.hp, w.spell)\nprint(isinstance(w, Hero))`,
-  say:"Output: Kai 10 Banana Blast, then True. A Wizard IS a Hero."},
- {type:"quiz",q:"In class Cat(Animal):, what is Animal?",opts:["The parent class Cat builds on","A method of Cat","An object made from Cat"],a:0,why:"The class in the parentheses is the parent. Cat inherits its methods."},
- {type:"code",title:"Make a Duck",body:`<p>Add a ${C("Duck")} class that inherits from ${C("Animal")} and says ${C("Quack!")}, so the last line prints ${C("Dot says Quack!")}.</p>`,
-  start:`class Animal:\n    def __init__(self, name):\n        self.name = name\n\n    def speak(self):\n        return "..."\n\n    def intro(self):\n        return f"{self.name} says {self.speak()}"\n\n# make Duck here\n\nprint(Duck("Dot").intro())\n`,
-  use:[[/class\s+Duck\s*\(\s*Animal\s*\)/,"Start with class Duck(Animal):"]],out:["Dot says Quack!"],
-  hint:`class Animal:\n    def __init__(self, name):\n        self.name = name\n\n    def speak(self):\n        return "..."\n\n    def intro(self):\n        return f"{self.name} says {self.speak()}"\n\nclass Duck(Animal):\n    def speak(self):\n        return "Quack!"\n\nprint(Duck("Dot").intro())`},
- {type:"fill",title:"Call the parent",body:`<p>Let the parent store the name, then add a color.</p>`,code:`class Animal:\n    def __init__(self, name):\n        self.name = name\n\nclass Cat(Animal):\n    def __init__(self, name, color):\n        [0]().__init__(name)\n        self.color = color\n\nc = Cat("Tom", "grey")\nprint(c.name, c.color)`,blanks:["super"],tokens:["super","self","Animal","parent"],why:"super() reaches the parent class, Animal.",out:"Tom grey"},
- {type:"code",title:"Shapes",body:`<p>Make ${C("Square(side)")} and ${C("Triangle(base, height)")} that inherit from ${C("Shape")}. Each one calls ${C("super().__init__()")} with its name and has its own ${C("area()")}. A triangle's area is base times height divided by 2.</p>`,
-  start:`class Shape:\n    def __init__(self, name):\n        self.name = name\n\n    def area(self):\n        return 0\n\n    def describe(self):\n        return f"{self.name}: area {self.area()}"\n\n# make Square and Triangle here\n\nfor s in [Square(3), Triangle(4, 5)]:\n    print(s.describe())\n`,
-  use:[[/class\s+Square\s*\(\s*Shape\s*\)/,"Start with class Square(Shape):"],[/class\s+Triangle\s*\(\s*Shape\s*\)/,"Add class Triangle(Shape):"],[/super\s*\(\s*\)/,"Use super().__init__(...) to set the name."]],out:["Square: area 9","Triangle: area 10.0"],
-  hint:`class Shape:\n    def __init__(self, name):\n        self.name = name\n\n    def area(self):\n        return 0\n\n    def describe(self):\n        return f"{self.name}: area {self.area()}"\n\nclass Square(Shape):\n    def __init__(self, side):\n        super().__init__("Square")\n        self.side = side\n\n    def area(self):\n        return self.side * self.side\n\nclass Triangle(Shape):\n    def __init__(self, base, height):\n        super().__init__("Triangle")\n        self.base = base\n        self.height = height\n\n    def area(self):\n        return self.base * self.height / 2\n\nfor s in [Square(3), Triangle(4, 5)]:\n    print(s.describe())`},
- {type:"quiz",q:"What does this print?",code:`class A:\n    def hi(self):\n        return "A"\n\nclass B(A):\n    pass\n\nprint(B().hi())`,opts:["A","B","Error"],a:0,mono:true,why:"B has no hi() of its own, so it uses the one it inherited from A."},
+ pool:[[`def f(x):
+    return x * x
+
+print(f(3))`,["9","6","x * x"]],[`def g(a, b=10):
+    return a + b
+
+print(g(1))`,["11","1","Error"]],[`def g(a, b=10):
+    return a + b
+
+print(g(1, 2))`,["3","11","12"]],[`def h():
+    print("hi")
+
+h()
+h()`,["hi hi","hi","None"]],[`def k(n):
+    return n > 5
+
+print(k(7))`,["True","False","7"]]]},
+
+{id:"py31",title:"Classes practice",sub:"build objects with methods",steps:[
+ {type:"talk",title:"Recap: a blueprint",
+  body:`<p>A ${C("class")} is a blueprint for objects. ${C("__init__")} sets up each new object, and ${C("self")} means "this object".</p>`,
+  demo:`class Monkey:
+    def __init__(self, name):
+        self.name = name
+        self.bananas = 0
+
+mo = Monkey("Mo")
+print(mo.name, mo.bananas)`,
+  say:"Output: Mo 0"},
+ {type:"code",title:"Make a Robot",body:`<p>Replace ${C("pass")} with ${C("self.name = name")} so each robot remembers its name. The program should print ${C("Beep")}.</p>`,
+  start:`class Robot:
+    def __init__(self, name):
+        pass  # store the name on self
+
+r = Robot("Beep")
+print(r.name)
+`,use:[[/self\.name\s*=\s*name/,"Store it with self.name = name"]],out:["Beep"],
+  hint:`class Robot:
+    def __init__(self, name):
+        self.name = name
+
+r = Robot("Beep")
+print(r.name)`},
+ {type:"talk",title:"Methods change the object",mood:"think",
+  body:`<p>A <b>method</b> is a function inside a class. It can change the object's attributes through ${C("self")}.</p>`,
+  demo:`class Monkey:
+    def __init__(self, name):
+        self.name = name
+        self.bananas = 0
+
+    def pick(self, n):
+        self.bananas += n
+
+mo = Monkey("Mo")
+mo.pick(3)
+mo.pick(2)
+print(mo.bananas)`,
+  say:"Output: 5"},
+ {type:"code",title:"Piggy bank",body:`<p>Finish the ${C("add")} method: replace ${C("pass")} with ${C("self.coins += amount")}. After adding 5 and 3, it should print ${C("8")}.</p>`,
+  start:`class Piggy:
+    def __init__(self):
+        self.coins = 0
+
+    def add(self, amount):
+        pass  # add amount to self.coins
+
+bank = Piggy()
+bank.add(5)
+bank.add(3)
+print(bank.coins)
+`,use:[[/self\.coins\s*\+=\s*amount|self\.coins\s*=\s*self\.coins\s*\+\s*amount/,"Add it with self.coins += amount"]],out:["8"],
+  hint:`class Piggy:
+    def __init__(self):
+        self.coins = 0
+
+    def add(self, amount):
+        self.coins += amount
+
+bank = Piggy()
+bank.add(5)
+bank.add(3)
+print(bank.coins)`},
+ {type:"talk",title:"Nice printing with __str__",mood:"cheer",
+  body:`<p>Printing an object normally shows something ugly like ${C("<__main__.Monkey object>")}. Add a ${C("__str__")} method that returns friendly text, and ${C("print")} uses it.</p>`,
+  demo:`class Monkey:
+    def __init__(self, name, bananas):
+        self.name = name
+        self.bananas = bananas
+
+    def __str__(self):
+        return f"{self.name} has {self.bananas} bananas"
+
+print(Monkey("Mo", 4))`,
+  say:"Output: Mo has 4 bananas"},
+ {type:"quiz",q:"What does this print?",code:`class Thing:
+    def __str__(self):
+        return "Ook!"
+
+print(Thing())`,opts:["Ook!","Thing","__str__"],a:0,mono:true,why:"print() calls __str__ to get the text."},
+ {type:"code",title:"Pet name tags",body:`<p>Make ${C("__str__")} return text like ${C("Mo the monkey")}. Replace ${C("\"?\"")} with ${C('f"{self.name} the {self.kind}"')}. It should print:</p><ul><li>${C("Mo the monkey")}</li><li>${C("Kiki the parrot")}</li></ul>`,
+  start:`class Pet:
+    def __init__(self, name, kind):
+        self.name = name
+        self.kind = kind
+
+    def __str__(self):
+        return "?"  # return text like: Mo the monkey
+
+print(Pet("Mo", "monkey"))
+print(Pet("Kiki", "parrot"))
+`,use:[[/self\.name/,"Use self.name in the text."],[/self\.kind/,"Use self.kind in the text."]],out:["Mo the monkey","Kiki the parrot"],
+  hint:`class Pet:
+    def __init__(self, name, kind):
+        self.name = name
+        self.kind = kind
+
+    def __str__(self):
+        return f"{self.name} the {self.kind}"
+
+print(Pet("Mo", "monkey"))
+print(Pet("Kiki", "parrot"))`},
+ {type:"order",title:"Build a lamp",body:`<p>Put the lines in order so the lamp switches on and prints ${C("True")}.</p>`,lines:["class Lamp:","    def __init__(self):","        self.on = False","    def switch(self):","        self.on = not self.on","lamp = Lamp()","lamp.switch()","print(lamp.on)"],why:"Class first, then make a lamp, switch it, and print.",out:"True"},
  {type:"game"},{type:"done"}],
- pool:[
-  [`class A:\n    def f(self):\n        return 1\n\nclass B(A):\n    def f(self):\n        return 2\n\nprint(B().f())`,["2","1","Error"]],
-  [`class A:\n    def __init__(self):\n        self.v = 1\n\nclass B(A):\n    def __init__(self):\n        super().__init__()\n        self.v += 1\n\nprint(B().v)`,["2","1","None"]],
-  [`class A:\n    pass\n\nclass B(A):\n    pass\n\nprint(isinstance(B(), A))`,["True","False","B"]],
-  [`class A:\n    def name(self):\n        return "A"\n\n    def hi(self):\n        return "I am " + self.name()\n\nclass B(A):\n    def name(self):\n        return "B"\n\nprint(B().hi())`,["I am B","I am A","Error"]],
-  [`class A:\n    def go(self):\n        return "a"\n\nclass B(A):\n    def go(self):\n        return super().go() + "b"\n\nprint(B().go())`,["ab","b","a"]]
- ]},
-{id:"py32",title:"Sturdy programs",sub:"raise, else, and asking again",steps:[
- {type:"talk",title:"Raise your own errors",mood:"oops",
-  body:`<p>You can raise errors too! ${C('raise ValueError("message")')} stops the function and says what's wrong. ${C("except ValueError as e")} catches it, and ${C("e")} holds the message.</p>`,
-  demo:`def set_age(age):\n    if age < 0:\n        raise ValueError("age can't be negative")\n    return age\n\nprint(set_age(9))\ntry:\n    set_age(-3)\nexcept ValueError as e:\n    print("Oops:", e)`,
-  say:"Output: 9, then Oops: age can't be negative"},
- {type:"talk",title:"Several excepts, and else",mood:"think",
-  body:`<p>One ${C("try")} can have several ${C("except")} blocks, one per kind of error. An ${C("else")} block runs only if <b>nothing</b> went wrong.</p>`,
-  demo:`def safe_div(a, b):\n    try:\n        result = a / b\n    except ZeroDivisionError:\n        return "can't divide by zero"\n    except TypeError:\n        return "numbers only, please"\n    else:\n        return result\n\nprint(safe_div(8, 2))\nprint(safe_div(8, 0))\nprint(safe_div(8, "two"))`,
-  say:"Output: 4.0, can't divide by zero, numbers only, please"},
- {type:"quiz",q:"What does this print?",code:`try:\n    n = int("7")\nexcept ValueError:\n    print("bad")\nelse:\n    print(n * 2)`,opts:["14","bad","77"],a:0,mono:true,why:"int(\"7\") works, so except is skipped and else runs."},
- {type:"code",title:"Safe withdraw",body:`<p>Make ${C("withdraw(balance, amount)")} raise ${C('ValueError("not enough coins")')} when the amount is bigger than the balance. Otherwise return what's left.</p>`,
-  start:`def withdraw(balance, amount):\n    pass\n\nprint(withdraw(10, 3))\ntry:\n    withdraw(5, 9)\nexcept ValueError as e:\n    print("Error:", e)\n`,
-  use:[[/raise\s+ValueError/,"Use raise ValueError(\"not enough coins\")."]],out:["7","Error: not enough coins"],
-  hint:`def withdraw(balance, amount):\n    if amount > balance:\n        raise ValueError("not enough coins")\n    return balance - amount\n\nprint(withdraw(10, 3))\ntry:\n    withdraw(5, 9)\nexcept ValueError as e:\n    print("Error:", e)`},
- {type:"talk",title:"Ask until it's right",
-  body:`<p>People type the strangest things! Put ${C("input()")} inside ${C("while True")}, use ${C("continue")} to ask again after a bad answer, and ${C("break")} once it's good.</p>`,
-  input:"lots\n-2\n7",demo:`while True:\n    text = input("How many bananas? ")\n    try:\n        n = int(text)\n    except ValueError:\n        print("Please type a number.")\n        continue\n    if n < 0:\n        print("Can't be negative!")\n        continue\n    break\nprint(f"Okay, {n} bananas!")`,
-  say:"Three tries: lots, -2, then 7. Change the Input box and try your own!"},
- {type:"fill",title:"Try, except, else",body:`<p>Fill in the two missing keywords.</p>`,code:`try:\n    x = int("5")\n[0] ValueError:\n    x = 0\n[1]:\n    x = x * 10\nprint(x)`,blanks:["except","else"],tokens:["except","else","finally","catch"],why:"The conversion works, so else runs and x becomes 50.",out:"50"},
- {type:"code",title:"Age checker",body:`<p>Keep asking ${C('input("Age: ")')} until you get a whole number from 1 to 120.</p><ul><li>Not a number: print ${C("That's not a number!")}</li><li>Too small or too big: print ${C("Out of range!")}</li></ul><p>Then print ${C("You are 9 years old.")}</p>`,
-  start:`age = input("Age: ")\n`,input:"nine\n9",
-  use:[[/while/,"Keep asking in a while loop."],[/try\s*:/,"Use try / except to catch bad numbers."]],
-  tests:[{input:"nine\n9",out:["That's not a number!","You are 9 years old."]},{input:"200\n0\n42",out:["Out of range!","Out of range!","You are 42 years old."]},{input:"7",out:["You are 7 years old."]}],
-  hint:`while True:\n    try:\n        age = int(input("Age: "))\n    except ValueError:\n        print("That's not a number!")\n        continue\n    if age < 1 or age > 120:\n        print("Out of range!")\n        continue\n    break\nprint(f"You are {age} years old.")`},
+ pool:[[`class A:
+    def __init__(self):
+        self.n = 2
+
+a = A()
+a.n *= 5
+print(a.n)`,["10","2","25"]],[`class S:
+    def __str__(self):
+        return "ook"
+
+print(S())`,["ook","S","None"]],[`class M:
+    def __init__(self, b):
+        self.b = b
+
+    def eat(self):
+        self.b -= 1
+
+m = M(3)
+m.eat()
+print(m.b)`,["2","3","1"]],[`class P:
+    sound = "eek"
+
+print(P().sound)`,["eek","sound","P"]],[`class Q:
+    def __init__(self, x):
+        self.x = x
+
+print(Q(1).x + Q(2).x)`,["3","12","1"]]]},
+
+{id:"py32",title:"Lists of objects",sub:"many objects, one loop",steps:[
+ {type:"talk",title:"A team of objects",
+  body:`<p>Objects can live in a list, just like numbers or strings. Loop over the list and use each object's attributes.</p>`,
+  demo:`class Player:
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+
+team = [Player("Mo", 12), Player("Ava", 30), Player("Leo", 7)]
+for p in team:
+    print(p.name)`,
+  say:"Output: Mo, Ava, Leo"},
+ {type:"code",title:"Roll call",body:`<p>Replace ${C("pass")} with a print line so each player shows like this:</p><ul><li>${C("Mo: 12")}</li><li>${C("Ava: 30")}</li><li>${C("Leo: 7")}</li></ul><p>Tip: ${C('f"{p.name}: {p.score}"')}</p>`,
+  start:`class Player:
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+
+team = [Player("Mo", 12), Player("Ava", 30), Player("Leo", 7)]
+for p in team:
+    pass  # print the name and score
+`,use:[[/p\.score/,"Use p.score to get each score."]],out:["Mo: 12","Ava: 30","Leo: 7"],
+  hint:`class Player:
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+
+team = [Player("Mo", 12), Player("Ava", 30), Player("Leo", 7)]
+for p in team:
+    print(f"{p.name}: {p.score}")`},
+ {type:"code",title:"Team total",body:`<p>Add up everyone's score. Replace ${C("pass")} with ${C("total += p.score")}. It should print ${C("49")}.</p>`,
+  start:`class Player:
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+
+team = [Player("Mo", 12), Player("Ava", 30), Player("Leo", 7)]
+total = 0
+for p in team:
+    pass  # add p.score to total
+print(total)
+`,use:[[/total\s*\+=\s*p\.score|total\s*=\s*total\s*\+\s*p\.score/,"Add each score with total += p.score"]],out:["49"],
+  hint:`class Player:
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+
+team = [Player("Mo", 12), Player("Ava", 30), Player("Leo", 7)]
+total = 0
+for p in team:
+    total += p.score
+print(total)`},
+ {type:"talk",title:"Finding the best one",mood:"think",
+  body:`<p>To find the biggest, start by guessing the first one is the best. Then check each object: if it beats the best so far, it becomes the new best.</p>`,
+  demo:`class Fruit:
+    def __init__(self, name, size):
+        self.name = name
+        self.size = size
+
+basket = [Fruit("kiwi", 3), Fruit("melon", 9), Fruit("fig", 2)]
+biggest = basket[0]
+for f in basket:
+    if f.size > biggest.size:
+        biggest = f
+print(biggest.name)`,
+  say:"Output: melon"},
+ {type:"quiz",q:"What does this print?",code:`class B:
+    def __init__(self, v):
+        self.v = v
+
+boxes = [B(3), B(8), B(1)]
+print(max([b.v for b in boxes]))`,opts:["8","3","[3, 8, 1]"],a:0,mono:true,why:"The comprehension makes [3, 8, 1], and max picks 8."},
+ {type:"code",title:"Who's the winner?",body:`<p>Find the player with the highest score. Replace ${C("pass")} with an ${C("if")}: when ${C("p.score")} is bigger than ${C("best.score")}, set ${C("best = p")}. It should print ${C("Winner: Ava")}.</p>`,
+  start:`class Player:
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+
+team = [Player("Mo", 12), Player("Ava", 30), Player("Leo", 7)]
+best = team[0]
+for p in team:
+    pass  # if p.score is bigger than best.score, set best = p
+print(f"Winner: {best.name}")
+`,use:[[/best\s*=\s*p\b/,"Make p the new best with best = p"]],out:["Winner: Ava"],
+  hint:`class Player:
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+
+team = [Player("Mo", 12), Player("Ava", 30), Player("Leo", 7)]
+best = team[0]
+for p in team:
+    if p.score > best.score:
+        best = p
+print(f"Winner: {best.name}")`},
+ {type:"talk",title:"A class that holds a list",mood:"cheer",
+  body:`<p>You can also put the list <b>inside</b> an object. This ${C("Team")} keeps its own list of players and has methods to work with them. You'll use this idea in the project!</p>`,
+  demo:`class Team:
+    def __init__(self):
+        self.players = []
+
+    def add(self, name):
+        self.players.append(name)
+
+    def size(self):
+        return len(self.players)
+
+t = Team()
+t.add("Mo")
+t.add("Ava")
+print(t.size(), t.players)`,
+  say:"Output: 2 ['Mo', 'Ava']"},
  {type:"game"},{type:"done"}],
- pool:[
-  [`try:\n    raise ValueError("ook")\nexcept ValueError as e:\n    print(e)`,["ook","ValueError","e"]],
-  [`try:\n    x = 1\nexcept ValueError:\n    x = 2\nelse:\n    x = 3\nprint(x)`,["3","1","2"]],
-  [`def f(n):\n    if n < 0:\n        raise ValueError("neg")\n    return n\n\ntry:\n    print(f(-1))\nexcept ValueError:\n    print("caught")`,["caught","-1","neg"]],
-  [`nums = [1, 2]\ntry:\n    print(nums[5])\nexcept IndexError:\n    print("no index")`,["no index","None","2"]],
-  [`for t in ["4", "x"]:\n    try:\n        print(int(t) + 1)\n    except ValueError:\n        print("skip")`,["5 skip","5 x","skip skip"]]
- ]},
-{id:"py33",title:"Project: Treehouse Inventory",sub:"a class, commands and error handling",project:true,steps:[
- {type:"talk",title:"Stock the treehouse",mood:"cheer",
-  body:`<p>TypeMonkey's treehouse is full of stuff: bananas, rope, maps... Let's build an inventory manager you control with typed commands like ${C("add banana 3")}, ${C("use banana 1")} and ${C("show")}.</p><p>It uses everything from this unit: a class, a dictionary inside it, raising errors, and an input loop.</p>`,
-  demo:`class Inventory:\n    def __init__(self):\n        self.items = {}\n\ninv = Inventory()\ninv.items["banana"] = 3\nprint(inv.items)`,
-  say:"The class holds a dictionary of item: amount. Output: {'banana': 3}"},
- {type:"code",mission:"Step 1",title:"Add and count",body:`<p>Give ${C("Inventory")} an ${C("add(item, n)")} method that adds to the amount, and ${C("count(item)")} that returns how many there are (0 if there are none).</p>`,
-  start:`class Inventory:\n    def __init__(self):\n        self.items = {}\n\n    # add() and count() go here\n\ninv = Inventory()\ninv.add("banana", 3)\ninv.add("banana", 2)\ninv.add("rope", 1)\nprint(inv.count("banana"))\nprint(inv.count("map"))\n`,
-  use:[[/def\s+add\s*\(/,"Add def add(self, item, n):"],[/def\s+count\s*\(/,"Add def count(self, item):"]],out:["5","0"],
-  hint:`class Inventory:\n    def __init__(self):\n        self.items = {}\n\n    def add(self, item, n):\n        self.items[item] = self.items.get(item, 0) + n\n\n    def count(self, item):\n        return self.items.get(item, 0)\n\ninv = Inventory()\ninv.add("banana", 3)\ninv.add("banana", 2)\ninv.add("rope", 1)\nprint(inv.count("banana"))\nprint(inv.count("map"))`},
- {type:"code",mission:"Step 2",title:"Use things up",body:`<p>Add ${C("use(item, n)")}: if there aren't enough, ${C('raise ValueError(f"not enough {item}")')}. Otherwise subtract, and delete the item with ${C("del")} when it reaches 0. Then add ${C("report()")} that returns ${C("Inventory is empty")} or the items sorted A to Z like ${C("banana: 2, rope: 1")}.</p>`,
-  start:`class Inventory:\n    def __init__(self):\n        self.items = {}\n\n    def add(self, item, n):\n        self.items[item] = self.items.get(item, 0) + n\n\n    def count(self, item):\n        return self.items.get(item, 0)\n\n    # use() and report() go here\n\ninv = Inventory()\ninv.add("banana", 3)\ninv.add("rope", 1)\ninv.use("banana", 1)\nprint(inv.report())\ntry:\n    inv.use("map", 1)\nexcept ValueError as e:\n    print("Error:", e)\ninv.use("banana", 2)\ninv.use("rope", 1)\nprint(inv.report())\n`,
-  use:[[/raise\s+ValueError/,"Raise a ValueError when there isn't enough."],[/def\s+report\s*\(/,"Add def report(self):"]],out:["banana: 2, rope: 1","Error: not enough map","Inventory is empty"],
-  hint:`class Inventory:\n    def __init__(self):\n        self.items = {}\n\n    def add(self, item, n):\n        self.items[item] = self.items.get(item, 0) + n\n\n    def count(self, item):\n        return self.items.get(item, 0)\n\n    def use(self, item, n):\n        if self.count(item) < n:\n            raise ValueError(f"not enough {item}")\n        self.items[item] -= n\n        if self.items[item] == 0:\n            del self.items[item]\n\n    def report(self):\n        if not self.items:\n            return "Inventory is empty"\n        return ", ".join(f"{k}: {v}" for k, v in sorted(self.items.items()))\n\ninv = Inventory()\ninv.add("banana", 3)\ninv.add("rope", 1)\ninv.use("banana", 1)\nprint(inv.report())\ntry:\n    inv.use("map", 1)\nexcept ValueError as e:\n    print("Error:", e)\ninv.use("banana", 2)\ninv.use("rope", 1)\nprint(inv.report())`},
- {type:"talk",title:"Reading commands",mood:"think",
-  body:`<p>A command like ${C("add banana 3")} splits into three words. Unpack them into variables, but check the length first so a short command doesn't crash your program.</p>`,
-  demo:`for line in ["add banana 3", "show", "use rope"]:\n    parts = line.split()\n    if len(parts) == 3:\n        cmd, item, amount = parts\n        print(cmd, "->", item, int(amount))\n    else:\n        print(parts, "is too short!")`,
-  say:"Output: add -> banana 3, then ['show'] is too short!, then ['use', 'rope'] is too short!"},
- {type:"quiz",q:"What does this print?",code:`parts = "use rope 2".split()\nprint(len(parts), parts[1])`,opts:["3 rope","3 use","2 rope"],a:0,mono:true,why:"Three words, and index 1 is the second one: rope."},
- {type:"code",final:true,title:"Run the treehouse",body:`<p>The class is ready. Now write the command loop with ${C('input("> ")')}:</p><ul><li>${C("add banana 3")}: print ${C("Added 3 banana")}</li><li>${C("use banana 1")}: print ${C("Used 1 banana")}, or ${C("Error: not enough banana")}</li><li>${C("show")}: print the report</li><li>${C("quit")}: print ${C("Bye!")} and stop</li><li>an amount that isn't a number: ${C("Amounts must be numbers!")}</li><li>anything else: ${C("Unknown command")}</li></ul>`,
-  start:`class Inventory:\n    def __init__(self):\n        self.items = {}\n\n    def add(self, item, n):\n        self.items[item] = self.items.get(item, 0) + n\n\n    def count(self, item):\n        return self.items.get(item, 0)\n\n    def use(self, item, n):\n        if self.count(item) < n:\n            raise ValueError(f"not enough {item}")\n        self.items[item] -= n\n        if self.items[item] == 0:\n            del self.items[item]\n\n    def report(self):\n        if not self.items:\n            return "Inventory is empty"\n        return ", ".join(f"{k}: {v}" for k, v in sorted(self.items.items()))\n\ninv = Inventory()\n# your command loop here\n`,
-  input:"add banana 3\nadd rope 1\nuse banana 1\nshow\nquit",
-  use:[[/while/,"Keep reading commands in a while loop."],[/except\s+ValueError/,"Catch ValueError for bad amounts and for using too much."]],
-  tests:[{input:"add banana 3\nadd rope 1\nuse banana 1\nshow\nquit",out:["Added 3 banana","Added 1 rope","Used 1 banana","banana: 2, rope: 1","Bye!"]},{input:"show\nuse map 1\ndance\nquit",out:["Inventory is empty","Error: not enough map","Unknown command","Bye!"]},{input:"add banana lots\nadd banana 2\nuse banana 2\nshow\nquit",out:["Amounts must be numbers!","Added 2 banana","Used 2 banana","Inventory is empty","Bye!"]}],
-  hint:`class Inventory:\n    def __init__(self):\n        self.items = {}\n\n    def add(self, item, n):\n        self.items[item] = self.items.get(item, 0) + n\n\n    def count(self, item):\n        return self.items.get(item, 0)\n\n    def use(self, item, n):\n        if self.count(item) < n:\n            raise ValueError(f"not enough {item}")\n        self.items[item] -= n\n        if self.items[item] == 0:\n            del self.items[item]\n\n    def report(self):\n        if not self.items:\n            return "Inventory is empty"\n        return ", ".join(f"{k}: {v}" for k, v in sorted(self.items.items()))\n\ninv = Inventory()\nwhile True:\n    parts = input("> ").split()\n    if parts == ["quit"]:\n        print("Bye!")\n        break\n    if parts == ["show"]:\n        print(inv.report())\n        continue\n    if len(parts) != 3 or parts[0] not in ("add", "use"):\n        print("Unknown command")\n        continue\n    cmd, item, amount = parts\n    try:\n        n = int(amount)\n    except ValueError:\n        print("Amounts must be numbers!")\n        continue\n    if cmd == "add":\n        inv.add(item, n)\n        print(f"Added {n} {item}")\n    else:\n        try:\n            inv.use(item, n)\n            print(f"Used {n} {item}")\n        except ValueError as e:\n            print(f"Error: {e}")`},
- {type:"talk",title:"You did it!",mood:"cheer",
-  body:`<p>You built a real command-driven program: a class to hold the data, errors that explain themselves, and a loop that never crashes on silly input. Text games, chat bots and shop systems all work this way.</p><p>Ideas to try next: a ${C("help")} command, a maximum bag size, or saving the totals for each day.</p>`,
-  say:"From print(\"Hello\") to a whole inventory system. Amazing work! 🐒"},
+ pool:[[`class P:
+    def __init__(self, n):
+        self.n = n
+
+ps = [P(1), P(2), P(3)]
+print(len(ps))`,["3","6","1"]],[`class P:
+    def __init__(self, n):
+        self.n = n
+
+ps = [P(4), P(5)]
+print(ps[-1].n)`,["5","4","-1"]],[`class P:
+    def __init__(self, n):
+        self.n = n
+
+print([p.n * 2 for p in [P(1), P(3)]])`,["[2, 6]","[1, 3]","8"]],[`class P:
+    def __init__(self, n):
+        self.n = n
+
+t = 0
+for p in [P(2), P(2)]:
+    t += p.n
+print(t)`,["4","2","22"]]]},
+
+{id:"py33",title:"Errors practice",sub:"check input and raise your own errors",steps:[
+ {type:"talk",title:"Recap: try and except",
+  body:`<p>Risky code goes in ${C("try")}. If it raises an error, the matching ${C("except")} block runs instead of crashing.</p>`,
+  demo:`try:
+    n = int("ten")
+except ValueError:
+    print("Not a number!")
+print("Still running")`,
+  say:"Output: Not a number!, then Still running."},
+ {type:"code",title:"Safe age",body:`<p>If the player types something that isn't a number, ${C("int()")} raises a ${C("ValueError")}. Replace ${C("pass")} with ${C('print("Please type a number")')}.</p><p>Typing ${C("9")} prints ${C("Next year you'll be 10")}. Typing ${C("nine")} prints ${C("Please type a number")}.</p>`,
+  start:`text = input("Your age: ")
+try:
+    age = int(text)
+    print(f"Next year you'll be {age + 1}")
+except ValueError:
+    pass  # print: Please type a number
+`,input:"nine",use:[[/except\s+ValueError/,"Keep the except ValueError: line."]],
+  tests:[{input:"9",out:["Next year you'll be 10"]},{input:"nine",out:["Please type a number"]}],
+  hint:`text = input("Your age: ")
+try:
+    age = int(text)
+    print(f"Next year you'll be {age + 1}")
+except ValueError:
+    print("Please type a number")`},
+ {type:"talk",title:"Keep asking until it works",mood:"think",
+  body:`<p>Put ${C("try")} inside a ${C("while True")} loop. When the number works, ${C("break")} out. When it fails, say so and the loop asks again.</p>`,
+  input:"abc\n7",demo:`while True:
+    text = input("Pick a number: ")
+    try:
+        n = int(text)
+        break
+    except ValueError:
+        print("That's not a number, try again!")
+print(f"You picked {n}")`,
+  say:"With abc then 7 typed: it complains once, then says You picked 7."},
+ {type:"quiz",q:"What does this print?",code:`try:
+    n = int("4")
+    print(n * 2)
+except ValueError:
+    print("oops")`,opts:["8","oops","44"],a:0,mono:true,why:"\"4\" becomes 4 just fine, so no error happens."},
+ {type:"talk",title:"raise your own errors",mood:"oops",
+  body:`<p>Your own functions can complain too! ${C("raise ValueError(\"message\")")} stops the function with an error. Whoever called it can catch it with ${C("except ValueError as e")}, and ${C("e")} holds the message.</p>`,
+  demo:`def set_age(age):
+    if age < 0:
+        raise ValueError("Age can't be negative")
+    return age
+
+try:
+    set_age(-3)
+except ValueError as e:
+    print("Problem:", e)`,
+  say:"Output: Problem: Age can't be negative"},
+ {type:"code",title:"Not enough bananas",body:`<p>You can't take more bananas than you have! Replace ${C("pass")} with ${C('raise ValueError("Not enough bananas")')}. The program should print ${C("7")} and then ${C("Oops: Not enough bananas")}.</p>`,
+  start:`def take(bananas, amount):
+    if amount > bananas:
+        pass  # raise a ValueError here
+    return bananas - amount
+
+try:
+    print(take(10, 3))
+    print(take(2, 5))
+except ValueError as e:
+    print("Oops:", e)
+`,use:[[/raise\s+ValueError/,"Use raise ValueError(\"Not enough bananas\")"]],out:["7","Oops: Not enough bananas"],
+  hint:`def take(bananas, amount):
+    if amount > bananas:
+        raise ValueError("Not enough bananas")
+    return bananas - amount
+
+try:
+    print(take(10, 3))
+    print(take(2, 5))
+except ValueError as e:
+    print("Oops:", e)`},
+ {type:"fill",title:"Catch the right one",body:`<p>Pick the error that dividing by zero raises.</p>`,code:`try:
+    x = 1 / 0
+except [0]:
+    print("No dividing by zero!")`,blanks:["ZeroDivisionError"],tokens:["ZeroDivisionError","ValueError","KeyError","Error"],why:"Dividing by zero raises ZeroDivisionError.",out:"No dividing by zero!"},
+ {type:"game"},{type:"done"}],
+ pool:[[`try:
+    print(int("7") + 1)
+except ValueError:
+    print("no")`,["8","no","71"]],[`try:
+    raise ValueError("bad")
+except ValueError as e:
+    print(e)`,["bad","ValueError","e"]],[`try:
+    print([1, 2][9])
+except IndexError:
+    print("too far")`,["too far","None","2"]],[`try:
+    x = 5
+except ValueError:
+    x = 0
+print(x)`,["5","0","None"]],[`def f(n):
+    if n < 0:
+        raise ValueError("neg")
+    return n
+
+try:
+    print(f(-1))
+except ValueError:
+    print("caught")`,["caught","-1","neg"]]]},
+
+{id:"py34",title:"Project: Adventure Backpack",sub:"a class, a dictionary and safe commands",project:true,steps:[
+ {type:"talk",title:"🏗️ Your mission",mood:"cheer",
+  body:`<p><b>Build a backpack for an adventure game!</b> The player can ${C("add")} items, ${C("use")} them, and ${C("show")} what's inside. If they try to use something they don't have, the game explains nicely instead of crashing.</p><p>Inside, the backpack is a dictionary: item name → how many.</p>`,
+  demo:`items = {"banana": 2}
+items["rope"] = 1
+items["banana"] += 1
+print(items)`,
+  say:"Output: {'banana': 3, 'rope': 1}. Four small steps, then you play it!"},
+ {type:"code",title:"Step 1: add items",body:`<p>Finish ${C("add")}: it should add 1 to the item's count, starting from 0 if it's new. Replace ${C("pass")} with:</p><p>${C("self.items[item] = self.items.get(item, 0) + 1")}</p><p>It should print ${C("{'banana': 2, 'rope': 1}")}.</p>`,
+  start:`class Backpack:
+    def __init__(self):
+        self.items = {}
+
+    def add(self, item):
+        pass  # add 1 to this item's count
+
+bag = Backpack()
+bag.add("banana")
+bag.add("banana")
+bag.add("rope")
+print(bag.items)
+`,use:[[/\.get\s*\(|\bin\b/,"Use self.items.get(item, 0) so new items start at 0."]],out:["{'banana': 2, 'rope': 1}"],
+  hint:`class Backpack:
+    def __init__(self):
+        self.items = {}
+
+    def add(self, item):
+        self.items[item] = self.items.get(item, 0) + 1
+
+bag = Backpack()
+bag.add("banana")
+bag.add("banana")
+bag.add("rope")
+print(bag.items)`},
+ {type:"code",title:"Step 2: use items",body:`<p>${C("use")} already takes 1 away. But when the count reaches 0, the item should disappear. Replace ${C("pass")} with ${C("del self.items[item]")}. It should print ${C("{'banana': 1}")}.</p>`,
+  start:`class Backpack:
+    def __init__(self):
+        self.items = {}
+
+    def add(self, item):
+        self.items[item] = self.items.get(item, 0) + 1
+
+    def use(self, item):
+        self.items[item] -= 1
+        if self.items[item] == 0:
+            pass  # remove the item
+
+bag = Backpack()
+bag.add("banana")
+bag.add("banana")
+bag.add("rope")
+bag.use("banana")
+bag.use("rope")
+print(bag.items)
+`,use:[[/del\s+self\.items\s*\[/,"Remove it with del self.items[item]"]],out:["{'banana': 1}"],
+  hint:`class Backpack:
+    def __init__(self):
+        self.items = {}
+
+    def add(self, item):
+        self.items[item] = self.items.get(item, 0) + 1
+
+    def use(self, item):
+        self.items[item] -= 1
+        if self.items[item] == 0:
+            del self.items[item]
+
+bag = Backpack()
+bag.add("banana")
+bag.add("banana")
+bag.add("rope")
+bag.use("banana")
+bag.use("rope")
+print(bag.items)`},
+ {type:"code",title:"Step 3: no cheating!",body:`<p>Using an item you don't have crashes with a ${C("KeyError")}. Replace ${C("pass")} with a friendly error:</p><p>${C('raise ValueError(f"You don\'t have a {item}.")')}</p><p>It should print ${C("You don't have a map.")}</p>`,
+  start:`class Backpack:
+    def __init__(self):
+        self.items = {}
+
+    def add(self, item):
+        self.items[item] = self.items.get(item, 0) + 1
+
+    def use(self, item):
+        if item not in self.items:
+            pass  # raise a ValueError with a friendly message
+        self.items[item] -= 1
+        if self.items[item] == 0:
+            del self.items[item]
+
+bag = Backpack()
+try:
+    bag.use("map")
+except ValueError as e:
+    print(e)
+`,use:[[/raise\s+ValueError/,"Use raise ValueError(...)"]],out:["You don't have a map."],
+  hint:`class Backpack:
+    def __init__(self):
+        self.items = {}
+
+    def add(self, item):
+        self.items[item] = self.items.get(item, 0) + 1
+
+    def use(self, item):
+        if item not in self.items:
+            raise ValueError(f"You don't have a {item}.")
+        self.items[item] -= 1
+        if self.items[item] == 0:
+            del self.items[item]
+
+bag = Backpack()
+try:
+    bag.use("map")
+except ValueError as e:
+    print(e)`},
+ {type:"talk",title:"Showing what's inside",mood:"think",
+  body:`<p>One more method, already written for you: ${C("show")} prints each item in A to Z order, or says the backpack is empty. ${C("not self.items")} is ${C("True")} when the dictionary is empty.</p>`,
+  demo:`class Backpack:
+    def __init__(self):
+        self.items = {"rope": 1, "banana": 2}
+
+    def show(self):
+        if not self.items:
+            print("Your backpack is empty.")
+        for item in sorted(self.items):
+            print(f"{item}: {self.items[item]}")
+
+Backpack().show()`,
+  say:"Output: banana: 2, then rope: 1."},
+ {type:"code",title:"Step 4: play it!",body:`<p>The whole game is ready except the ${C("use")} command. Replace ${C("pass")} with a ${C("try")} / ${C("except")}:</p><ul><li>try ${C("bag.use(item)")} and print ${C("You used the rope.")} (with the right item)</li><li>${C("except ValueError as e:")} print ${C("e")}</li></ul><p>Try commands like ${C("add rope")}, ${C("use rope")}, ${C("show")} and ${C("quit")} in the Input box.</p>`,
+  start:`class Backpack:
+    def __init__(self):
+        self.items = {}
+
+    def add(self, item):
+        self.items[item] = self.items.get(item, 0) + 1
+
+    def use(self, item):
+        if item not in self.items:
+            raise ValueError(f"You don't have a {item}.")
+        self.items[item] -= 1
+        if self.items[item] == 0:
+            del self.items[item]
+
+    def show(self):
+        if not self.items:
+            print("Your backpack is empty.")
+        for item in sorted(self.items):
+            print(f"{item}: {self.items[item]}")
+
+bag = Backpack()
+while True:
+    command = input("> ")
+    if command == "quit":
+        print("Bye!")
+        break
+    elif command == "show":
+        bag.show()
+    elif command.startswith("add "):
+        item = command[4:]
+        bag.add(item)
+        print(f"Added {item}.")
+    elif command.startswith("use "):
+        item = command[4:]
+        pass  # try to use it; print the error if it fails
+    else:
+        print("Try: add, use, show or quit")
+`,input:"add rope\nuse rope\nuse rope\nquit",
+  use:[[/\btry\s*:/,"Wrap bag.use(item) in try:"],[/except\s+ValueError/,"Catch it with except ValueError as e:"]],
+  tests:[{input:"add rope\nadd banana\nadd banana\nuse banana\nshow\nquit",out:["Added rope.","Added banana.","Added banana.","You used the banana.","banana: 1","rope: 1","Bye!"]},{input:"use map\nadd map\nuse map\nshow\ndance\nquit",out:["You don't have a map.","Added map.","You used the map.","Your backpack is empty.","Try: add, use, show or quit","Bye!"]}],
+  hint:`class Backpack:
+    def __init__(self):
+        self.items = {}
+
+    def add(self, item):
+        self.items[item] = self.items.get(item, 0) + 1
+
+    def use(self, item):
+        if item not in self.items:
+            raise ValueError(f"You don't have a {item}.")
+        self.items[item] -= 1
+        if self.items[item] == 0:
+            del self.items[item]
+
+    def show(self):
+        if not self.items:
+            print("Your backpack is empty.")
+        for item in sorted(self.items):
+            print(f"{item}: {self.items[item]}")
+
+bag = Backpack()
+while True:
+    command = input("> ")
+    if command == "quit":
+        print("Bye!")
+        break
+    elif command == "show":
+        bag.show()
+    elif command.startswith("add "):
+        item = command[4:]
+        bag.add(item)
+        print(f"Added {item}.")
+    elif command.startswith("use "):
+        item = command[4:]
+        try:
+            bag.use(item)
+            print(f"You used the {item}.")
+        except ValueError as e:
+            print(e)
+    else:
+        print("Try: add, use, show or quit")`},
+ {type:"talk",title:"🎉 You built it!",mood:"cheer",
+  body:`<p>Your backpack uses a <b>class</b>, a <b>dictionary</b>, a <b>loop</b>, and <b>error handling</b>, all working together. That's how real programs are built: small pieces, each doing one job.</p><p>Ideas to try next: a ${C("drop")} command, a weight limit that raises an error, or a secret item that wins the game.</p>`,
+  say:"You finished Objects & safe code. Amazing work!"},
  {type:"done"}]}
 ]});

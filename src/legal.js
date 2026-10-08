@@ -1,14 +1,15 @@
-/* TypeMonkey legal text. DRAFT: have a lawyer or a reputable template service review before launch.
-   Fill in the bracketed placeholders in LEGAL_INFO. Used by the in-app Terms/Privacy screens and by build.py
+/* TypeMonkey legal text. Have a lawyer or a reputable template service review it when you can. Used by the in-app Terms/Privacy screens and by build.py
    to generate terms.html and privacy.html (the app stores require a public privacy policy URL). */
 const LEGAL_INFO={
   owner:"Wolfhope",                     // the person or company that publishes the app
-  email:"[support email]",              // where people can reach you
-  law:"[your state], United States",    // governing law
-  updated:"October 6, 2026",
+  email:"",                             // optional public support email; leave "" to point people to the support page
+  support:"https://wolfhopecom.github.io/typemonkey/support.html",
+  law:"the State of Ohio, United States", // governing law
+  updated:"October 7, 2026",
   price:"$4.99"
 };
 
+const LEGAL_CONTACT=()=>LEGAL_INFO.email?`email us at <b>${LEGAL_INFO.email}</b> or visit <a href="${LEGAL_INFO.support}">${LEGAL_INFO.support}</a>`:`visit our support page at <a href="${LEGAL_INFO.support}">${LEGAL_INFO.support}</a>`;
 const LEGAL={
 terms:{title:"Terms of Service",sections:[
  ["The short version",`<p>TypeMonkey is a learning app. Use it to learn and have fun. The lessons and TypeMonkey himself belong to us. We work hard to keep the app bug-free, but it's provided "as is," and we can't be responsible for problems that come from using it or the code you learn in it.</p>`],
@@ -24,7 +25,7 @@ terms:{title:"Terms of Service",sections:[
  ["Changes",`<p>We may update the App and these Terms. If we make important changes, we'll update the date at the top and, where appropriate, let you know in the App. Continuing to use the App after changes means you accept the updated Terms.</p>`],
  ["App Store and Google Play",`<p>These Terms are between you and ${LEGAL_INFO.owner}, not Apple or Google. Apple and Google are not responsible for the App, its content, maintenance, support or any claims about it. If the App fails to meet any warranty that can't be disclaimed, you may notify the store, which may refund the purchase price; beyond that, the store has no warranty obligation. Apple and its subsidiaries are third-party beneficiaries of these Terms and may enforce them against you.</p>`],
  ["Governing law",`<p>These Terms are governed by the laws of ${LEGAL_INFO.law}, without regard to conflict-of-law rules.</p>`],
- ["Contact",`<p>Questions about these Terms? Email us at <b>${LEGAL_INFO.email}</b>.</p>`]
+ ["Contact",`<p>Questions about these Terms? Please ${LEGAL_CONTACT()}.</p>`]
 ]},
 privacy:{title:"Privacy Policy",sections:[
  ["The short version",`<p><b>TypeMonkey doesn't collect any personal information.</b> There are no accounts, no ads, no analytics and no tracking. Your progress stays on your device.</p>`],
@@ -33,6 +34,6 @@ privacy:{title:"Privacy Policy",sections:[
  ["Purchases",`<p>In-app purchases are handled entirely by Apple's App Store or Google Play. They process your payment under their own privacy policies. We only learn that a purchase was made so the App can unlock content; we never see your payment details.</p>`],
  ["Children",`<p>TypeMonkey Jr. is designed for children ages 7 to 12. Because the App doesn't collect personal information from anyone, it doesn't collect personal information from children. Purchases are behind a grown-up check, and the App doesn't open outside websites.</p><p>Parents or guardians with questions can contact us at <b>${LEGAL_INFO.email}</b>.</p>`],
  ["Changes",`<p>If this policy changes, we'll update the date at the top. If we ever start collecting any information, we'll update this policy first and ask for your permission where the law requires it.</p>`],
- ["Contact",`<p>Questions about privacy? Email us at <b>${LEGAL_INFO.email}</b>.</p>`]
+ ["Contact",`<p>Questions about privacy? Please ${LEGAL_CONTACT()}.</p>`]
 ]}
 };

@@ -1,6 +1,10 @@
 /* TypeMonkey Jr. · ages 7–12 · no typing. Maze steps: grid rows use # tree, . path, S start, B banana.
    dir is the starting direction (N/E/S/W). blocks are the buttons offered. start pre-fills a (buggy) program.
-   solution must reach the banana within max blocks (checked by tests/verify_course.py). */
+   solution must reach the banana within max blocks (checked by tests/verify_course.py).
+   aim (optional) overrides the big goal line shown on every puzzle; otherwise it's made from the puzzle.
+   predict steps show a short program and ask where the monkey ends up (grid/dir/prog) or which dance move
+   comes next (dance:{pattern,times}, ask = index of the move to guess). build is the free-play level maker.
+   Ramp rule (checked): the first puzzle of every lesson needs 3 blocks or fewer. */
 const JF="fwd",JL="left",JRT="right",JIFR="ifR",JIFL="ifL",JCALL="call",jrep=(n,...body)=>({rep:n,body}),juntil=(...body)=>({until:true,body});
 
 const JR_UNIT1={name:"Monkey moves",free:true,lessons:[
@@ -11,6 +15,7 @@ const JR_UNIT1={name:"Monkey moves",free:true,lessons:[
  {type:"maze",title:"Two little steps",body:`<p>Tap <b>Forward</b> two times, then press <b>Go!</b></p>`,grid:["S.B"],dir:"E",blocks:[JF],solution:[JF,JF],say:"Forward, Forward, Go!"},
  {type:"dance",title:"Copy my dance",body:`<p>A dance is a program too: moves in order! Tap <b>👀 Watch it</b>, then tap the same moves.</p>`,moves:["clap","jump"],target:["clap","jump"],solution:{pattern:["clap","jump"]},say:"Clap first, then jump!"},
  {type:"maze",title:"A longer walk",grid:["S....B"],dir:"E",blocks:[JF],solution:[JF,JF,JF,JF,JF],say:"Count the empty squares between me and the banana!"},
+ {type:"predict",title:"Where will I stop?",body:`<p>Read my program. Then tap the square where I will stop.</p>`,grid:["S....B"],dir:"E",prog:[JF,JF,JF],say:"Three steps. Count them on the path!"},
  {type:"quiz",q:"What is a program?",opts:["A list of steps for a computer to follow","A kind of banana","A TV show"],a:0,why:"Programs are instructions. Computers follow them exactly, in order."},
  {type:"dance",title:"Three-move dance",moves:["clap","jump","wave"],target:["wave","clap","jump"],solution:{pattern:["wave","clap","jump"]},say:"Same order as the dance. Watch it first!"},
  {type:"box",title:"Bonus: my banana box",body:`<p>This is my banana box! Its name is <b>bananas</b>. Coders call a box with a name a <b>variable</b>. Tap <b>+ 1</b> to put in a banana until there are 3.</p>`,name:"bananas",startVal:0,goal:3,ops:["+1"],solution:["+1","+1","+1"],say:"Watch the code change every time you tap!"},
@@ -22,7 +27,9 @@ const JR_UNIT1={name:"Monkey moves",free:true,lessons:[
  {type:"maze",title:"One turn",grid:["S.","#B"],dir:"E",blocks:[JF,JL,JRT],solution:[JF,JRT,JF],say:"Forward, then turn right so I face down, then Forward!"},
  {type:"quiz",q:"TypeMonkey faces right ➜ and turns LEFT. Which way is he facing now?",opts:["Up ⬆","Down ⬇","Left ⬅"],a:0,why:"If you face right and turn left, you end up facing up."},
  {type:"maze",title:"The other way",grid:["#B","S."],dir:"E",blocks:[JF,JL,JRT],solution:[JF,JL,JF],say:"This time the banana is up. Which way do I turn?"},
+ {type:"predict",title:"Step, turn, step",body:`<p>Where will I stop? Tap the square!</p>`,grid:["S..","...","..B"],dir:"E",prog:[JF,JRT,JF],say:"Watch my arrow. After the turn, I face down."},
  {type:"dance",title:"Spin move!",body:`<p>New move: <b>🌀 Spin</b>. That's a turn all the way around!</p>`,moves:["clap","jump","spin"],target:["jump","spin","clap","spin"],solution:{pattern:["jump","spin","clap","spin"]}},
+ {type:"maze",title:"Walk, then turn",grid:["S..","##B"],dir:"E",blocks:[JF,JL,JRT],solution:[JF,JF,JRT,JF],say:"Walk to the end, then turn and step down."},
  {type:"maze",title:"Around the corner",grid:["S..#","##.#","##.B"],dir:"E",blocks:[JF,JL,JRT],solution:[JF,JF,JRT,JF,JF,JL,JF],say:"Walk, turn, walk, turn, walk!"},
  {type:"done"}]},
 {id:"jr3",title:"Bug hunt",sub:"finding and fixing mistakes",steps:[
@@ -42,7 +49,9 @@ const JR_UNIT2={name:"Loops",lessons:[
   body:`<p>Instead of Forward, Forward, Forward, Forward, Forward, you can say <b>Repeat 5 times: Forward</b>. That's called a <b>loop</b>!</p><p>Tap <b>Repeat</b>, add blocks inside it, then tap <b>done</b>. Tap the 🔁 number to change how many times it repeats.</p>`,
   say:"Loops make programs shorter. Coders LOVE short programs."},
  {type:"dance",title:"Clap clap clap clap",loop:true,body:`<p>Add <b>one</b> 👏 Clap, then press <b>+</b> until it says Repeat <b>4</b> times.</p>`,moves:["clap","jump"],target:["clap","clap","clap","clap"],solution:{pattern:["clap"],times:4},say:"One clap, repeated 4 times. That's a loop!"},
+ {type:"predict",title:"What comes next?",body:`<p>Read the dance program. Which move comes next?</p>`,dance:{pattern:["clap","jump"],times:3},ask:3,moves:["clap","jump","spin"],say:"Clap, jump, clap... then?"},
  {type:"maze",title:"Use a loop",grid:["S....B"],dir:"E",blocks:[JF,"rep"],max:2,solution:[jrep(5,JF)],say:"Only 2 blocks allowed! Tap Repeat, then Forward, then set it to 5."},
+ {type:"predict",title:"Loop, turn, loop",body:`<p>Where will I stop? Tap the square!</p>`,grid:["S...",".#..","...B"],dir:"E",prog:[jrep(2,JF),JRT,jrep(2,JF)],say:"Two steps, turn, two steps."},
  {type:"quiz",q:"Repeat 3 times: Forward. How many steps forward is that?",opts:["3","1","4"],a:0,why:"The block inside runs 3 times."},
  {type:"dance",title:"Jump and clap, again and again",loop:true,moves:["clap","jump","spin"],target:["jump","clap","jump","clap","jump","clap"],solution:{pattern:["jump","clap"],times:3},say:"Find the part that repeats. How many times does it happen?"},
  {type:"maze",title:"Two loops",grid:["S....","####.","####.","####B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(4,JF),JRT,jrep(3,JF)],say:"One loop to go across, one loop to go down!"},
@@ -51,6 +60,7 @@ const JR_UNIT2={name:"Loops",lessons:[
  {type:"talk",title:"Find the pattern",mood:"think",
   body:`<p>Before you build, look closely. Do you see something that happens again and again? That's the part to put inside your Repeat.</p>`,
   say:"Coders call this pattern-spotting. It's a big part of thinking like a programmer."},
+ {type:"predict",title:"Party guess",body:`<p>Which move comes next? Look for the part that repeats.</p>`,dance:{pattern:["wave","spin","clap"],times:2},ask:4,moves:["clap","spin","wave"],say:"Wave, spin, clap, wave... then?"},
  {type:"quiz",q:"Which part repeats in: Forward, Turn, Forward, Turn, Forward, Turn?",opts:["Forward, Turn","Forward","Turn, Turn"],a:0,why:"Forward, Turn happens 3 times. So: Repeat 3 times: Forward, Turn."},
  {type:"dance",title:"The party pattern",loop:true,moves:["clap","jump","spin","wave","wiggle"],target:["wave","spin","clap","wave","spin","clap"],solution:{pattern:["wave","spin","clap"],times:2},say:"Three moves, then the same three moves again!"},
  {type:"maze",title:"Around the pond",grid:["S..","##.","B.."],dir:"N",blocks:[JF,JL,JRT,"rep"],max:4,solution:[jrep(3,JRT,JF,JF)],say:"I'm facing up! Turn, walk two. Turn, walk two. See the pattern?"},
@@ -60,6 +70,7 @@ const JR_UNIT2={name:"Loops",lessons:[
  {type:"talk",title:"Into the jungle!",mood:"cheer",
   body:`<p>These mazes are bigger. Use everything you know: Forward, turns, and Repeat. Plan first, then build!</p>`,
   say:"I believe in you!"},
+ {type:"maze",title:"Down the vine",grid:["S",".",".",".","B"],dir:"S",blocks:[JF,JL,JRT,"rep"],max:2,solution:[jrep(4,JF)],say:"Warm-up! One loop takes me all the way down."},
  {type:"maze",title:"River bend",grid:["S...#","###.#","#B..#"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:8,solution:[jrep(3,JF),JRT,jrep(2,JF),JRT,jrep(2,JF)]},
  {type:"dance",title:"Victory dance!",loop:true,body:`<p>Halfway through the jungle! Time to celebrate.</p>`,moves:["clap","jump","spin","wave","wiggle"],target:["wiggle","jump","wiggle","jump","wiggle","jump","wiggle","jump"],solution:{pattern:["wiggle","jump"],times:4}},
  {type:"maze",title:"Monkey bridge",grid:["S..#..","#.##.#","#....B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:7,solution:[JF,JRT,jrep(2,JF),JL,jrep(4,JF)]},
@@ -71,7 +82,7 @@ const JR_UNIT3={name:"Think like a coder",lessons:[
  {type:"talk",title:"Order matters",mood:"think",
   body:`<p>Computers do things in the exact order you say. If you put on your shoes before your socks... uh oh! 🧦👟</p>`,
   say:"Let's practice putting steps in order."},
- {type:"order",title:"Banana sandwich",body:`<p>Put the steps in order.</p>`,lines:["Get two slices of bread","Spread peanut butter","Add banana slices","Put the slices together"],why:"First the bread, then the toppings, then close it up!"},
+ {type:"order",title:"Banana sandwich",body:`<p>Put the steps in order.</p>`,lines:["Get two slices of bread","Add banana slices","Put the slices together"],why:"First the bread, then the bananas, then close it up!"},
  {type:"quiz",q:"Why does order matter in a program?",opts:["The computer does steps exactly in the order you give","It doesn't matter at all","Computers like alphabetical order"],a:0,why:"Change the order and you change what happens."},
  {type:"order",title:"Plant a seed",body:`<p>Put the steps in order.</p>`,lines:["Dig a hole","Drop in the seed","Cover it with soil","Water it"],why:"You can't cover the seed before it's in the hole!"},
  {type:"dance",title:"Order changes the dance",body:`<p>Same moves, different order, different dance! Copy this one exactly.</p>`,moves:["clap","jump","spin","wave"],target:["spin","wave","jump","clap"],solution:{pattern:["spin","wave","jump","clap"]}},
@@ -103,6 +114,7 @@ const JR_UNIT3={name:"Think like a coder",lessons:[
  {type:"talk",title:"The final quest!",mood:"cheer",
   body:`<p>This is it: the Banana Quest! Tricky challenges stand between me and the Golden Banana. Use sequences, loops, choices and debugging. You've got this!</p>`,
   say:"Ready? Let's go!"},
+ {type:"maze",title:"Temple hallway",grid:["S...B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:2,solution:[jrep(4,JF)],say:"A quick warm-up. Two blocks!"},
  {type:"maze",title:"The canyon",grid:["S.#B","#.#.","#..."],dir:"E",blocks:[JF,JL,JRT,"rep"],max:10,solution:[JF,JRT,jrep(2,JF),JL,jrep(2,JF),JL,jrep(2,JF)]},
  {type:"sort",title:"The temple gate",body:`<p>The gate only opens for the right things!</p>`,rule:"IF it's a number bigger than 5 ➜ 🚪 Open the gate<br>ELSE ➜ 🔒 Stay shut",bins:[{icon:"🚪",name:"Open"},{icon:"🔒",name:"Stay shut"}],
   items:[{icon:"8",bin:0},{icon:"2",bin:1,why:"2 is smaller than 5. Stay shut!"},{icon:"10",bin:0,why:"10 is bigger than 5!"},{icon:"5",bin:1,why:"5 is not BIGGER than 5. It's the same! Stay shut."},{icon:"7",bin:0,why:"7 is bigger than 5!"}],
@@ -120,6 +132,7 @@ const JR_UNIT4={name:"Smart monkey",lessons:[
   say:"Watch them disappear as I gobble them up. Nom nom!"},
  {type:"maze",title:"Banana row",grid:["SB.B"],dir:"E",blocks:[JF],solution:[JF,JF,JF],say:"Two bananas in a row. Easy start!"},
  {type:"quiz",q:"In a banana hunt, when is the puzzle finished?",opts:["When ALL the bananas are collected","After the first banana","After 10 steps"],a:0,why:"Every banana counts! Leave one behind and the puzzle isn't done."},
+ {type:"maze",title:"Banana corner",grid:["SB.","##B"],dir:"E",blocks:[JF,JL,JRT],solution:[JF,JF,JRT,JF],say:"Get the first banana, then turn the corner for the next one."},
  {type:"maze",title:"There and back",grid:["S.B.","###.","B..."],dir:"E",blocks:[JF,JL,JRT,"rep"],max:8,solution:[jrep(3,JF),JRT,jrep(2,JF),JRT,jrep(3,JF)],say:"One banana up top, one at the bottom. Go get 'em both!"},
  {type:"maze",title:"Banana stairs",grid:["S####","B.###","#.B##","##.B#","###.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(4,JRT,JF,JL,JF)],say:"A banana on every step! Can you loop it?"},
  {type:"done"}]},
@@ -163,6 +176,8 @@ const JR_UNIT5={name:"My own blocks",lessons:[
  {type:"talk",title:"Your very own block!",mood:"cheer",
   body:`<p>What if you could make a <b>brand-new block</b>? Tap <b>⭐ My move</b> and add blocks to it. Then in your main program, each <b>⭐</b> block does your whole move!</p><p>Real coders call this a <b>function</b>. Build it once, use it again and again.</p>`,
   say:"It's like teaching me a dance move, then just shouting its name!"},
+ {type:"maze",title:"Big steps",func:true,grid:["S.....B"],dir:"E",blocks:[JF,JCALL],startFn:[JF,JF,JF],solution:{main:[JCALL,JCALL],fn:[JF,JF,JF]},aim:"⭐ Use My move two times to get the banana!",
+  body:`<p>I made a move for you! ⭐ <b>My move</b> = 3 steps forward. In the <b>Main program</b>, tap ⭐ two times.</p>`,say:"Each ⭐ is 3 big steps!"},
  {type:"maze",title:"Stair dance",func:true,grid:STAIRS5,dir:"E",blocks:[JF,JL,JRT,JCALL],max:8,solution:{main:[JCALL,JCALL,JCALL,JCALL],fn:[JRT,JF,JL,JF]},
   body:`<p>Every stair is the same: turn right, step, turn left, step. Put that in ⭐ My move, then use ⭐ four times.</p>`,say:"First tap ⭐ My move and build the stair move."},
  {type:"quiz",q:"Why make your own block?",opts:["So you can reuse steps without building them again","To make the maze bigger","Because computers like stars"],a:0,why:"Functions save you from repeating yourself. Change the move once and every ⭐ changes too!"},
@@ -172,7 +187,7 @@ const JR_UNIT5={name:"My own blocks",lessons:[
  {type:"talk",title:"Super combo",mood:"think",
   body:`<p>You can put ⭐ inside a <b>Repeat</b>! Then a tiny main program can make me do a huge amount of moves.</p>`,
   say:"Repeat 5 times: ⭐. That's two blocks doing twenty moves!"},
- {type:"maze",title:"Giant stairs again",func:true,grid:STAIRS6,dir:"E",blocks:[JF,JL,JRT,"rep",JCALL],max:6,solution:{main:[jrep(5,JCALL)],fn:[JRT,JF,JL,JF]}},
+ {type:"maze",title:"Giant stairs again",func:true,grid:STAIRS6,dir:"E",blocks:[JF,JL,JRT,"rep",JCALL],max:6,startFn:[JRT,JF,JL,JF],solution:{main:[jrep(5,JCALL)],fn:[JRT,JF,JL,JF]},say:"I kept your stair move in ⭐! Put ⭐ inside a Repeat."},
  {type:"quiz",q:"⭐ My move has 4 blocks. You use ⭐ 3 times. How many steps and turns does TypeMonkey do?",opts:["12","7","4"],a:0,why:"3 times 4 blocks is 12."},
  {type:"maze",title:"The long hop",func:true,grid:HOPS5,dir:"E",blocks:[JF,JL,JRT,"rep",JCALL],max:7,solution:{main:[jrep(5,JCALL)],fn:[JF,JRT,JF,JL,JF]},say:"Same hop as before, but five times. Use a Repeat!"},
  {type:"done"}]},
@@ -187,7 +202,7 @@ const JR_UNIT5={name:"My own blocks",lessons:[
  {type:"talk",title:"The final combo",mood:"cheer",
   body:`<p>Last challenge: put <b>smart blocks</b> inside ⭐ My move, and use <b>Repeat until 🍌</b> in the main program. That's exactly how real programs are built: small smart pieces, used over and over.</p>`,
   say:"You're thinking like a real programmer now!"},
- {type:"maze",title:"Hop until banana",func:true,grid:HOPS5,dir:"E",blocks:[JF,JL,JRT,"until",JCALL],max:7,solution:{main:[juntil(JCALL)],fn:[JF,JRT,JF,JL,JF]},say:"You don't even need to count the hops!"},
+ {type:"maze",title:"Hop until banana",func:true,grid:HOPS5,dir:"E",blocks:[JF,JL,JRT,"until",JCALL],max:7,startFn:[JF,JRT,JF,JL,JF],solution:{main:[juntil(JCALL)],fn:[JF,JRT,JF,JL,JF]},say:"Your hop is already in ⭐. You don't even need to count the hops!"},
  {type:"maze",title:"Smart spiral",func:true,grid:["S....","####.","B...."],dir:"E",blocks:[JF,JIFR,"until",JCALL],max:4,solution:{main:[juntil(JCALL)],fn:[JIFR,JF]}},
  {type:"maze",title:"The grand tour",func:true,grid:["SB..B","####.","B..B."],dir:"E",blocks:[JF,JL,JRT,JIFR,"until",JCALL],max:4,solution:{main:[juntil(JCALL)],fn:[JIFR,JF]},win:"Function Master! You built a smart, reusable program! ⭐"},
  {type:"done"}]}
@@ -216,6 +231,12 @@ const JR_UNIT6={name:"Detective work",lessons:[
  {type:"maze",title:"Wrong turn",grid:["S...","###.","###B"],dir:"E",blocks:[JF,JL,JRT,"rep"],start:[jrep(3,JF),JL,jrep(2,JF)],solution:[jrep(3,JF),JRT,jrep(2,JF)],say:"The turn looks suspicious."},
  {type:"maze",title:"The loop that forgot to look",grid:["S....","####.","B...."],dir:"E",blocks:[JF,JIFR,"until"],max:3,start:[juntil(JF)],solution:[juntil(JIFR,JF)],say:"My loop walks straight into trees. What block is missing?"},
  {type:"quiz",q:"What's the FIRST thing a good detective does with a buggy program?",opts:["Run it and watch what happens","Delete everything","Guess a fix"],a:0,why:"Watching the program run shows you exactly where it goes wrong."},
+ {type:"done"}]},
+{id:"jr20",title:"Make your own puzzle",sub:"build a maze, then solve it",project:true,steps:[
+ {type:"talk",title:"You're the boss now!",mood:"cheer",
+  body:`<p>Now YOU make the puzzle! Put me, some bananas 🍌 and some trees 🌴 on the grid.</p><p>Then press <b>▶ Play it!</b> and write a program to get me there.</p>`,
+  say:"Make it as easy or as tricky as you like!"},
+ {type:"build",title:"My own maze",say:"Pick a thing, then tap a square to put it there."},
  {type:"done"}]}
 ]};
 

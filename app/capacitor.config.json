@@ -1,0 +1,41 @@
+{
+  "appId": "com.wolfhope.typemonkey",
+  "appName": "TypeMonkey",
+  "webDir": "www",
+  "backgroundColor": "#F2F5F1",
+  "loggingBehavior": "debug",
+  "server": {
+    "androidScheme": "https",
+    "iosScheme": "capacitor",
+    "hostname": "localhost"
+  },
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#F2F5F1",
+    "preferredContentMode": "mobile",
+    "scrollEnabled": true,
+    "allowsLinkPreview": false
+  },
+  "android": {
+    "backgroundColor": "#F2F5F1",
+    "allowMixedContent": false,
+    "captureInput": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 600,
+      "launchAutoHide": true,
+      "launchFadeOutDuration": 250,
+      "backgroundColor": "#F2F5F1",
+      "showSpinner": false,
+      "androidScaleType": "CENTER_CROP",
+      "splashFullScreen": false,
+      "splashImmersive": false
+    },
+    "StatusBar": {
+      "style": "DEFAULT",
+      "overlaysWebView": false,
+      "backgroundColor": "#F2F5F1"
+    }
+  }
+}

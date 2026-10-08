@@ -8,28 +8,38 @@ A play-along app for learning to code, guided by TypeMonkey, an orange monkey wi
 
 | Course | Size | How it works in the app |
 |---|---|---|
-| JavaScript | 6 units · 25 lessons | Runs live in the browser |
-| Python | 6 units · 20 lessons | Runs live (Brython, bundled) |
-| HTML & CSS | 4 units · 12 lessons | Pages render live; challenges inspect the page you built |
-| SQL | 4 units · 12 lessons | Runs live on the TypeMonkey Zoo database (in-house SQL engine); results show as tables |
-| C# | 4 units · 12 lessons | Runs live (in-house C#/C++ runner) |
-| C++ | 4 units · 12 lessons | Runs live (in-house C#/C++ runner) |
-| TypeMonkey Jr. (ages 7–12) | 4 units · 13 lessons | Block-coding mazes: sequences, loops, repeat-until, if-tree-ahead choices, banana hunts, debugging, plus logic games |
+| JavaScript | 7 units · 29 lessons | Runs live in the browser |
+| Build a Game (JavaScript) | 6 units · 24 lessons | Runs live on a retro "game screen": dice, mazes, card games, boss battles |
+| Python | 9 units · 34 lessons | Runs live (Brython, bundled) |
+| HTML & CSS | 7 units · 26 lessons | Pages render live; challenges inspect the page you built |
+| SQL | 7 units · 24 lessons | Runs live on the TypeMonkey Zoo database (in-house SQL engine) |
+| C# | 7 units · 26 lessons | Runs live (in-house C#/C++/Java runner, with inheritance) |
+| C++ | 7 units · 26 lessons | Runs live (in-house runner, checked against g++) |
+| Java | 6 units · 24 lessons | Runs live (in-house runner, checked against javac) |
+| Swift | 6 units · 24 lessons | Runs live (in-house Swift runner, checked against a real Swift 6 compiler) |
+| TypeMonkey Jr. (ages 7–12) | 6 units · 21 lessons | No typing: block mazes, dance party, sorting machine, banana boxes, predict puzzles and a puzzle maker |
 
-All code challenges are graded by running the learner's code (with changed values too, so hard-coded answers fail).
+Plus two hands-on sections (Python):
 
-Every course ends each unit with a project. Exercise types: explanations with runnable demos, code challenges, quizzes, fill-in-the-blank, put-the-lines-in-order, Output Rush (a timed "what prints?" game) and, for kids, maze puzzles.
+- **🏗️ Build Projects:** 8 projects across Beginner, Intermediate and Advanced. Each is a mission brief, small missions that teach one piece, then a final build TypeMonkey checks by playing your program with different inputs. Pick any project in an open level; a level opens after any 2 projects in the level before it.
+- **🐛 Bug Lab:** 5 levels of broken code to fix, from syntax slips to debugging a mini-project, with hints that come one at a time.
+
+On phones, most code challenges can be solved by **tapping tiles** (word tiles for one-liners, line tiles to put in order) instead of typing, with a ⌨️ Type it switch for anyone who wants to type; typing gets a row of code symbols above the keyboard. All code challenges are graded by running the learner's code (with changed values or several inputs, so hard-coded answers fail). Help comes as a ladder: one clue, then the plan, then the answer. Early lessons add a warm-up before longer code.
 
 Also included:
 
-- **Playground:** free coding in all six languages, including SQL against the zoo database.
-- **Review:** every missed quiz, fill-in, ordering puzzle and Output Rush question comes back with spaced repetition (right away, then after 1, 3 and 7 days).
-- **Shop:** spend bananas on fur colors, hats, glasses and neckwear for TypeMonkey; the look appears everywhere he does.
-- **Practice rush:** a 60-second review game drawing from every lesson you've finished.
-- **Progress:** XP, bananas, daily streak, and resume-where-you-left-off, saved on the device.
-- **Business model:** Unit 1 of each course is free; a one-time $4.99 unlock opens everything (currently a demo button).
+- **TypeMonkey Jr. help:** a clear goal line on every puzzle, kind "oops" messages, step-by-step hints that glow on the block to fix, a gentle "can you make it shorter?" nudge, and the kid's blocks shown as real code after each win.
+- **Phone-first lessons:** a winding path map of big lesson circles, one big Check / Continue / Run button pinned at the bottom, feedback that slides up above it, and the tile tray docked like a keyboard. No hearts or lives.
+- **Playground:** free coding in every language, with an input box for programs that ask questions.
+- **Daily challenge:** new every day. Coders get two freshly generated "what prints?" puzzles and a small code task in their current language, harder as they progress; Jr.-only kids get a brand-new maze, dance and banana box.
+- **Review:** missed questions come back with spaced repetition.
+- **Shop & badges:** spend bananas on outfits for TypeMonkey; earn badges.
+- **Sounds & music:** soft synthesized effects (no audio files): each dance move has its own sound, the monkey goes "nom" on bananas and "bonk" on trees, banana boxes plop higher as they fill. Jr. puzzles play a dance beat or a calm jungle tune. Sounds switch in the top bar and Settings; Music has its own switch in Settings.
+- **Backup code:** Settings → Back up my progress makes a `TM1-` code (or a file) you can paste on another device to restore lessons, bananas and outfits. Codes are checked before anything is replaced.
+- **Progress:** XP, bananas, daily streak and resume-where-you-left-off, saved on the device.
+- **Business model:** Unit 1 of each course is free; a one-time $4.99 unlock opens everything (currently a demo button behind a grown-up check).
 
-Everything runs on the device. There are no servers, accounts, API keys or outside services.
+Everything runs on the device, including the fonts (bundled Latin subsets of Baloo 2, Nunito and JetBrains Mono, SIL Open Font License; see src/fonts). There are no servers, accounts, API keys, outside services or network requests.
 
 ## Project layout
 
@@ -50,6 +60,11 @@ tests/verify_compiled.py       runs every C++ (g++), Python (python3) and SQL (S
 tests/verify_python_engine.py  app's Python vs python3 on every snippet
 tests/verify_sql_engine.py     app's SQL engine vs SQLite
 tests/verify_clike.py          app's C++ runner vs g++, C# runner vs verified answers
+tests/verify_java.py           app's Java runner vs javac
+tests/verify_swift.py          app's Swift runner vs expected outputs
+tests/verify_swift_real.py     app's Swift runner vs a real Swift compiler (set SWIFTC=/path/to/swiftc; skips if unset)
+tests/verify_extras.py         Build Projects and Bug Lab answers vs python3
+tests/verify_daily.py          generated daily challenges (120 days x every level) vs the app runner and python3
 index.html                     built app (generated)
 ```
 
@@ -63,6 +78,8 @@ pip install playwright && python -m playwright install chromium
 python3 tests/verify_course.py    # JavaScript, HTML & CSS, mazes, and structure of every course
 python3 tests/verify_compiled.py  # C++, Python and SQL answers (needs g++, python3, node)
 python3 tests/verify_python_engine.py && python3 tests/verify_sql_engine.py && python3 tests/verify_clike.py
+python3 tests/verify_java.py && python3 tests/verify_swift.py && python3 tests/verify_extras.py && python3 tests/verify_daily.py
+SWIFTC=/opt/swiftwasm/swift-wasm-6.0.2-RELEASE/usr/bin/swiftc python3 tests/verify_swift_real.py  # swiftwasm 6.0.2 (Ubuntu 22.04) from GitHub releases
 ```
 
 Open `index.html` in any browser to use the app.
@@ -88,3 +105,7 @@ Run both test scripts after editing lessons. They catch wrong answers, unsolvabl
 - Terms of Service and Privacy Policy screens (needed for the app stores; kids section needs COPPA review)
 - Native apps for iPhone, iPad, Android and desktop (wrap with Capacitor; Apple developer account $99/yr, Google Play $25 once)
 - Real in-app purchase through the App Store and Google Play
+
+## Native app
+
+`app/` wraps `index.html` for the App Store and Google Play with Capacitor 7. On a Mac: `cd app && npm install && python3 build_app.py --setup` once (creates `app/ios` and `app/android`), then `python3 build_app.py && npx cap open ios` (or `android`) after every change. See [app/README.md](app/README.md) for running on a phone, version numbers, and the in-app purchase checklist.

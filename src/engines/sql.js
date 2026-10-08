@@ -1,6 +1,6 @@
 /* TypeMonkey SQL: a small in-house SQL engine with SQLite-style behavior.
    Supports CREATE TABLE, INSERT, UPDATE, DELETE and SELECT with DISTINCT, joins (INNER/LEFT),
-   WHERE, GROUP BY, HAVING, ORDER BY, LIMIT/OFFSET, subqueries (incl. EXISTS), WITH, CASE, aggregates and common functions.
+   WHERE, GROUP BY, HAVING, ORDER BY, LIMIT/OFFSET, subqueries, CASE, aggregates and common functions.
    TMSQL.run(sql, tables) -> {ok, columns, rows, error}. Tables: {name:{cols:[...], rows:[[...]]}} (copied, never mutated). */
 const TMSQL=(()=>{
   class Real{constructor(x){this.x=x}}           // REAL values (so 4.0 prints as 4.0, like SQLite)
@@ -153,7 +153,6 @@ const TMSQL=(()=>{
       if(isKw("TRUE")){p++;return {lit:1}}
       if(isKw("FALSE")){p++;return {lit:0}}
       if(acceptOp("(")){if(isKw("SELECT")){const q=select();op(")");return {scalar:q}}const e=expr();op(")");return e}
-      if(isKw("EXISTS")){p++;op("(");if(!isKw("SELECT"))fail("EXISTS needs a query, like EXISTS (SELECT ...)");const q=select();op(")");return {exists:q}}
       if(isKw("CASE")){
         p++;let base=null;if(!isKw("WHEN"))base=expr();const whens=[];
         while(acceptKw("WHEN")){const w=expr();kw("THEN");whens.push([w,expr()])}
@@ -231,7 +230,6 @@ const TMSQL=(()=>{
       return lookup(ctx,e);
     }
     if(e.scalar){const r=runSelect(e.scalar,db,ctx);return r.rows.length?r.rows[0][0]:null}
-    if(e.exists)return runSelect(e.exists,db,ctx).rows.length?1:0;
     if(e.cas){
       const base=e.base?evalE(e.base,ctx,db):undefined;
       for(const [w,t] of e.whens){const wv=evalE(w,ctx,db);if(base!==undefined?(base!==null&&wv!==null&&compare(base,wv)===0):truthy(wv))return evalE(t,ctx,db)}

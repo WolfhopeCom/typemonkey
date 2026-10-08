@@ -6,11 +6,11 @@
        and fill-in must run without errors (demo output is listed with -v for a human check).
 Usage: python3 tests/verify_clike.py [-v]
 """
-import json, os, pathlib, re, subprocess, sys, tempfile
+import json, pathlib, re, subprocess, sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tests"))
-from verify_compiled import load_courses, run_cpp, norm, CPP_HEAD  # noqa: E402
+from verify_compiled import load_courses, run_cpp, norm  # noqa: E402
 
 VERBOSE = "-v" in sys.argv
 
@@ -28,12 +28,134 @@ EXTRA_CPP = [
     '#include <iostream>\nclass Counter {\nint count = 0;\npublic:\n  void add() { count++; }\n  int get() const { return count; }\n};\nint main() { Counter c; Counter d = c; c.add(); c.add(); d.add(); std::cout << c.get() << d.get(); }',
     'std::vector<std::vector<int>> g = {{1, 2}, {3, 4}};\nint s = 0;\nfor (auto& row : g) for (int x : row) s += x;\nstd::cout << s << g[1][0];',
     'int total = 0;\nint i = 10;\nwhile (true) {\n  if (i <= 0) break;\n  total += i;\n  i -= 3;\n}\nstd::cout << total;',
-    # std::map: missing keys get the value type's default, iteration is sorted by key
-    '#include <iostream>\n#include <map>\n#include <string>\nint main() {\n  std::map<std::string, std::string> m;\n  std::cout << "[" << m["x"] << "]" << m.size();\n  std::map<int, int> sq = {{3, 9}, {1, 1}, {2, 4}};\n  for (const auto& p : sq) std::cout << p.first << p.second;\n  std::cout << sq.at(2) << sq.empty();\n}',
-    # string rfind / npos / erase / replace
-    'std::string s = "a-b-c";\nstd::cout << s.rfind("-") << " " << (s.find("z") == std::string::npos);\ns.erase(1, 1);\ns.replace(0, 1, "X");\nstd::cout << " " << s;',
-    # overloaded free functions, returning {..} as a struct, iterator arithmetic, char& over a string
-    '#include <iostream>\n#include <string>\n#include <vector>\nint f(int a) { return a; }\nint f(int a, int b) { return a * b; }\nstruct P { int x, y; };\nP mk(int v) { return {v, v + 1}; }\nint main() {\n  P p = mk(f(3, 2));\n  std::cout << f(1) << p.x << p.y;\n  std::vector<int> v = {1, 2, 3, 4};\n  v.erase(v.begin() + 2);\n  for (int x : v) std::cout << x;\n  std::string w = "ab";\n  for (char& c : w) c = toupper(c);\n  std::cout << w;\n}',
+    # inheritance: virtual/override through A&, A*, vector<A*>, auto; non-virtual uses the static type;
+    # Base::method(), init-list base constructors, struct inheritance, slicing, pure virtual, dynamic_cast
+    r'''#include <iostream>
+#include <string>
+#include <vector>
+using namespace std;
+
+class Animal {
+protected:
+  string name;
+public:
+  Animal(string n) : name(n) {}
+  virtual ~Animal() {}
+  virtual string speak() const { return "..."; }
+  string plain() const { return "animal plain"; }
+  void hello() const { cout << name << " says " << speak() << "\n"; }
+  string getName() const { return name; }
+};
+class Dog : public Animal {
+public:
+  Dog(string n) : Animal(n) {}
+  string speak() const override { return "Woof"; }
+  string plain() const { return "dog plain"; }
+  void fetch() { cout << name << " fetches\n"; }
+};
+class Puppy : public Dog {
+public:
+  Puppy(string n) : Dog(n + " Jr") {}
+  string speak() const override { return "Yip " + Dog::speak(); }
+};
+class Cat : public Animal {
+public:
+  Cat() : Animal("Kitty") {}
+  string speak() const override { return "Meow"; }
+};
+struct Base { int x = 1; void show() { cout << "Base " << x << "\n"; } };
+struct Derived : Base { int y = 2; void show() { cout << "Derived " << x << y << "\n"; } };
+
+class Shape {
+public:
+  virtual double area() const = 0;
+  virtual string label() const { return "shape"; }
+};
+class Rect : public Shape {
+  double w, h;
+public:
+  Rect(double w, double h) : w(w), h(h) {}
+  double area() const override { return w * h; }
+};
+
+void introduce(const Animal& a) { a.hello(); cout << a.plain() << "\n"; }
+void byValue(Animal a) { cout << a.speak() << "\n"; }
+
+int main() {
+  Dog d("Rex");
+  Cat c;
+  Puppy p("Rex");
+  introduce(d);
+  introduce(c);
+  introduce(p);
+  byValue(d);
+  Animal& r = d;
+  cout << r.speak() << " " << r.plain() << " " << d.plain() << "\n";
+  Animal* ptr = &p;
+  cout << ptr->speak() << " " << ptr->plain() << "\n";
+  vector<Animal*> zoo = {new Dog("A"), new Cat(), new Puppy("B")};
+  zoo.push_back(new Animal("Plain"));
+  for (Animal* a : zoo) cout << a->getName() << ": " << a->speak() << "\n";
+  for (auto a : zoo) cout << a->plain() << "\n";
+  for (int i = 0; i < zoo.size(); i++) cout << zoo[i]->speak();
+  cout << "\n";
+  Derived dv;
+  dv.show();
+  Base& br = dv;
+  br.show();
+  Base b2 = dv;
+  b2.show();
+  Rect rc(2, 3);
+  Shape& s = rc;
+  cout << s.area() << " " << s.label() << "\n";
+  Dog* dd = dynamic_cast<Dog*>(zoo[2]);
+  if (dd) dd->fetch();
+  Dog* none = dynamic_cast<Dog*>(zoo[1]);
+  cout << (none == nullptr) << "\n";
+  for (Animal* a : zoo) delete a;
+  return 0;
+}''',
+    # braced initializers straight into const Struct& / by-value params, returns, push_back, emplace_back, Item{...}
+    r'''#include <iostream>
+#include <string>
+#include <vector>
+using namespace std;
+struct Item { std::string name; int qty; };
+struct Point { int x; int y; Point(int a, int b) : x(a), y(b) {} };
+void tag(const Item& it) { std::cout << it.name << " - " << it.qty << "\n"; }
+void tagv(Item it) { std::cout << it.name << " = " << it.qty << "\n"; }
+void pt(const Point& p) { cout << p.x << "," << p.y << "\n"; }
+Item make(int n) { return {"made", n}; }
+Point origin() { return {0, 0}; }
+struct Pair : Item { bool ok; };
+int main() {
+  tag({"banana", 2});
+  tagv({"apple", 5});
+  pt({3, 4});
+  Item m = make(7);
+  tag(m);
+  tag(make(9));
+  pt(origin());
+  vector<Item> items;
+  items.push_back({"kiwi", 1});
+  items.emplace_back(Item{"fig", 3});
+  vector<Point> ps;
+  ps.emplace_back(5, 6);
+  ps.push_back({7, 8});
+  ps.push_back(Point(9, 10));
+  for (const auto& i : items) tag(i);
+  for (const auto& p : ps) pt(p);
+  Item a;
+  a = {"plum", 4};
+  tag(a);
+  Pair pr{{"pear", 6}, true};
+  tag(pr);
+  cout << pr.ok << "\n";
+}''',
+    'struct Item { std::string name; int qty; };\nvoid tag(const Item& it) { std::cout << it.name << " - " << it.qty << "\\n"; }\nint main() { tag({"banana", 2}); }',
+    '#include <iostream>\nstruct A { int v; A(int x) : v(x) { std::cout << "A" << x; } };\nstruct B : A { int w; B() : A(3), w(4) { std::cout << "B" << v << w; } };\nint main() { B b; std::cout << b.v; }',
+    '#include <iostream>\nclass A { public: virtual void f() = 0; void g() { f(); } virtual ~A() = default; };\nclass B : public A { public: void f() override { std::cout << "B::f "; } };\nclass C : public B { public: void f() override { std::cout << "C::f "; B::f(); } };\nint main() { C c; B b; A* xs[] = {&b, &c}; for (A* a : xs) a->g(); }',
+    'class Counter {\nprotected:\n  int n = 0;\npublic:\n  void add() { n++; }\n};\nclass Loud : public Counter {\npublic:\n  void add() { Counter::add(); Counter::add(); std::cout << n; }\n};\nint main() { Loud l; l.add(); l.add(); Counter& c = l; c.add(); std::cout << " "; l.add(); }',
 ]
 
 EXTRA_CS = [  # (code, expected output)
@@ -51,21 +173,101 @@ EXTRA_CS = [  # (code, expected output)
     ('string s = "banana";\nConsole.WriteLine(s.Length);\nConsole.WriteLine(s.Substring(1, 3).ToUpper());\nConsole.WriteLine(s.Replace("a", "o"));', '6\nANA\nbonono'),
     ('using System;\n\nclass Program {\n  static int Square(int n) { return n * n; }\n  static void Main() {\n    Console.WriteLine(Square(9));\n  }\n}', '81'),
     ('double avg = (90 + 85 + 77) / 3.0;\nConsole.WriteLine(Math.Round(avg, 1));', '84'),
-    ('Console.WriteLine(string.Format("{0,-5}|{1,3}", "ab", 7));\nint[] a = { 3, 1, 2 };\nArray.Sort(a);\nConsole.WriteLine(string.Join(",", a));', 'ab   |  7\n1,2,3'),
-    ('var l = new List<int> { 4, 9, 2 };\nConsole.WriteLine(l.OrderByDescending(x => x).First());\nConsole.WriteLine(l.Max(x => x * 2) + " " + l.Average(x => x * 1.0));\nConsole.WriteLine(l.Skip(1).Take(1).Sum() + " " + l.Count(x => x > 3) + " " + l.Count);', '9\n18 5\n9 2 3'),
-    ('A x = new C();\nConsole.WriteLine(x.W() + (x is B) + (x is C));\nif (x is B b) Console.WriteLine(b.W());\n\nclass A { public virtual string W() => "a"; }\nclass B : A { public override string W() => "b" + base.W(); }\nclass C : B { }', 'baTrueTrue\nba'),
-    ('var k = new Kid("Mo", 7);\nConsole.WriteLine(k);\nConsole.WriteLine(k.Hello());\n\nclass Person {\n  public string Name { get; }\n  public Person(string name) { Name = name; }\n  public virtual string Hello() => $"Hi, I am {Name}";\n  public override string ToString() => $"Person {Name}";\n}\nclass Kid : Person {\n  public int Age;\n  public Kid(string name, int age) : base(name) { Age = age; }\n  public override string Hello() => base.Hello() + $" and I am {Age}";\n  public override string ToString() => $"Kid {Name}";\n}', 'Kid Mo\nHi, I am Mo and I am 7'),
+    # inheritance: abstract, virtual/override (several levels), base.Method(), : base(...), : this(...), new (hiding),
+    # is / as / casts, List<Base> dispatch, ToString override, exception subclasses
+    (r'''using System;
+using System.Collections.Generic;
+
+abstract class Shape {
+  protected string name;
+  public Shape(string name) { this.name = name; }
+  public abstract double Area();
+  public virtual string Describe() { return $"{name} with area {Area():F1}"; }
+}
+class Circle : Shape {
+  double r;
+  public Circle(double r) : base("Circle") { this.r = r; }
+  public override double Area() => Math.PI * r * r;
+}
+class Square : Shape {
+  protected double s;
+  public Square(double s) : base("Square") { this.s = s; }
+  public override double Area() { return s * s; }
+  public override string Describe() { return "[] " + base.Describe(); }
+}
+class Cube : Square {
+  public Cube(double s) : base(s) { name = "Cube"; }
+  public override double Area() { return 6 * base.Area(); }
+}
+class Animal {
+  public string Name { get; set; }
+  public Animal(string n) { Name = n; }
+  public virtual string Speak() => "...";
+  public string Hello() { return Name + " says " + Speak(); }
+  public string Plain() { return "animal plain"; }
+  public override string ToString() => "Animal " + Name;
+}
+class Dog : Animal {
+  public Dog(string n) : base(n) {}
+  public override string Speak() => "Woof";
+  public new string Plain() { return "dog plain"; }
+  public void Fetch() { Console.WriteLine(Name + " fetches"); }
+}
+class Cat : Animal {
+  public Cat() : this("Kitty") {}
+  public Cat(string n) : base(n) {}
+  public override string Speak() { return "Meow"; }
+}
+class MyErr : Exception { public MyErr(string m) : base(m) {} }
+
+class Program {
+  static void Main() {
+    List<Shape> shapes = new List<Shape> { new Circle(1), new Square(2), new Cube(2) };
+    foreach (Shape s in shapes) Console.WriteLine(s.Describe());
+    var zoo = new List<Animal> { new Dog("Rex"), new Cat(), new Animal("Bob") };
+    foreach (var a in zoo) {
+      Console.WriteLine(a.Hello());
+      if (a is Dog d) d.Fetch();
+      Dog maybe = a as Dog;
+      Console.WriteLine(maybe == null ? "not a dog" : "a dog");
+      Console.WriteLine(a.Plain());
+    }
+    Animal x = new Dog("Max");
+    Console.WriteLine(x.Speak() + " " + x.Plain() + " " + ((Dog)x).Plain());
+    Console.WriteLine(x);
+    Console.WriteLine(x is Animal);
+    try { throw new MyErr("bad thing"); } catch (MyErr e) { Console.WriteLine("caught " + e.Message); }
+    try { Cat c = (Cat)x; } catch (InvalidCastException e) { Console.WriteLine("cast failed"); }
+  }
+}''', 'Circle with area 3.1\n[] Square with area 4.0\n[] Cube with area 24.0\nRex says Woof\nRex fetches\na dog\nanimal plain\nKitty says Meow\nnot a dog\nanimal plain\nBob says ...\nnot a dog\nanimal plain\nWoof animal plain dog plain\nAnimal Max\nTrue\ncaught bad thing\ncast failed'),
+    ('Animal a = new Dog();\nConsole.WriteLine(a.Sound + " " + a.Legs);\nConsole.WriteLine(a.Describe());\nclass Animal { public virtual string Sound => "?"; public int Legs { get; set; } = 4; public string Describe() => $"I say {Sound}"; }\nclass Dog : Animal { public override string Sound => "Woof"; }', 'Woof 4\nI say Woof'),
+    ('var d = new Dog { Name = "Rex", Age = 3 };\nConsole.WriteLine(d.Name + d.Age + d.Info());\nclass Pet { public string Name { get; set; } public string Info() => "!" + Name; }\nclass Dog : Pet { public int Age { get; set; } }', 'Rex3!Rex'),
+    ('class Base { public static int Count = 0; protected int id; public Base() { Count++; id = Count; } }\nclass Kid : Base { public int Id() { return id * 10; } }\nvar k1 = new Kid(); var k2 = new Kid();\nConsole.WriteLine(k2.Id() + " " + Base.Count);', '20 2'),
+    ('object o = "hi";\nif (o is string s) Console.WriteLine(s.Length);\nobject n = 5;\nConsole.WriteLine(n is int);', '2\nTrue'),
+]
+
+ERR_CS = [  # (code, part of the error TypeMonkey must report)
+    ('class A { public void F() {} }\nclass B : A { public override void F() {} }\nnew B().F();', 'no suitable method found to override'),
+    ('abstract class A { public abstract void F(); }\nvar a = new A();', 'Cannot create an instance of the abstract type'),
+    ('abstract class A { public abstract void F(); }\nclass B : A { }\nConsole.WriteLine(1);', 'does not implement inherited abstract member'),
+    ('class A { public A(string n) {} }\nclass B : A { public B() {} }\nnew B();', 'There is no argument given'),
+    ('class B : Zebra { }\nConsole.WriteLine(1);', "'Zebra' could not be found"),
+]
+ERR_CPP = [  # TypeMonkey must report an error, and g++ must refuse to compile them too
+    'class A { public: void f() {} };\nclass B : public A { public: void f() override {} };\nint main() { B b; }',
+    'class A { public: virtual void f() = 0; };\nclass B : public A {};\nint main() { B b; }',
+    'class A { public: A(int x) {} };\nclass B : public A { public: B() {} };\nint main() { B b; }',
 ]
 
 
 def run_tmc(items):
     script = (ROOT / "src" / "engines" / "clike.js").read_text() + """
 const I=JSON.parse(require('fs').readFileSync(0,'utf8'));
-console.log(JSON.stringify(I.map(([c,l,i])=>TMC.run(c,l,i,true))));"""
+console.log(JSON.stringify(I.map(([c,l,i,q])=>TMC.run(c,l,i,q))));"""
     tmp = ROOT / "tests" / ".clike.js"
     tmp.write_text(script)
     try:
-        r = subprocess.run(["node", str(tmp)], input=json.dumps([list(x) + [INPUTS.get(x[0])] for x in items]), capture_output=True, text=True)
+        r = subprocess.run(["node", str(tmp)], input=json.dumps([list(x) + [INPUTS.get(x[0]), x[0] in QUIET] for x in items]), capture_output=True, text=True)
         if r.returncode:
             print(r.stderr[-2000:])
             sys.exit(1)
@@ -75,56 +277,34 @@ console.log(JSON.stringify(I.map(([c,l,i])=>TMC.run(c,l,i,true))));"""
 
 
 INPUTS = {}  # demo code -> what the learner types in the Input box
+QUIET = set()  # code-challenge hints: run without echoing the typed input, like the grader does
 
 
-def run_cpp_in(code, stdin=""):
-    """Like verify_compiled.run_cpp, but types `stdin` into the program."""
-    if not stdin:
-        return run_cpp(code)
-    attempts = [CPP_HEAD + code] if "int main" in code else [CPP_HEAD + "int main() {\n" + code + "\n}", CPP_HEAD + code + "\nint main() {}"]
-    last = ""
-    for prog in attempts:
-        with tempfile.TemporaryDirectory() as d:
-            src, exe = os.path.join(d, "t.cpp"), os.path.join(d, "t")
-            pathlib.Path(src).write_text(prog)
-            c = subprocess.run(["g++", "-std=c++17", "-w", src, "-o", exe], capture_output=True, text=True)
-            if c.returncode:
-                last = c.stderr.strip().splitlines()[0] if c.stderr.strip() else "compile error"
-                continue
-            r = subprocess.run([exe], capture_output=True, text=True, timeout=5, input=stdin)
-            return True, r.stdout
-    return False, last
-
-
-def challenge_checks(course):
-    """C++ code challenges: the hint, compiled with g++, must print the expected lines for every test input
-    (and TypeMonkey's runner must agree with g++)."""
-    cases = []
-    for unit in course["units"]:
-        for l in unit["lessons"]:
-            for i, s in enumerate(l.get("steps", [])):
-                if s["type"] != "code":
-                    continue
-                if s.get("tests"):
-                    for t in s["tests"]:
-                        cases.append((l["id"], i, s["hint"], t.get("input") or "", t["out"]))
-                elif s.get("out"):
-                    cases.append((l["id"], i, s["hint"], s.get("input") or "", s["out"]))
-    return cases
+def run_cpp_input(code, stdin):
+    """Like run_cpp, but feeds `stdin` to the program (for cin-based challenges)."""
+    import os, tempfile
+    from verify_compiled import CPP_HEAD
+    prog = CPP_HEAD + code if "int main" in code else CPP_HEAD + "int main() {\n" + code + "\n}"
+    with tempfile.TemporaryDirectory() as d:
+        src, exe = os.path.join(d, "t.cpp"), os.path.join(d, "t")
+        pathlib.Path(src).write_text(prog)
+        c = subprocess.run(["g++", "-std=c++17", "-w", src, "-o", exe], capture_output=True, text=True)
+        if c.returncode:
+            return False, "compile error"
+        r = subprocess.run([exe], capture_output=True, text=True, timeout=5, input=stdin)
+        return True, r.stdout
 
 
 def snippets(course):
     for unit in course["units"]:
         for l in unit["lessons"]:
-            for s in l.get("steps", []):
-                if s["type"] == "code" and (s.get("tests") or s.get("input")):
-                    INPUTS[s["hint"]] = s["tests"][0]["input"] if s.get("tests") else s["input"]
             for code, opts in l.get("pool", []):
                 yield l["id"], "game", code, opts[0]
             for i, s in enumerate(l.get("steps", [])):
                 if s["type"] == "talk" and s.get("demo"):
                     if s.get("input"):
                         INPUTS[s["demo"]] = s["input"]
+                        QUIET.add(s["demo"])
                     yield l["id"], f"step {i} demo", s["demo"], None
                 if s["type"] == "quiz" and s.get("code"):
                     yield l["id"], f"step {i} quiz", s["code"], s["opts"][s["a"]] if "print" in s["q"] else None
@@ -133,7 +313,15 @@ def snippets(course):
                 if s["type"] == "order":
                     yield l["id"], f"step {i} order", "\n".join(s["lines"]), s.get("out")
                 if s["type"] == "code":
-                    yield l["id"], f"step {i} hint", s["hint"], None
+                    tests = s.get("tests") or ([{"input": s["input"], "out": s.get("out")}] if s.get("input") else [])
+                    if tests:  # input-reading challenges: run the hint with every test's typed input
+                        for j, t in enumerate(tests):
+                            code = s["hint"] + "\n" * (j + 1)  # unique key per test input
+                            INPUTS[code] = t["input"]
+                            QUIET.add(code)
+                            yield l["id"], f"step {i} hint test {j}", code, "\n".join(t["out"]) if t.get("out") is not None else None
+                    else:
+                        yield l["id"], f"step {i} hint", s["hint"], None
 
 
 def main():
@@ -145,7 +333,7 @@ def main():
     ours = run_tmc([[c, "cpp"] for _, _, c, _ in cpp])
     compared = 0
     for (lid, what, code, exp), mine in zip(cpp, ours):
-        ok, real = run_cpp_in(code, INPUTS.get(code) or "")
+        ok, real = run_cpp_input(code, INPUTS[code]) if code in QUIET else run_cpp(code)
         if not ok:
             continue  # fragments that need context (g++ can't compile them alone either)
         compared += 1
@@ -153,29 +341,6 @@ def main():
             problems.append(f"C++ {lid} {what}: g++ prints {norm(real)!r}, TypeMonkey prints {norm(mine['out'])!r} {mine['error'] or ''}\n    {code[:200]!r}")
         elif VERBOSE:
             print(f"  ok C++ {lid} {what}: {norm(real)[:80]!r}")
-    # ---- C++ code challenges: g++ must print the expected output for each test input
-    chal = challenge_checks(courses["cpp"])
-    script = (ROOT / "src" / "engines" / "clike.js").read_text() + """
-const I=JSON.parse(require('fs').readFileSync(0,'utf8'));
-console.log(JSON.stringify(I.map(([c,i])=>TMC.run(c,"cpp",i,true))));"""
-    tmp = ROOT / "tests" / ".clike2.js"
-    tmp.write_text(script)
-    try:
-        r = subprocess.run(["node", str(tmp)], input=json.dumps([[c, i] for _, _, c, i, _ in chal]), capture_output=True, text=True, check=True)
-        ours2 = json.loads(r.stdout)
-    finally:
-        tmp.unlink()
-    for (lid, i, code, stdin, want), mine in zip(chal, ours2):
-        ok, real = run_cpp_in(code, stdin)
-        if not ok:
-            problems.append(f"C++ {lid} step {i} hint doesn't compile with g++: {real}")
-            continue
-        got = [l.rstrip() for l in real.rstrip("\n").split("\n")] if real.strip("\n") else []
-        if [w.strip() for w in want] != [g.strip() for g in got]:
-            problems.append(f"C++ {lid} step {i} hint: expected {want!r}, g++ prints {got!r} (input {stdin!r})")
-        if mine["error"] or norm(mine["out"]) != norm(real):
-            problems.append(f"C++ {lid} step {i} hint: g++ prints {norm(real)!r}, TypeMonkey prints {norm(mine['out'])!r} {mine['error'] or ''} (input {stdin!r})")
-        compared += 1
     # ---- C# against verified answers
     cs = list(snippets(courses["cs"]))
     cs_extra = [("extra", f"extra {i}", c, e) for i, (c, e) in enumerate(EXTRA_CS)]
@@ -195,6 +360,15 @@ console.log(JSON.stringify(I.map(([c,i])=>TMC.run(c,"cpp",i,true))));"""
             problems.append(f"C# {lid} {what}: expected {norm(exp)!r}, TypeMonkey prints {norm(mine['out'])!r}\n    {code[:200]!r}")
         elif VERBOSE:
             print(f"  ok C# {lid} {what}: {norm(mine['out'])[:100]!r}")
+    # ---- programs that must be rejected
+    ours = run_tmc([[c, "cs"] for c, _ in ERR_CS] + [[c, "cpp"] for c in ERR_CPP])
+    for (code, want), mine in zip(ERR_CS, ours):
+        if not mine["error"] or want not in mine["error"]:
+            problems.append(f"C# error case: expected an error with {want!r}, TypeMonkey says {mine['error']!r}\n    {code[:200]!r}")
+    for code, mine in zip(ERR_CPP, ours[len(ERR_CS):]):
+        ok, _ = run_cpp(code)
+        if ok or not mine["error"]:
+            problems.append(f"C++ error case: g++ {'compiles' if ok else 'rejects'} it, TypeMonkey says {mine['error']!r}\n    {code[:200]!r}")
     for p in problems:
         print("✖", p)
     print(f"C++: {compared} snippets compared with g++. C#: {len(cs) + len(cs_extra)} snippets checked. {len(problems)} problem(s)")
