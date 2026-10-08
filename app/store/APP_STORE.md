@@ -19,7 +19,7 @@ Everything to copy into App Store Connect, plus the exact steps. Screenshots are
 
 **Apps → + → New App**
 - Platform: **iOS**
-- Name: **TypeMonkey**. If it's taken, try **TypeMonkey: Learn to Code**.
+- Name: **TypeMonkey: Learn To Code** (the home-screen icon still says TypeMonkey)
 - Primary language: English (U.S.)
 - Bundle ID: **com.wolfhope.typemonkey**. If it's not in the list, register it first: developer.apple.com → Certificates, IDs & Profiles → Identifiers → +, App ID, with **In-App Purchase** checked.
 - SKU: **typemonkey-ios**
@@ -39,7 +39,7 @@ Everything to copy into App Store Connect, plus the exact steps. Screenshots are
 
 ## 4. App information
 
-- **Subtitle (30 max):** Learn to code, one banana
+- **Subtitle (30 max):** Python, JavaScript & more (or: Coding for kids & beginners)
 - **Category:** Primary **Education**, Secondary **Developer Tools**
 - **Content rights:** Does not contain third-party content (Brython and the fonts are open-source and credited in Settings).
 - **Age rating questionnaire:** answer **None / No** to everything (no violence, no mature themes, no gambling, no unrestricted web access, no user-generated content shared with others, no chat). Result: **4+**.
@@ -91,7 +91,7 @@ Everything to copy into App Store Connect, plus the exact steps. Screenshots are
 > Unit 1 of every course is free. One purchase unlocks everything, forever. No subscription.
 
 **Keywords (100 max):**
-> learn to code,coding,programming,python,javascript,kids,swift,html,sql,java,c++,beginner
+> coding,programming,python,javascript,kids,swift,html,sql,java,c++,beginner,games,lessons
 
 **Support URL:** https://wolfhopecom.github.io/typemonkey/support.html
 **Marketing URL:** https://wolfhopecom.github.io/typemonkey/
