@@ -20,6 +20,10 @@ FRAME = """<html><body style="margin:0;width:1290px;height:2796px;background:lin
 <h1 style="color:#fff;font-size:104px;line-height:1.08;text-align:center;margin:150px 60px 80px;font-weight:900;letter-spacing:-1px;text-shadow:0 4px 0 #0002">{title}</h1>
 <div style="width:1080px;height:2330px;border-radius:90px;overflow:hidden;border:14px solid #1B2621;box-shadow:0 40px 80px #0005;background:#F2F5F1">
 <img src="data:image/png;base64,{img}" style="width:100%;display:block"></div></body></html>"""
+IPAD = """<html><body style="margin:0;width:2048px;height:2732px;background:linear-gradient(170deg,#FF8A2A,#F2642A);font-family:system-ui,-apple-system,sans-serif;display:flex;flex-direction:column;align-items:center;overflow:hidden">
+<h1 style="color:#fff;font-size:130px;line-height:1.08;text-align:center;margin:150px 80px 90px;font-weight:900;letter-spacing:-1px;text-shadow:0 4px 0 #0002">{title}</h1>
+<div style="width:1680px;height:2240px;border-radius:70px;overflow:hidden;border:18px solid #1B2621;box-shadow:0 40px 80px #0005;background:#F2F5F1">
+<img src="data:image/png;base64,{img}" style="width:100%;display:block"></div></body></html>"""
 async def main():
     OUT.mkdir(parents=True, exist_ok=True)
     async with async_playwright() as p:
@@ -36,5 +40,17 @@ async def main():
             await fr.set_content(FRAME.format(title=title, img=base64.b64encode(png).decode())); await fr.wait_for_timeout(200)
             await fr.screenshot(path=str(OUT / f"{name}.png"))
             print("wrote", name)
+        # iPad 13" (2048 x 2732): the same screens on an iPad-sized page
+        ip = await (await b.new_context(viewport={"width": 768, "height": 1024}, device_scale_factor=2, is_mobile=True, has_touch=True)).new_page()
+        await ip.goto((ROOT / "index.html").as_uri()); await ip.wait_for_timeout(800); await ip.evaluate(SETUP)
+        fi = await (await b.new_context(viewport={"width": 2048, "height": 2732})).new_page()
+        (OUT / "ipad").mkdir(exist_ok=True)
+        for name, title, js in SHOTS:
+            await ip.evaluate(js); await ip.wait_for_timeout(700)
+            await ip.evaluate("document.querySelectorAll('.celebrate,.burst,.toast').forEach(e=>e.remove())")
+            png = await ip.screenshot()
+            await fi.set_content(IPAD.format(title=title, img=base64.b64encode(png).decode())); await fi.wait_for_timeout(200)
+            await fi.screenshot(path=str(OUT / "ipad" / f"{name}.png"))
+            print("wrote ipad", name)
         await b.close()
 asyncio.run(main())
