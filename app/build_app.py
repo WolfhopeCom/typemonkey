@@ -94,33 +94,30 @@ def patch_podfile():
             print("set the App target's iOS Deployment Target to 15.0")
 
 
-AUDIO_SNIPPET = """        // TypeMonkey: let the app's sounds play even when the iPhone's silent switch is on,
-        // mixing with (not stopping) any music the player already has playing.
-        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
-        try? AVAudioSession.sharedInstance().setActive(true)
-"""
+AUDIO_MARK = "// TypeMonkey: let the app's sounds play even when the iPhone's silent switch is on,"
 
 
 def patch_app_delegate():
+    """Undo an earlier experiment: forcing the iOS audio session to .playback made the web view go silent on some
+    phones. Let WebKit manage audio as it does by default (sounds follow the silent switch)."""
     ad = IOS / "App" / "App" / "AppDelegate.swift"
     if not ad.exists():
         return
     s = ad.read_text()
-    if "AVAudioSession" in s:
+    if AUDIO_MARK not in s:
         return
-    if "import AVFoundation" not in s:
-        s = s.replace("import Capacitor", "import Capacitor\nimport AVFoundation", 1)
-    anchor = "// Override point for customization after application launch."
-    if anchor in s:
-        s = s.replace(anchor, anchor + "\n" + AUDIO_SNIPPET.rstrip("\n"), 1)
-    else:
-        m = re.search(r"didFinishLaunchingWithOptions[^{]*\{\n", s)
-        if not m:
-            print("warning: could not find didFinishLaunching in AppDelegate.swift; sounds follow the silent switch")
-            return
-        s = s[:m.end()] + AUDIO_SNIPPET + s[m.end():]
+    lines = s.split("\n")
+    out, skip = [], 0
+    for line in lines:
+        if AUDIO_MARK in line:
+            skip = 4  # the comment line, its second comment line and the two AVAudioSession lines
+        if skip:
+            skip -= 1
+            continue
+        out.append(line)
+    s = "\n".join(out).replace("import Capacitor\nimport AVFoundation", "import Capacitor", 1)
     ad.write_text(s)
-    print("patched ios/App/App/AppDelegate.swift (sounds play with the silent switch on)")
+    print("restored ios/App/App/AppDelegate.swift (default audio)")
 
 
 def patch_ios():

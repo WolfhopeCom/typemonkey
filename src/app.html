@@ -21,13 +21,13 @@
   --bad:#F26D62; --code-bg:#0D1511; --code-fg:#E0ECE6; --code-dim:#6F9283; --console:#0A110E; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55;margin:0}
-.app{max-width:720px;margin:0 auto;padding:12px 16px 40px;display:flex;flex-direction:column;gap:18px}
+.app{max-width:720px;margin:0 auto;padding:0 16px 40px;display:flex;flex-direction:column;gap:18px}
 .stack{display:flex;flex-direction:column;gap:16px}
 h1,h2,h3{font-family:var(--display);line-height:1.1;margin:0;text-wrap:balance}
 button{font:inherit;cursor:pointer}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 
-.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;align-items:center;gap:10px;padding-block:8px}
+.topbar{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;align-items:center;gap:10px;padding-block:calc(8px + env(safe-area-inset-top,0px)) 8px;margin-inline:-16px;padding-inline:16px}
 .brand{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:800;font-size:1.35rem;background:none;border:0;color:var(--fg);padding:0}
 .brand svg{width:38px;height:38px}
 .brand b{color:var(--accent)}
@@ -690,12 +690,16 @@ const SFX=(()=>{
   function wake(){ // called from inside a real user gesture
     gestured=true;if(!AC||!on())return;
     try{if(!ctx){ctx=new AC();master=ctx.createGain();master.gain.value=.7;master.connect(ctx.destination)}
-      if(ctx.state!=="running")ctx.resume().catch(()=>{});
-      // iPhone/iPad: play one silent sample inside the first tap so the audio system fully wakes up
-      if(!wake.unlocked){const b=ctx.createBuffer(1,1,22050),src=ctx.createBufferSource();src.buffer=b;src.connect(ctx.destination);src.start(0);wake.unlocked=true}
+      // iPhone/iPad only switch sound on inside certain taps (touchend/click), and can pause it again after a call or
+      // switching apps. So on every tap, until the audio is really running: resume it and play one silent sample.
+      if(ctx.state!=="running"){
+        try{const b=ctx.createBuffer(1,1,22050),src=ctx.createBufferSource();src.buffer=b;src.connect(ctx.destination);src.start(0)}catch(e){}
+        ctx.resume().catch(()=>{});
+      }
     }catch(e){ctx=null}
   }
-  if(typeof document!=="undefined")["pointerdown","touchend","keydown"].forEach(ev=>document.addEventListener(ev,wake,{capture:true,passive:true}));
+  if(typeof document!=="undefined")["pointerdown","touchend","click","keydown"].forEach(ev=>document.addEventListener(ev,wake,{capture:true,passive:true}));
+  if(typeof document!=="undefined")document.addEventListener("visibilitychange",()=>{if(!document.hidden&&ctx&&ctx.state!=="running")ctx.resume().catch(()=>{})});
   function play(name,arg){
     try{
       const r=R[name];if(!r||!on()||!gestured||!AC)return false;
