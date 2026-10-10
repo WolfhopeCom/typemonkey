@@ -22,18 +22,19 @@ A play-along app for learning to code, guided by TypeMonkey, an orange monkey wi
 Plus two hands-on sections (Python):
 
 - **🏗️ Build Projects:** 8 projects across Beginner, Intermediate and Advanced. Each is a mission brief, small missions that teach one piece, then a final build TypeMonkey checks by playing your program with different inputs. Pick any project in an open level; a level opens after any 2 projects in the level before it.
-- **🐛 Bug Lab:** 5 levels of broken code to fix, from syntax slips to debugging a mini-project, with hints that come one at a time.
+- **🐛 Bug Lab:** 5 levels of broken code to fix, from syntax slips to debugging a mini-project, with hints that come one at a time. A **↺ Start over** button (on every code challenge) brings back the original code.
 
 On phones, most code challenges can be solved by **tapping tiles** (word tiles for one-liners, line tiles to put in order) instead of typing, with a ⌨️ Type it switch for anyone who wants to type; typing gets a row of code symbols above the keyboard. All code challenges are graded by running the learner's code (with changed values or several inputs, so hard-coded answers fail). Help comes as a ladder: one clue, then the plan, then the answer. Early lessons add a warm-up before longer code.
 
 Also included:
 
-- **TypeMonkey Jr. help:** a clear goal line on every puzzle, kind "oops" messages, step-by-step hints that glow on the block to fix, a gentle "can you make it shorter?" nudge, and the kid's blocks shown as real code after each win.
+- **TypeMonkey Jr. help:** a clear goal line on every puzzle, kind "oops" messages, step-by-step hints that glow on the block to fix, a gentle "can you make it shorter?" nudge, and the kid's blocks shown as real code after each win. Mazes have a fence of the world's walls (🌴 🌵 🌊 …) so the edge is clearly blocked, a big yellow arrow shows which way TypeMonkey faces, turn blocks use road-sign arrows (↰ ↱), and a see-through "ghost" monkey shows where the program so far ends. "Tree ahead?" blocks and lesson words follow the world (🌵 Cactus ahead? in the desert). Sorting games shuffle their items every time, and "in N taps" banana boxes always ask for the true fewest taps.
 - **Phone-first lessons:** a winding path map of big lesson circles, one big Check / Continue / Run button pinned at the bottom, feedback that slides up above it, and the tile tray docked like a keyboard. No hearts or lives.
 - **Playground:** free coding in every language, with an input box for programs that ask questions.
 - **Daily challenge:** new every day. Coders get two freshly generated "what prints?" puzzles and a small code task in their current language, harder as they progress; Jr.-only kids get a brand-new maze, dance and banana box.
 - **Review:** missed questions come back with spaced repetition.
 - **Shop & badges:** spend bananas on outfits for TypeMonkey; earn badges.
+- **Motion:** screens slide in, the course map pops in, TypeMonkey breathes and sways, Jr. mazes hop, puff, bonk and spin-jump, and finishing a lesson brings light rays, count-up rewards and confetti. All of it switches off with the device's Reduce Motion setting.
 - **Sounds & music:** soft synthesized effects (no audio files): each dance move has its own sound, the monkey goes "nom" on bananas and "bonk" on trees, banana boxes plop higher as they fill. Jr. puzzles play a dance beat or a calm jungle tune. Sounds switch in the top bar and Settings; Music has its own switch in Settings.
 - **Backup code:** Settings → Back up my progress makes a `TM1-` code (or a file) you can paste on another device to restore lessons, bananas and outfits. Codes are checked before anything is replaced.
 - **Progress:** XP, bananas, daily streak and resume-where-you-left-off, saved on the device.
@@ -65,6 +66,7 @@ tests/verify_swift.py          app's Swift runner vs expected outputs
 tests/verify_swift_real.py     app's Swift runner vs a real Swift compiler (set SWIFTC=/path/to/swiftc; skips if unset)
 tests/verify_extras.py         Build Projects and Bug Lab answers vs python3
 tests/verify_daily.py          generated daily challenges (120 days x every level) vs the app runner and python3
+tests/verify_layout.py         phone layout: every lesson step and the legal pages at 390px, nothing sticks out
 index.html                     built app (generated)
 ```
 
@@ -79,6 +81,7 @@ python3 tests/verify_course.py    # JavaScript, HTML & CSS, mazes, and structure
 python3 tests/verify_compiled.py  # C++, Python and SQL answers (needs g++, python3, node)
 python3 tests/verify_python_engine.py && python3 tests/verify_sql_engine.py && python3 tests/verify_clike.py
 python3 tests/verify_java.py && python3 tests/verify_swift.py && python3 tests/verify_extras.py && python3 tests/verify_daily.py
+python3 tests/verify_layout.py    # nothing runs off a phone screen
 SWIFTC=/opt/swiftwasm/swift-wasm-6.0.2-RELEASE/usr/bin/swiftc python3 tests/verify_swift_real.py  # swiftwasm 6.0.2 (Ubuntu 22.04) from GitHub releases
 ```
 

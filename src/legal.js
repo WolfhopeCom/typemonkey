@@ -9,7 +9,8 @@ const LEGAL_INFO={
   price:"$4.99"
 };
 
-const LEGAL_CONTACT=()=>LEGAL_INFO.email?`email us at <b>${LEGAL_INFO.email}</b> or visit <a href="${LEGAL_INFO.support}">${LEGAL_INFO.support}</a>`:`visit our support page at <a href="${LEGAL_INFO.support}">${LEGAL_INFO.support}</a>`;
+const LEGAL_LINK=()=>`<a href="${LEGAL_INFO.support}">${LEGAL_INFO.owner} support page</a> (${LEGAL_INFO.support.replace(/^https?:\/\//,"")})`;
+const LEGAL_CONTACT=()=>LEGAL_INFO.email?`email us at <b>${LEGAL_INFO.email}</b> or visit our ${LEGAL_LINK()}`:`visit our ${LEGAL_LINK()}`;
 const LEGAL={
 terms:{title:"Terms of Service",sections:[
  ["The short version",`<p>TypeMonkey is a learning app. Use it to learn and have fun. The lessons and TypeMonkey himself belong to us. We work hard to keep the app bug-free, but it's provided "as is," and we can't be responsible for problems that come from using it or the code you learn in it.</p>`],

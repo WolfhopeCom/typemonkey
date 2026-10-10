@@ -41,6 +41,7 @@ GEN = r"""async () => {
     if (JSON.stringify(fl) !== JSON.stringify(dn.target) || dn.target.some(m => !dn.moves.includes(m))) out.bad.push(`jr L${L} d${d}: dance bad`);
     const v = bx.solution.reduce((n, o) => BOXOPS[o](n), bx.startVal);
     if (v !== bx.goal || (bx.max && bx.solution.length > bx.max) || bx.goal <= bx.startVal) out.bad.push(`jr L${L} d${d}: box bad`);
+    { const best = boxShortest(bx.startVal, bx.goal, bx.ops); if (bx.max && best && best.length < bx.max) out.bad.push(`jr L${L} d${d}: box says ${bx.max} taps but ${best.length} is enough`); }
   }
   return out;
 }"""

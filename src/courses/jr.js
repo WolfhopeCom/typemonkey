@@ -22,7 +22,7 @@ const JR_UNIT1={name:"Monkey moves",free:true,lessons:[
  {type:"done"}]},
 {id:"jr2",title:"Turning corners",sub:"turn left, turn right",steps:[
  {type:"talk",title:"Turning",mood:"think",
-  body:`<p><b>Turn right ↻</b> and <b>Turn left ↺</b> spin me around without moving. Then <b>Forward</b> goes the new way.</p><p>Watch my little arrow. It always shows which way I'm facing!</p>`,
+  body:`<p><b>Turn right ↱</b> and <b>Turn left ↰</b> spin me around without moving. Then <b>Forward</b> goes the new way.</p><p>The <b>yellow arrow</b> shows which way I'm facing. Turns are <b>my</b> right and <b>my</b> left, like when you turn your own body. The <b>see-through monkey</b> shows where your blocks will take me, so you can check before you press Go!</p>`,
   say:"Just one turn to start."},
  {type:"maze",title:"One turn",grid:["S.","#B"],dir:"E",blocks:[JF,JL,JRT],solution:[JF,JRT,JF],say:"Forward, then turn right so I face down, then Forward!"},
  {type:"quiz",q:"TypeMonkey faces right ➜ and turns LEFT. Which way is he facing now?",opts:["Up ⬆","Down ⬇","Left ⬅"],a:0,why:"If you face right and turn left, you end up facing up."},
@@ -94,7 +94,7 @@ const JR_UNIT3={name:"Think like a coder",lessons:[
  {type:"box",title:"Fill the box",body:`<p>Tap <b>+ 1</b> until the box holds 3 bananas.</p>`,name:"bananas",startVal:0,goal:3,ops:["+1"],solution:["+1","+1","+1"],say:"Tap + 1 three times!"},
  {type:"quiz",q:"bananas = 2, then bananas = bananas + 1. What's in the box now?",opts:["3","2","1"],a:0,why:"It had 2, and we added 1 more. Now it holds 3."},
  {type:"box",title:"Bigger jumps",body:`<p>Now you can add 1 <b>or</b> 2 at a time. Get to 5 in only <b>3 taps</b>!</p>`,name:"bananas",startVal:0,goal:5,ops:["+1","+2"],max:3,solution:["+2","+2","+1"],say:"Big jumps first, then a little one!"},
- {type:"box",title:"Score points",body:`<p>Games keep a <b>score</b>. Get the score to 10 in <b>3 taps</b>.</p>`,name:"score",startVal:0,goal:10,ops:["+1","+2","+5"],max:3,solution:["+5","+5"],say:"Which button gets there fastest?"},
+ {type:"box",title:"Score points",body:`<p>Games keep a <b>score</b>. Get the score to 10 in <b>2 taps</b>.</p>`,name:"score",startVal:0,goal:10,ops:["+1","+2","+5"],max:2,solution:["+5","+5"],say:"Which button gets there fastest?"},
  {type:"box",title:"Double trouble",body:`<p>New button: <b>× 2</b> doubles what's in the box! Start with 1 and get to 8 in <b>3 taps</b>.</p>`,name:"bananas",startVal:1,goal:8,ops:["+1","x2"],max:3,solution:["x2","x2","x2"],win:"Doubling is super powerful! 1, 2, 4, 8!"},
  {type:"done"}]},
 {id:"jr8",title:"If this, then that",sub:"computers make choices",steps:[
@@ -119,7 +119,7 @@ const JR_UNIT3={name:"Think like a coder",lessons:[
  {type:"sort",title:"The temple gate",body:`<p>The gate only opens for the right things!</p>`,rule:"IF it's a number bigger than 5 ➜ 🚪 Open the gate<br>ELSE ➜ 🔒 Stay shut",bins:[{icon:"🚪",name:"Open"},{icon:"🔒",name:"Stay shut"}],
   items:[{icon:"8",bin:0},{icon:"2",bin:1,why:"2 is smaller than 5. Stay shut!"},{icon:"10",bin:0,why:"10 is bigger than 5!"},{icon:"5",bin:1,why:"5 is not BIGGER than 5. It's the same! Stay shut."},{icon:"7",bin:0,why:"7 is bigger than 5!"}],
   code:"if number > 5:\n    open_gate()\nelse:\n    stay_shut()",say:"Careful with 5!"},
- {type:"box",title:"The treasure counter",body:`<p>The treasure chest opens when <b>coins</b> is exactly 12. Use <b>4 taps</b> or fewer.</p>`,name:"coins",startVal:0,goal:12,ops:["+1","+5","x2","-1"],max:4,solution:["+5","+1","x2"],say:"There's more than one way to do it!"},
+ {type:"box",title:"The treasure counter",body:`<p>The treasure chest opens when <b>coins</b> is exactly 12. Use <b>3 taps</b> or fewer.</p>`,name:"coins",startVal:0,goal:12,ops:["+1","+5","x2","-1"],max:3,solution:["+5","+1","x2"],say:"There's more than one way to do it!"},
  {type:"maze",title:"Buggy temple",grid:["S...","###.","###.","B..."],dir:"N",blocks:[JF,JL,JRT,"rep"],max:5,start:[jrep(3,JL,JF,JF,JF)],solution:[jrep(3,JRT,JF,JF,JF)],say:"The temple's program has a bug. Find it!"},
  {type:"maze",title:"The Golden Banana",grid:["S#####","..####","#..###","##..##","###..#","####.B"],dir:"E",blocks:[JF,JL,JRT,"rep"],max:5,solution:[jrep(5,JRT,JF,JL,JF)],win:"You found the Golden Banana! You're a real coder now!"},
  {type:"done"}]}
@@ -149,7 +149,7 @@ const JR_UNIT4={name:"Smart monkey",lessons:[
  {type:"talk",title:"Smart blocks",mood:"cheer",
   body:`<p>The purple blocks make a <b>choice</b>. <b>Tree ahead? Turn right</b> means: IF there's a tree in front of me, turn right. If there isn't, do nothing.</p><p>Put one inside <b>Repeat until 🍌</b> with a Forward, and I can find my own way around corners!</p>`,
   say:"This is how robot vacuums find their way around a room!"},
- {type:"sort",title:"Robot brain",body:`<p>First, YOU be my brain! Look at what's in front of me and choose.</p>`,rule:"IF there's a tree ahead ➜ ↻ Turn<br>ELSE ➜ 👣 Walk forward",bins:[{icon:"↻",name:"Turn"},{icon:"👣",name:"Forward"}],
+ {type:"sort",title:"Robot brain",body:`<p>First, YOU be my brain! Look at what's in front of me and choose.</p>`,rule:"IF there's a tree ahead ➜ ↱ Turn<br>ELSE ➜ 👣 Walk forward",bins:[{icon:"↱",name:"Turn"},{icon:"👣",name:"Forward"}],
   items:[{icon:"🌳",name:"tree ahead",bin:0},{icon:"🟩",name:"clear path",bin:1,why:"No tree, so keep walking!"},{icon:"🟩",name:"clear path",bin:1,why:"No tree, so keep walking!"},{icon:"🌳",name:"tree ahead",bin:0,why:"Tree! Turn so you don't bonk."},{icon:"🟩",name:"clear path",bin:1,why:"No tree, so keep walking!"},{icon:"🌳",name:"tree ahead",bin:0,why:"Tree! Turn so you don't bonk."}],
   code:"if tree_ahead():\n    turn_right()\nelse:\n    forward()",say:"Tree? Turn! No tree? Walk!"},
  {type:"maze",title:"Around the bend",grid:["S...","###.","###.","###B"],dir:"E",blocks:[JF,JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],say:"Try: Repeat until 🍌 with Tree ahead? Turn right, then Forward inside."},

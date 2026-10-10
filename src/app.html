@@ -115,7 +115,7 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
 .card h2{font-size:1.55rem}
 .card p{margin:0;max-width:62ch}
-code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);padding:1px 6px;border-radius:6px;white-space:nowrap}
+code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);padding:1px 6px;border-radius:6px;white-space:normal;overflow-wrap:anywhere;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 
 .editor{background:var(--code-bg);border-radius:12px;overflow:hidden;min-width:0}
 .editor .head{display:flex;align-items:center;gap:8px;padding:8px 12px;color:var(--code-dim);font-family:var(--mono);font-size:.8rem;border-bottom:1px solid #ffffff14}
@@ -237,6 +237,8 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 /* Jr. mazes */
 .maze{position:relative;display:grid;grid-template-columns:repeat(var(--w),1fr);width:min(100%,calc(var(--w) * 64px));aspect-ratio:var(--w) / var(--h);max-width:100%;align-self:center;border-radius:14px;overflow:hidden;background:#7FC77A}
 .mc{display:grid;place-items:center;font-size:clamp(1.1rem,5vw,1.9rem)}
+.mframe{align-self:center;box-sizing:border-box;width:min(100%,calc(var(--w) * 64px + 32px));padding:16px;border-radius:20px;background-color:var(--tree);background-size:22px 22px;box-shadow:inset 0 0 0 3px #0001,0 4px 0 #0002}
+.mframe>.maze{width:100%;border-radius:10px;box-shadow:0 0 0 3px #0002}
 .mc.path{background:var(--path,#F3DFA8);box-shadow:inset 0 0 0 1px var(--pathline,#E5CC88)}
 .mc.tree{background:var(--tree,#5FAE5A)}
 .stage{position:relative;height:210px;border-radius:18px;overflow:hidden;background:radial-gradient(ellipse at 50% 0%,#7B4BC8 0%,transparent 65%),linear-gradient(#1E1238,#3B1F63 70%)}
@@ -297,7 +299,9 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 .tile{font-family:var(--mono);font-size:1rem;min-height:44px;padding:6px 12px;border-radius:10px;border:0;background:var(--surface);color:var(--fg);box-shadow:0 3px 0 var(--line),0 0 0 2px var(--line) inset;font-weight:600;white-space:pre}
 .tile.tl{text-align:left;white-space:pre-wrap;overflow-wrap:anywhere}
 .tile.on{background:#FFD9B5;color:#2A1300;box-shadow:0 2px 0 #E0A060}
-.tbuild .tline.tile.on{display:block;width:fit-content;max-width:100%}
+.tbuild .tline.tile.on{display:block;width:fit-content;max-width:calc(100% - var(--in,0) * .5ch);white-space:pre-wrap;overflow-wrap:anywhere;text-align:left}
+.tile{max-width:100%;overflow-wrap:anywhere}
+.tile:not(.tl):not(.tline){white-space:pre-wrap}
 .symbar{display:flex;gap:4px;overflow-x:auto;padding:6px 8px;background:#0F1A16;scrollbar-width:none}
 .symbar button{flex:none;min-width:38px;height:38px;border:0;border-radius:8px;background:#22332C;color:#E8F2EC;font-family:var(--mono);font-size:1.05rem;font-weight:700}
 .app:has(.actionbar){padding-bottom:0;min-height:100vh;min-height:100dvh}
@@ -381,6 +385,14 @@ span.repn{display:inline-block}
 .bcell{min-height:0;position:relative;display:grid;place-items:center;border:0;padding:0;border-radius:6px;background:#F3DFA8;font-size:clamp(1.2rem,7vw,2rem);color:inherit}
 .bcell.tree{background:#5FAE5A}
 .bcell .bmk{width:80%;height:80%;display:grid;place-items:center}.bcell .bmk svg{width:100%;height:100%}
+.mk .arr{inset:0;right:auto;bottom:auto;width:100%;height:100%;background:none;border-radius:0;font-size:0;color:transparent}
+.mk .arr::before,.mk .arr::after{content:"";position:absolute;top:50%;right:1%;width:30%;height:40%;transform:translateY(-50%);clip-path:polygon(0 28%,52% 28%,52% 0,100% 50%,52% 100%,52% 72%,0 72%)}
+.mk .arr::before{background:#14201B;right:-1%;width:34%;height:48%}
+.mk .arr::after{background:#FFC845}
+.mk.ghost{opacity:.42;transition:left .2s ease,top .2s ease;z-index:0}
+.mk.ghost .mface{filter:grayscale(.4)}
+.mk.ghost .arr::after{background:#fff}
+.mk:not(.ghost){z-index:1}
 .bcell .arr{position:absolute;right:2px;bottom:2px;width:42%;height:42%}
 .btools{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .tool-b{display:flex;flex-direction:column;align-items:center;gap:2px;border:3px solid transparent;border-radius:14px;background:var(--surface2);color:var(--fg);font-weight:800;padding:8px 4px;font-size:.85rem}
@@ -401,6 +413,12 @@ span.repn{display:inline-block}
 .season{position:absolute;top:6px;left:6px;font-size:.68rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
 .legal h3{font-size:1.1rem;margin-top:6px}
 .legal p{color:var(--fg);line-height:1.6}
+.legal{overflow-wrap:break-word}
+.editor .head .resetc{flex:none;white-space:nowrap;font-family:var(--body);font-weight:800;font-size:.85rem;color:#FFE3C7;background:#26372F;border:0;border-radius:999px;padding:7px 12px;text-decoration:none;-webkit-tap-highlight-color:transparent;transition:background .2s,color .2s}
+.editor .head .resetc.armed{background:var(--banana);color:#2A1300;animation:pop .3s ease}
+.editor .head .resetc:focus-visible{outline:2px solid var(--banana)}
+.legal a{color:color-mix(in srgb,var(--accent) 70%,var(--fg));font-weight:700}
+.legal,.legal *{max-width:100%}
 .gate{position:fixed;inset:0;z-index:20;background:color-mix(in srgb,#000 55%,transparent);display:grid;place-items:center;padding:16px}
 .gate .card{max-width:420px;width:100%}
 .continue{display:flex;align-items:center;gap:12px;width:100%;background:var(--accent);color:var(--accent-ink);border:0;border-radius:var(--r);padding:14px 16px;text-align:left;box-shadow:0 5px 0 color-mix(in srgb,var(--accent) 60%,#000);transition:transform .08s}
@@ -458,6 +476,40 @@ span.repn{display:inline-block}
 .unlocked{text-align:center;font-weight:800;color:var(--leaf);background:color-mix(in srgb,var(--leaf) 12%,var(--surface));border-radius:var(--r);padding:14px}
 html.bigtext{font-size:112.5%}html.bigtext body{font-size:18px}
 html.calm *{animation:none!important;transition:none!important}
+/* ===== Motion pack: smooth screens, a living mascot, juicy Jr. moves and a big finish (all off with Reduce Motion) ===== */
+@keyframes enterUp{from{opacity:0;transform:translateY(16px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes nodeIn{from{opacity:0;scale:.6}to{opacity:1;scale:1}}
+@keyframes breathe{0%,100%{transform:translateY(0) rotate(0)}30%{transform:translateY(-3px) rotate(-2deg)}60%{transform:translateY(-1px) rotate(1.5deg)}}
+@keyframes hop{0%{transform:translateY(0) scale(1,1)}25%{transform:translateY(-22%) scale(.94,1.08)}55%{transform:translateY(0) scale(1.1,.88)}100%{transform:translateY(0) scale(1,1)}}
+@keyframes bonk{0%,100%{transform:translateX(0) rotate(0)}20%{transform:translateX(-10%) rotate(-10deg)}45%{transform:translateX(8%) rotate(8deg)}70%{transform:translateX(-4%) rotate(-4deg)}}
+@keyframes victory{0%{transform:translateY(0) rotate(0) scale(1)}35%{transform:translateY(-38%) rotate(180deg) scale(1.15)}70%{transform:translateY(0) rotate(360deg) scale(1)}85%{transform:scale(1.12,.9)}100%{transform:none}}
+@keyframes puff{from{opacity:.75;transform:translate(-50%,-50%) scale(.4)}to{opacity:0;transform:translate(-50%,-80%) scale(1.5)}}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,0) scale(.6)}20%{opacity:1;transform:translate(-50%,-30%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-160%) scale(1)}}
+@keyframes rays{to{transform:translate(-50%,-50%) rotate(360deg)}}
+@keyframes jumpIn{0%{opacity:0;transform:translateY(60px) scale(.5)}55%{opacity:1;transform:translateY(-14px) scale(1.08)}75%{transform:translateY(0) scale(.96,1.04)}100%{transform:none}}
+@keyframes cfall{0%{transform:translate3d(0,-10vh,0) rotate(0)}100%{transform:translate3d(var(--dx),110vh,0) rotate(var(--rot))}}
+@keyframes glowGood{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--leaf) 55%,transparent)}100%{box-shadow:0 0 0 18px transparent}}
+#screen>.stack>.card,#screen>.stack>.hero,#screen>.stack>.buddy{animation:enterUp .38s cubic-bezier(.2,.8,.3,1) both}
+#screen>.stack>.card:nth-of-type(2){animation-delay:.05s}#screen>.stack>.buddy{animation-delay:.12s}
+.pnode{animation:nodeIn .42s cubic-bezier(.3,1.5,.5,1) both}
+.pnode:nth-child(2){animation-delay:.04s}.pnode:nth-child(3){animation-delay:.08s}.pnode:nth-child(4){animation-delay:.12s}.pnode:nth-child(5){animation-delay:.16s}.pnode:nth-child(6){animation-delay:.2s}.pnode:nth-child(7){animation-delay:.24s}.pnode:nth-child(n+8){animation-delay:.28s}
+.buddy .tm{transform-origin:50% 90%;animation:breathe 3.6s ease-in-out infinite}
+.buddy.bounce .tm{animation:bob .6s ease,breathe 3.6s ease-in-out .6s infinite}
+.feedback.good{animation:sheetUp .25s ease,glowGood .7s ease-out .1s}
+.mk .mface{transform-origin:50% 85%}
+.mk.hop .mface{animation:hop .34s ease-out}
+.mk.bonk .mface{animation:bonk .45s ease-out}
+.mk.win .mface{animation:victory .9s cubic-bezier(.3,.7,.3,1)}
+.mfx{position:absolute;pointer-events:none;z-index:3;font-size:clamp(.9rem,4vw,1.4rem);font-weight:900;white-space:nowrap}
+.mfx.puff{width:calc(60% / var(--w));aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#fff9 0,#fff0 70%);animation:puff .5s ease-out forwards}
+.mfx.up{animation:floatUp .9s ease-out forwards;color:#2A1300;text-shadow:0 2px 0 #fff8}
+.fin-stage{position:relative;width:100%;height:170px;display:grid;place-items:center;overflow:hidden;border-radius:18px;background:radial-gradient(circle at 50% 60%,color-mix(in srgb,var(--banana) 55%,transparent),transparent 70%)}
+.fin-stage .rays{position:absolute;left:50%;top:58%;width:380px;height:380px;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 0deg,color-mix(in srgb,var(--banana) 45%,transparent) 0 10deg,transparent 10deg 24deg);animation:rays 18s linear infinite;opacity:.8;-webkit-mask:radial-gradient(circle closest-side,#000 25%,transparent 100%);mask:radial-gradient(circle closest-side,#000 25%,transparent 100%)}
+.fin-stage .tm{position:relative;width:132px;height:132px;animation:jumpIn .8s cubic-bezier(.3,.8,.3,1) both,breathe 3s ease-in-out 1s infinite}
+.reward div{animation:enterUp .4s cubic-bezier(.2,.8,.3,1) both}.reward div:nth-child(2){animation-delay:.12s}.reward div:nth-child(3){animation-delay:.24s}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:70;overflow:hidden}
+.confetti i{position:absolute;top:0;width:9px;height:14px;border-radius:2px;animation:cfall var(--t) cubic-bezier(.3,.4,.6,1) var(--d) forwards;opacity:.95}
+@media (prefers-reduced-motion:reduce){.buddy .tm,.fin-stage .rays{animation:none}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 
@@ -1193,13 +1245,14 @@ function saveSpot(){
 }
 function draft(k,v){const p=S.progress[cur.l.id];if(!p)return;p.drafts=p.drafts||{};if(v===undefined)return p.drafts[k];p.drafts[k]=v;save()}
 function shell(inner){
+  if(wallObs){wallObs.disconnect();wallObs=null}
   setMode(cur&&cur.c&&cur.c.kids);
   const pct=Math.round(cur.step/(cur.l.steps.length-1)*100);
   $("#screen").innerHTML=`<div class="stack">
     <div class="lessonbar"><button class="x" id="quit" aria-label="Leave lesson">×</button><div class="progress"><span style="width:${pct}%"></span></div></div>
     ${inner}${cur.c.tables?`<details class="drawer"><summary>📋 Show the zoo tables</summary>${Object.keys(cur.c.tables).map(t=>tableHTML(cur.c,t)).join("")}</details>`:""}</div>`;
   $("#quit").onclick=()=>cur.review||cur.daily?home():coursePage(cur.c.id);
-  dockActions();
+  dockActions();watchWallWords();
   $("#foot").innerHTML="";window.scrollTo(0,0);
 }
 /* Phone-first lesson layout: the main buttons live in one bar pinned to the bottom (where your thumb is).
@@ -1321,7 +1374,7 @@ function tilePlan(s){
   const given=hint.slice(0,pre),todo=hint.slice(pre);
   if(!todo.length)return null;
   if(todo.length===1){const t=tokenizeLine(todo[0]);if(!t||t.length<2||t.length>12)return null;return {mode:"tokens",given,pieces:t}}
-  if(todo.length>8)return null;
+  if(todo.length>12)return null;                   // up to 12 lines as line tiles (each keeps its indent, so it is only about order)
   return {mode:"lines",given,pieces:todo};
 }
 const tileCode=(p,placed)=>[...p.given,...(p.mode==="tokens"?(placed.length?[placed.map(i=>p.pieces[i]).join("")]:[]):placed.map(i=>p.pieces[i]))].join("\n");
@@ -1404,6 +1457,15 @@ function codeStep(s){
     if(ok&&!solved){solved=true;$("#go").disabled=false;$("#go").hidden=false;if($("#trun"))$("#trun").hidden=true;award(30,5);bump("challenges");if(tries===1)bump("firstTry")}
   });
   $("#code-c").addEventListener("input",()=>{if(!T||T.mode()==="type")draft(k,$("#code-c").value)});
+  /* ↺ Start over: puts the original code back (handy in Bug Lab when the code has changed too much to remember) */
+  {const head=$("#code-c").closest(".editor").querySelector(".head"),rb=document.createElement("button");
+    rb.className="linkbtn resetc";rb.id="resetc";rb.type="button";rb.textContent="↺ Start over";head.insertBefore(rb,head.querySelector(".run"));
+    let armed=null;const orig=s.start||"";
+    const sync=()=>{const changed=$("#code-c").value!==orig&&!(T&&T.mode()==="tap");rb.hidden=!changed;if(!changed){clearTimeout(armed);armed=null;rb.textContent="↺ Start over";rb.classList.remove("armed")}};
+    rb.onclick=()=>{if(!armed){rb.textContent="Tap again ↺";rb.classList.add("armed");armed=setTimeout(()=>{armed=null;rb.textContent="↺ Start over";rb.classList.remove("armed")},3500);return}
+      clearTimeout(armed);armed=null;const ta=$("#code-c");ta.value=orig;ta.dispatchEvent(new Event("input",{bubbles:true}));draft(k,orig);sync();ta.focus();
+      $("#bud").innerHTML=buddy(isBug?"Fresh start! Here's the original buggy code again. Run it and read the error.":"Fresh start! Here's the code you began with.","happy")};
+    $("#code-c").addEventListener("input",sync);sync();}
   const doType=cur.c.runnable==="web"?"Type your code, then tap ▶ Show page.":"Type your code, then press ▶ Run.";
   const syncRun=m=>{const tr=$("#trun");if(tr){tr.hidden=!(m==="tap"&&!solved);$("#go").hidden=m==="tap"&&!solved}};
   const T=TP?wireTiles(s,TP,m=>{const t=document.querySelector(".card .todo span");if(t)t.textContent="👉 "+(m==="tap"?doTap:doType);syncRun(m)}):null;
@@ -1558,7 +1620,13 @@ function dance(s){
 }
 /* Sorting machine: things come down a belt one at a time; the kid follows an IF / ELSE rule
    by tapping the right bin. */
+/* New order every time, so kids read each thing instead of just tapping left, right, left, right.
+   Never a strict back-and-forth pattern, and never more than 3 of the same bin in a row. */
+function sortOrder(items){
+  const alt=o=>o.every((x,k)=>!k||x.bin!==o[k-1].bin),run=o=>o.some((x,k)=>k>=3&&o.slice(k-3,k+1).every(y=>y.bin===x.bin));
+  let best=items;for(let t=0;t<60;t++){const o=shuffle(items);if(!(o.length>=4&&alt(o))&&!run(o)){best=o;break}}return best}
 function sorter(s){
+  s={...s,items:sortOrder(s.items)};
   let i=0,miss=0,missHere=0,counts=s.bins.map(()=>0);
   shell(`<div class="card"><div class="label">🏭 Sorting machine · +15 XP</div><h2>${s.title}</h2>${jrGoal(s)}${s.body||""}
     <div class="rule">${s.rule}</div>
@@ -1585,6 +1653,9 @@ function sorter(s){
 /* Banana boxes: a variable is a box with a name. The kid taps operations to change what's
    inside until it matches the goal. Each tap becomes a line of code. */
 const BOXOPS={"+1":v=>v+1,"+2":v=>v+2,"+3":v=>v+3,"+5":v=>v+5,"-1":v=>v-1,"x2":v=>v*2};
+/* Fewest taps from start to goal (breadth-first search). Used so "in N taps" is never looser than it needs to be. */
+function boxShortest(start,goal,ops,limit=10){let level=[[start,[]]];const seen=new Set([start]);
+  for(let d=0;d<=limit;d++){const nx=[];for(const [v,seq] of level){if(v===goal)return seq;for(const o of ops){const w=BOXOPS[o](v);if(!seen.has(w)&&w>=-20&&w<=500){seen.add(w);nx.push([w,[...seq,o]])}}}level=nx}return null}
 const opLabel=o=>o==="x2"?"× 2":o.replace("+","+ ").replace("-","− ");
 const opCode=(name,o)=>`${name} = ${name} ${o==="x2"?"* 2":o[0]+" "+o.slice(1)}`;
 function boxGame(s){
@@ -1653,9 +1724,30 @@ function order(s){
 
 /* ---------- TypeMonkey Jr.: maze puzzles ---------- */
 const DIRS={N:[0,-1],E:[1,0],S:[0,1],W:[-1,0]},LEFT={N:"W",W:"S",S:"E",E:"N"},RIGHT={N:"E",E:"S",S:"W",W:"N"},ROT={E:0,S:90,W:180,N:270};
-const BLOCKS={fwd:{icon:"👣",label:"Forward"},left:{icon:"↺",label:"Turn left"},right:{icon:"↻",label:"Turn right"},rep:{icon:"🔁",label:"Repeat"},
-  until:{icon:"🔁🍌",label:"Repeat until 🍌"},call:{icon:"⭐",label:"My move"},ifR:{icon:"🌴↻",label:"Tree ahead? Turn right"},ifL:{icon:"🌴↺",label:"Tree ahead? Turn left"}};
+const BLOCKS={fwd:{icon:"👣",label:"Forward"},left:{icon:"↰",label:"Turn left"},right:{icon:"↱",label:"Turn right"},rep:{icon:"🔁",label:"Repeat"},
+  until:{icon:"🔁🍌",label:"Repeat until 🍌"},call:{icon:"⭐",label:"My move"},ifR:{get icon(){return JR_WALL.w+"↱"},get label(){return JR_WALL.n+" ahead? Turn right"}},ifL:{get icon(){return JR_WALL.w+"↰"},get label(){return JR_WALL.n+" ahead? Turn left"}}};
+/* The "… ahead?" blocks name the wall of the current world (🌴 Tree, 🌵 Cactus, 🌊 Wave …). Set when a maze is drawn. */
+let JR_WALL={w:"🌴",n:"Tree"};const setWall=Wd=>{JR_WALL={w:Wd.wall,n:Wd.wallName||"Tree"}};
 const isBox=b=>typeof b==="object";
+/* In Jr. lessons the maze walls change with the world (🌴 trees, 🌵 cacti, 🌊 waves …). So the words and pictures
+   on screen match what kids see, "tree" and 🌴/🌳 in Jr. text are swapped for the current world's wall as they appear. */
+const wallWords=Wd=>{const one=Wd.wallName.toLowerCase(),many=Wd.wallPlural,cap=w=>w[0].toUpperCase()+w.slice(1);
+  return t=>t.replace(/\b(T|t)rees\b/g,(m,c)=>c==="T"?cap(many):many).replace(/\b(T|t)ree\b/g,(m,c)=>c==="T"?cap(one):one).replace(/🌴|🌳/g,Wd.wall)};
+let wallObs=null;
+function watchWallWords(){
+  if(wallObs)wallObs.disconnect();
+  if(!(cur&&cur.c&&cur.c.kids))return;const Wd=worldFor();if(Wd.wall==="🌴")return;const fix=wallWords(Wd);
+  const walk=n=>{if(n.nodeType===3){const t=fix(n.nodeValue);if(t!==n.nodeValue)n.nodeValue=t;return}
+    if(n.nodeType!==1||n.closest&&n.closest("pre,code,.kcode"))return;
+    for(const a of ["aria-label","title"])if(n.hasAttribute&&n.hasAttribute(a))n.setAttribute(a,fix(n.getAttribute(a)));n.childNodes.forEach(walk)};
+  const root=$("#screen");walk(root);
+  wallObs=new MutationObserver(ms=>{wallObs.disconnect();if(!$("#quit")||!(cur&&cur.c&&cur.c.kids))return;ms.forEach(m=>{if(m.type==="characterData")walk(m.target);else m.addedNodes.forEach(walk)});wallObs.observe(root,{childList:true,subtree:true,characterData:true})});
+  wallObs.observe(root,{childList:true,subtree:true,characterData:true});
+}
+/* A slim frame of the world's walls (🌴 🌵 🌊 …) drawn around every maze: the edge of the map really is a wall,
+   so "Tree ahead?" and "bumped into a tree" make sense at the edge too. */
+const mazeFrame=Wd=>{const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"><text x="11" y="17" font-size="15" text-anchor="middle">${Wd.wall}</text></svg>`;
+  return `--tree:${Wd.tree};background-image:url('data:image/svg+xml,${encodeURIComponent(svg)}');`};
 function mazeInfo(g){let start;const goals=[];g.forEach((row,y)=>[...row].forEach((ch,x)=>{if(ch==="S")start=[x,y];if(ch==="B")goals.push([x,y])}));return {start,goal:goals[0],goals,w:g[0].length,h:g.length}}
 const blockCount=prog=>prog.reduce((n,b)=>n+(isBox(b)?1+b.body.length:1),0);
 /* runs a program; path entries are [x, y, dir, bump?, eatenKey?]
@@ -1707,12 +1799,12 @@ function simulate(grid,dir,prog,fn){
 }
 /* TypeMonkey Jr.: every unit is a new world, and mazes give up to 3 stars */
 const WORLDS=[
-  {name:"Jungle",emoji:"🌴",wall:"🌴",path:"#F3DFA8",line:"#E5CC88",tree:"#5FAE5A"},
-  {name:"Beach",emoji:"🏝️",wall:"🌊",path:"#FFE9B8",line:"#F2D592",tree:"#4FB6E8"},
-  {name:"Snowy peaks",emoji:"❄️",wall:"☃️",path:"#EEF6FF",line:"#D3E3F5",tree:"#9CC3E6"},
-  {name:"Desert",emoji:"🏜️",wall:"🌵",path:"#F7D9A6",line:"#E9C17F",tree:"#D99A55"},
-  {name:"Outer space",emoji:"🚀",wall:"🪐",path:"#3B3970",line:"#4D4A8C",tree:"#1D1B45"},
-  {name:"Candy land",emoji:"🍭",wall:"🍭",path:"#FFE0F0",line:"#F7C3DE",tree:"#F48FC0"}];
+  {name:"Jungle",wallName:"Tree",wallPlural:"trees",emoji:"🌴",wall:"🌴",path:"#F3DFA8",line:"#E5CC88",tree:"#5FAE5A"},
+  {name:"Beach",wallName:"Wave",wallPlural:"waves",emoji:"🏝️",wall:"🌊",path:"#FFE9B8",line:"#F2D592",tree:"#4FB6E8"},
+  {name:"Snowy peaks",wallName:"Snowman",wallPlural:"snowmen",emoji:"❄️",wall:"☃️",path:"#EEF6FF",line:"#D3E3F5",tree:"#9CC3E6"},
+  {name:"Desert",wallName:"Cactus",wallPlural:"cacti",emoji:"🏜️",wall:"🌵",path:"#F7D9A6",line:"#E9C17F",tree:"#D99A55"},
+  {name:"Outer space",wallName:"Planet",wallPlural:"planets",emoji:"🚀",wall:"🪐",path:"#3B3970",line:"#4D4A8C",tree:"#1D1B45"},
+  {name:"Candy land",wallName:"Lollipop",wallPlural:"lollipops",emoji:"🍭",wall:"🍭",path:"#FFE0F0",line:"#F7C3DE",tree:"#F48FC0"}];
 const worldFor=()=>WORLDS[((cur&&cur.item&&cur.item.ui)||0)%WORLDS.length];
 const KID_WINS=["Ooh ooh! Banana time!","You're a coding superstar!","Monkey dance time! 💃","Wow, that program was perfect!","High five! ✋","Yum yum, thank you!","You did it! I'm so proud!"];
 /* Shows a kid's block program as simple code, so they see what "real code" looks like. */
@@ -1748,17 +1840,34 @@ function mazeHint(prog,fn,s,open){
   if(prog.length>solM.length)return {msg:"One block too many! Tap Undo to take the last one away.",glow:{i:solM.length}};
   return {msg:"Your program looks just right. Press ▶ Go!",glow:{go:true}};
 }
-const mkPlace=(m,x,y,d,bump)=>{const k=$("#mk");if(!k)return;k.style.left=`calc(${x} * 100% / ${m.w})`;k.style.top=`calc(${y} * 100% / ${m.h})`;k.style.transform=bump?"translateX(4px)":"none";$("#arr").style.transform=`rotate(${ROT[d]}deg)`};
+/* ---------- Motion pack helpers ---------- */
+const calmMotion=()=>{try{return matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){return false}};
+function confetti(n=70){if(calmMotion())return;const box=document.createElement("div");box.className="confetti";box.setAttribute("aria-hidden","true");
+  const C=["#FA7A20","#FFC845","#22986A","#7C5CFF","#FF6FAE","#4FB6E8"];
+  for(let i=0;i<n;i++){const e=document.createElement("i");const t=1.8+Math.random()*1.6;
+    e.style.cssText=`left:${Math.random()*100}%;background:${C[i%C.length]};--t:${t}s;--d:${Math.random()*.6}s;--dx:${(Math.random()-.5)*160}px;--rot:${(Math.random()-.5)*1080}deg;${Math.random()<.3?"border-radius:50%;width:10px;height:10px;":""}`;box.appendChild(e)}
+  document.body.appendChild(box);setTimeout(()=>box.remove(),4200)}
+function countUp(el,to,ms=900){if(!el)return;if(calmMotion()||!to){el.textContent=el.dataset.pre+to;return}const t0=performance.now();
+  const f=t=>{const k=Math.min(1,(t-t0)/ms),v=Math.round(to*(1-Math.pow(1-k,3)));el.textContent=el.dataset.pre+v;if(k<1&&el.isConnected)requestAnimationFrame(f)};requestAnimationFrame(f)}
+/* Jr. maze effects: a hop each step, a dust puff, a wobble + 💫 on a bonk, a floating +1 🍌 when a banana is eaten */
+function mazeFx(m,kind,x,y,text){const mz=$("#mz");if(!mz||calmMotion())return;const e=document.createElement("div");e.className="mfx "+kind;
+  e.style.left=`calc((${x} + .5) * 100% / ${m.w})`;e.style.top=`calc((${y} + ${kind==="puff"?.8:.3}) * 100% / ${m.h})`;if(text)e.textContent=text;mz.appendChild(e);setTimeout(()=>e.remove(),1000)}
+function mkAnim(cls){const k=$("#mk");if(!k||calmMotion())return;k.classList.remove("hop","bonk","win");void k.offsetWidth;k.classList.add(cls)}
+/* Ghost preview: a see-through monkey shows where the program so far ends and which way he faces,
+   so kids can see what "Turn right" does before pressing Go. */
+const ghostPlace=(m,end)=>{const g=$("#mkg");if(!g)return;if(!end){g.hidden=true;return}const [x,y,d]=end;g.hidden=false;
+  g.style.left=`calc(${x} * 100% / ${m.w})`;g.style.top=`calc(${y} * 100% / ${m.h})`;g.querySelector(".arr").style.transform=`rotate(${ROT[d]}deg)`};
+const mkPlace=(m,x,y,d,bump)=>{const k=$("#mk");if(!k)return;{const px=+k.dataset.x,py=+k.dataset.y;if(k.dataset.x!==undefined){if(bump){mkAnim("bonk");mazeFx(m,"up",x,y,"💫")}else if(px!==x||py!==y){mkAnim("hop");mazeFx(m,"puff",px,py)}}k.dataset.x=x;k.dataset.y=y}k.style.left=`calc(${x} * 100% / ${m.w})`;k.style.top=`calc(${y} * 100% / ${m.h})`;k.style.transform=bump?"translateX(4px)":"none";$("#arr").style.transform=`rotate(${ROT[d]}deg)`};
 function maze(s){
   const m=mazeInfo(s.grid);let prog=jrClone(s.start||[]);let open=null,running=false,fails=0,won=false,everWon=false,mark=null,glow=null,walk=null,walkK=0;
   let fn=jrClone(s.startFn||[]),lane=s.func&&!(s.startFn||[]).length?"fn":"main";const FN_OK=["fwd","left","right","ifR","ifL"];
   const total=()=>blockCount(prog)+(s.func?fn.length:0);
   const solM=s.solution?(s.func?s.solution.main:s.solution):null,solF=s.func&&s.solution?s.solution.fn:[];
   const best=solM?blockCount(solM)+solF.length:0;const loopy=s.blocks.some(b=>b==="rep"||b==="until"||b==="call");
-  const Wd=worldFor();
+  const Wd=worldFor();setWall(Wd);
   const cell=ch=>ch==="#"?Wd.wall:ch==="B"?"🍌":"";const nB=m.goals.length;
   shell(`<div class="card"><div class="label">${Wd.emoji} ${Wd.name} maze${nB>1?` · collect all ${nB} bananas`:""}${s.max?` · use ${s.max} blocks or fewer`:""}${s.sandbox?"":" · +15 XP"}</div><h2>${s.title}</h2>${jrGoal(s)}${s.body||""}
-    <div class="maze" style="--w:${m.w};--h:${m.h};--path:${Wd.path};--pathline:${Wd.line};--tree:${Wd.tree}" id="mz">${s.grid.map((row,y)=>[...row].map((ch,x)=>`<div class="mc ${ch==="#"?"tree":"path"}" data-xy="${x},${y}">${cell(ch)}</div>`).join("")).join("")}<div class="mk" id="mk"><div class="mface" id="mface">${monkey("happy")}</div><span class="arr" id="arr">➜</span></div></div>
+    <div class="mframe" style="--w:${m.w};${mazeFrame(Wd)}"><div class="maze" style="--w:${m.w};--h:${m.h};--path:${Wd.path};--pathline:${Wd.line};--tree:${Wd.tree}" id="mz">${s.grid.map((row,y)=>[...row].map((ch,x)=>`<div class="mc ${ch==="#"?"tree":"path"}" data-xy="${x},${y}">${cell(ch)}</div>`).join("")).join("")}<div class="mk ghost" id="mkg" hidden aria-hidden="true"><div class="mface">${monkey("happy")}</div><span class="arr"></span></div><div class="mk" id="mk"><div class="mface" id="mface">${monkey("happy")}</div><span class="arr" id="arr">➜</span></div></div></div>
     ${s.func?`<div class="lanes" role="tablist"><button class="lane" data-lane="main" aria-pressed="true">Main program</button><button class="lane" data-lane="fn" aria-pressed="false">⭐ My move</button></div>
     <div class="label">⭐ My move <span style="text-transform:none;letter-spacing:0;font-weight:600">(build it once, use it with the ⭐ block)</span></div><div class="prog fprog" id="fprog"></div>`:""}
     <div class="label">${s.func?"Main program":"Your program"}</div><div class="prog" id="prog"></div>
@@ -1767,9 +1876,12 @@ function maze(s){
     <div id="bud">${buddy(s.say||"Tap the blocks to build a program, then press Go!","think")}</div>
     <div class="row kidrow"><button class="btn banana" id="run">▶ Go!</button><button class="btn ghost" id="undo">Undo</button><button class="btn ghost" id="clr">Clear</button><button class="btn ghost" id="hint" hidden>💡 Show me a hint</button><button class="btn ghost" id="walk" hidden>👣 Show me step by step</button>${s.sandbox?`<button class="btn ghost" id="edit">✏️ Change my puzzle</button>`:""}<button class="btn" id="go" hidden>Continue</button></div>`);
   const place=(x,y,d,bump)=>mkPlace(m,x,y,d,bump);
-  const reset=()=>{place(m.start[0],m.start[1],s.dir);m.goals.forEach(([gx,gy])=>{const c=document.querySelector(`.mc[data-xy="${gx},${gy}"]`);if(c)c.textContent="🍌"})};
+  const reset=()=>{{const _k=$("#mk");if(_k)delete _k.dataset.x}place(m.start[0],m.start[1],s.dir);m.goals.forEach(([gx,gy])=>{const c=document.querySelector(`.mc[data-xy="${gx},${gy}"]`);if(c)c.textContent="🍌"})};
   const hit=(o,i,j,f)=>!!o&&o.i===i&&o.j===j&&o.f===f;
-  const draw=()=>{
+  const updGhost=()=>{if(running||won||(!prog.length&&!fn.length)){ghostPlace(m,null);return}
+    const r=simulate(s.grid,s.dir,prog,s.func?fn:[]);const e=r.path[r.path.length-1];
+    ghostPlace(m,e&&!(e[0]===m.start[0]&&e[1]===m.start[1]&&e[2]===s.dir)?e:null)};
+  const draw=()=>{queueMicrotask(updGhost);
     const fl=(o,i,j)=>hit(o,i,j,undefined);
     if(s.func){
       $("#fprog").innerHTML=fn.length?fn.map((b,i)=>`<button class="chip ${mark&&mark.f===i?"oops":""} ${glow&&glow.f===i?"glow":""}" data-f="${i}" aria-label="Remove ${BLOCKS[b].label}">${BLOCKS[b].icon}</button>`).join(""):'<span class="empty">Tap ⭐ My move above, then add blocks here</span>';
@@ -1808,7 +1920,7 @@ function maze(s){
   if(s.sandbox)$("#edit").onclick=()=>{if(!running)s.sandbox()};
   const msgFor=(result,left)=>{const W=Wd.wall;
     if(result==="win")return `You got there! But this puzzle wants ${s.max} blocks or fewer, and you used ${total()}.${loopy?" A Repeat 🔁 can make it shorter!":""}`;
-    if(result==="wall")return `Oops! The monkey bumped into a ${W}. Look at the wiggly block. Does it need a turn ↻ ↺ before it?`;
+    if(result==="wall")return `Oops! The monkey bumped into a ${W}. Look at the wiggly block. Does it need a turn ↰ ↱ before it?`;
     if(result==="loop")return "The monkey went around and around! The wiggly loop never got him to every banana. Look at the blocks inside it.";
     if(result==="extra")return `Yum, ${nB>1?"every banana":"the banana"}! But then the monkey kept going. The wiggly block is extra. Take it away!`;
     return `So close! ${left>1?`${left} bananas are`:"A banana is"} still waiting. Add more blocks at the end.`};
@@ -1817,10 +1929,10 @@ function maze(s){
     const {path,result,failAt,left}=simulate(s.grid,s.dir,prog,fn);let k=1;
     const tick=()=>{
       if(!$("#mk"))return;
-      if(k<path.length){const [x,y,d,bump,ate]=path[k];place(x,y,d,bump);jsnd(bump?"bonk":ate?"nom":"walk",k);if(ate){const c=document.querySelector(`.mc[data-xy="${ate}"]`);if(c)setTimeout(()=>{c.textContent="✨"},250)}k++;return setTimeout(tick,path.length>40?220:380)}
+      if(k<path.length){const [x,y,d,bump,ate]=path[k];place(x,y,d,bump);jsnd(bump?"bonk":ate?"nom":"walk",k);if(ate){mazeFx(m,"up",x,y,"+1 🍌");const c=document.querySelector(`.mc[data-xy="${ate}"]`);if(c)setTimeout(()=>{c.textContent="✨"},250)}k++;return setTimeout(tick,path.length>40?220:380)}
       running=false;
       const tooMany=s.max&&total()>s.max;
-      if(result==="win"&&!tooMany){const first=!everWon;won=everWon=true;if(first&&!s.sandbox){award(15,3);bump("mazes");if(s.start)bump("bugsFixed")}jsnd("tada");$("#mface").innerHTML=monkey("cheer");
+      if(result==="win"&&!tooMany){const first=!everWon;won=everWon=true;if(first&&!s.sandbox){award(15,3);bump("mazes");if(s.start)bump("bugsFixed")}jsnd("tada");$("#mface").innerHTML=monkey("cheer");mkAnim("win");
         const more=best&&total()>best;
         $("#fb").innerHTML=`<div class="feedback good">🍌 ${nB>1?"All bananas collected!":"Banana reached!"} ${esc(s.win||pick(WINS))}<div class="kcode"><small>🧑‍💻 Your blocks, written as code:</small><pre>${esc(kidCode(prog,s.func?fn:null))}</pre></div>
           ${more?`<div class="nudge">🌟 You did it! Can you do it with fewer blocks?${loopy?" A loop 🔁 could help.":""} <button class="btn ghost sm" id="fewer">Try with ${best} blocks</button></div>`:""}</div>`;
@@ -1844,22 +1956,22 @@ const roChips=p=>p.map(b=>isBox(b)?`<span class="repblk ${b.until?"until":""}"><
 function predictEnd(s){const r=simulate(s.grid,s.dir,s.prog,[]);const e=r.path[r.path.length-1];return {x:e[0],y:e[1],r}}
 function predict(s){
   if(s.dance)return predictDance(s);
-  const m=mazeInfo(s.grid),Wd=worldFor(),E=predictEnd(s),path=E.r.path;let guess=null,busy=false,tries=0,done=false;
+  const m=mazeInfo(s.grid),Wd=worldFor(),E=(setWall(Wd),predictEnd(s)),path=E.r.path;let guess=null,busy=false,tries=0,done=false;
   const cell=ch=>ch==="#"?Wd.wall:ch==="B"?"🍌":"";
   shell(`<div class="card"><div class="label">🤔 Predict · +10 XP</div><h2>${s.title}</h2>${jrGoal(s)}${s.body||""}
     <div class="label">The program</div><div class="prog ro">${roChips(s.prog)}</div>
-    <div class="maze" style="--w:${m.w};--h:${m.h};--path:${Wd.path};--pathline:${Wd.line};--tree:${Wd.tree}" id="mz">${s.grid.map((row,y)=>[...row].map((ch,x)=>ch==="#"?`<div class="mc tree">${cell(ch)}</div>`:`<button class="mc path pick" data-xy="${x},${y}" aria-label="Square ${x+1} across, ${y+1} down">${cell(ch)}</button>`).join("")).join("")}<div class="mk" id="mk"><div class="mface" id="mface">${monkey("think")}</div><span class="arr" id="arr">➜</span></div></div>
+    <div class="mframe" style="--w:${m.w};${mazeFrame(Wd)}"><div class="maze" style="--w:${m.w};--h:${m.h};--path:${Wd.path};--pathline:${Wd.line};--tree:${Wd.tree}" id="mz">${s.grid.map((row,y)=>[...row].map((ch,x)=>ch==="#"?`<div class="mc tree">${cell(ch)}</div>`:`<button class="mc path pick" data-xy="${x},${y}" aria-label="Square ${x+1} across, ${y+1} down">${cell(ch)}</button>`).join("")).join("")}<div class="mk" id="mk"><div class="mface" id="mface">${monkey("think")}</div><span class="arr" id="arr">➜</span></div></div></div>
     <div class="kcode"><small>🧑‍💻 The program, written as code:</small><pre>${esc(kidCode(s.prog))}</pre></div><div id="fb"></div></div>
     <div id="bud">${buddy(s.say||"Tap the square where I'll stop. Then press ▶ Let's see!","think")}</div>
     <div class="row"><button class="btn banana" id="run" disabled>▶ Let's see!</button><button class="btn ghost" id="again" hidden>Guess again</button><button class="btn" id="go" hidden>Continue</button></div>`);
-  const reset=()=>{mkPlace(m,m.start[0],m.start[1],s.dir);m.goals.forEach(([gx,gy])=>{const c=document.querySelector(`.mc[data-xy="${gx},${gy}"]`);if(c)c.textContent="🍌"});$$(".mc").forEach(c=>c.classList.remove("stop"))};
+  const reset=()=>{{const _k=$("#mk");if(_k)delete _k.dataset.x}mkPlace(m,m.start[0],m.start[1],s.dir);m.goals.forEach(([gx,gy])=>{const c=document.querySelector(`.mc[data-xy="${gx},${gy}"]`);if(c)c.textContent="🍌"});$$(".mc").forEach(c=>c.classList.remove("stop"))};
   $$(".mc.pick").forEach(c=>c.onclick=()=>{if(busy||done)return;$$(".mc.guess").forEach(g=>g.classList.remove("guess"));c.classList.add("guess");guess=c.dataset.xy.split(",").map(Number);$("#run").disabled=false;$("#run").classList.add("ready");jsnd("step")});
   $("#run").onclick=()=>{if(busy||done||!guess)return;busy=true;$("#run").classList.remove("ready");reset();let k=1;
-    const tick=()=>{if(!$("#mk"))return;if(k<path.length){const [x,y,d,bump,ate]=path[k];mkPlace(m,x,y,d,bump);jsnd(ate?"nom":"walk",k);if(ate){const c=document.querySelector(`.mc[data-xy="${ate}"]`);if(c)setTimeout(()=>{c.textContent="✨"},250)}k++;return setTimeout(tick,420)}
+    const tick=()=>{if(!$("#mk"))return;if(k<path.length){const [x,y,d,bump,ate]=path[k];mkPlace(m,x,y,d,bump);jsnd(ate?"nom":"walk",k);if(ate){mazeFx(m,"up",x,y,"+1 🍌");const c=document.querySelector(`.mc[data-xy="${ate}"]`);if(c)setTimeout(()=>{c.textContent="✨"},250)}k++;return setTimeout(tick,420)}
       busy=false;tries++;const ok=guess[0]===E.x&&guess[1]===E.y;const stop=document.querySelector(`.mc[data-xy="${E.x},${E.y}"]`);if(stop)stop.classList.add("stop");
       const steps=path.slice(1).filter((p,i)=>p[0]!==path[i][0]||p[1]!==path[i][1]).length,turns=path.slice(1).filter((p,i)=>p[2]!==path[i][2]).length;
       const how=`I walked ${steps} step${steps===1?"":"s"}${turns?` and turned ${turns} time${turns===1?"":"s"}`:""}.`;
-      if(ok){done=true;if(tries===1)award(10,1);jsnd("tada");$("#mface").innerHTML=monkey("cheer");$("#fb").innerHTML=`<div class="feedback good">🎉 You guessed it! ${how} You can read code like a pro!</div>`;jrBud(pick(KID_WINS),"cheer");bananaBurst();$("#run").hidden=true;$("#again").hidden=true;$("#go").hidden=false}
+      if(ok){done=true;if(tries===1)award(10,1);jsnd("tada");$("#mface").innerHTML=monkey("cheer");mkAnim("win");$("#fb").innerHTML=`<div class="feedback good">🎉 You guessed it! ${how} You can read code like a pro!</div>`;jrBud(pick(KID_WINS),"cheer");bananaBurst();$("#run").hidden=true;$("#again").hidden=true;$("#go").hidden=false}
       else{jsnd("oops");$("#mface").innerHTML=monkey("happy");const msg=`Nice try! I stopped on the green square. ${how} Follow the blocks one by one with your finger.`;$("#fb").innerHTML=`<div class="feedback oops">${msg}</div>`;
         jrBud(tries>=2?"Now you know! Tap Continue when you're ready.":"Want to try again? Tap “Guess again”.","happy",msg);$("#run").hidden=true;$("#again").hidden=tries>=2;$("#go").hidden=false;if(tries>=2)done=true}};
     setTimeout(tick,200)};
@@ -2004,8 +2116,8 @@ function finish(){
   save();
   const L=flat(cur.c);const nx=L[cur.item.idx+1];const nst=nx&&status(cur.c,nx);
   const [d,n,all]=countLessons(cur.c);const courseDone=first&&d===n&&n===all;
-  shell(`<div class="card" style="text-align:center;align-items:center"><div class="label">${cur.l.project?"Project complete":"Lesson complete"}</div><h2>${esc(cur.l.title)} ✓</h2>
-    <div class="reward"><div><b>+${cur.earned.xp}</b><span>XP</span></div><div><b>+${cur.earned.ban}</b><span>Bananas</span></div><div><b>${S.streak}</b><span>Day streak</span></div></div>
+  shell(`<div class="card" style="text-align:center;align-items:center"><div class="fin-stage" aria-hidden="true"><div class="rays"></div>${monkey("cheer")}</div><div class="label">${cur.l.project?"Project complete":"Lesson complete"}</div><h2>${esc(cur.l.title)} ✓</h2>
+    <div class="reward"><div><b id="cuXp" data-pre="+">+${cur.earned.xp}</b><span>XP</span></div><div><b id="cuBan" data-pre="+">+${cur.earned.ban}</b><span>Bananas</span></div><div><b>${S.streak}</b><span>Day streak</span></div></div>
     ${cur.earned.total?`<p>Quiz: ${cur.earned.right} of ${cur.earned.total} right${first?" · first-time bonus +20 XP":""}</p>`:first?"<p>First-time bonus +20 XP</p>":""}
     ${cur.missed?`<p>🧠 ${cur.missed} question${cur.missed===1?"":"s"} saved to Review so you can try again later.</p>`:""}</div>
     ${courseDone?`<div class="cert"><div class="label">Course complete</div><h3>You finished ${cur.c.name}!</h3><p>${d} lessons, every project built. TypeMonkey is officially impressed.</p></div>`:""}
@@ -2014,6 +2126,8 @@ function finish(){
   $("#back").onclick=()=>coursePage(cur.c.id);
   sfx("complete");if(cur.earned.ban)setTimeout(()=>sfx("coins"),750);
   if($("#nxt"))$("#nxt").onclick=()=>nst==="pro"?coursePage(cur.c.id):startLesson(nx.l.id);
+  countUp($("#cuXp"),cur.earned.xp);setTimeout(()=>countUp($("#cuBan"),cur.earned.ban,700),250);
+  setTimeout(()=>confetti(courseDone?140:70),250);
   if(cur.c.kids){
     setTimeout(bananaBurst,150);
   }
@@ -2227,8 +2341,9 @@ function genDance(r,lvl){
 }
 function genBox(r,lvl){
   const ops=lvl===1?["+1","+2"]:lvl===2?["+1","+2","+5"]:["+1","+5","x2"],start=lvl===3?1:0,n=lvl===1?3:lvl===2?3:DINT(r,3,4);
-  const seq=[];let v=start;while(seq.length<n){const o=DPICK(r,ops);if(o==="x2"&&v===0)continue;seq.push(o);v=BOXOPS[o](v)}
-  return {type:"box",title:"🎯 Today's banana box",body:`<p>Make the box hold exactly <b>${v}</b>${lvl>1?` in <b>${n}</b> taps or fewer`:""}.</p>`,name:"bananas",startVal:start,goal:v,ops,max:lvl>1?n:undefined,solution:seq};
+  let seq=[],v=start;while(seq.length<n){const o=DPICK(r,ops);if(o==="x2"&&v===0)continue;seq.push(o);v=BOXOPS[o](v)}
+  seq=boxShortest(start,v,ops)||seq;const m=seq.length;   // the tap limit is always the true fewest taps
+  return {type:"box",title:"🎯 Today's banana box",body:`<p>Make the box hold exactly <b>${v}</b>${lvl>1?` in <b>${m}</b> taps or fewer`:""}.</p>`,name:"bananas",startVal:start,goal:v,ops,max:lvl>1?m:undefined,solution:seq};
 }
 function dailyJr(r,c){const n=doneIn(c),lvl=n<4?1:n<10?2:3;return [genMaze(r,lvl),genDance(r,lvl),genBox(r,lvl)].map(s=>({...s,_course:c}))}
 function dailySteps(){

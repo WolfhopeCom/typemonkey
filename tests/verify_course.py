@@ -90,6 +90,9 @@ CHECK = r"""async () => {
       const v = s.solution.reduce((n, o) => BOXOPS[o](n), s.startVal || 0);
       if (v !== s.goal) R.push(`${x.l.id} step ${i}: box solution gives ${v}, goal ${s.goal}`);
       if (s.max && s.solution.length > s.max) R.push(`${x.l.id} step ${i}: box solution too long`);
+      { const best = boxShortest(s.startVal || 0, s.goal, s.ops); const say = (s.body || "") + " " + (s.say || "");
+        if (s.max && best && best.length < s.max) R.push(`${x.l.id} step ${i}: "${s.title}" allows ${s.max} taps but ${best.length} is enough`);
+        const m = say.match(/(\d+)\s*(?:<\/b>\s*)?taps?/); if (s.max && m && +m[1] !== s.max) R.push(`${x.l.id} step ${i}: "${s.title}" text says ${m[1]} taps but max is ${s.max}`); }
       if (s.solution.some(o => !s.ops.includes(o))) R.push(`${x.l.id} step ${i}: box solution uses an op not offered`);
     }
     if (s.type === "sort") {
