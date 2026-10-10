@@ -246,8 +246,6 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 /* Jr. mazes */
 .maze{position:relative;display:grid;grid-template-columns:repeat(var(--w),1fr);width:min(100%,calc(var(--w) * 64px));aspect-ratio:var(--w) / var(--h);max-width:100%;align-self:center;border-radius:14px;overflow:hidden;background:#7FC77A}
 .mc{display:grid;place-items:center;font-size:clamp(1.1rem,5vw,1.9rem)}
-.mframe{align-self:center;box-sizing:border-box;width:min(100%,calc(var(--w) * 64px + 32px));padding:16px;border-radius:20px;background-color:var(--tree);background-size:22px 22px;box-shadow:inset 0 0 0 3px #0001,0 4px 0 #0002}
-.mframe>.maze{width:100%;border-radius:10px;box-shadow:0 0 0 3px #0002}
 .mc.path{background:var(--path,#F3DFA8);box-shadow:inset 0 0 0 1px var(--pathline,#E5CC88)}
 .mc.tree{background:var(--tree,#5FAE5A)}
 .stage{position:relative;height:210px;border-radius:18px;overflow:hidden;background:radial-gradient(ellipse at 50% 0%,#7B4BC8 0%,transparent 65%),linear-gradient(#1E1238,#3B1F63 70%)}
@@ -423,9 +421,9 @@ span.repn{display:inline-block}
 .legal h3{font-size:1.1rem;margin-top:6px}
 .legal p{color:var(--fg);line-height:1.6}
 .legal{overflow-wrap:break-word}
-.editor .head .resetc{flex:none;white-space:nowrap;font-family:var(--body);font-weight:800;font-size:.85rem;color:#FFE3C7;background:#26372F;border:0;border-radius:999px;padding:7px 12px;text-decoration:none;-webkit-tap-highlight-color:transparent;transition:background .2s,color .2s}
-.editor .head .resetc.armed{background:var(--banana);color:#2A1300;animation:pop .3s ease}
-.editor .head .resetc:focus-visible{outline:2px solid var(--banana)}
+.editor .head .resetc{flex:none;width:30px;height:30px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:#ffffff14;color:var(--code-dim);font-size:1.05rem;font-weight:700;line-height:1;margin-left:auto;-webkit-tap-highlight-color:transparent;transition:background .2s,color .2s}
+.editor .head .resetc:hover,.editor .head .resetc:active{background:#ffffff26;color:var(--code-fg)}
+.editor .head .resetc.undo{background:var(--banana);color:#2A1300}
 .legal a{color:color-mix(in srgb,var(--accent) 70%,var(--fg));font-weight:700}
 .legal,.legal *{max-width:100%}
 .gate{position:fixed;inset:0;z-index:20;background:color-mix(in srgb,#000 55%,transparent);display:grid;place-items:center;padding:16px}
@@ -44597,18 +44595,18 @@ const JR_UNIT4={name:"Smart monkey",lessons:[
  {type:"sort",title:"Robot brain",body:`<p>First, YOU be my brain! Look at what's in front of me and choose.</p>`,rule:"IF there's a tree ahead ➜ ↱ Turn<br>ELSE ➜ 👣 Walk forward",bins:[{icon:"↱",name:"Turn"},{icon:"👣",name:"Forward"}],
   items:[{icon:"🌳",name:"tree ahead",bin:0},{icon:"🟩",name:"clear path",bin:1,why:"No tree, so keep walking!"},{icon:"🟩",name:"clear path",bin:1,why:"No tree, so keep walking!"},{icon:"🌳",name:"tree ahead",bin:0,why:"Tree! Turn so you don't bonk."},{icon:"🟩",name:"clear path",bin:1,why:"No tree, so keep walking!"},{icon:"🌳",name:"tree ahead",bin:0,why:"Tree! Turn so you don't bonk."}],
   code:"if tree_ahead():\n    turn_right()\nelse:\n    forward()",say:"Tree? Turn! No tree? Walk!"},
- {type:"maze",title:"Around the bend",grid:["S...","###.","###.","###B"],dir:"E",blocks:[JF,JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],say:"Try: Repeat until 🍌 with Tree ahead? Turn right, then Forward inside."},
+ {type:"maze",title:"Around the bend",grid:["S...#","###.#","###.#","###B#"],dir:"E",blocks:[JF,JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],say:"Try: Repeat until 🍌 with Tree ahead? Turn right, then Forward inside."},
  {type:"quiz",q:"The rule is: IF a tree is ahead THEN turn right. There's NO tree ahead. What does TypeMonkey do?",opts:["Nothing, he skips the turn","He turns right anyway","He stops forever"],a:0,why:"The IF part is false, so the turn doesn't happen."},
- {type:"maze",title:"Left this time",grid:["###B","###.","###.","S..."],dir:"E",blocks:[JF,JIFL,"until"],max:3,solution:[juntil(JIFL,JF)]},
- {type:"maze",title:"The spiral",grid:["S....","####.","B...."],dir:"E",blocks:[JF,JL,JRT,JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],say:"You could count every step... or let the smart block figure it out!"},
+ {type:"maze",title:"Left this time",grid:["###B#","###.#","###.#","S...#"],dir:"E",blocks:[JF,JIFL,"until"],max:3,solution:[juntil(JIFL,JF)]},
+ {type:"maze",title:"The spiral",grid:["S....#","####.#","B....#","######"],dir:"E",blocks:[JF,JL,JRT,JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],say:"You could count every step... or let the smart block figure it out!"},
  {type:"done"}]},
 {id:"jr13",title:"Maze master",sub:"the ultimate challenge",project:true,steps:[
  {type:"talk",title:"Final challenge!",mood:"cheer",
   body:`<p>You've learned sequences, loops, repeat-until and choices. These last mazes use <b>everything</b>. Take your time, plan, test, and fix. That's what real coders do!</p>`,
   say:"I believe in you, Maze Master!"},
- {type:"maze",title:"Banana loop-de-loop",grid:["SB..B","####.","B..B."],dir:"E",blocks:[JF,JL,JRT,JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],say:"Four bananas, one tiny program. Can you do it in 3 blocks?"},
- {type:"maze",title:"Smart pond",grid:["S..","##.","B.."],dir:"E",blocks:[JF,JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],say:"Remember this pond? This time the smart block does all the turning!"},
- {type:"maze",title:"The Golden Grove",grid:["SB...","####B","B...."],dir:"E",blocks:[JF,JL,JRT,"rep",JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],win:"You're officially a Maze Master! 🏆"},
+ {type:"maze",title:"Banana loop-de-loop",grid:["SB..B#","####.#","B..B.#","######"],dir:"E",blocks:[JF,JL,JRT,JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],say:"Four bananas, one tiny program. Can you do it in 3 blocks?"},
+ {type:"maze",title:"Smart pond",grid:["S..#","##.#","B..#","####"],dir:"E",blocks:[JF,JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],say:"Remember this pond? This time the smart block does all the turning!"},
+ {type:"maze",title:"The Golden Grove",grid:["SB...#","####B#","B....#","######"],dir:"E",blocks:[JF,JL,JRT,"rep",JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],win:"You're officially a Maze Master! 🏆"},
  {type:"done"}]}
 ]};
 
@@ -44648,8 +44646,8 @@ const JR_UNIT5={name:"My own blocks",lessons:[
   body:`<p>Last challenge: put <b>smart blocks</b> inside ⭐ My move, and use <b>Repeat until 🍌</b> in the main program. That's exactly how real programs are built: small smart pieces, used over and over.</p>`,
   say:"You're thinking like a real programmer now!"},
  {type:"maze",title:"Hop until banana",func:true,grid:HOPS5,dir:"E",blocks:[JF,JL,JRT,"until",JCALL],max:7,startFn:[JF,JRT,JF,JL,JF],solution:{main:[juntil(JCALL)],fn:[JF,JRT,JF,JL,JF]},say:"Your hop is already in ⭐. You don't even need to count the hops!"},
- {type:"maze",title:"Smart spiral",func:true,grid:["S....","####.","B...."],dir:"E",blocks:[JF,JIFR,"until",JCALL],max:4,solution:{main:[juntil(JCALL)],fn:[JIFR,JF]}},
- {type:"maze",title:"The grand tour",func:true,grid:["SB..B","####.","B..B."],dir:"E",blocks:[JF,JL,JRT,JIFR,"until",JCALL],max:4,solution:{main:[juntil(JCALL)],fn:[JIFR,JF]},win:"Function Master! You built a smart, reusable program! ⭐"},
+ {type:"maze",title:"Smart spiral",func:true,grid:["S....#","####.#","B....#","######"],dir:"E",blocks:[JF,JIFR,"until",JCALL],max:4,solution:{main:[juntil(JCALL)],fn:[JIFR,JF]}},
+ {type:"maze",title:"The grand tour",func:true,grid:["SB..B#","####.#","B..B.#","######"],dir:"E",blocks:[JF,JL,JRT,JIFR,"until",JCALL],max:4,solution:{main:[juntil(JCALL)],fn:[JIFR,JF]},win:"Function Master! You built a smart, reusable program! ⭐"},
  {type:"done"}]}
 ]};
 
@@ -44674,7 +44672,7 @@ const JR_UNIT6={name:"Detective work",lessons:[
   say:"Grab your magnifying glass. 🔍"},
  {type:"maze",title:"One step too far",grid:["S..B"],dir:"E",blocks:[JF],start:[JF,JF,JF,JF],solution:[JF,JF,JF],say:"Something is extra here..."},
  {type:"maze",title:"Wrong turn",grid:["S...","###.","###B"],dir:"E",blocks:[JF,JL,JRT,"rep"],start:[jrep(3,JF),JL,jrep(2,JF)],solution:[jrep(3,JF),JRT,jrep(2,JF)],say:"The turn looks suspicious."},
- {type:"maze",title:"The loop that forgot to look",grid:["S....","####.","B...."],dir:"E",blocks:[JF,JIFR,"until"],max:3,start:[juntil(JF)],solution:[juntil(JIFR,JF)],say:"My loop walks straight into trees. What block is missing?"},
+ {type:"maze",title:"The loop that forgot to look",grid:["S....#","####.#","B....#","######"],dir:"E",blocks:[JF,JIFR,"until"],max:3,start:[juntil(JF)],solution:[juntil(JIFR,JF)],say:"My loop walks straight into trees. What block is missing?"},
  {type:"quiz",q:"What's the FIRST thing a good detective does with a buggy program?",opts:["Run it and watch what happens","Delete everything","Guess a fix"],a:0,why:"Watching the program run shows you exactly where it goes wrong."},
  {type:"done"}]},
 {id:"jr20",title:"Make your own puzzle",sub:"build a maze, then solve it",project:true,steps:[
@@ -47851,7 +47849,7 @@ const LEGAL_INFO={
   price:"$4.99"
 };
 
-const LEGAL_LINK=()=>`<a href="${LEGAL_INFO.support}">${LEGAL_INFO.owner} support page</a> (${LEGAL_INFO.support.replace(/^https?:\/\//,"")})`;
+const LEGAL_LINK=()=>`<a href="${LEGAL_INFO.support}">support page</a>`;
 const LEGAL_CONTACT=()=>LEGAL_INFO.email?`email us at <b>${LEGAL_INFO.email}</b> or visit our ${LEGAL_LINK()}`:`visit our ${LEGAL_LINK()}`;
 const LEGAL={
 terms:{title:"Terms of Service",sections:[
@@ -53417,15 +53415,19 @@ function codeStep(s){
     if(ok&&!solved){solved=true;$("#go").disabled=false;$("#go").hidden=false;if($("#trun"))$("#trun").hidden=true;award(30,5);bump("challenges");if(tries===1)bump("firstTry")}
   });
   $("#code-c").addEventListener("input",()=>{if(!T||T.mode()==="type")draft(k,$("#code-c").value)});
-  /* ↺ Start over: puts the original code back (handy in Bug Lab when the code has changed too much to remember) */
+  /* ↺ Reset: puts the original code back in one tap (handy in Bug Lab when the code has changed too much to remember).
+     For a few seconds after, the same button is ↶ Undo in case it was a slip. */
   {const head=$("#code-c").closest(".editor").querySelector(".head"),rb=document.createElement("button");
-    rb.className="linkbtn resetc";rb.id="resetc";rb.type="button";rb.textContent="↺ Start over";head.insertBefore(rb,head.querySelector(".run"));
-    let armed=null;const orig=s.start||"";
-    const sync=()=>{const changed=$("#code-c").value!==orig&&!(T&&T.mode()==="tap");rb.hidden=!changed;if(!changed){clearTimeout(armed);armed=null;rb.textContent="↺ Start over";rb.classList.remove("armed")}};
-    rb.onclick=()=>{if(!armed){rb.textContent="Tap again ↺";rb.classList.add("armed");armed=setTimeout(()=>{armed=null;rb.textContent="↺ Start over";rb.classList.remove("armed")},3500);return}
-      clearTimeout(armed);armed=null;const ta=$("#code-c");ta.value=orig;ta.dispatchEvent(new Event("input",{bubbles:true}));draft(k,orig);sync();ta.focus();
-      $("#bud").innerHTML=buddy(isBug?"Fresh start! Here's the original buggy code again. Run it and read the error.":"Fresh start! Here's the code you began with.","happy")};
-    $("#code-c").addEventListener("input",sync);sync();}
+    rb.className="resetc";rb.id="resetc";rb.type="button";head.insertBefore(rb,head.querySelector(".run"));
+    const orig=s.start||"";let undo=null,timer=null;
+    const look=()=>{rb.textContent=undo!==null?"↶":"↺";rb.title=undo!==null?"Undo reset":"Reset to the starting code";rb.setAttribute("aria-label",rb.title);rb.classList.toggle("undo",undo!==null)};
+    const sync=()=>{if(undo===null)rb.hidden=$("#code-c").value===orig||!!(T&&T.mode()==="tap");look()};
+    const put=v=>{const ta=$("#code-c");ta.value=v;ta.dispatchEvent(new Event("input",{bubbles:true}));draft(k,v)};
+    rb.onclick=()=>{clearTimeout(timer);
+      if(undo!==null){const v=undo;undo=null;put(v);sync();return}
+      undo=$("#code-c").value;put(orig);rb.hidden=false;look();
+      timer=setTimeout(()=>{undo=null;sync()},5000)};
+    $("#code-c").addEventListener("input",()=>{if(undo!==null&&$("#code-c").value!==orig){undo=null;clearTimeout(timer)}sync()});sync();}
   const doType=cur.c.runnable==="web"?"Type your code, then tap ▶ Show page.":"Type your code, then press ▶ Run.";
   const syncRun=m=>{const tr=$("#trun");if(tr){tr.hidden=!(m==="tap"&&!solved);$("#go").hidden=m==="tap"&&!solved}};
   const T=TP?wireTiles(s,TP,m=>{const t=document.querySelector(".card .todo span");if(t)t.textContent="👉 "+(m==="tap"?doTap:doType);syncRun(m)}):null;
@@ -53704,10 +53706,6 @@ function watchWallWords(){
   wallObs=new MutationObserver(ms=>{wallObs.disconnect();if(!$("#quit")||!(cur&&cur.c&&cur.c.kids))return;ms.forEach(m=>{if(m.type==="characterData")walk(m.target);else m.addedNodes.forEach(walk)});wallObs.observe(root,{childList:true,subtree:true,characterData:true})});
   wallObs.observe(root,{childList:true,subtree:true,characterData:true});
 }
-/* A slim frame of the world's walls (🌴 🌵 🌊 …) drawn around every maze: the edge of the map really is a wall,
-   so "Tree ahead?" and "bumped into a tree" make sense at the edge too. */
-const mazeFrame=Wd=>{const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"><text x="11" y="17" font-size="15" text-anchor="middle">${Wd.wall}</text></svg>`;
-  return `--tree:${Wd.tree};background-image:url('data:image/svg+xml,${encodeURIComponent(svg)}');`};
 function mazeInfo(g){let start;const goals=[];g.forEach((row,y)=>[...row].forEach((ch,x)=>{if(ch==="S")start=[x,y];if(ch==="B")goals.push([x,y])}));return {start,goal:goals[0],goals,w:g[0].length,h:g.length}}
 const blockCount=prog=>prog.reduce((n,b)=>n+(isBox(b)?1+b.body.length:1),0);
 /* runs a program; path entries are [x, y, dir, bump?, eatenKey?]
@@ -53827,7 +53825,7 @@ function maze(s){
   const Wd=worldFor();setWall(Wd);
   const cell=ch=>ch==="#"?Wd.wall:ch==="B"?"🍌":"";const nB=m.goals.length;
   shell(`<div class="card"><div class="label">${Wd.emoji} ${Wd.name} maze${nB>1?` · collect all ${nB} bananas`:""}${s.max?` · use ${s.max} blocks or fewer`:""}${s.sandbox?"":" · +15 XP"}</div><h2>${s.title}</h2>${jrGoal(s)}${s.body||""}
-    <div class="mframe" style="--w:${m.w};${mazeFrame(Wd)}"><div class="maze" style="--w:${m.w};--h:${m.h};--path:${Wd.path};--pathline:${Wd.line};--tree:${Wd.tree}" id="mz">${s.grid.map((row,y)=>[...row].map((ch,x)=>`<div class="mc ${ch==="#"?"tree":"path"}" data-xy="${x},${y}">${cell(ch)}</div>`).join("")).join("")}<div class="mk ghost" id="mkg" hidden aria-hidden="true"><div class="mface">${monkey("happy")}</div><span class="arr"></span></div><div class="mk" id="mk"><div class="mface" id="mface">${monkey("happy")}</div><span class="arr" id="arr">➜</span></div></div></div>
+    <div class="maze" style="--w:${m.w};--h:${m.h};--path:${Wd.path};--pathline:${Wd.line};--tree:${Wd.tree}" id="mz">${s.grid.map((row,y)=>[...row].map((ch,x)=>`<div class="mc ${ch==="#"?"tree":"path"}" data-xy="${x},${y}">${cell(ch)}</div>`).join("")).join("")}<div class="mk ghost" id="mkg" hidden aria-hidden="true"><div class="mface">${monkey("happy")}</div><span class="arr"></span></div><div class="mk" id="mk"><div class="mface" id="mface">${monkey("happy")}</div><span class="arr" id="arr">➜</span></div></div>
     ${s.func?`<div class="lanes" role="tablist"><button class="lane" data-lane="main" aria-pressed="true">Main program</button><button class="lane" data-lane="fn" aria-pressed="false">⭐ My move</button></div>
     <div class="label">⭐ My move <span style="text-transform:none;letter-spacing:0;font-weight:600">(build it once, use it with the ⭐ block)</span></div><div class="prog fprog" id="fprog"></div>`:""}
     <div class="label">${s.func?"Main program":"Your program"}</div><div class="prog" id="prog"></div>
@@ -53920,7 +53918,7 @@ function predict(s){
   const cell=ch=>ch==="#"?Wd.wall:ch==="B"?"🍌":"";
   shell(`<div class="card"><div class="label">🤔 Predict · +10 XP</div><h2>${s.title}</h2>${jrGoal(s)}${s.body||""}
     <div class="label">The program</div><div class="prog ro">${roChips(s.prog)}</div>
-    <div class="mframe" style="--w:${m.w};${mazeFrame(Wd)}"><div class="maze" style="--w:${m.w};--h:${m.h};--path:${Wd.path};--pathline:${Wd.line};--tree:${Wd.tree}" id="mz">${s.grid.map((row,y)=>[...row].map((ch,x)=>ch==="#"?`<div class="mc tree">${cell(ch)}</div>`:`<button class="mc path pick" data-xy="${x},${y}" aria-label="Square ${x+1} across, ${y+1} down">${cell(ch)}</button>`).join("")).join("")}<div class="mk" id="mk"><div class="mface" id="mface">${monkey("think")}</div><span class="arr" id="arr">➜</span></div></div></div>
+    <div class="maze" style="--w:${m.w};--h:${m.h};--path:${Wd.path};--pathline:${Wd.line};--tree:${Wd.tree}" id="mz">${s.grid.map((row,y)=>[...row].map((ch,x)=>ch==="#"?`<div class="mc tree">${cell(ch)}</div>`:`<button class="mc path pick" data-xy="${x},${y}" aria-label="Square ${x+1} across, ${y+1} down">${cell(ch)}</button>`).join("")).join("")}<div class="mk" id="mk"><div class="mface" id="mface">${monkey("think")}</div><span class="arr" id="arr">➜</span></div></div>
     <div class="kcode"><small>🧑‍💻 The program, written as code:</small><pre>${esc(kidCode(s.prog))}</pre></div><div id="fb"></div></div>
     <div id="bud">${buddy(s.say||"Tap the square where I'll stop. Then press ▶ Let's see!","think")}</div>
     <div class="row"><button class="btn banana" id="run" disabled>▶ Let's see!</button><button class="btn ghost" id="again" hidden>Guess again</button><button class="btn" id="go" hidden>Continue</button></div>`);

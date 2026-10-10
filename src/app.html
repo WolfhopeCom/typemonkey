@@ -237,8 +237,6 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 /* Jr. mazes */
 .maze{position:relative;display:grid;grid-template-columns:repeat(var(--w),1fr);width:min(100%,calc(var(--w) * 64px));aspect-ratio:var(--w) / var(--h);max-width:100%;align-self:center;border-radius:14px;overflow:hidden;background:#7FC77A}
 .mc{display:grid;place-items:center;font-size:clamp(1.1rem,5vw,1.9rem)}
-.mframe{align-self:center;box-sizing:border-box;width:min(100%,calc(var(--w) * 64px + 32px));padding:16px;border-radius:20px;background-color:var(--tree);background-size:22px 22px;box-shadow:inset 0 0 0 3px #0001,0 4px 0 #0002}
-.mframe>.maze{width:100%;border-radius:10px;box-shadow:0 0 0 3px #0002}
 .mc.path{background:var(--path,#F3DFA8);box-shadow:inset 0 0 0 1px var(--pathline,#E5CC88)}
 .mc.tree{background:var(--tree,#5FAE5A)}
 .stage{position:relative;height:210px;border-radius:18px;overflow:hidden;background:radial-gradient(ellipse at 50% 0%,#7B4BC8 0%,transparent 65%),linear-gradient(#1E1238,#3B1F63 70%)}
@@ -414,9 +412,9 @@ span.repn{display:inline-block}
 .legal h3{font-size:1.1rem;margin-top:6px}
 .legal p{color:var(--fg);line-height:1.6}
 .legal{overflow-wrap:break-word}
-.editor .head .resetc{flex:none;white-space:nowrap;font-family:var(--body);font-weight:800;font-size:.85rem;color:#FFE3C7;background:#26372F;border:0;border-radius:999px;padding:7px 12px;text-decoration:none;-webkit-tap-highlight-color:transparent;transition:background .2s,color .2s}
-.editor .head .resetc.armed{background:var(--banana);color:#2A1300;animation:pop .3s ease}
-.editor .head .resetc:focus-visible{outline:2px solid var(--banana)}
+.editor .head .resetc{flex:none;width:30px;height:30px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:#ffffff14;color:var(--code-dim);font-size:1.05rem;font-weight:700;line-height:1;margin-left:auto;-webkit-tap-highlight-color:transparent;transition:background .2s,color .2s}
+.editor .head .resetc:hover,.editor .head .resetc:active{background:#ffffff26;color:var(--code-fg)}
+.editor .head .resetc.undo{background:var(--banana);color:#2A1300}
 .legal a{color:color-mix(in srgb,var(--accent) 70%,var(--fg));font-weight:700}
 .legal,.legal *{max-width:100%}
 .gate{position:fixed;inset:0;z-index:20;background:color-mix(in srgb,#000 55%,transparent);display:grid;place-items:center;padding:16px}
@@ -1457,15 +1455,19 @@ function codeStep(s){
     if(ok&&!solved){solved=true;$("#go").disabled=false;$("#go").hidden=false;if($("#trun"))$("#trun").hidden=true;award(30,5);bump("challenges");if(tries===1)bump("firstTry")}
   });
   $("#code-c").addEventListener("input",()=>{if(!T||T.mode()==="type")draft(k,$("#code-c").value)});
-  /* ↺ Start over: puts the original code back (handy in Bug Lab when the code has changed too much to remember) */
+  /* ↺ Reset: puts the original code back in one tap (handy in Bug Lab when the code has changed too much to remember).
+     For a few seconds after, the same button is ↶ Undo in case it was a slip. */
   {const head=$("#code-c").closest(".editor").querySelector(".head"),rb=document.createElement("button");
-    rb.className="linkbtn resetc";rb.id="resetc";rb.type="button";rb.textContent="↺ Start over";head.insertBefore(rb,head.querySelector(".run"));
-    let armed=null;const orig=s.start||"";
-    const sync=()=>{const changed=$("#code-c").value!==orig&&!(T&&T.mode()==="tap");rb.hidden=!changed;if(!changed){clearTimeout(armed);armed=null;rb.textContent="↺ Start over";rb.classList.remove("armed")}};
-    rb.onclick=()=>{if(!armed){rb.textContent="Tap again ↺";rb.classList.add("armed");armed=setTimeout(()=>{armed=null;rb.textContent="↺ Start over";rb.classList.remove("armed")},3500);return}
-      clearTimeout(armed);armed=null;const ta=$("#code-c");ta.value=orig;ta.dispatchEvent(new Event("input",{bubbles:true}));draft(k,orig);sync();ta.focus();
-      $("#bud").innerHTML=buddy(isBug?"Fresh start! Here's the original buggy code again. Run it and read the error.":"Fresh start! Here's the code you began with.","happy")};
-    $("#code-c").addEventListener("input",sync);sync();}
+    rb.className="resetc";rb.id="resetc";rb.type="button";head.insertBefore(rb,head.querySelector(".run"));
+    const orig=s.start||"";let undo=null,timer=null;
+    const look=()=>{rb.textContent=undo!==null?"↶":"↺";rb.title=undo!==null?"Undo reset":"Reset to the starting code";rb.setAttribute("aria-label",rb.title);rb.classList.toggle("undo",undo!==null)};
+    const sync=()=>{if(undo===null)rb.hidden=$("#code-c").value===orig||!!(T&&T.mode()==="tap");look()};
+    const put=v=>{const ta=$("#code-c");ta.value=v;ta.dispatchEvent(new Event("input",{bubbles:true}));draft(k,v)};
+    rb.onclick=()=>{clearTimeout(timer);
+      if(undo!==null){const v=undo;undo=null;put(v);sync();return}
+      undo=$("#code-c").value;put(orig);rb.hidden=false;look();
+      timer=setTimeout(()=>{undo=null;sync()},5000)};
+    $("#code-c").addEventListener("input",()=>{if(undo!==null&&$("#code-c").value!==orig){undo=null;clearTimeout(timer)}sync()});sync();}
   const doType=cur.c.runnable==="web"?"Type your code, then tap ▶ Show page.":"Type your code, then press ▶ Run.";
   const syncRun=m=>{const tr=$("#trun");if(tr){tr.hidden=!(m==="tap"&&!solved);$("#go").hidden=m==="tap"&&!solved}};
   const T=TP?wireTiles(s,TP,m=>{const t=document.querySelector(".card .todo span");if(t)t.textContent="👉 "+(m==="tap"?doTap:doType);syncRun(m)}):null;
@@ -1744,10 +1746,6 @@ function watchWallWords(){
   wallObs=new MutationObserver(ms=>{wallObs.disconnect();if(!$("#quit")||!(cur&&cur.c&&cur.c.kids))return;ms.forEach(m=>{if(m.type==="characterData")walk(m.target);else m.addedNodes.forEach(walk)});wallObs.observe(root,{childList:true,subtree:true,characterData:true})});
   wallObs.observe(root,{childList:true,subtree:true,characterData:true});
 }
-/* A slim frame of the world's walls (🌴 🌵 🌊 …) drawn around every maze: the edge of the map really is a wall,
-   so "Tree ahead?" and "bumped into a tree" make sense at the edge too. */
-const mazeFrame=Wd=>{const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"><text x="11" y="17" font-size="15" text-anchor="middle">${Wd.wall}</text></svg>`;
-  return `--tree:${Wd.tree};background-image:url('data:image/svg+xml,${encodeURIComponent(svg)}');`};
 function mazeInfo(g){let start;const goals=[];g.forEach((row,y)=>[...row].forEach((ch,x)=>{if(ch==="S")start=[x,y];if(ch==="B")goals.push([x,y])}));return {start,goal:goals[0],goals,w:g[0].length,h:g.length}}
 const blockCount=prog=>prog.reduce((n,b)=>n+(isBox(b)?1+b.body.length:1),0);
 /* runs a program; path entries are [x, y, dir, bump?, eatenKey?]
@@ -1867,7 +1865,7 @@ function maze(s){
   const Wd=worldFor();setWall(Wd);
   const cell=ch=>ch==="#"?Wd.wall:ch==="B"?"🍌":"";const nB=m.goals.length;
   shell(`<div class="card"><div class="label">${Wd.emoji} ${Wd.name} maze${nB>1?` · collect all ${nB} bananas`:""}${s.max?` · use ${s.max} blocks or fewer`:""}${s.sandbox?"":" · +15 XP"}</div><h2>${s.title}</h2>${jrGoal(s)}${s.body||""}
-    <div class="mframe" style="--w:${m.w};${mazeFrame(Wd)}"><div class="maze" style="--w:${m.w};--h:${m.h};--path:${Wd.path};--pathline:${Wd.line};--tree:${Wd.tree}" id="mz">${s.grid.map((row,y)=>[...row].map((ch,x)=>`<div class="mc ${ch==="#"?"tree":"path"}" data-xy="${x},${y}">${cell(ch)}</div>`).join("")).join("")}<div class="mk ghost" id="mkg" hidden aria-hidden="true"><div class="mface">${monkey("happy")}</div><span class="arr"></span></div><div class="mk" id="mk"><div class="mface" id="mface">${monkey("happy")}</div><span class="arr" id="arr">➜</span></div></div></div>
+    <div class="maze" style="--w:${m.w};--h:${m.h};--path:${Wd.path};--pathline:${Wd.line};--tree:${Wd.tree}" id="mz">${s.grid.map((row,y)=>[...row].map((ch,x)=>`<div class="mc ${ch==="#"?"tree":"path"}" data-xy="${x},${y}">${cell(ch)}</div>`).join("")).join("")}<div class="mk ghost" id="mkg" hidden aria-hidden="true"><div class="mface">${monkey("happy")}</div><span class="arr"></span></div><div class="mk" id="mk"><div class="mface" id="mface">${monkey("happy")}</div><span class="arr" id="arr">➜</span></div></div>
     ${s.func?`<div class="lanes" role="tablist"><button class="lane" data-lane="main" aria-pressed="true">Main program</button><button class="lane" data-lane="fn" aria-pressed="false">⭐ My move</button></div>
     <div class="label">⭐ My move <span style="text-transform:none;letter-spacing:0;font-weight:600">(build it once, use it with the ⭐ block)</span></div><div class="prog fprog" id="fprog"></div>`:""}
     <div class="label">${s.func?"Main program":"Your program"}</div><div class="prog" id="prog"></div>
@@ -1960,7 +1958,7 @@ function predict(s){
   const cell=ch=>ch==="#"?Wd.wall:ch==="B"?"🍌":"";
   shell(`<div class="card"><div class="label">🤔 Predict · +10 XP</div><h2>${s.title}</h2>${jrGoal(s)}${s.body||""}
     <div class="label">The program</div><div class="prog ro">${roChips(s.prog)}</div>
-    <div class="mframe" style="--w:${m.w};${mazeFrame(Wd)}"><div class="maze" style="--w:${m.w};--h:${m.h};--path:${Wd.path};--pathline:${Wd.line};--tree:${Wd.tree}" id="mz">${s.grid.map((row,y)=>[...row].map((ch,x)=>ch==="#"?`<div class="mc tree">${cell(ch)}</div>`:`<button class="mc path pick" data-xy="${x},${y}" aria-label="Square ${x+1} across, ${y+1} down">${cell(ch)}</button>`).join("")).join("")}<div class="mk" id="mk"><div class="mface" id="mface">${monkey("think")}</div><span class="arr" id="arr">➜</span></div></div></div>
+    <div class="maze" style="--w:${m.w};--h:${m.h};--path:${Wd.path};--pathline:${Wd.line};--tree:${Wd.tree}" id="mz">${s.grid.map((row,y)=>[...row].map((ch,x)=>ch==="#"?`<div class="mc tree">${cell(ch)}</div>`:`<button class="mc path pick" data-xy="${x},${y}" aria-label="Square ${x+1} across, ${y+1} down">${cell(ch)}</button>`).join("")).join("")}<div class="mk" id="mk"><div class="mface" id="mface">${monkey("think")}</div><span class="arr" id="arr">➜</span></div></div>
     <div class="kcode"><small>🧑‍💻 The program, written as code:</small><pre>${esc(kidCode(s.prog))}</pre></div><div id="fb"></div></div>
     <div id="bud">${buddy(s.say||"Tap the square where I'll stop. Then press ▶ Let's see!","think")}</div>
     <div class="row"><button class="btn banana" id="run" disabled>▶ Let's see!</button><button class="btn ghost" id="again" hidden>Guess again</button><button class="btn" id="go" hidden>Continue</button></div>`);

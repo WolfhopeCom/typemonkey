@@ -152,18 +152,18 @@ const JR_UNIT4={name:"Smart monkey",lessons:[
  {type:"sort",title:"Robot brain",body:`<p>First, YOU be my brain! Look at what's in front of me and choose.</p>`,rule:"IF there's a tree ahead ➜ ↱ Turn<br>ELSE ➜ 👣 Walk forward",bins:[{icon:"↱",name:"Turn"},{icon:"👣",name:"Forward"}],
   items:[{icon:"🌳",name:"tree ahead",bin:0},{icon:"🟩",name:"clear path",bin:1,why:"No tree, so keep walking!"},{icon:"🟩",name:"clear path",bin:1,why:"No tree, so keep walking!"},{icon:"🌳",name:"tree ahead",bin:0,why:"Tree! Turn so you don't bonk."},{icon:"🟩",name:"clear path",bin:1,why:"No tree, so keep walking!"},{icon:"🌳",name:"tree ahead",bin:0,why:"Tree! Turn so you don't bonk."}],
   code:"if tree_ahead():\n    turn_right()\nelse:\n    forward()",say:"Tree? Turn! No tree? Walk!"},
- {type:"maze",title:"Around the bend",grid:["S...","###.","###.","###B"],dir:"E",blocks:[JF,JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],say:"Try: Repeat until 🍌 with Tree ahead? Turn right, then Forward inside."},
+ {type:"maze",title:"Around the bend",grid:["S...#","###.#","###.#","###B#"],dir:"E",blocks:[JF,JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],say:"Try: Repeat until 🍌 with Tree ahead? Turn right, then Forward inside."},
  {type:"quiz",q:"The rule is: IF a tree is ahead THEN turn right. There's NO tree ahead. What does TypeMonkey do?",opts:["Nothing, he skips the turn","He turns right anyway","He stops forever"],a:0,why:"The IF part is false, so the turn doesn't happen."},
- {type:"maze",title:"Left this time",grid:["###B","###.","###.","S..."],dir:"E",blocks:[JF,JIFL,"until"],max:3,solution:[juntil(JIFL,JF)]},
- {type:"maze",title:"The spiral",grid:["S....","####.","B...."],dir:"E",blocks:[JF,JL,JRT,JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],say:"You could count every step... or let the smart block figure it out!"},
+ {type:"maze",title:"Left this time",grid:["###B#","###.#","###.#","S...#"],dir:"E",blocks:[JF,JIFL,"until"],max:3,solution:[juntil(JIFL,JF)]},
+ {type:"maze",title:"The spiral",grid:["S....#","####.#","B....#","######"],dir:"E",blocks:[JF,JL,JRT,JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],say:"You could count every step... or let the smart block figure it out!"},
  {type:"done"}]},
 {id:"jr13",title:"Maze master",sub:"the ultimate challenge",project:true,steps:[
  {type:"talk",title:"Final challenge!",mood:"cheer",
   body:`<p>You've learned sequences, loops, repeat-until and choices. These last mazes use <b>everything</b>. Take your time, plan, test, and fix. That's what real coders do!</p>`,
   say:"I believe in you, Maze Master!"},
- {type:"maze",title:"Banana loop-de-loop",grid:["SB..B","####.","B..B."],dir:"E",blocks:[JF,JL,JRT,JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],say:"Four bananas, one tiny program. Can you do it in 3 blocks?"},
- {type:"maze",title:"Smart pond",grid:["S..","##.","B.."],dir:"E",blocks:[JF,JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],say:"Remember this pond? This time the smart block does all the turning!"},
- {type:"maze",title:"The Golden Grove",grid:["SB...","####B","B...."],dir:"E",blocks:[JF,JL,JRT,"rep",JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],win:"You're officially a Maze Master! 🏆"},
+ {type:"maze",title:"Banana loop-de-loop",grid:["SB..B#","####.#","B..B.#","######"],dir:"E",blocks:[JF,JL,JRT,JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],say:"Four bananas, one tiny program. Can you do it in 3 blocks?"},
+ {type:"maze",title:"Smart pond",grid:["S..#","##.#","B..#","####"],dir:"E",blocks:[JF,JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],say:"Remember this pond? This time the smart block does all the turning!"},
+ {type:"maze",title:"The Golden Grove",grid:["SB...#","####B#","B....#","######"],dir:"E",blocks:[JF,JL,JRT,"rep",JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],win:"You're officially a Maze Master! 🏆"},
  {type:"done"}]}
 ]};
 
@@ -203,8 +203,8 @@ const JR_UNIT5={name:"My own blocks",lessons:[
   body:`<p>Last challenge: put <b>smart blocks</b> inside ⭐ My move, and use <b>Repeat until 🍌</b> in the main program. That's exactly how real programs are built: small smart pieces, used over and over.</p>`,
   say:"You're thinking like a real programmer now!"},
  {type:"maze",title:"Hop until banana",func:true,grid:HOPS5,dir:"E",blocks:[JF,JL,JRT,"until",JCALL],max:7,startFn:[JF,JRT,JF,JL,JF],solution:{main:[juntil(JCALL)],fn:[JF,JRT,JF,JL,JF]},say:"Your hop is already in ⭐. You don't even need to count the hops!"},
- {type:"maze",title:"Smart spiral",func:true,grid:["S....","####.","B...."],dir:"E",blocks:[JF,JIFR,"until",JCALL],max:4,solution:{main:[juntil(JCALL)],fn:[JIFR,JF]}},
- {type:"maze",title:"The grand tour",func:true,grid:["SB..B","####.","B..B."],dir:"E",blocks:[JF,JL,JRT,JIFR,"until",JCALL],max:4,solution:{main:[juntil(JCALL)],fn:[JIFR,JF]},win:"Function Master! You built a smart, reusable program! ⭐"},
+ {type:"maze",title:"Smart spiral",func:true,grid:["S....#","####.#","B....#","######"],dir:"E",blocks:[JF,JIFR,"until",JCALL],max:4,solution:{main:[juntil(JCALL)],fn:[JIFR,JF]}},
+ {type:"maze",title:"The grand tour",func:true,grid:["SB..B#","####.#","B..B.#","######"],dir:"E",blocks:[JF,JL,JRT,JIFR,"until",JCALL],max:4,solution:{main:[juntil(JCALL)],fn:[JIFR,JF]},win:"Function Master! You built a smart, reusable program! ⭐"},
  {type:"done"}]}
 ]};
 
@@ -229,7 +229,7 @@ const JR_UNIT6={name:"Detective work",lessons:[
   say:"Grab your magnifying glass. 🔍"},
  {type:"maze",title:"One step too far",grid:["S..B"],dir:"E",blocks:[JF],start:[JF,JF,JF,JF],solution:[JF,JF,JF],say:"Something is extra here..."},
  {type:"maze",title:"Wrong turn",grid:["S...","###.","###B"],dir:"E",blocks:[JF,JL,JRT,"rep"],start:[jrep(3,JF),JL,jrep(2,JF)],solution:[jrep(3,JF),JRT,jrep(2,JF)],say:"The turn looks suspicious."},
- {type:"maze",title:"The loop that forgot to look",grid:["S....","####.","B...."],dir:"E",blocks:[JF,JIFR,"until"],max:3,start:[juntil(JF)],solution:[juntil(JIFR,JF)],say:"My loop walks straight into trees. What block is missing?"},
+ {type:"maze",title:"The loop that forgot to look",grid:["S....#","####.#","B....#","######"],dir:"E",blocks:[JF,JIFR,"until"],max:3,start:[juntil(JF)],solution:[juntil(JIFR,JF)],say:"My loop walks straight into trees. What block is missing?"},
  {type:"quiz",q:"What's the FIRST thing a good detective does with a buggy program?",opts:["Run it and watch what happens","Delete everything","Guess a fix"],a:0,why:"Watching the program run shows you exactly where it goes wrong."},
  {type:"done"}]},
 {id:"jr20",title:"Make your own puzzle",sub:"build a maze, then solve it",project:true,steps:[

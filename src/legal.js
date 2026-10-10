@@ -9,7 +9,7 @@ const LEGAL_INFO={
   price:"$4.99"
 };
 
-const LEGAL_LINK=()=>`<a href="${LEGAL_INFO.support}">${LEGAL_INFO.owner} support page</a> (${LEGAL_INFO.support.replace(/^https?:\/\//,"")})`;
+const LEGAL_LINK=()=>`<a href="${LEGAL_INFO.support}">support page</a>`;
 const LEGAL_CONTACT=()=>LEGAL_INFO.email?`email us at <b>${LEGAL_INFO.email}</b> or visit our ${LEGAL_LINK()}`:`visit our ${LEGAL_LINK()}`;
 const LEGAL={
 terms:{title:"Terms of Service",sections:[

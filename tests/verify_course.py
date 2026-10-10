@@ -100,6 +100,15 @@ CHECK = r"""async () => {
       if (s.bins.some((b, k) => !s.items.some(it => it.bin === k))) R.push(`${x.l.id} step ${i}: a sort bin gets nothing`);
     }
   }
+  // "Tree ahead?" must always mean a tree you can SEE: the answer may not rely on the edge of the map as a wall
+  for (const x of flat(jr)) for (const [i, s] of (x.l.steps || []).entries()) if ((s.type === "maze" || s.type === "predict") && s.solution) {
+    const sol = s.solution.main ? s.solution : {main: s.solution, fn: []}; if (!Array.isArray(sol.main)) continue;
+    const ifs = b => typeof b === "object" ? b.body.some(ifs) : (b === "ifR" || b === "ifL");
+    if (![...sol.main, ...(sol.fn || [])].some(ifs)) continue;
+    const run = g => { const r = simulate(g, s.dir, sol.main, sol.fn || []); return r.result + ":" + r.path.length };
+    const pads = {right: g => g.map(r => r + "."), left: g => g.map(r => "." + r), top: g => [".".repeat(g[0].length), ...g], bottom: g => [...g, ".".repeat(g[0].length)]};
+    for (const [side, f] of Object.entries(pads)) if (run(f(s.grid)) !== run(s.grid)) R.push(`${x.l.id} step ${i}: "${s.title}" uses the ${side} edge of the map as a tree; draw real # there`);
+  }
   for (const x of flat(jr)) for (const [i, s] of (x.l.steps || []).entries()) if (s.type === "maze") {
     const w = s.grid[0].length;
     if (!s.grid.every(r => r.length === w)) R.push(`${x.l.id} step ${i}: grid rows differ in length`);

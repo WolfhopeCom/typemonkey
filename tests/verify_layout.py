@@ -19,7 +19,7 @@ CHECK = r"""() => {
   for (const el of document.querySelectorAll('#screen *')) {
     const r = el.getBoundingClientRect(); if (!r.width || !r.height) continue;
     const cs = getComputedStyle(el); if (cs.visibility === 'hidden' || cs.position === 'fixed') continue;
-    if (el.closest('.confetti,.burst,.mfx,.mframe,.fin-stage,.stage')) continue;  // decorations that are clipped on purpose
+    if (el.closest('.confetti,.burst,.mfx,.fin-stage,.stage')) continue;  // decorations that are clipped on purpose
     if (!el.children.length && el.scrollWidth > el.clientWidth + 2 && cs.overflowX === 'visible' && el.clientWidth > 0 && !['PRE','CODE','TEXTAREA','svg','path'].includes(el.tagName))
       bad.push({k: 'text', tag: el.tagName, txt: (el.textContent || '').slice(0, 50)});
     const a = clipAnc(el);
