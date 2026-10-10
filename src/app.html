@@ -326,6 +326,11 @@ code.i{font-family:var(--mono);font-size:.88em;background:var(--surface2);paddin
 .pnode.done .pbtn{background:var(--leaf);color:#fff;box-shadow:0 6px 0 color-mix(in srgb,var(--leaf) 60%,#000)}
 .pnode.proj .pbtn{border-radius:24px}
 .pnode.next .pbtn{animation:pnext 1.6s ease-in-out infinite}
+.pnode{position:relative}
+.pwalker{position:absolute;left:calc(50% - 39px - 52px);top:10px;width:50px;height:50px;pointer-events:none;z-index:2;filter:drop-shadow(0 4px 3px #0003)}
+.pwalker .tm{width:100%;height:100%;transform-origin:50% 90%;animation:breathe 3.2s ease-in-out infinite}
+.pwalker.walking .tm{animation:none}
+.pwalker.arrived .tm{animation:pop .4s ease,breathe 3.2s ease-in-out .4s infinite}
 @keyframes pnext{0%,100%{transform:none}50%{transform:translateY(-4px)}}
 .pbtn:active{transform:translateY(4px)!important;box-shadow:0 2px 0 var(--line)!important}
 .pbtn[disabled]{opacity:.7}
@@ -464,6 +469,7 @@ span.repn{display:inline-block}
 .setrow:first-of-type{border-top:0}
 .setrow>div:first-child{min-width:0;flex:1 1 180px;display:flex;flex-direction:column}
 .setrow span{color:var(--muted);font-size:.88rem}
+.remindat{font:inherit;font-weight:700;padding:6px 8px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
 .seg{display:flex;background:var(--surface2);border-radius:12px;padding:3px;gap:2px}
 .seg button{border:0;background:none;color:var(--fg);font-weight:800;font-size:.88rem;padding:7px 12px;border-radius:9px}
 .seg button[aria-checked="true"]{background:var(--surface);box-shadow:0 1px 3px #0002;color:var(--accent)}
@@ -667,7 +673,7 @@ const WINS=["Nailed it!","Clean code. Love it.","Ook ook! That's right!","You're
 
 /* ---------- State ---------- */
 const KEY="typemonkey-v1";
-const freshState=()=>({xp:0,bananas:0,streak:0,lastDay:null,done:[],progress:{},pro:false,look:{...DEFAULT_LOOK},owned:{fur:["orange"],hat:["none"],eyes:["round","none"],neck:["none"],pet:["none"]},review:{},settings:{theme:"system",text:"normal",calm:false,sound:true,music:true},stats:{},badges:{}});
+const freshState=()=>({xp:0,bananas:0,streak:0,lastDay:null,done:[],progress:{},pro:false,look:{...DEFAULT_LOOK},owned:{fur:["orange"],hat:["none"],eyes:["round","none"],neck:["none"],pet:["none"]},review:{},settings:{theme:"system",text:"normal",calm:false,sound:true,music:true,remind:false,remindAt:18,cloud:true},stats:{},badges:{}});
 /* Fill in anything missing (older saves, restored backups) so the rest of the app can rely on the shape */
 function normState(raw){
   const S={...freshState(),...(raw&&typeof raw==="object"?raw:{})};
@@ -678,20 +684,21 @@ function normState(raw){
   if(!S.owned.pet.includes("none"))S.owned.pet.push("none");
   ["orange"].forEach(x=>S.owned.fur.includes(x)||S.owned.fur.push(x));["none"].forEach(x=>S.owned.hat.includes(x)||S.owned.hat.push(x));
   ["round","none"].forEach(x=>S.owned.eyes.includes(x)||S.owned.eyes.push(x));["none"].forEach(x=>S.owned.neck.includes(x)||S.owned.neck.push(x));S.review=S.review||{};
-  S.settings={theme:"system",text:"normal",calm:false,sound:true,music:true,...(S.settings||{})};delete S.tester;
+  S.settings={theme:"system",text:"normal",calm:false,sound:true,music:true,remind:false,remindAt:18,cloud:true,...(S.settings||{})};delete S.tester;
   S.stats=S.stats||{};S.badges=S.badges||{};
   return S;
 }
 let S=freshState();
 try{const raw=localStorage.getItem(KEY);if(raw)S=JSON.parse(raw)}catch(e){}
 S=normState(S);
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}renderStats();if(typeof checkAchievements==="function")setTimeout(checkAchievements,0)}
+function save(){S.savedAt=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(window.__cloudQueue)window.__cloudQueue();renderStats();if(typeof checkAchievements==="function")setTimeout(checkAchievements,0)}
 function applySettings(){
   const r=document.documentElement;const st=S.settings;
   if(st.theme==="system")r.removeAttribute("data-theme");else r.setAttribute("data-theme",st.theme);
   r.classList.toggle("bigtext",st.text==="large");r.classList.toggle("calm",!!st.calm);
 }
 applySettings();
+setTimeout(()=>Remind.sync(),1500);
 /* ---------- Sounds: tiny synthesized effects (Web Audio, no files). Soft, short, throttled, never throws.
    The AudioContext is only created/resumed inside a user gesture (iOS / Safari rule). ---------- */
 const SFX=(()=>{
@@ -813,7 +820,29 @@ document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest
 function renderStats(){$("#sStreak").textContent=S.streak;$("#sBan").textContent=S.bananas;$("#sXp").textContent=S.xp;$("#brandMonkey").innerHTML=monkey();renderSnd()}
 function renderSnd(){const b=$("#sndBtn");if(!b)return;const on=S.settings.sound!==false;b.textContent=on?"🔊":"🔇";b.setAttribute("aria-pressed",on);b.setAttribute("aria-label",on?"Sounds on. Tap to turn off":"Sounds off. Tap to turn on")}
 const dayStr=d=>d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
-function bumpStreak(){const t=dayStr(new Date());if(S.lastDay===t)return;const y=dayStr(new Date(Date.now()-864e5));S.streak=S.lastDay===y?S.streak+1:1;S.lastDay=t}
+/* ---------- Daily reminders (phone app only, opt-in): local notifications, no server.
+   The next 14 days are scheduled at the chosen hour; a day you already practiced is skipped. ---------- */
+const Remind={
+  plugin(){try{const C=window.Capacitor;return C&&C.isNativePlatform&&C.isNativePlatform()&&C.Plugins&&C.Plugins.LocalNotifications||null}catch(e){return null}},
+  ok(){return !!Remind.plugin()},
+  LINES:["Your daily banana is waiting 🍌 One quick lesson?","TypeMonkey saved you a seat. Ready to code? 🐒","5 minutes of code today? TypeMonkey believes in you!","A new puzzle is ready for you 🧩","Keep your brain buzzing: one lesson today 🚀"],
+  async sync(){const P=Remind.plugin();if(!P)return;
+    try{await P.cancel({notifications:Array.from({length:14},(_,i)=>({id:4100+i}))}).catch(()=>{});
+      if(!S.settings.remind)return;
+      const h=+S.settings.remindAt||18,now=new Date(),today=dayStr(now),y=dayStr(new Date(Date.now()-864e5)),list=[];
+      const live=S.streak>=2&&(S.lastDay===today||S.lastDay===y);
+      for(let d=0;d<14;d++){const at=new Date(now.getFullYear(),now.getMonth(),now.getDate()+d,h,0,0);
+        if(at<=now||(d===0&&S.lastDay===today))continue;
+        const body=d<=1&&live?`🔥 Keep your ${S.streak}-day streak going! One quick lesson?`:Remind.LINES[(at.getDate()+d)%Remind.LINES.length];
+        list.push({id:4100+d,title:"TypeMonkey",body,schedule:{at}})}
+      if(list.length)await P.schedule({notifications:list});
+    }catch(e){}},
+  async enable(on){const P=Remind.plugin();if(!P)return false;
+    if(on){try{let r=await P.checkPermissions();if(r.display!=="granted")r=await P.requestPermissions();
+      if(r.display!=="granted"){S.settings.remind=false;save();toast("Notifications are off for TypeMonkey. Turn them on in your phone's Settings app.");return false}}catch(e){return false}}
+    S.settings.remind=on;save();await Remind.sync();if(on)toast("Reminder on. See you tomorrow! 🍌");return true}
+};
+function bumpStreak(){const t=dayStr(new Date());if(S.lastDay===t)return;const y=dayStr(new Date(Date.now()-864e5));S.streak=S.lastDay===y?S.streak+1:1;S.lastDay=t;setTimeout(()=>Remind.sync(),0)}
 
 /* ---------- Code runner: in-page, loop-guarded, with a fallback if eval is blocked ---------- */
 function guardLoops(code){
@@ -1198,6 +1227,25 @@ function pathHTML(c,L,ui,nuId){
       <button class="lesson pbtn" data-l="${x.l.id}" aria-label="${esc(x.l.title)}${cls==="done"?" (done)":cls==="locked"?" (locked)":""}" ${cls==="open"||cls==="done"||res?"":"disabled"}>${isNext?`<span class="pstart">${res?"RESUME":"START"}</span>`:""}<span class="pic">${icon}</span></button>
       <div class="plabel"><b>${x.l.title}</b><span>${sub}</span>${res?`<button class="linkbtn" data-restart="${x.l.id}">Start over</button>`:""}</div></div>`}).join("");
 }
+/* Course map: a little TypeMonkey sits beside your next lesson. Right after you finish a lesson he hops along
+   the path from that lesson to the next one. */
+let mapWalk=null;   // {cid, from} set by finish()
+function placeWalker(cid,nuId){
+  const W=mapWalk&&mapWalk.cid===cid?mapWalk:null;mapWalk=null;
+  const node=nuId&&document.querySelector(`.pnode .pbtn[data-l="${nuId}"]`);if(!node)return;
+  const pn=node.closest(".pnode"),el=document.createElement("div");el.className="pwalker";el.setAttribute("aria-hidden","true");el.innerHTML=monkey("happy");pn.appendChild(el);
+  const from=W&&document.querySelector(`.pnode .pbtn[data-l="${W.from}"]`);
+  if(!from||from===node||calmMotion())return;
+  node.scrollIntoView({block:"center"});
+  const a=from.getBoundingClientRect(),b=el.getBoundingClientRect();
+  const dx=a.left+a.width/2-(b.left+b.width/2),dy=a.top+a.height/2-(b.top+b.height/2);
+  const hops=Math.max(2,Math.min(5,Math.round(Math.hypot(dx,dy)/45))),kf=[];
+  for(let i=0;i<=hops*2;i++){const t=i/(hops*2),lift=i%2?-26:0;kf.push({transform:`translate(${dx*(1-t)}px,${dy*(1-t)+lift}px) scale(${i%2?1.06:1},${i%2?1.06:.94})`,offset:t})}
+  el.classList.add("walking");
+  const an=el.animate(kf,{duration:hops*320,delay:350,easing:"linear",fill:"backwards"});
+  for(let i=0;i<hops;i++)setTimeout(()=>sfx("step"),350+i*320);
+  an.onfinish=()=>{el.classList.remove("walking");el.classList.add("arrived");sfx("ding")};
+}
 function coursePage(cid){
   SFX.stopMusic();
   rerender=()=>coursePage(cid);
@@ -1226,6 +1274,7 @@ function coursePage(cid){
   $$(".lesson:not([disabled])").forEach(b=>b.onclick=()=>startLesson(b.dataset.l));
   $$("[data-restart]").forEach(b=>b.onclick=()=>{delete S.progress[b.dataset.restart];save();startLesson(b.dataset.restart)});
   foot();window.scrollTo(0,0);
+  if(!c.pickAny)placeWalker(cid,nuId);
 }
 
 /* ---------- Lesson runner ---------- */
@@ -2106,7 +2155,7 @@ function practice(){
 function finish(){
   if(cur.review)return reviewDone();
   if(cur.daily)return dailyDone();
-  const id=cur.l.id;const first=!S.done.includes(id);
+  const id=cur.l.id;const first=!S.done.includes(id);mapWalk={cid:cur.c.id,from:id};
   const bonus=first?20:0;cur.earned.xp+=bonus;
   S.xp+=cur.earned.xp;S.bananas+=cur.earned.ban;bumpStreak();if(first)S.done.push(id);delete S.progress[id];
   bump("lessons");if(cur.earned.total>=2&&cur.earned.right===cur.earned.total)bump("perfectQuiz");
@@ -2403,7 +2452,7 @@ function shop(tab="hat",preview){SFX.stopMusic();
 }
 
 /* ---------- Settings ---------- */
-const APP_VERSION="1.0";
+const APP_VERSION="1.1";
 function settingsPage(){SFX.stopMusic();
   const back=rerender===settingsPage?home:rerender;rerender=settingsPage;setMode(false);
   const st=S.settings;
@@ -2416,6 +2465,8 @@ function settingsPage(){SFX.stopMusic();
       <div class="setrow"><b>Sounds</b>${seg("sound",st.sound===false?"off":"on",[["on","On"],["off","Off"]])}</div>
       <div class="setrow"><b>Music <small>in Jr.</small></b>${seg("music",st.music===false?"off":"on",[["on","On"],["off","Off"]])}</div>
       <div class="setrow"><b>Calm mode <small>less motion</small></b>${seg("calm",st.calm?"on":"off",[["off","Off"],["on","On"]])}</div>
+      ${Cloud.plugin()?`<div class="setrow"><b>iCloud sync <small>${st.cloud===false?"progress stays on this device":"progress follows you to your other Apple devices"}</small></b>${seg("cloud",st.cloud===false?"off":"on",[["on","On"],["off","Off"]])}</div>`:""}
+      ${Remind.ok()?`<div class="setrow"><b>Daily reminder <small>${st.remind?"skipped on days you practice":"a nudge to keep your streak"}</small></b><div class="setbtns">${seg("remind",st.remind?"on":"off",[["off","Off"],["on","On"]])}${st.remind?`<select id="remindAt" class="remindat" aria-label="Reminder time">${[7,8,12,15,16,17,18,19,20].map(h=>`<option value="${h}" ${+st.remindAt===h?"selected":""}>${h===12?"12 pm":h>12?(h-12)+" pm":h+" am"}</option>`).join("")}</select>`:""}</div></div>`:""}
     </div>
     <div class="card setlist">
       <div class="setrow"><b>${S.pro?"✓ Full version unlocked":"Full version <small>one-time ${STORE.price}</small>"}</b><div class="setbtns">${S.pro?"":`<button class="btn banana sm" id="sbuy">Unlock</button>`}<button class="btn ghost sm" id="restore">Restore</button></div></div>
@@ -2428,12 +2479,15 @@ function settingsPage(){SFX.stopMusic();
   $("#back").onclick=()=>back();
   const bindSeg=(id,fn)=>$$(`#${id} button`).forEach(b=>b.onclick=()=>{fn(b.dataset.v);save();applySettings();settingsPage()});
   bindSeg("theme",v=>st.theme=v);bindSeg("text",v=>st.text=v);bindSeg("calm",v=>st.calm=v==="on");bindSeg("sound",v=>{st.sound=v==="on";if(st.sound)setTimeout(()=>sfx("correct"),40);else SFX.stopMusic(true)});bindSeg("music",v=>{st.music=v==="on";if(!st.music)SFX.stopMusic(true)});
+  bindSeg("cloud",v=>{st.cloud=v==="on";if(st.cloud)setTimeout(async()=>{await Cloud.pull();Cloud.queue(300)},50)});
+  $$("#remind button").forEach(b=>b.onclick=async()=>{await Remind.enable(b.dataset.v==="on");settingsPage()});
+  if($("#remindAt"))$("#remindAt").onchange=e=>{st.remindAt=+e.target.value;save();Remind.sync();toast("Reminder set for "+e.target.selectedOptions[0].textContent+".")};
   if($("#sbuy"))$("#sbuy").onclick=()=>unlockFull(settingsPage);
   $("#restore").onclick=()=>restoreFull(settingsPage);
   $("#sbackup").onclick=backupPage;
   $("#sterms").onclick=()=>legalPage("terms");$("#sprivacy").onclick=()=>legalPage("privacy");
   $("#reset").onclick=()=>{$("#confirm").innerHTML=`<div class="feedback bad"><b>Erase everything?</b> This can't be undone.<div class="row" style="margin-top:8px"><button class="btn sm" id="yes">Erase everything</button><button class="btn ghost sm" id="no">Keep my progress</button></div></div>`;
-    $("#yes").onclick=()=>{const keep=S.settings;S=freshState();S.settings=keep;save();applySettings();toast("Progress erased.");home()};
+    $("#yes").onclick=()=>{const keep=S.settings;S=freshState();S.resetAt=Date.now();S.settings=keep;save();applySettings();toast("Progress erased.");home()};
     $("#no").onclick=()=>$("#confirm").innerHTML=""};
   $("#foot").innerHTML="";window.scrollTo(0,0);
 }
@@ -2470,6 +2524,53 @@ const BK={
     return `This backup has <b>${n} lesson${n===1?"":"s"} done</b>, <b>${b} banana${b===1?"":"s"}</b> and <b>${x} XP</b>${bd?`, plus ${bd} badge${bd===1?"":"s"}`:""}${st.pro?". The full version is unlocked in it":""}.`},
   fileName(){const d=new Date();return `typemonkey-backup-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}.txt`}
 };
+/* ---------- iCloud progress sync (iPhone/iPad app only; uses the typemonkey-icloud plugin) ----------
+   Progress travels as the same compressed code as a backup, in Apple's iCloud key-value store, so it follows the
+   player to their other Apple devices with no account or server of ours. Two saves are merged so nothing is lost:
+   lessons done, badges and items owned are combined; XP takes the higher number; bananas, outfit and the like come
+   from whichever device saved last; settings always stay as they are on this device. */
+function mergeState(a,b){
+  const t=x=>+x.savedAt||0,[old,neu]=t(a)>t(b)?[b,a]:[a,b],M={...old,...neu};
+  if(+neu.resetAt&&t(old)<=+neu.resetAt)return normState({...neu,settings:a.settings});   // a newer "Erase everything" or restored backup wins outright
+  M.settings=a.settings;                                           // a = this device
+  M.done=[...new Set([...(a.done||[]),...(b.done||[])])];
+  M.xp=Math.max(+a.xp||0,+b.xp||0);
+  M.pro=!!(a.pro||b.pro);
+  M.badges={...(old.badges||{}),...(neu.badges||{})};for(const k in M.badges){const x=(a.badges||{})[k],y=(b.badges||{})[k];if(x&&y)M.badges[k]=Math.min(x,y)}
+  M.owned={};for(const k of new Set([...Object.keys(a.owned||{}),...Object.keys(b.owned||{})]))M.owned[k]=[...new Set([...((a.owned||{})[k]||[]),...((b.owned||{})[k]||[])])];
+  M.review={...(old.review||{}),...(neu.review||{})};
+  M.progress={...(old.progress||{}),...(neu.progress||{})};for(const id of M.done)delete M.progress[id];
+  M.stats={...(old.stats||{})};for(const [k,v] of Object.entries(neu.stats||{})){const o=M.stats[k];
+    M.stats[k]=typeof v==="number"&&typeof o==="number"?Math.max(v,o):Array.isArray(v)&&Array.isArray(o)?[...new Set([...o,...v])]:v}
+  const la=a.lastDay||"",lb=b.lastDay||"";const sk=la>lb?a:lb>la?b:((+a.streak||0)>=(+b.streak||0)?a:b);M.lastDay=sk.lastDay;M.streak=sk.streak;
+  return normState(M);
+}
+const Cloud={
+  KEY:"tm.progress",lastSent:null,timer:null,busy:false,
+  plugin(){try{const C=window.Capacitor;return C&&C.isNativePlatform&&C.isNativePlatform()&&C.Plugins&&C.Plugins.TMCloud||null}catch(e){return null}},
+  on(){return !!Cloud.plugin()&&S.settings.cloud!==false},
+  forCloud(){const c={...S};delete c.settings;return c},
+  /* Fetch iCloud's copy and merge it in. Returns true if anything on this device changed. */
+  async pull(quiet){
+    if(!Cloud.on()||Cloud.busy)return false;Cloud.busy=true;
+    try{const r=await Cloud.plugin().get({key:Cloud.KEY});if(!r||!r.value)return false;if(r.value===Cloud.lastSent)return false;
+      const got=await BK.read(r.value);if(!got.state)return false;
+      const strip=x=>{const c={...x};delete c.settings;delete c.savedAt;return JSON.stringify(c)};
+      const M=mergeState(S,normState({...got.state,settings:S.settings}));if(strip(M)===strip(S))return false;
+      S=M;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}renderStats();
+      if(!quiet)toast("☁️ Progress synced from your other device.");
+      if(!$("#quit")&&typeof rerender==="function")rerender();
+      Cloud.queue(400);return true;
+    }catch(e){return false}finally{Cloud.busy=false}},
+  async push(){if(!Cloud.on())return;try{const code=await BK.make(Cloud.forCloud());if(code===Cloud.lastSent)return;await Cloud.plugin().set({key:Cloud.KEY,value:code});Cloud.lastSent=code}catch(e){}},
+  queue(ms=3000){if(!Cloud.on())return;clearTimeout(Cloud.timer);Cloud.timer=setTimeout(Cloud.push,ms)},
+  start(){const P=Cloud.plugin();if(!P)return;
+    window.__cloudQueue=()=>Cloud.queue();
+    try{P.addListener("changed",()=>Cloud.pull())}catch(e){}
+    document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")Cloud.pull();else{clearTimeout(Cloud.timer);Cloud.push()}});
+    setTimeout(async()=>{await Cloud.pull();Cloud.queue(500)},800)}
+};
+Cloud.start();
 async function copyText(text,ta){
   try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);return true}}catch(e){}
   try{if(ta){ta.focus();ta.select();ta.setSelectionRange(0,text.length)}if(document.execCommand&&document.execCommand("copy"))return true}catch(e){}
@@ -2512,7 +2613,7 @@ function backupPage(){SFX.stopMusic();
     box.innerHTML=`<div class="feedback good">✓ ${BK.summary(r.state)}<p style="margin:6px 0 0"><b>Replace the progress on this device with it?</b> What's here now (${ls(S.done.length)}, ${bs(S.bananas)}) will be replaced.</p>
       <div class="row" style="margin-top:10px"><button class="btn sm" id="bkyes">Yes, restore it</button><button class="btn ghost sm" id="bkno">Cancel</button></div></div>`;
     $("#bkno").onclick=()=>box.innerHTML="";
-    $("#bkyes").onclick=()=>{S=normState(r.state);save();applySettings();toast(`Welcome back! ${ls(S.done.length)} and ${bs(S.bananas)} restored.`);home()}};
+    $("#bkyes").onclick=()=>{S=normState(r.state);S.resetAt=Date.now();save();applySettings();toast(`Welcome back! ${ls(S.done.length)} and ${bs(S.bananas)} restored.`);home()}};
   $("#bkcheck").onclick=()=>check($("#bkin").value);
   $("#bkload").onclick=()=>$("#bkfile").click();
   $("#bkfile").onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;

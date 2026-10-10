@@ -99,7 +99,21 @@ The icon is TypeMonkey's happy monkey (drawn by `monkey("happy")` in the app) on
 
 Web Audio and `localStorage` work in both WebViews (WKWebView on iOS, Android System WebView). Sounds start on a tap, as the app already does.
 
+## iCloud sync and daily reminders (version 1.1)
+
+**iCloud sync.** `plugins/typemonkey-icloud` is the app's own tiny Capacitor plugin (one Swift file). It keeps the player's progress, as the same compressed code a backup makes, in the **iCloud key-value store** (`NSUbiquitousKeyValueStore`), so it follows them to their other Apple devices signed in to the same Apple Account. No server and no account of ours. Two devices' progress is merged: lessons done, badges and owned items are combined, XP takes the higher number, bananas and outfit come from whichever device saved last, and settings stay per device. "Erase everything" and restoring a backup win over older saves. Players can switch it off in Settings.
+
+- `npm install` links the plugin (`"typemonkey-icloud": "file:plugins/typemonkey-icloud"`) and `cap sync` adds it to the Xcode project (CocoaPods `TypemonkeyIcloud.podspec`, or `Package.swift` for SPM).
+- It needs the **iCloud → Key-value storage** capability. `build_app.py` writes `ios/App/App/App.entitlements` and points the App target at it; with automatic signing Xcode adds the capability to the App ID on the next build. If Xcode shows a signing error about iCloud, open **Signing & Capabilities**, click **+ Capability**, add **iCloud**, and tick **Key-value storage**.
+- The App Privacy answers don't change: the data goes to the player's own iCloud, not to us.
+- Android: no iCloud, so the setting is hidden there.
+
+**Daily reminders.** `@capacitor/local-notifications` (official). Opt-in from Settings: the first time it asks for notification permission, then schedules the next 14 days at the chosen hour (7 am to 8 pm), skipping a day the player already practiced. The window rolls forward each time the app opens. Nothing leaves the device.
+
 ### Things to check on a real device
+
+- **iCloud sync:** sign in to the same Apple Account on an iPhone and an iPad (or two iPhones), finish a lesson on one, then open the app on the other. It should say "Progress synced from your other device". iCloud can take a few seconds to a minute.
+- **Reminders:** turn on the Daily reminder, pick the next whole hour, and lock the phone. It should arrive at that hour unless you finish a lesson first.
 
 - **iPhone silent switch** mutes Web Audio in the app. That is normal iOS behaviour.
 - **Backup file** (Settings, Back up my progress, save as a file) uses a browser download, which WebViews do not support. The **backup code** (copy and paste) works. Loading a backup file works. To save files natively later, add `@capacitor/filesystem` + `@capacitor/share`.

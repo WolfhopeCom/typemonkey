@@ -36,6 +36,9 @@ Also included:
 - **Shop & badges:** spend bananas on outfits for TypeMonkey; earn badges.
 - **Motion:** screens slide in, the course map pops in, TypeMonkey breathes and sways, Jr. mazes hop, puff, bonk and spin-jump, and finishing a lesson brings light rays, count-up rewards and confetti. All of it switches off with the device's Reduce Motion setting.
 - **Sounds & music:** soft synthesized effects (no audio files): each dance move has its own sound, the monkey goes "nom" on bananas and "bonk" on trees, banana boxes plop higher as they fill. Jr. puzzles play a dance beat or a calm jungle tune. Sounds switch in the top bar and Settings; Music has its own switch in Settings.
+- **iCloud sync (iPhone/iPad app):** progress follows the player to their other Apple devices through Apple's iCloud key-value store, merged so nothing is lost. On by default, switchable in Settings. See app/README.md.
+- **Daily reminders (phone app, opt-in):** one friendly local notification a day at a chosen hour, skipped on days already practiced.
+- **Course map walk:** a little TypeMonkey sits beside the next lesson and hops along the path to it after each finished lesson.
 - **Backup code:** Settings → Back up my progress makes a `TM1-` code (or a file) you can paste on another device to restore lessons, bananas and outfits. Codes are checked before anything is replaced.
 - **Progress:** XP, bananas, daily streak and resume-where-you-left-off, saved on the device.
 - **Business model:** Unit 1 of each course is free; a one-time $4.99 unlock opens everything (currently a demo button behind a grown-up check).

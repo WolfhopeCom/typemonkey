@@ -122,9 +122,39 @@ def patch_app_delegate():
     print("restored ios/App/App/AppDelegate.swift (default audio)")
 
 
+KV_KEY = "com.apple.developer.ubiquity-kvstore-identifier"
+
+
+def patch_entitlements():
+    """iCloud progress sync (plugins/typemonkey-icloud) needs the iCloud key-value storage entitlement.
+    Writes ios/App/App/App.entitlements and points the App target at it. With automatic signing Xcode
+    adds the iCloud capability to the App ID on the next build."""
+    app_dir = IOS / "App" / "App"
+    proj = IOS / "App" / "App.xcodeproj" / "project.pbxproj"
+    if not app_dir.is_dir() or not proj.exists():
+        return
+    p = proj.read_text()
+    m = re.search(r"CODE_SIGN_ENTITLEMENTS = \"?([^;\"]+)\"?;", p)
+    rel = m.group(1) if m else "App/App.entitlements"
+    ent = IOS / "App" / rel
+    data = plistlib.loads(ent.read_bytes()) if ent.exists() else {}
+    if data.get(KV_KEY) != "$(TeamIdentifierPrefix)$(CFBundleIdentifier)":
+        data[KV_KEY] = "$(TeamIdentifierPrefix)$(CFBundleIdentifier)"
+        ent.write_bytes(plistlib.dumps(data, sort_keys=False))
+        print(f"wrote ios/App/{rel} (iCloud key-value storage for progress sync)")
+    if not m:
+        q = p.replace("INFOPLIST_FILE = App/Info.plist;", "CODE_SIGN_ENTITLEMENTS = App/App.entitlements;\n\t\t\t\tINFOPLIST_FILE = App/Info.plist;")
+        if q != p:
+            proj.write_text(q)
+            print("pointed the App target at App/App.entitlements")
+        else:
+            print("NOTE: add the iCloud capability (Key-value storage) to the App target in Xcode for progress sync")
+
+
 def patch_ios():
     patch_podfile()
     patch_app_delegate()
+    patch_entitlements()
     plist = IOS / "App" / "App" / "Info.plist"
     if not plist.exists():
         return

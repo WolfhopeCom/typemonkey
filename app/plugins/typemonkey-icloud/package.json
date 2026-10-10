@@ -1,0 +1,13 @@
+{
+  "name": "typemonkey-icloud",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TypeMonkey's own tiny Capacitor plugin: keeps progress in the iCloud key-value store (NSUbiquitousKeyValueStore) so it follows the player to their other Apple devices.",
+  "license": "UNLICENSED",
+  "files": ["ios/", "Package.swift", "TypemonkeyIcloud.podspec"],
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    }
+  }
+}
