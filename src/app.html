@@ -469,6 +469,12 @@ span.repn{display:inline-block}
 .setrow:first-of-type{border-top:0}
 .setrow>div:first-child{min-width:0;flex:1 1 180px;display:flex;flex-direction:column}
 .setrow span{color:var(--muted);font-size:.88rem}
+.remindask{border-radius:18px;padding:14px;background:color-mix(in srgb,var(--banana) 18%,var(--surface));border:2px solid color-mix(in srgb,var(--banana) 60%,transparent);display:flex;flex-direction:column;gap:10px;animation:enterUp .4s cubic-bezier(.2,.8,.3,1) .5s both}
+.remindask .ra-top{display:flex;gap:10px;align-items:flex-start;text-align:left}.remindask .ra-top p{margin:2px 0 0;color:var(--muted);font-size:.92rem}
+.remindask .ra-bell{font-size:1.8rem;line-height:1;animation:ring 1.2s ease 1s 2}
+@keyframes ring{0%,100%{transform:rotate(0)}15%{transform:rotate(18deg)}30%{transform:rotate(-16deg)}45%{transform:rotate(10deg)}60%{transform:rotate(-6deg)}}
+.remindask .ra-row{display:flex;align-items:center;gap:8px;font-weight:700}.remindask .ra-btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.remindask.ra-done{font-weight:700}.remindask.ra-done p{margin:0}
 .remindat{font:inherit;font-weight:700;padding:6px 8px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
 .seg{display:flex;background:var(--surface2);border-radius:12px;padding:3px;gap:2px}
 .seg button{border:0;background:none;color:var(--fg);font-weight:800;font-size:.88rem;padding:7px 12px;border-radius:9px}
@@ -837,6 +843,21 @@ const Remind={
         list.push({id:4100+d,title:"TypeMonkey",body,schedule:{at}})}
       if(list.length)await P.schedule({notifications:list});
     }catch(e){}},
+  /* Friendly "want a reminder?" card after a win. iOS shows its own permission box only once, so we ask with our
+     own card first: right after the first finished lesson, and (after "Not now") once more 3+ lessons and 2+ days
+     later. "Don't ask again" or a second "Not now" ends it; Settings always has the switch. */
+  shouldAsk(){if(!Remind.ok()||S.settings.remind)return false;const a=S.remindAsk||{};if(a.never||(a.n||0)>=2)return false;
+    if(!a.n)return S.done.length>=1;return S.done.length>=(a.done||0)+3&&Date.now()-(a.at||0)>=2*864e5},
+  asked(never){const a=S.remindAsk||{};S.remindAsk={n:(a.n||0)+1,at:Date.now(),done:S.done.length,never:!!never||(a.n||0)+1>=2};save()},
+  card(){const hrs=[7,8,12,15,16,17,18,19,20],now=+S.settings.remindAt||18;
+    return `<div class="remindask" id="remindask"><div class="ra-top"><span class="ra-bell" aria-hidden="true">🔔</span><div><b>Want a daily reminder?</b><p>TypeMonkey can send one friendly nudge a day to keep your streak going. No nudge on days you already practiced.</p></div></div>
+      <div class="ra-row"><label for="raAt">Remind me at</label><select id="raAt" class="remindat">${hrs.map(h=>`<option value="${h}" ${h===now?"selected":""}>${h===12?"12 pm":h>12?(h-12)+" pm":h+" am"}</option>`).join("")}</select></div>
+      <div class="ra-btns"><button class="btn banana sm" id="raYes">🔔 Yes, remind me</button><button class="btn ghost sm" id="raLater">Not now</button><button class="linkbtn" id="raNever">Don't ask again</button></div></div>`},
+  wireCard(){const c=$("#remindask");if(!c)return;const done=msg=>{c.classList.add("ra-done");c.innerHTML=`<p>${msg}</p>`};
+    $("#raYes").onclick=async()=>{const sel=$("#raAt"),label=sel.selectedOptions[0].textContent;S.settings.remindAt=+sel.value;Remind.asked(true);const ok=await Remind.enable(true);
+      done(ok?`🔔 All set! A reminder at ${label} each day. Change it any time in Settings ⚙️`:"No problem. You can turn reminders on any time in Settings ⚙️")};
+    $("#raLater").onclick=()=>{Remind.asked(false);done("Okay! You can turn reminders on any time in Settings ⚙️")};
+    $("#raNever").onclick=()=>{Remind.asked(true);done("Got it, we won't ask again. Reminders are in Settings ⚙️ if you change your mind.")}},
   async enable(on){const P=Remind.plugin();if(!P)return false;
     if(on){try{let r=await P.checkPermissions();if(r.display!=="granted")r=await P.requestPermissions();
       if(r.display!=="granted"){S.settings.remind=false;save();toast("Notifications are off for TypeMonkey. Turn them on in your phone's Settings app.");return false}}catch(e){return false}}
@@ -2162,15 +2183,16 @@ function finish(){
   const hr=new Date().getHours();if(hr>=22||hr<4)bump("night");if(hr>=4&&hr<8)bump("early");
   save();
   const L=flat(cur.c);const nx=L[cur.item.idx+1];const nst=nx&&status(cur.c,nx);
-  const [d,n,all]=countLessons(cur.c);const courseDone=first&&d===n&&n===all;
+  const [d,n,all]=countLessons(cur.c);const courseDone=first&&d===n&&n===all;const askRemind=Remind.shouldAsk();
   shell(`<div class="card" style="text-align:center;align-items:center"><div class="fin-stage" aria-hidden="true"><div class="rays"></div>${monkey("cheer")}</div><div class="label">${cur.l.project?"Project complete":"Lesson complete"}</div><h2>${esc(cur.l.title)} ✓</h2>
     <div class="reward"><div><b id="cuXp" data-pre="+">+${cur.earned.xp}</b><span>XP</span></div><div><b id="cuBan" data-pre="+">+${cur.earned.ban}</b><span>Bananas</span></div><div><b>${S.streak}</b><span>Day streak</span></div></div>
     ${cur.earned.total?`<p>Quiz: ${cur.earned.right} of ${cur.earned.total} right${first?" · first-time bonus +20 XP":""}</p>`:first?"<p>First-time bonus +20 XP</p>":""}
     ${cur.missed?`<p>🧠 ${cur.missed} question${cur.missed===1?"":"s"} saved to Review so you can try again later.</p>`:""}</div>
     ${courseDone?`<div class="cert"><div class="label">Course complete</div><h3>You finished ${cur.c.name}!</h3><p>${d} lessons, every project built. TypeMonkey is officially impressed.</p></div>`:""}
     ${buddy(courseDone?"WE DID IT! Time to build something of your own in the Playground.":nx?`Next up: ${Q(nx.l.title)} Come back tomorrow to keep your streak alive!`:"That's everything in this course for now. More is on the way!","cheer")}
+    ${askRemind?Remind.card():""}
     <div class="row">${nx&&(nst==="open"||nst==="done")?`<button class="btn" id="nxt">Next lesson</button>`:""}${nx&&nst==="pro"?`<button class="btn banana" id="nxt">Unlock the next unit</button>`:""}<button class="btn ghost" id="back">Back to course</button></div>`);
-  $("#back").onclick=()=>coursePage(cur.c.id);
+  $("#back").onclick=()=>coursePage(cur.c.id);Remind.wireCard();
   sfx("complete");if(cur.earned.ban)setTimeout(()=>sfx("coins"),750);
   if($("#nxt"))$("#nxt").onclick=()=>nst==="pro"?coursePage(cur.c.id):startLesson(nx.l.id);
   countUp($("#cuXp"),cur.earned.xp);setTimeout(()=>countUp($("#cuBan"),cur.earned.ban,700),250);
