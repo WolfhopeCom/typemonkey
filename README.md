@@ -22,7 +22,7 @@ A play-along app for learning to code, guided by TypeMonkey, an orange monkey wi
 Plus two hands-on sections (Python):
 
 - **🏗️ Build Projects:** 8 projects across Beginner, Intermediate and Advanced. Each is a mission brief, small missions that teach one piece, then a final build TypeMonkey checks by playing your program with different inputs. Pick any project in an open level; a level opens after any 2 projects in the level before it.
-- **🐛 Bug Lab:** 5 levels of broken code to fix, from syntax slips to debugging a mini-project, with hints that come one at a time. A small **↺ reset** button (on every code challenge) brings back the original code, with ↶ undo for a few seconds.
+- **🐛 Bug Lab:** 5 levels of broken code to fix, from syntax slips to debugging a mini-project, with hints that come one at a time. A **↺ Reset** button next to Run (on every code challenge) brings back the original code, with **↶ Undo** for a few seconds.
 
 On phones, most code challenges can be solved by **tapping tiles** (word tiles for one-liners, line tiles to put in order) instead of typing, with a ⌨️ Type it switch for anyone who wants to type; typing gets a row of code symbols above the keyboard. All code challenges are graded by running the learner's code (with changed values or several inputs, so hard-coded answers fail). Help comes as a ladder: one clue, then the plan, then the answer. Early lessons add a warm-up before longer code.
 

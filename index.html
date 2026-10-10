@@ -421,9 +421,9 @@ span.repn{display:inline-block}
 .legal h3{font-size:1.1rem;margin-top:6px}
 .legal p{color:var(--fg);line-height:1.6}
 .legal{overflow-wrap:break-word}
-.editor .head .resetc{flex:none;width:30px;height:30px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:#ffffff14;color:var(--code-dim);font-size:1.05rem;font-weight:700;line-height:1;margin-left:auto;-webkit-tap-highlight-color:transparent;transition:background .2s,color .2s}
-.editor .head .resetc:hover,.editor .head .resetc:active{background:#ffffff26;color:var(--code-fg)}
-.editor .head .resetc.undo{background:var(--banana);color:#2A1300}
+.editor .head .resetc{flex:none;display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 12px;border:1.5px solid #FFC84566;border-radius:999px;background:#FFC8451A;color:#FFD97A;font-family:var(--body);font-size:.88rem;font-weight:800;line-height:1;white-space:nowrap;-webkit-tap-highlight-color:transparent;transition:background .2s,color .2s,border-color .2s}
+.editor .head .resetc:active{background:#FFC84533}
+.editor .head .resetc.undo{background:var(--banana);border-color:var(--banana);color:#2A1300}
 .legal a{color:color-mix(in srgb,var(--accent) 70%,var(--fg));font-weight:700}
 .legal,.legal *{max-width:100%}
 .gate{position:fixed;inset:0;z-index:20;background:color-mix(in srgb,#000 55%,transparent);display:grid;place-items:center;padding:16px}
@@ -53420,7 +53420,7 @@ function codeStep(s){
   {const head=$("#code-c").closest(".editor").querySelector(".head"),rb=document.createElement("button");
     rb.className="resetc";rb.id="resetc";rb.type="button";head.insertBefore(rb,head.querySelector(".run"));
     const orig=s.start||"";let undo=null,timer=null;
-    const look=()=>{rb.textContent=undo!==null?"↶":"↺";rb.title=undo!==null?"Undo reset":"Reset to the starting code";rb.setAttribute("aria-label",rb.title);rb.classList.toggle("undo",undo!==null)};
+    const look=()=>{rb.textContent=undo!==null?"↶ Undo":"↺ Reset";rb.title=undo!==null?"Undo reset":"Reset to the starting code";rb.setAttribute("aria-label",rb.title);rb.classList.toggle("undo",undo!==null)};
     const sync=()=>{if(undo===null)rb.hidden=$("#code-c").value===orig||!!(T&&T.mode()==="tap");look()};
     const put=v=>{const ta=$("#code-c");ta.value=v;ta.dispatchEvent(new Event("input",{bubbles:true}));draft(k,v)};
     rb.onclick=()=>{clearTimeout(timer);
