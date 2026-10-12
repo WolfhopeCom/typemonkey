@@ -512,6 +512,12 @@ html.calm *{animation:none!important;transition:none!important}
 .mk.win .mface{animation:victory .9s cubic-bezier(.3,.7,.3,1)}
 .mfx{position:absolute;pointer-events:none;z-index:3;font-size:clamp(.9rem,4vw,1.4rem);font-weight:900;white-space:nowrap}
 .mfx.puff{width:calc(60% / var(--w));aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#fff9 0,#fff0 70%);animation:puff .5s ease-out forwards}
+.repadd{min-width:36px;height:36px;border-radius:10px;border:2px dashed #ffffff66;background:transparent;color:#fff;font-size:1.2rem;font-weight:900;margin-left:2px}
+.progtip{margin:6px 2px 0;font-size:.95rem;color:var(--muted);min-height:0}.progtip:empty{display:none}
+.mthink{position:absolute;z-index:4;transform:translateY(-105%);background:#fff;color:#2A1300;border:2px solid #7C5CFF;border-radius:14px;padding:4px 10px;font-weight:900;font-size:clamp(.75rem,3.4vw,1rem);white-space:nowrap;pointer-events:none;box-shadow:0 3px 0 #5A3FD0;animation:thinkIn .3s cubic-bezier(.3,1.5,.5,1)}
+@keyframes thinkIn{from{opacity:0;scale:.5}to{opacity:1;scale:1}}
+.mthink.low{transform:translateY(4px)}.mthink.low::after{display:none}
+.mthink::after{content:"";position:absolute;left:var(--tail,50%);bottom:-8px;width:10px;height:10px;background:#fff;border-right:2px solid #7C5CFF;border-bottom:2px solid #7C5CFF;transform:translateX(-50%) rotate(45deg)}
 .mfx.up{animation:floatUp .9s ease-out forwards;color:#2A1300;text-shadow:0 2px 0 #fff8}
 .fin-stage{position:relative;width:100%;height:170px;display:grid;place-items:center;overflow:hidden;border-radius:18px;background:radial-gradient(circle at 50% 60%,color-mix(in srgb,var(--banana) 55%,transparent),transparent 70%)}
 .fin-stage .rays{position:absolute;left:50%;top:58%;width:380px;height:380px;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 0deg,color-mix(in srgb,var(--banana) 45%,transparent) 0 10deg,transparent 10deg 24deg);animation:rays 18s linear infinite;opacity:.8;-webkit-mask:radial-gradient(circle closest-side,#000 25%,transparent 100%);mask:radial-gradient(circle closest-side,#000 25%,transparent 100%)}
@@ -1170,7 +1176,7 @@ function home(){
     <section class="hero"><h1>Learn to code, one banana at a time.</h1><p>Bite-size lessons, real code you run yourself, quizzes and mini-games. Built for all ages and experience levels.</p></section>
     ${buddy(greet,resume?"cheer":"happy")}
     ${nu?`<button class="continue" id="cont"><span class="cicon" aria-hidden="true">▶</span><span class="ctext"><small>${resume?"Pick up where you left off":S.done.length?"Continue":"Start here"} · ${esc(js.name)}</small><b>${esc(nu.l.title)}</b><span>${resume?`Step ${resume.step+1} of ${nu.l.steps.length-1} · saved`:`Unit ${nu.ui+1} · ${esc(nu.u.name)}`}</span></span><span class="cgo">${resume?"Resume":S.done.length?"Continue":"Start"}</span></button>`:nextPro?`<div class="row"><button class="btn banana" id="unl">See the full course</button></div>`:""}
-    <button class="daily ${dailyDoneToday()?"done":""}" id="daily"><span class="dicon">🎯</span><span class="dtext"><b>${dailyDoneToday()?"Daily challenge done!":"Daily challenge"}</b><span>${dailyDoneToday()?`Come back tomorrow for a new one · 🔥 ${(S.daily||{}).streak||1}-day daily streak`:`3 fresh challenges, new every day · bonus bananas${(S.daily||{}).streak?` · keep your ${(S.daily||{}).streak}-day streak going`:""}`}</span></span><span class="pill ${dailyDoneToday()?"ok":"kid"}">${dailyDoneToday()?"✓":"+10 🍌"}</span></button>
+    <button class="daily ${dailyDoneToday()?"done":""}" id="daily"><span class="dicon">🎯</span><span class="dtext"><b>${dailyDoneToday()?"Daily challenge done!":"Daily challenge · "+DAY_THEMES[new Date().getDay()][1]+" "+DAY_THEMES[new Date().getDay()][2]}</b><span>${dailyDoneToday()?`Come back tomorrow for a new one · 🔥 ${(S.daily||{}).streak||1}-day daily streak`:`3 fresh challenges, new every day · bonus bananas${(S.daily||{}).streak?` · keep your ${(S.daily||{}).streak}-day streak going`:""}`}</span></span><span class="pill ${dailyDoneToday()?"ok":"kid"}">${dailyDoneToday()?"✓":"+10 🍌"}</span></button>
     <div class="tools">
       <button class="tool" id="review"><b>🧠 Review${dueCount()?` <span class="due">${dueCount()}</span>`:""}</b><span>${dueCount()?"Questions you missed are ready to try again":reviewSize()?"All caught up! Missed questions come back here":"Questions you miss come back here later"}</span></button>
       <button class="tool" id="play"><b>›_ Playground</b><span>Write any code you want and run it</span></button>
@@ -1312,8 +1318,9 @@ function saveSpot(){
   S.progress[cur.l.id]={...p,step:cur.step,earned:{...cur.earned}};save();
 }
 function draft(k,v){const p=S.progress[cur.l.id];if(!p)return;p.drafts=p.drafts||{};if(v===undefined)return p.drafts[k];p.drafts[k]=v;save()}
+let SCREEN_ID=0;  // bumps on every new lesson screen, so animations from an old screen stop drawing
 function shell(inner){
-  if(wallObs){wallObs.disconnect();wallObs=null}
+  SCREEN_ID++;if(wallObs){wallObs.disconnect();wallObs=null}
   setMode(cur&&cur.c&&cur.c.kids);
   const pct=Math.round(cur.step/(cur.l.steps.length-1)*100);
   $("#screen").innerHTML=`<div class="stack">
@@ -1841,7 +1848,7 @@ function simulate(grid,dir,prog,fn){
       const [dx,dy]=DIRS[d];x+=dx;y+=dy;const k=x+","+y;
       if(left.has(k)){left.delete(k);path.push([x,y,d,null,k]);if(!left.size){won=true;return "won"}return null}
     }
-    path.push([x,y,d]);return null;
+    path.push(t==="ifR"||t==="ifL"?[x,y,d,null,null,t]:[x,y,d]);return null;
   };
   const runList=(list,inUntil,ctx,callAt)=>{
     for(let idx=0;idx<list.length;idx++){const b=list[idx];
@@ -1873,7 +1880,7 @@ const WORLDS=[
   {name:"Desert",wallName:"Cactus",wallPlural:"cacti",emoji:"🏜️",wall:"🌵",path:"#F7D9A6",line:"#E9C17F",tree:"#D99A55"},
   {name:"Outer space",wallName:"Planet",wallPlural:"planets",emoji:"🚀",wall:"🪐",path:"#3B3970",line:"#4D4A8C",tree:"#1D1B45"},
   {name:"Candy land",wallName:"Lollipop",wallPlural:"lollipops",emoji:"🍭",wall:"🍭",path:"#FFE0F0",line:"#F7C3DE",tree:"#F48FC0"}];
-const worldFor=()=>WORLDS[((cur&&cur.item&&cur.item.ui)||0)%WORLDS.length];
+const worldFor=()=>WORLDS[((cur&&cur.daily)?dayNum(new Date()):((cur&&cur.item&&cur.item.ui)||0))%WORLDS.length];   // the daily challenge visits a new world each day
 const KID_WINS=["Ooh ooh! Banana time!","You're a coding superstar!","Monkey dance time! 💃","Wow, that program was perfect!","High five! ✋","Yum yum, thank you!","You did it! I'm so proud!"];
 /* Shows a kid's block program as simple code, so they see what "real code" looks like. */
 const KCODE={fwd:"forward()",left:"turn_left()",right:"turn_right()",ifR:"if tree_ahead(): turn_right()",ifL:"if tree_ahead(): turn_left()",call:"my_move()"};
@@ -1920,6 +1927,12 @@ function countUp(el,to,ms=900){if(!el)return;if(calmMotion()||!to){el.textConten
 /* Jr. maze effects: a hop each step, a dust puff, a wobble + 💫 on a bonk, a floating +1 🍌 when a banana is eaten */
 function mazeFx(m,kind,x,y,text){const mz=$("#mz");if(!mz||calmMotion())return;const e=document.createElement("div");e.className="mfx "+kind;
   e.style.left=`calc((${x} + .5) * 100% / ${m.w})`;e.style.top=`calc((${y} + ${kind==="puff"?.8:.3}) * 100% / ${m.h})`;if(text)e.textContent=text;mz.appendChild(e);setTimeout(()=>e.remove(),1000)}
+/* "Smart block" thinking: when a 🌵 ahead? block makes TypeMonkey turn, a thought bubble shows why */
+function mazeThink(m,x,y,why){const mz=$("#mz");if(!mz)return;const e=document.createElement("div");e.className="mthink";
+  e.textContent=`${JR_WALL.w} ahead! ${why==="ifL"?"↰":"↱"}`;e.style.top=`calc(${y} * 100% / ${m.h})`;if(!y)e.classList.add("low");mz.appendChild(e);
+  const W=mz.clientWidth,w=e.offsetWidth,cx=(x+.5)*W/m.w;e.style.left=Math.max(4,Math.min(W-w-4,cx-w/2))+"px";   // centred on TypeMonkey, kept inside the maze
+  e.style.setProperty("--tail",(cx-Math.max(4,Math.min(W-w-4,cx-w/2)))+"px");
+  setTimeout(()=>e.remove(),calmMotion()?700:1100)}
 function mkAnim(cls){const k=$("#mk");if(!k||calmMotion())return;k.classList.remove("hop","bonk","win");void k.offsetWidth;k.classList.add(cls)}
 /* Ghost preview: a see-through monkey shows where the program so far ends and which way he faces,
    so kids can see what "Turn right" does before pressing Go. */
@@ -1938,7 +1951,7 @@ function maze(s){
     <div class="maze" style="--w:${m.w};--h:${m.h};--path:${Wd.path};--pathline:${Wd.line};--tree:${Wd.tree}" id="mz">${s.grid.map((row,y)=>[...row].map((ch,x)=>`<div class="mc ${ch==="#"?"tree":"path"}" data-xy="${x},${y}">${cell(ch)}</div>`).join("")).join("")}<div class="mk ghost" id="mkg" hidden aria-hidden="true"><div class="mface">${monkey("happy")}</div><span class="arr"></span></div><div class="mk" id="mk"><div class="mface" id="mface">${monkey("happy")}</div><span class="arr" id="arr">➜</span></div></div>
     ${s.func?`<div class="lanes" role="tablist"><button class="lane" data-lane="main" aria-pressed="true">Main program</button><button class="lane" data-lane="fn" aria-pressed="false">⭐ My move</button></div>
     <div class="label">⭐ My move <span style="text-transform:none;letter-spacing:0;font-weight:600">(build it once, use it with the ⭐ block)</span></div><div class="prog fprog" id="fprog"></div>`:""}
-    <div class="label">${s.func?"Main program":"Your program"}</div><div class="prog" id="prog"></div>
+    <div class="label">${s.func?"Main program":"Your program"}</div><div class="prog" id="prog"></div><p class="progtip" id="progtip" aria-live="polite"></p>
     <div class="palette">${s.blocks.map(b=>`<button class="blk b-${b}" data-b="${b}"><span>${BLOCKS[b].icon}</span>${BLOCKS[b].label}</button>`).join("")}</div>
     <div id="fb"></div></div>
     <div id="bud">${buddy(s.say||"Tap the blocks to build a program, then press Go!","think")}</div>
@@ -1959,10 +1972,12 @@ function maze(s){
     }
     const chip=(b,i,j)=>`<button class="chip ${mark&&(fl(mark,i,j)||mark.f!==undefined&&mark.i===i&&mark.j===j)?"oops":""} ${fl(glow,i,j)?"glow":""}" data-i="${i}" ${j!==undefined?`data-j="${j}"`:""} aria-label="Remove ${BLOCKS[b].label}">${BLOCKS[b].icon}</button>`;
     $("#prog").innerHTML=prog.length?prog.map((b,i)=>typeof b==="object"?
-      `<span class="repblk ${b.until?"until":""} ${open===i?"open":""} ${fl(mark,i,undefined)?"oops":""} ${fl(glow,i,undefined)?"glow":""}">${b.until?`<span class="repn">🔁 until 🍌</span>`:`<button class="repn ${glow&&glow.rep===i?"glow":""}" data-r="${i}" aria-label="Change repeat count">🔁 ×${b.rep}</button>`}${b.body.map((t,j)=>chip(t,i,j)).join("")}${open===i?`<button class="repclose ${glow&&glow.done===i?"glow":""}" data-c="${i}">done</button>`:""}</span>`:chip(b,i)).join(""):'<span class="empty">Tap blocks below to add them here</span>';
+      `<span class="repblk ${b.until?"until":""} ${open===i?"open":""} ${fl(mark,i,undefined)?"oops":""} ${fl(glow,i,undefined)?"glow":""}">${b.until?`<span class="repn">🔁 until 🍌</span>`:`<button class="repn ${glow&&glow.rep===i?"glow":""}" data-r="${i}" aria-label="Change repeat count">🔁 ×${b.rep}</button>`}${b.body.map((t,j)=>chip(t,i,j)).join("")}${open===i?`<button class="repclose ${glow&&glow.done===i?"glow":""}" data-c="${i}">done</button>`:`<button class="repadd" data-a="${i}" aria-label="Add blocks inside this repeat">＋</button>`}</span>`:chip(b,i)).join(""):'<span class="empty">Tap blocks below to add them here</span>';
     $$("#prog .chip").forEach(c=>c.onclick=()=>{if(running||won)return;const i=+c.dataset.i;if(c.dataset.j!==undefined)prog[i].body.splice(+c.dataset.j,1);else{prog.splice(i,1);if(open!==null&&i<open)open--}edit()});
     $$("#prog button.repn").forEach(c=>c.onclick=()=>{if(running||won)return;const b=prog[+c.dataset.r];b.rep=b.rep>=5?2:b.rep+1;edit()});
     $$("#prog .repclose").forEach(c=>c.onclick=()=>{open=null;edit()});
+    $$("#prog .repadd").forEach(c=>c.onclick=()=>{if(running||won)return;open=+c.dataset.a;edit()});
+    {const tip=$("#progtip");if(tip)tip.innerHTML=open!==null?"👉 Tap blocks to put them <b>inside</b> 🔁. Tap <b>done</b> when you're finished.":(prog.some(b=>typeof b==="object")?"Tip: tap <b>＋</b> on a 🔁 box to add more blocks inside it.":"")}
     $$(".palette .blk").forEach(b=>b.classList.toggle("glow",!!glow&&glow.pal===b.dataset.b&&(!glow.lane||glow.lane===lane)));
     $("#run").classList.toggle("glow",!!glow&&!!glow.go);$("#run").classList.toggle("ready",!!prog.length&&!running&&!won&&!(glow&&glow.go));
   };
@@ -1995,9 +2010,9 @@ function maze(s){
   $("#run").onclick=()=>{
     if(running||won||!prog.length)return;running=true;open=null;mark=null;glow=null;$("#fb").innerHTML="";draw();reset();
     const {path,result,failAt,left}=simulate(s.grid,s.dir,prog,fn);let k=1;
-    const tick=()=>{
+    const sid=SCREEN_ID;const tick=()=>{if(SCREEN_ID!==sid)return;
       if(!$("#mk"))return;
-      if(k<path.length){const [x,y,d,bump,ate]=path[k];place(x,y,d,bump);jsnd(bump?"bonk":ate?"nom":"walk",k);if(ate){mazeFx(m,"up",x,y,"+1 🍌");const c=document.querySelector(`.mc[data-xy="${ate}"]`);if(c)setTimeout(()=>{c.textContent="✨"},250)}k++;return setTimeout(tick,path.length>40?220:380)}
+      if(k<path.length){const [x,y,d,bump,ate,why]=path[k];place(x,y,d,bump);if(why)mazeThink(m,x,y,why);jsnd(bump?"bonk":ate?"nom":"walk",k);if(ate){mazeFx(m,"up",x,y,"+1 🍌");const c=document.querySelector(`.mc[data-xy="${ate}"]`);if(c)setTimeout(()=>{c.textContent="✨"},250)}k++;return setTimeout(tick,path.length>40?220:380)}
       running=false;
       const tooMany=s.max&&total()>s.max;
       if(result==="win"&&!tooMany){const first=!everWon;won=everWon=true;if(first&&!s.sandbox){award(15,3);bump("mazes");if(s.start)bump("bugsFixed")}jsnd("tada");$("#mface").innerHTML=monkey("cheer");mkAnim("win");
@@ -2035,7 +2050,7 @@ function predict(s){
   const reset=()=>{{const _k=$("#mk");if(_k)delete _k.dataset.x}mkPlace(m,m.start[0],m.start[1],s.dir);m.goals.forEach(([gx,gy])=>{const c=document.querySelector(`.mc[data-xy="${gx},${gy}"]`);if(c)c.textContent="🍌"});$$(".mc").forEach(c=>c.classList.remove("stop"))};
   $$(".mc.pick").forEach(c=>c.onclick=()=>{if(busy||done)return;$$(".mc.guess").forEach(g=>g.classList.remove("guess"));c.classList.add("guess");guess=c.dataset.xy.split(",").map(Number);$("#run").disabled=false;$("#run").classList.add("ready");jsnd("step")});
   $("#run").onclick=()=>{if(busy||done||!guess)return;busy=true;$("#run").classList.remove("ready");reset();let k=1;
-    const tick=()=>{if(!$("#mk"))return;if(k<path.length){const [x,y,d,bump,ate]=path[k];mkPlace(m,x,y,d,bump);jsnd(ate?"nom":"walk",k);if(ate){mazeFx(m,"up",x,y,"+1 🍌");const c=document.querySelector(`.mc[data-xy="${ate}"]`);if(c)setTimeout(()=>{c.textContent="✨"},250)}k++;return setTimeout(tick,420)}
+    const sid=SCREEN_ID;const tick=()=>{if(SCREEN_ID!==sid)return;if(!$("#mk"))return;if(k<path.length){const [x,y,d,bump,ate,why]=path[k];mkPlace(m,x,y,d,bump);if(why)mazeThink(m,x,y,why);jsnd(ate?"nom":"walk",k);if(ate){mazeFx(m,"up",x,y,"+1 🍌");const c=document.querySelector(`.mc[data-xy="${ate}"]`);if(c)setTimeout(()=>{c.textContent="✨"},250)}k++;return setTimeout(tick,420)}
       busy=false;tries++;const ok=guess[0]===E.x&&guess[1]===E.y;const stop=document.querySelector(`.mc[data-xy="${E.x},${E.y}"]`);if(stop)stop.classList.add("stop");
       const steps=path.slice(1).filter((p,i)=>p[0]!==path[i][0]||p[1]!==path[i][1]).length,turns=path.slice(1).filter((p,i)=>p[2]!==path[i][2]).length;
       const how=`I walked ${steps} step${steps===1?"":"s"}${turns?` and turned ${turns} time${turns===1?"":"s"}`:""}.`;
@@ -2361,23 +2376,120 @@ const DCODE=[
  [3,r=>{const n=DINT(r,3,15);return {title:"Triple it",task:`Write a function ${C("triple")} that returns its number times 3, then print ${C("triple("+n+")")}.`,out:[String(3*n)],use:[[/function\s+triple|def\s+triple|triple\s*=/,"Make a function called triple."],[/return/,"Send the answer back with return."]],js:`function triple(x) {\n  return x * 3;\n}\nconsole.log(triple(${n}));`,py:`def triple(x):\n    return x * 3\n\nprint(triple(${n}))`}}],
  [3,r=>{const a=[0,0,0,0,0,0].map(()=>DINT(r,1,40));return {title:"Find the biggest",task:`Use a loop to find the biggest number in ${C("nums")} and print it.`,out:[String(Math.max(...a))],use:[[/for|while/,"Check each number in a loop."]],start:{js:`let nums = [${a.join(", ")}];\n`,py:`nums = [${a.join(", ")}]\n`},js:`let nums = [${a.join(", ")}];\nlet best = nums[0];\nfor (let n of nums) {\n  if (n > best) best = n;\n}\nconsole.log(best);`,py:`nums = [${a.join(", ")}]\nbest = nums[0]\nfor n in nums:\n    if n > best:\n        best = n\nprint(best)`}}],
 ];
+/* --- more daily puzzles: [level, generator, topic]. Every one is written in JavaScript and Python and prints the same. --- */
+DQ.push(
+ [1,r=>{const A=DINT(r,2,9),B=DINT(r,10,20);return {js:`let a = ${A};\nlet b = ${B};\nlet c = a;\na = b;\nb = c;\nconsole.log(a, b);`,py:`a = ${A}\nb = ${B}\nc = a\na = b\nb = c\nprint(a, b)`,ans:`${B} ${A}`,wrong:[`${A} ${B}`,`${B} ${B}`,`${A} ${A}`]}},"vars"],
+ [1,r=>{const A=DINT(r,2,9),B=DINT(r,1,6);return {js:`let x = ${A};\nx += ${B};\nx *= 2;\nconsole.log(x);`,py:`x = ${A}\nx += ${B}\nx *= 2\nprint(x)`,ans:(A+B)*2,wrong:[A+B*2,A*2+B,(A+B)]}},"vars"],
+ [1,r=>{const p=DPICK(r,["ba","mo","zu","ki","po"]),e=DPICK(r,["!","?","..."]);return {js:`let part = "${p}";\nconsole.log(part + part + "${e}");`,py:`part = "${p}"\nprint(part + part + "${e}")`,ans:`${p}${p}${e}`,wrong:[`${p}${e}`,`${p} ${p}${e}`,`part + part + ${e}`]}},"text"],
+ [1,r=>{const n=DINT(r,1,10);return {js:`let bananas = ${n};\nif (bananas > 5) {\n  console.log("Party!");\n} else {\n  console.log("Snack time");\n}`,py:`bananas = ${n}\nif bananas > 5:\n    print("Party!")\nelse:\n    print("Snack time")`,ans:n>5?"Party!":"Snack time",wrong:[n>5?"Snack time":"Party!","bananas","Nothing"]}},"ifs"],
+ [1,r=>{const n=DINT(r,2,4),w=DPICK(r,["ook","hop","beep"]);return {js:`for (let i = 0; i < ${n}; i++) {\n  console.log("${w}");\n}`,py:`for i in range(${n}):\n    print("${w}")`,ans:Array(n).fill(w).join("\n"),wrong:[Array(n+1).fill(w).join("\n"),Array(n-1).fill(w).join("\n"),w+" x "+n]}},"loops"],
+ [1,r=>{const f=["kiwi","mango","fig","plum"].sort(()=>r()-.5).slice(0,3),i=DINT(r,0,2);return {js:`let fruits = ["${f.join('", "')}"];\nconsole.log(fruits[${i}]);`,py:`fruits = ["${f.join('", "')}"]\nprint(fruits[${i}])`,ans:f[i],wrong:[f[(i+1)%3],f[(i+2)%3],"fruits"]}},"lists"],
+ [1,r=>{const nm=DPICK(r,["Mo","Kiki","Zip","Bo","Lulu"]);return {js:`function hi(name) {\n  console.log("Hi " + name);\n}\nhi("${nm}");`,py:`def hi(name):\n    print("Hi " + name)\n\nhi("${nm}")`,ans:`Hi ${nm}`,wrong:["Hi name",`${nm}`,"Hi"]}},"funcs"],
+ [2,r=>{const t=DPICK(r,[35,31,22,18,12,5]);const a=t>30?"Hot":t>15?"Warm":"Cold";return {js:`let temp = ${t};\nif (temp > 30) {\n  console.log("Hot");\n} else if (temp > 15) {\n  console.log("Warm");\n} else {\n  console.log("Cold");\n}`,py:`temp = ${t}\nif temp > 30:\n    print("Hot")\nelif temp > 15:\n    print("Warm")\nelse:\n    print("Cold")`,ans:a,wrong:["Hot","Warm","Cold"].filter(x=>x!==a)}},"ifs"],
+ [2,r=>{const A=DINT(r,1,8),B=DINT(r,1,8),ok=A>3&&B>3;return {js:`let a = ${A};\nlet b = ${B};\nif (a > 3 && b > 3) {\n  console.log("both");\n} else {\n  console.log("not both");\n}`,py:`a = ${A}\nb = ${B}\nif a > 3 and b > 3:\n    print("both")\nelse:\n    print("not both")`,ans:ok?"both":"not both",wrong:[ok?"not both":"both","a","b"]}},"ifs"],
+ [2,r=>{const w=DPICK(r,["monkey","banana","jungle","parrot","coconut","vine"]);return {js:`let word = "${w}";\nconsole.log(word.length);`,py:`word = "${w}"\nprint(len(word))`,ans:w.length,wrong:[w.length-1,w.length+1,w.length*2]}},"text"],
+ [2,r=>{const w=DPICK(r,["mango","kiwi","lemon","grape"]);return {js:`let fruit = "${w}";\nconsole.log(fruit.toUpperCase() + "!");`,py:`fruit = "${w}"\nprint(fruit.upper() + "!")`,ans:w.toUpperCase()+"!",wrong:[w+"!",w[0].toUpperCase()+w.slice(1)+"!",w.toUpperCase()]}},"text"],
+ [2,r=>{const n=DINT(r,2,4),a=Array.from({length:n},()=>DINT(r,1,9)),x=DINT(r,1,9);return {js:`let nums = [${a.join(", ")}];\nnums.push(${x});\nconsole.log(nums.length);`,py:`nums = [${a.join(", ")}]\nnums.append(${x})\nprint(len(nums))`,ans:n+1,wrong:[n,x,n+2]}},"lists"],
+ [2,r=>{const a=Array.from({length:4},()=>DINT(r,1,9)),s=a.reduce((p,q)=>p+q,0);return {js:`let nums = [${a.join(", ")}];\nlet total = 0;\nfor (let n of nums) {\n  total += n;\n}\nconsole.log(total);`,py:`nums = [${a.join(", ")}]\ntotal = 0\nfor n in nums:\n    total += n\nprint(total)`,ans:s,wrong:[s-a[3],s+1,a[3]]}},"lists"],
+ [2,r=>{const A=DINT(r,2,9),B=DINT(r,2,9);return {js:`function add(a, b) {\n  return a + b;\n}\nconsole.log(add(${A}, ${B}) * 2);`,py:`def add(a, b):\n    return a + b\n\nprint(add(${A}, ${B}) * 2)`,ans:(A+B)*2,wrong:[A+B*2,A+B,A*B*2]}},"funcs"],
+ [2,r=>{const n=DINT(r,3,5);return {js:`for (let i = ${n}; i > 0; i--) {\n  console.log(i);\n}\nconsole.log("Go!");`,py:`for i in range(${n}, 0, -1):\n    print(i)\nprint("Go!")`,ans:[...Array.from({length:n},(_,i)=>String(n-i)),"Go!"].join("\n"),wrong:[[...Array.from({length:n},(_,i)=>String(n-i-1)),"Go!"].join("\n"),[...Array.from({length:n},(_,i)=>String(i+1)),"Go!"].join("\n"),[...Array.from({length:n-1},(_,i)=>String(n-i)),"Go!"].join("\n")]}},"loops"],
+ [2,r=>{const A=DINT(r,10,30),B=DINT(r,3,7);return {js:`let bananas = ${A};\nlet friends = ${B};\nconsole.log(bananas % friends);`,py:`bananas = ${A}\nfriends = ${B}\nprint(bananas % friends)`,ans:A%B,wrong:[Math.floor(A/B),A-B,(A%B)+1]}},"vars"],
+ [3,r=>{const w=DPICK(r,["stressed","monkey","drawer","banana","lemon"]);return {js:`let w = "${w}";\nconsole.log(w.split("").reverse().join(""));`,py:`w = "${w}"\nprint(w[::-1])`,ans:[...w].reverse().join(""),wrong:[w,w.slice(1),[...w].reverse().join("").toUpperCase()]}},"text"],
+ [3,r=>{const w=DPICK(r,["banana","papaya","cabana","alpaca","pasta"]),n=[...w].filter(c=>c==="a").length;return {js:`let w = "${w}";\nlet count = 0;\nfor (let ch of w) {\n  if (ch === "a") {\n    count += 1;\n  }\n}\nconsole.log(count);`,py:`w = "${w}"\ncount = 0\nfor ch in w:\n    if ch == "a":\n        count += 1\nprint(count)`,ans:n,wrong:[n-1,n+1,w.length]}},"text"],
+ [3,r=>{const n=DINT(r,3,5),f=k=>k<=1?1:k*f(k-1);return {js:`function f(n) {\n  if (n <= 1) {\n    return 1;\n  }\n  return n * f(n - 1);\n}\nconsole.log(f(${n}));`,py:`def f(n):\n    if n <= 1:\n        return 1\n    return n * f(n - 1)\n\nprint(f(${n}))`,ans:f(n),wrong:[f(n-1),n*n,f(n)+1]}},"funcs"],
+ [3,r=>{const A=DINT(r,2,4),B=DINT(r,2,5);return {js:`let count = 0;\nfor (let i = 0; i < ${A}; i++) {\n  for (let j = 0; j < ${B}; j++) {\n    count += 1;\n  }\n}\nconsole.log(count);`,py:`count = 0\nfor i in range(${A}):\n    for j in range(${B}):\n        count += 1\nprint(count)`,ans:A*B,wrong:[A+B,A*B+1,B]}},"loops"],
+ [3,r=>{const n=DPICK(r,[3,5,9,10,15,30,7,8]),a=n%15===0?"FizzBuzz":n%3===0?"Fizz":n%5===0?"Buzz":String(n);return {js:`let n = ${n};\nif (n % 15 === 0) {\n  console.log("FizzBuzz");\n} else if (n % 3 === 0) {\n  console.log("Fizz");\n} else if (n % 5 === 0) {\n  console.log("Buzz");\n} else {\n  console.log(n);\n}`,py:`n = ${n}\nif n % 15 == 0:\n    print("FizzBuzz")\nelif n % 3 == 0:\n    print("Fizz")\nelif n % 5 == 0:\n    print("Buzz")\nelse:\n    print(n)`,ans:a,wrong:["Fizz","Buzz","FizzBuzz",String(n)].filter(x=>x!==a)}},"ifs"],
+ [3,r=>{const w=DPICK(r,["monkey","bananas","coconut","jungle"]);return {js:`let w = "${w}";\nconsole.log(w.slice(1, 4));`,py:`w = "${w}"\nprint(w[1:4])`,ans:w.slice(1,4),wrong:[w.slice(0,3),w.slice(1,5),w.slice(0,4)]}},"text"],
+ [3,r=>{const nm=DPICK(r,["Mo","Kiki","Zip"]);return {js:`function greet(name = "friend") {\n  return "Hi " + name;\n}\nconsole.log(greet());\nconsole.log(greet("${nm}"));`,py:`def greet(name="friend"):\n    return "Hi " + name\n\nprint(greet())\nprint(greet("${nm}"))`,ans:`Hi friend\nHi ${nm}`,wrong:[`Hi ${nm}\nHi ${nm}`,`Hi\nHi ${nm}`,`Hi friend\nHi friend`]}},"funcs"],
+ [3,r=>{const f=["kiwi","mango","fig","plum","pear"].sort(()=>r()-.5).slice(0,4),k=DINT(r,0,3);return {js:`let fruits = ["${f.join('", "')}"];\nconsole.log(fruits.indexOf("${f[k]}"));`,py:`fruits = ["${f.join('", "')}"]\nprint(fruits.index("${f[k]}"))`,ans:k,wrong:[k+1,(k+2)%4,4].filter(x=>x!==k)}},"lists"]
+);
+DCODE.push(
+ [1,r=>{const w=DPICK(r,["jungle","banana","coconut"]);return {title:"Shout it",task:`Make a variable ${C("word")} set to ${C('"'+w+'"')}, then print it in CAPITAL letters.`,out:[w.toUpperCase()],use:[[/word/,"Make a variable called word."],[/upper|toUpperCase/,"Turn it into capitals."]],js:`let word = "${w}";\nconsole.log(word.toUpperCase());`,py:`word = "${w}"\nprint(word.upper())`}},"text"],
+ [1,r=>{const A=DINT(r,8,15),B=DINT(r,2,6);return {title:"Bananas left",task:`You have ${C("have = "+A)} bananas and eat ${C("eaten = "+B)}. Make both variables, then print how many are left.`,out:[String(A-B)],use:[[/have/,"Make a variable called have."],[/eaten/,"Make a variable called eaten."]],js:`let have = ${A};\nlet eaten = ${B};\nconsole.log(have - eaten);`,py:`have = ${A}\neaten = ${B}\nprint(have - eaten)`}},"vars"],
+ [1,r=>{const h=DINT(r,6,10);return {title:"Snack check",task:`Make ${C("hunger")} set to ${h}. If ${C("hunger")} is more than 5, print ${C("Snack time!")}`,out:["Snack time!"],use:[[/hunger/,"Make a variable called hunger."],[/if/,"Check it with if."]],js:`let hunger = ${h};\nif (hunger > 5) {\n  console.log("Snack time!");\n}`,py:`hunger = ${h}\nif hunger > 5:\n    print("Snack time!")`}},"ifs"],
+ [2,r=>{const n=DINT(r,3,6);return {title:"Countdown",task:`Use a loop to count down from ${n} to 1, one number per line.`,out:Array.from({length:n},(_,i)=>String(n-i)),use:[[/for|while/,"Use a loop."]],js:`for (let i = ${n}; i >= 1; i--) {\n  console.log(i);\n}`,py:`for i in range(${n}, 0, -1):\n    print(i)`}},"loops"],
+ [2,r=>{const n=DPICK(r,[8,10,12]);return {title:"Even steps",task:`Use a loop to print the even numbers from 2 to ${n}, one per line.`,out:Array.from({length:n/2},(_,i)=>String(2*i+2)),use:[[/for|while/,"Use a loop."]],js:`for (let i = 2; i <= ${n}; i += 2) {\n  console.log(i);\n}`,py:`for i in range(2, ${n} + 1, 2):\n    print(i)`}},"loops"],
+ [2,r=>{const n=DINT(r,3,20),cut=10;return {title:"Big or small",task:`Make ${C("n")} set to ${n}. If ${C("n")} is more than ${cut}, print ${C("big")}. Otherwise print ${C("small")}.`,out:[n>cut?"big":"small"],use:[[/if/,"Use if."],[/else/,"Use else for the other case."]],js:`let n = ${n};\nif (n > ${cut}) {\n  console.log("big");\n} else {\n  console.log("small");\n}`,py:`n = ${n}\nif n > ${cut}:\n    print("big")\nelse:\n    print("small")`}},"ifs"],
+ [2,r=>{const it=["rope","map","torch","snack","hat"].sort(()=>r()-.5).slice(0,3);return {title:"Backpack list",task:`Make a list ${C("pack")} with ${it.map(x=>C('"'+x+'"')).join(", ")}, then use a loop to print each item on its own line.`,out:it,use:[[/pack/,"Make a list called pack."],[/for|while/,"Print them with a loop."]],js:`let pack = ["${it.join('", "')}"];\nfor (let item of pack) {\n  console.log(item);\n}`,py:`pack = ["${it.join('", "')}"]\nfor item in pack:\n    print(item)`}},"lists"],
+ [2,r=>{const w=DPICK(r,["mango","ninja","pizza"]);return {title:"Name tag",task:`Write a function ${C("tag")} that takes a name and returns ${C('"Hi, I am " + name')}. Print ${C("tag(\""+w+"\")")}.`,out:[`Hi, I am ${w}`],use:[[/function\s+tag|def\s+tag|tag\s*=/,"Make a function called tag."],[/return/,"Return the text."]],js:`function tag(name) {\n  return "Hi, I am " + name;\n}\nconsole.log(tag("${w}"));`,py:`def tag(name):\n    return "Hi, I am " + name\n\nprint(tag("${w}"))`}},"funcs"],
+ [3,r=>{const w=DPICK(r,["banana","papaya","alpaca","cabana"]);return {title:"Count the a's",task:`Use a loop to count how many times ${C("a")} appears in ${C('"'+w+'"')}, then print the count.`,out:[String([...w].filter(c=>c==="a").length)],use:[[/for|while/,"Check each letter in a loop."]],js:`let w = "${w}";\nlet count = 0;\nfor (let ch of w) {\n  if (ch === "a") {\n    count += 1;\n  }\n}\nconsole.log(count);`,py:`w = "${w}"\ncount = 0\nfor ch in w:\n    if ch == "a":\n        count += 1\nprint(count)`}},"text"],
+ [3,r=>{const avg=DINT(r,4,9),a=[avg-2,avg+3,avg,avg-1];return {title:"Average score",task:`${C("scores")} is ${C("["+a.join(", ")+"]")}. Add them up with a loop, then print the total divided by how many there are.`,out:[String(avg)],use:[[/for|while/,"Add them up in a loop."]],start:{js:`let scores = [${a.join(", ")}];\n`,py:`scores = [${a.join(", ")}]\n`},js:`let scores = [${a.join(", ")}];\nlet total = 0;\nfor (let s of scores) {\n  total += s;\n}\nconsole.log(total / scores.length);`,py:`scores = [${a.join(", ")}]\ntotal = 0\nfor s in scores:\n    total += s\nprint(total // len(scores))`}},"lists"],
+ [3,r=>{const A=DINT(r,2,9),B=A+DINT(r,1,4)*2-1;return {title:"Even or odd",task:`Write a function ${C("parity")} that returns ${C('"even"')} or ${C('"odd"')}. Print ${C("parity("+A+")")} and then ${C("parity("+B+")")}.`,out:[A%2?"odd":"even",B%2?"odd":"even"],use:[[/function\s+parity|def\s+parity|parity\s*=/,"Make a function called parity."],[/%/,"Use % 2 to check."]],js:`function parity(n) {\n  if (n % 2 === 0) {\n    return "even";\n  }\n  return "odd";\n}\nconsole.log(parity(${A}));\nconsole.log(parity(${B}));`,py:`def parity(n):\n    if n % 2 == 0:\n        return "even"\n    return "odd"\n\nprint(parity(${A}))\nprint(parity(${B}))`}},"funcs"],
+ [3,r=>{const n=DINT(r,3,5);return {title:"Square dance",task:`Write a function ${C("square")} that returns a number times itself. Use a loop to print the squares of 1 to ${n}.`,out:Array.from({length:n},(_,i)=>String((i+1)*(i+1))),use:[[/function\s+square|def\s+square|square\s*=/,"Make a function called square."],[/for|while/,"Use a loop."]],js:`function square(x) {\n  return x * x;\n}\nfor (let i = 1; i <= ${n}; i++) {\n  console.log(square(i));\n}`,py:`def square(x):\n    return x * x\n\nfor i in range(1, ${n} + 1):\n    print(square(i))`}},"funcs"]
+);
+
+DCODE.push(
+ [1,r=>{const nm=DPICK(r,["Mo","Kiki","Zip","Lulu"]),a=DINT(r,6,12);return {title:"Name and age",task:`Make ${C("name")} set to ${C('"'+nm+'"')} and ${C("age")} set to ${a}, then print ${C(nm+" is "+a)} using both variables.`,out:[`${nm} is ${a}`],use:[[/name/,"Make a variable called name."],[/age/,"Make a variable called age."]],js:`let name = "${nm}";\nlet age = ${a};\nconsole.log(name + " is " + age);`,py:`name = "${nm}"\nage = ${a}\nprint(name + " is " + str(age))`}},"vars"],
+ [1,r=>{const pr=DINT(r,2,6),q=DINT(r,2,5);return {title:"Price tag",task:`A banana costs ${C("price = "+pr)} coins and you buy ${C("count = "+q)}. Make both variables and print the total cost.`,out:[String(pr*q)],use:[[/price/,"Make a variable called price."],[/count/,"Make a variable called count."]],js:`let price = ${pr};\nlet count = ${q};\nconsole.log(price * count);`,py:`price = ${pr}\ncount = ${q}\nprint(price * count)`}},"vars"],
+ [1,r=>{const n=DINT(r,2,4);return {title:"Hip hip hooray",task:`Use a loop to print ${C("Hooray!")} ${n} times.`,out:Array(n).fill("Hooray!"),use:[[/for|while/,"Use a loop."]],js:`for (let i = 0; i < ${n}; i++) {\n  console.log("Hooray!");\n}`,py:`for i in range(${n}):\n    print("Hooray!")`}},"loops"],
+ [1,r=>{const f=["kiwi","mango","fig","plum"].sort(()=>r()-.5).slice(0,3);return {title:"First in line",task:`Make a list ${C("fruits")} with ${f.map(x=>C('"'+x+'"')).join(", ")}, then print the first one.`,out:[f[0]],use:[[/fruits/,"Make a list called fruits."],[/\[0\]/,"The first item is at position 0."]],js:`let fruits = ["${f.join('", "')}"];\nconsole.log(fruits[0]);`,py:`fruits = ["${f.join('", "')}"]\nprint(fruits[0])`}},"lists"],
+ [1,r=>{const n=DINT(r,2,3);return {title:"Wave hello",task:`Write a function ${C("wave")} that prints ${C("Hello from TypeMonkey!")}, then call it ${n} times.`,out:Array(n).fill("Hello from TypeMonkey!"),use:[[/function\s+wave|def\s+wave|wave\s*=/,"Make a function called wave."]],js:`function wave() {\n  console.log("Hello from TypeMonkey!");\n}\n${Array(n).fill("wave();").join("\n")}`,py:`def wave():\n    print("Hello from TypeMonkey!")\n\n${Array(n).fill("wave()").join("\n")}`}},"funcs"],
+ [2,r=>{const n=DINT(r,2,9);return {title:"Times table",task:`Use a loop to print ${n} × 1 up to ${n} × 5, one answer per line.`,out:[1,2,3,4,5].map(k=>String(n*k)),use:[[/for|while/,"Use a loop."]],js:`for (let i = 1; i <= 5; i++) {\n  console.log(${n} * i);\n}`,py:`for i in range(1, 5 + 1):\n    print(${n} * i)`}},"loops"],
+ [2,r=>{const [a,b]=[["kiwi","banana"],["mango","fig"],["coconut","plum"],["pear","pineapple"]][DINT(r,0,3)];const lg=b.length>a.length?b:a;return {title:"Longer word",task:`Make ${C("a = \""+a+"\"")} and ${C("b = \""+b+"\"")}. Use if to print whichever word is longer.`,out:[lg],use:[[/if/,"Compare them with if."],[/length|len\(/,"Compare their lengths."]],js:`let a = "${a}";\nlet b = "${b}";\nif (a.length > b.length) {\n  console.log(a);\n} else {\n  console.log(b);\n}`,py:`a = "${a}"\nb = "${b}"\nif len(a) > len(b):\n    print(a)\nelse:\n    print(b)`}},"text"],
+ [2,r=>{const a=[DINT(r,1,9),DINT(r,1,9),DINT(r,1,9)];return {title:"Shopping total",task:`${C("prices")} is ${C("["+a.join(", ")+"]")}. Add them up with a loop and print the total.`,out:[String(a[0]+a[1]+a[2])],use:[[/for|while/,"Add them up in a loop."]],start:{js:`let prices = [${a.join(", ")}];\n`,py:`prices = [${a.join(", ")}]\n`},js:`let prices = [${a.join(", ")}];\nlet total = 0;\nfor (let p of prices) {\n  total += p;\n}\nconsole.log(total);`,py:`prices = [${a.join(", ")}]\ntotal = 0\nfor p in prices:\n    total += p\nprint(total)`}},"lists"],
+ [2,r=>{const sc=DPICK(r,[35,48,50,62,80,95]);return {title:"Pass or try again",task:`Make ${C("score")} set to ${sc}. If it is 50 or more, print ${C("pass")}. Otherwise print ${C("try again")}.`,out:[sc>=50?"pass":"try again"],use:[[/if/,"Use if."],[/else/,"Use else for the other case."]],js:`let score = ${sc};\nif (score >= 50) {\n  console.log("pass");\n} else {\n  console.log("try again");\n}`,py:`score = ${sc}\nif score >= 50:\n    print("pass")\nelse:\n    print("try again")`}},"ifs"]
+);
+
+/* Topics of the first templates (newer ones carry it as a third item) */
+["vars","text","vars","ifs","loops","loops","loops","lists","funcs","text","lists"].forEach((t,i)=>{if(DQ[i])DQ[i][2]=DQ[i][2]||t});
+["vars","text","loops","loops","funcs","lists"].forEach((t,i)=>{if(DCODE[i])DCODE[i][2]=DCODE[i][2]||t});
+/* A theme for every day of the week, and a different mix of puzzle kinds each day */
+const DAY_THEMES=[["mix","🎲","Mystery mix Sunday"],["vars","🧪","Variable Monday"],["loops","🔁","Loop Tuesday"],["ifs","🔀","Decision Wednesday"],["text","🔤","Text Thursday"],["lists","📦","List Friday"],["funcs","🧩","Function Saturday"]];
+const DAY_FORMATS=[["predict","order","code"],["predict","bug","code"],["predict","predict","code"],["order","predict","bug"],["predict","code","order"],["bug","predict","code"],["predict","order","bug"]];
+const dayNum=d=>Math.floor(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5);
+const dailySeen=()=>{const m=new Map();((S.daily||{}).seen||[]).forEach((k,i)=>{k=String(k).replace(/[ob]$/,"");if(!m.has(k))m.set(k,i)});return m};
+/* pick n templates: today's topic first, your level first, nothing you had in the last week */
+function pickDaily(r,bank,L,topic,n,avoid,tag){
+  const all=bank.map((t,i)=>({t,key:tag+i})).filter(x=>x.t[0]<=L);
+  const score=x=>(x.t[0]===L?2:0)+(topic==="mix"||x.t[2]===topic?3:0)+(avoid.has(x.key)?-30+avoid.get(x.key):0)+r();
+  const out=[];const pool=[...all];
+  while(out.length<n&&pool.length){pool.sort((a,b)=>score(b)-score(a));const x=pool.shift();out.push(x);avoid.set(x.key,-100)}
+  return out;
+}
+/* Bug hunt: put one small, common mistake into a working answer */
+function addBug(code,lang,out){
+  const B=lang==="py"?[[/(range\(\d+), (\d+) \+ 1/,"$1, $2"],[/<=/,"<"],[/(\n(?:for|if|def|while)[^\n]*):\n/,"$1\n"]]:[[/<= /,"< "],[/>= 1;/,"> 1;"]];
+  for(const [re,to] of B){const c=code.replace(re,to);if(c!==code)return c}
+  // otherwise a typo in the print that makes the expected answer (so it is on the path that really runs)
+  const P=lang==="py"?"print(":"console.log(",T=lang==="py"?"prnt(":"console.lgo(";const lines=code.split("\n");
+  let k=lines.findIndex(l=>l.includes(P)&&out&&l.includes(`"${out[0]}"`));if(k<0)k=lines.findIndex(l=>l.includes(P));
+  if(k<0)return null;lines[k]=lines[k].replace(P,T);return lines.join("\n")}
+function dailyCoder(r,c,day=new Date()){
+  const lang=c.id==="py"?"py":"js",L=dailyLevel(c),tag={1:"warm-up",2:"challenge",3:"brain-buster"}[L];
+  const dn=dayNum(day),[topic,emo,themeName]=DAY_THEMES[day.getDay()],formats=DAY_FORMATS[dn%7],avoid=dailySeen();
+  const nQ=formats.filter(f=>f==="predict").length,nC=formats.filter(f=>f!=="predict").length;
+  const qs=pickDaily(r,DQ,L,topic,nQ,avoid,"q"),cs=pickDaily(r,DCODE,L,topic,nC,avoid,"c");const cm=lang==="py"?"#":"//";
+  const from=`${emo} ${themeName} · ${tag}`;
+  const steps=formats.map(f=>{
+    if(f==="predict"){const x=qs.shift();const q=x.t[1](r);
+      return {type:"quiz",q:"What does this print?",code:q[lang],opts:dailyOpts(q.ans,q.wrong),a:0,mono:true,why:`It prints ${q.ans}. Follow it line by line, keeping track of each variable.`,_course:c,_from:from,_key:x.key}}
+    const x=cs.shift();const t=x.t[1](r);const outText=t.out.join(" · ");
+    {const had=new Set((S.daily||{}).seen||[]),k=g=>x.key+(g==="order"?"o":g==="bug"?"b":"");   // seen this one lately? use a format you haven't had it in
+      if(had.has(k(f))){const alt=["bug","order","code"].find(g=>!had.has(k(g)));if(alt)f=alt}}
+    if(f==="order"){let lines=t[lang].split("\n").filter(l=>l.trim());
+      {const set=/^(let |const )?\w+ = [^;]*;?$/;let k=0;while(k<lines.length&&set.test(lines[k]))k++;   // setup lines could go in any order: keep them together on one line
+        if(k>1)lines=[lines.slice(0,k).map(l=>lang==="js"&&!l.endsWith(";")?l+";":l).join(lang==="js"?" ":"; "),...lines.slice(k)]}
+      if(lines.length>=3&&lines.length<=8&&new Set(lines).size===lines.length)
+        return {type:"order",title:"🧩 Daily order: "+t.title,body:`<p>${t.task}</p><p>Put the lines in the right order.</p>`,lines,why:`In this order it prints ${outText}.`,_out:t.out,_course:c,_from:from,_key:x.key+"o"}}
+    if(f==="bug"){const bad=addBug(t[lang],lang,t.out);
+      if(bad)return {type:"code",title:"🐛 Daily bug hunt: "+t.title,body:`<p>${t.task}</p><p><b>This code has one small bug.</b> Run it, find the bug and fix it so it prints ${C(outText)}.</p>`,start:bad,hint:t[lang],out:t.out,use:t.use,_course:c,_from:from,_key:x.key+"b"}}
+    return {type:"code",title:"🎯 Daily code: "+t.title,body:`<p>${t.task}</p>`,start:(t.start?t.start[lang]:"")+`${cm} Your code here\n`,hint:t[lang],out:t.out,use:t.use,_course:c,_from:from,_key:x.key};
+  });
+  return steps;
+}
 function dailyOpts(ans,wrong){const A=String(ans),seen=new Set([A]),o=[A];for(const w of wrong){const s=String(w);if(!seen.has(s)&&o.length<4){seen.add(s);o.push(s)}}let k=2;while(o.length<3){const s=String((+A||0)+k++);if(!seen.has(s)){seen.add(s);o.push(s)}}return o}
 function pickLeveled(r,bank,L,n){const pool=bank.filter(([l])=>l===L),lower=bank.filter(([l])=>l<L);const out=[];const src=[...pool];
   while(out.length<n&&(src.length||lower.length)){const from=src.length&&(out.length===0||!lower.length||r()<.7)?src:lower;out.push(from.splice(Math.floor(r()*from.length),1)[0][1])}return out}
-function dailyCoder(r,c){
-  const lang=c.id==="py"?"py":"js",L=dailyLevel(c),tag={1:"warm-up",2:"challenge",3:"brain-buster"}[L];
-  const qs=pickLeveled(r,DQ,L,2).map(g=>{const q=g(r);return {type:"quiz",q:"What does this print?",code:q[lang],opts:dailyOpts(q.ans,q.wrong),a:0,mono:true,why:`It prints ${q.ans}. Follow it line by line, keeping track of each variable.`,_course:c,_from:"Today's "+tag,_fresh:true}});
-  const t=pickLeveled(r,DCODE,L,1)[0](r);const cm=lang==="py"?"#":"//";
-  const code={type:"code",title:"🎯 Daily code: "+t.title,body:`<p>${t.task}</p>`,start:(t.start?t.start[lang]:"")+`${cm} Your code here\n`,hint:t[lang],out:t.out,use:t.use,_course:c,_from:"Today's "+tag};
-  return [...qs,code];
-}
-function dailyFromLessons(r,c){  // other languages: the newest things you've learned, with a real code challenge
+function dailyFromLessons(r,c){  // other languages: puzzles from everything you've learned (newest first), never one from the last week
   const done=flat(c).filter(x=>x.l.steps&&S.done.includes(x.l.id));const L=done.length?done:flat(c).filter(x=>x.l.steps).slice(0,1);
-  const recent=L.slice(-4),pools=[];recent.forEach(x=>(x.l.pool||[]).forEach((p,j)=>pools.push({l:x.l,j})));
-  const out=[];for(let k=0;k<2&&pools.length;k++){const pk=pools.splice(Math.floor(r()*pools.length),1)[0],p=pk.l.pool[pk.j];
-    out.push({type:"quiz",q:"What does this print?",code:p[0],opts:[...p[1]],a:0,mono:true,why:`It prints ${p[1][0].includes("\n")?"those lines":p[1][0]}.`,_course:c,_from:pk.l.title,_src:{key:pk.l.id+"#p"+pk.j,item:{kind:"pool",lid:pk.l.id,j:pk.j}}})}
-  const codes=[];L.slice(-6).forEach(x=>x.l.steps.forEach(s=>{if(s.type==="code"&&!s.final&&!s.tests)codes.push({s,l:x.l})}));
-  if(codes.length){const pk=DPICK(r,codes);out.push({...pk.s,title:"🎯 Daily code: "+pk.s.title,_course:c,_from:pk.l.title})}
+  const seen=dailySeen(),recent=L.slice(-10),pools=[];recent.forEach((x,ri)=>(x.l.pool||[]).forEach((p,j)=>pools.push({l:x.l,j,w:ri+1})));
+  const fresh=a=>{const f=a.filter(x=>!seen.has(x.key));return f.length?f:a};
+  pools.forEach(p=>p.key=p.l.id+"#p"+p.j);
+  const pickW=a=>{const tot=a.reduce((q,x)=>q+x.w,0);let k=r()*tot;for(const x of a){k-=x.w;if(k<=0)return x}return a[a.length-1]};
+  const out=[];let pp=fresh(pools);for(let k=0;k<2&&pp.length;k++){const pk=pickW(pp);pp=pp.filter(x=>x!==pk);const p=pk.l.pool[pk.j];
+    out.push({type:"quiz",q:"What does this print?",code:p[0],opts:[...p[1]],a:0,mono:true,why:`It prints ${p[1][0].includes("\n")?"those lines":p[1][0]}.`,_course:c,_from:pk.l.title,_key:pk.key,_src:{key:pk.key,item:{kind:"pool",lid:pk.l.id,j:pk.j}}})}
+  const codes=[];L.slice(-12).forEach((x,ri)=>x.l.steps.forEach((s,si)=>{if(s.type==="code"&&!s.final&&!s.tests)codes.push({s,l:x.l,key:x.l.id+"#c"+si,w:ri+1})}));
+  if(codes.length){const pk=pickW(fresh(codes));out.push({...pk.s,title:"🎯 Daily code: "+pk.s.title,_course:c,_from:pk.l.title,_key:pk.key})}
   return out;
 }
 /* --- fresh TypeMonkey Jr. puzzles --- */
@@ -2414,7 +2526,23 @@ function genBox(r,lvl){
   seq=boxShortest(start,v,ops)||seq;const m=seq.length;   // the tap limit is always the true fewest taps
   return {type:"box",title:"🎯 Today's banana box",body:`<p>Make the box hold exactly <b>${v}</b>${lvl>1?` in <b>${m}</b> taps or fewer`:""}.</p>`,name:"bananas",startVal:start,goal:v,ops,max:lvl>1?m:undefined,solution:seq};
 }
-function dailyJr(r,c){const n=doneIn(c),lvl=n<4?1:n<10?2:3;return [genMaze(r,lvl),genDance(r,lvl),genBox(r,lvl)].map(s=>({...s,_course:c}))}
+const JR_SORTS=[
+ {title:"Fruit or animal?",rule:"Fruit ➜ 🧺 Basket<br>Animal ➜ 🏠 Zoo",bins:[{icon:"🧺",name:"Basket"},{icon:"🏠",name:"Zoo"}],a:[["🍎","apple"],["🍌","banana"],["🍇","grapes"],["🍓","strawberry"],["🍉","melon"]],b:[["🐘","elephant"],["🦒","giraffe"],["🐸","frog"],["🐧","penguin"],["🦁","lion"]]},
+ {title:"Hot or cold?",rule:"Hot ➜ 🔥 Hot<br>Cold ➜ ❄️ Cold",bins:[{icon:"🔥",name:"Hot"},{icon:"❄️",name:"Cold"}],a:[["☀️","sun"],["🌶️","chili"],["🍕","hot pizza"],["🌋","volcano"],["☕","cocoa"]],b:[["🧊","ice"],["⛄","snowman"],["🍦","ice cream"],["🐧","penguin"],["❄️","snowflake"]]},
+ {title:"Land or water?",rule:"Lives in water ➜ 🌊 Water<br>Lives on land ➜ 🌳 Land",bins:[{icon:"🌊",name:"Water"},{icon:"🌳",name:"Land"}],a:[["🐟","fish"],["🐙","octopus"],["🐬","dolphin"],["🦈","shark"],["🐳","whale"]],b:[["🐒","monkey"],["🐄","cow"],["🐇","rabbit"],["🐴","horse"],["🐿️","squirrel"]]},
+ {title:"Day or night?",rule:"Day ➜ ☀️ Day<br>Night ➜ 🌙 Night",bins:[{icon:"☀️",name:"Day"},{icon:"🌙",name:"Night"}],a:[["🌅","sunrise"],["🌈","rainbow"],["🏖️","beach day"],["🌻","sunflower"]],b:[["⭐","stars"],["🦉","owl"],["🌙","moon"],["😴","bedtime"]]},
+ {title:"Even or odd?",lvl:2,rule:"Even (2, 4, 6…) ➜ 🟦 Even<br>Odd (1, 3, 5…) ➜ 🟧 Odd",bins:[{icon:"🟦",name:"Even"},{icon:"🟧",name:"Odd"}],a:[["2",""],["4",""],["6",""],["8",""],["10",""]],b:[["1",""],["3",""],["5",""],["7",""],["9",""]]},
+ {title:"Bigger than 5?",lvl:2,rule:"More than 5 ➜ ⬆️ Big<br>5 or less ➜ ⬇️ Small",bins:[{icon:"⬆️",name:"Big"},{icon:"⬇️",name:"Small"}],a:[["6",""],["8",""],["9",""],["12",""],["7",""]],b:[["1",""],["3",""],["5",""],["2",""],["4",""]]}];
+function genSort(r,lvl){const pool=JR_SORTS.filter(x=>(x.lvl||1)<=lvl),T=DPICK(r,pool),n=lvl===1?2:3;
+  const pick=(arr,k)=>[...arr].sort(()=>r()-.5).slice(0,k);
+  const items=[...pick(T.a,n).map(([icon,name])=>({icon,name,bin:0})),...pick(T.b,n).map(([icon,name])=>({icon,name,bin:1}))];
+  return {type:"sort",title:"🎯 Today's sort: "+T.title,body:`<p>Follow the rule. Tap where each thing goes!</p>`,rule:T.rule,bins:T.bins,items,say:"A new sorting game, just for today!"}}
+function genPredict(r,lvl){const m=genMaze(r,lvl===1?1:2);const prog=m.solution.slice(0,lvl===1?3:5);
+  return {type:"predict",title:"🎯 Where will I stop?",body:`<p>Read my program. Then tap the square where I will stop.</p>`,grid:m.grid,dir:m.dir,prog,say:"Follow the blocks one by one with your finger!"}}
+function dailyJr(r,c,day=new Date()){const n=doneIn(c),lvl=n<4?1:n<10?2:3;
+  const MIX=[["maze","sort","dance"],["predict","box","maze"],["maze","dance","box"],["sort","maze","predict"],["dance","predict","box"],["maze","box","sort"],["predict","dance","maze"]];
+  const G={maze:genMaze,dance:genDance,box:genBox,sort:genSort,predict:genPredict};
+  return MIX[dayNum(day)%7].map(k=>({...G[k](r,lvl),_course:c,_key:"jr-"+k}))}
 function dailySteps(){
   const rnd=seeded("typemonkey-"+dayStr(new Date()));
   const started=(S.stats.started||[]).filter(id=>{const c=courseById(id);return c&&c.units&&!c.kids&&!c.extra});
@@ -2432,7 +2560,7 @@ function startDaily(){SFX.stopMusic();
 function dailyDone(){
   const ok=cur.earned.right,n=cur.earned.total;
   const t=dayStr(new Date()),y=dayStr(new Date(Date.now()-864e5));const d=S.daily||{};
-  const streak=d.last===y?(d.streak||0)+1:1;S.daily={last:t,streak,best:Math.max(d.best||0,streak)};
+  const streak=d.last===y?(d.streak||0)+1:1;const seen=[...cur.l.steps.map(x=>x._key).filter(Boolean),...(d.seen||[])].slice(0,24);S.daily={last:t,streak,best:Math.max(d.best||0,streak),seen};
   const ban=10+ok*3+(streak>=3?5:0),xp=ok*10;S.bananas+=ban;S.xp+=xp;bumpStreak();bump("dailies");save();
   shell(`<div class="card" style="text-align:center;align-items:center"><div class="label">Daily challenge complete</div><h2>${ok}/${n} right</h2>
     <div class="reward"><div><b>+${xp}</b><span>XP</span></div><div><b>+${ban}</b><span>Bananas</span></div><div><b>${streak}</b><span>Daily streak</span></div></div>

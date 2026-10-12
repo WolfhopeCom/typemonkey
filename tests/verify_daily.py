@@ -19,13 +19,17 @@ GEN = r"""async () => {
     for (const cid of ["js", "py"]) {
       const c = courseById(cid);
       const keep = S.done; S.done = flat(c).slice(0, L === 1 ? 0 : L === 2 ? 5 : 12).map(x => x.l.id);
-      const steps = dailyCoder(r, c); S.done = keep;
+      const day = new Date(2026, 0, 1 + d); const steps = dailyCoder(r, c, day); S.done = keep;
       for (const s of steps) {
         if (s.type === "quiz") {
           if (new Set(s.opts).size !== s.opts.length || s.opts.length < 3) out.bad.push(`${cid} L${L} d${d}: bad options ${s.opts}`);
           if (cid === "js") { const got = (await runCode(s.code)).filter(o => o[0] === "log").map(o => o[1]).join("\n");
             if (got !== s.opts[0]) out.bad.push(`js L${L} d${d}: answer ${s.opts[0]} but prints ${got}\n${s.code}`); }
           else out.py.push([s.code, s.opts[0]]);
+        } else if (s.type === "order") {
+          if (new Set(s.lines).size !== s.lines.length || s.lines.length < 3) out.bad.push(`${cid} L${L} d${d}: order lines not unique`);
+          const g = await grade({...s, type: "code", hint: s.lines.join("\n"), out: s._out}, s.lines.join("\n"), cid === "py" ? "py" : "js");
+          if (!g[0]) out.bad.push(`${cid} L${L} d${d}: order lines in order fail ${g[1]}`);
         } else {
           const g = await grade(s, s.hint, cid === "py" ? "py" : "js"); if (!g[0]) out.bad.push(`${cid} L${L} d${d}: code hint fails ${g[1]} ${g[2] || ""}\n${s.hint}`);
           const g2 = await grade(s, s.start, cid === "py" ? "py" : "js"); if (g2[0]) out.bad.push(`${cid} L${L} d${d}: starter passes`);
@@ -33,7 +37,12 @@ GEN = r"""async () => {
       }
     }
     const jr = courseById("jr"); const keep = S.done; S.done = flat(jr).slice(0, L === 1 ? 0 : L === 2 ? 5 : 12).map(x => x.l.id);
-    const [mz, dn, bx] = dailyJr(r, jr); S.done = keep;
+    const jrSteps = dailyJr(r, jr, new Date(2026, 0, 1 + d)); S.done = keep;
+    for (const s of jrSteps) {
+      if (s.type === "sort" && (!s.items.length || s.bins.some((b, k) => !s.items.some(it => it.bin === k)))) out.bad.push(`jr L${L} d${d}: sort has an empty bin`);
+      if (s.type === "predict") { const e = predictEnd(s), m = mazeInfo(s.grid); if ((e.x === m.start[0] && e.y === m.start[1]) || s.grid[e.y][e.x] === "#" || e.r.result === "wall") out.bad.push(`jr L${L} d${d}: predict ends badly ${JSON.stringify(s.grid)} ${s.prog}`); }
+    }
+    const mz = genMaze(r, L), dn = genDance(r, L), bx = genBox(r, L);
     const sim = simulate(mz.grid, mz.dir, mz.solution, []);
     if (sim.result !== "win") out.bad.push(`jr L${L} d${d}: maze not solved (${sim.result}) ${JSON.stringify(mz.grid)}`);
     if (L === 1 && mz.solution.filter(b => b !== "fwd").length > 1) out.bad.push(`jr L1 d${d}: maze has more than one turn`);
@@ -42,6 +51,17 @@ GEN = r"""async () => {
     const v = bx.solution.reduce((n, o) => BOXOPS[o](n), bx.startVal);
     if (v !== bx.goal || (bx.max && bx.solution.length > bx.max) || bx.goal <= bx.startVal) out.bad.push(`jr L${L} d${d}: box bad`);
     { const best = boxShortest(bx.startVal, bx.goal, bx.ops); if (bx.max && best && best.length < bx.max) out.bad.push(`jr L${L} d${d}: box says ${bx.max} taps but ${best.length} is enough`); }
+  }
+  // a week of dailies in a row (remembering what was played) never repeats a puzzle
+  for (const cid of ["js", "py"]) for (const L of [1, 2, 3]) {
+    const c = courseById(cid), keepD = S.daily, keepDone = S.done; S.done = flat(c).slice(0, L === 1 ? 0 : L === 2 ? 5 : 12).map(x => x.l.id); S.daily = {seen: []};
+    const used = [], days = [];
+    for (let d = 0; d < 7; d++) { const steps = dailyCoder(seeded("w" + d), c, new Date(2026, 2, 1 + d)); const keys = steps.map(s => s._key); days.push(keys.map(k => k.replace(/[ob]$/, "")));
+      used.push(...keys); S.daily = {seen: [...steps.map(s => s._key), ...S.daily.seen].slice(0, 24)}; }
+    const dup = used.filter((k, i) => used.indexOf(k) !== i);   // same puzzle in the same format twice in a week
+    if (dup.length) out.bad.push(`${cid} L${L}: the same puzzle twice within a week: ${[...new Set(dup)].join(", ")}`);
+    for (let d = 1; d < days.length; d++) { const back = days[d].filter(k => days[d - 1].includes(k)); if (back.length) out.bad.push(`${cid} L${L}: day ${d} repeats yesterday's ${back}`); }
+    S.daily = keepD; S.done = keepDone;
   }
   return out;
 }"""
