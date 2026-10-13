@@ -447,7 +447,7 @@ const BUG_INTRO=(level,what)=>({type:"talk",title:`🐛 Bug Lab · Level ${level
   body:`<p>${what}</p><p>All the code in Bug Lab is <b>Python</b> 🐍. For each one: press <b>▶ Run</b> to see what goes wrong, then fix the code until it does what it should. If you're stuck, hints come one at a time. Try to fix it without them!</p>`,
   say:"Finding bugs is a real programmer superpower. Let's train it!"});
 
-const COURSE_BUGLAB={id:"buglab",name:"Bug Lab",extra:true,blurb:"This code is broken. Fix it! Five levels, from typos to debugging a real mini-project. Hints come one at a time. In Python. Level 1 is free.",units:[
+const COURSE_BUGLAB={id:"buglab",name:"Bug Lab",extra:true,blurb:"This code is broken. Fix it! Seven levels, from typos to sneaky bugs and boss-level mini-projects. Hints come one at a time. In Python. Level 1 is free.",units:[
 {name:"Level 1 · Syntax slips",free:true,lessons:[
 {id:"bug1",title:"Syntax slips",sub:"missing colons, quotes and brackets",steps:[
  BUG_INTRO(1,"Level 1 bugs stop the program from running at all. Python can't understand the code, so it shows an error before anything prints. The error message is your best clue!"),
@@ -556,9 +556,54 @@ const COURSE_BUGLAB={id:"buglab",name:"Bug Lab",extra:true,blurb:"This code is b
   hints:["Ava gets C instead of A. Which check does Python try first?","The order of the checks matters: the first one that's true wins. Put the highest grade first.","For the average: <code class=\"i\">sum(scores)</code> on a dictionary adds up the <b>keys</b>. You want the values, rounded to 2 decimals."],
   explain:"1) The checks are in the wrong order: 95 is already >= 70, so it returns C. Check 90 first, then 80, then 70. 2) <code class=\"i\">sum(scores)</code> tries to add the names; use <code class=\"i\">sum(scores.values())</code>. 3) Round it: <code class=\"i\">round(..., 2)</code>.",
   hint:`def letter(score):\n    if score >= 90:\n        return "A"\n    elif score >= 80:\n        return "B"\n    elif score >= 70:\n        return "C"\n    else:\n        return "F"\n\nscores = {"Ava": 95, "Leo": 82, "Kai": 64}\nfor name in scores:\n    print(name, letter(scores[name]))\nprint("Average:", round(sum(scores.values()) / len(scores), 2))`},
+ {type:"done"}]}
+]},
+{name:"Level 6 · Sneaky bugs",lessons:[
+{id:"bug6",title:"Sneaky bugs",sub:"tiny mistakes Python happily runs",steps:[
+ BUG_INTRO(6,"Level 6 bugs are extra sneaky: Python runs them <b>without any error</b>, because the broken code is still real Python. It just doesn't mean what the coder wanted. Read each line slowly and ask: does this do what I think?"),
+ {type:"bug",title:"Countdown to liftoff",body:`<p>This should count 5, 4, 3, 2, 1 (each on its own line) and then print ${C("Liftoff!")}</p>`,
+  start:`n = 5\nwhile n > 1:\n    print(n)\n    n -= 1\nprint("Liftoff!")\n`,out:["5","4","3","2","1","Liftoff!"],
+  hints:["Run it. Which number is missing?","When n is 1, is <code class=\"i\">n > 1</code> true or false?"],
+  explain:"The loop stops as soon as <code class=\"i\">n > 1</code> is false, and that happens when n is 1, so 1 never prints. Use <code class=\"i\">while n > 0:</code> (or <code class=\"i\">n >= 1</code>). Another off-by-one!",
+  hint:`n = 5\nwhile n > 0:\n    print(n)\n    n -= 1\nprint("Liftoff!")`},
+ {type:"bug",title:"Wrong fruit bowl",body:`<p>Mo buys 4 more apples. It should print ${C("Apples: 7")} and ${C("Pears: 2")}</p>`,
+  start:`apples = 3\npears = 2\n\n# Mo buys 4 more apples\npears = pears + 4\n\nprint("Apples:", apples)\nprint("Pears:", pears)\n`,out:["Apples: 7","Pears: 2"],
+  hints:["Read the comment, then read the line under it. Do they match?","Which variable should get the extra 4?"],
+  explain:"The comment says apples, but the code changes <code class=\"i\">pears</code>. Python can't know what you meant! Update the right box: <code class=\"i\">apples = apples + 4</code>",
+  hint:`apples = 3\npears = 2\n\n# Mo buys 4 more apples\napples = apples + 4\n\nprint("Apples:", apples)\nprint("Pears:", pears)`},
+ {type:"bug",title:"Where's the dog?",body:`<p>This looks for "dog" in the list, so it should print ${C("Found dog: True")}</p>`,
+  start:`pets = ["cat", "dog", "fish"]\nfound = False\nfor p in pets:\n    if p == "dog":\n        found == True\nprint("Found dog:", found)\n`,out:["Found dog: True"],
+  hints:["The <code class=\"i\">if</code> works. Look at the line inside it.","Is <code class=\"i\">found == True</code> storing a value, or asking a question?"],
+  explain:"<code class=\"i\">==</code> <b>asks</b> \"are these equal?\" and then throws the answer away. To <b>store</b> a value, use one <code class=\"i\">=</code>: <code class=\"i\">found = True</code>",
+  hint:`pets = ["cat", "dog", "fish"]\nfound = False\nfor p in pets:\n    if p == "dog":\n        found = True\nprint("Found dog:", found)`},
+ {type:"bug",title:"The ride checker",body:`<p>Riders aged 10 or more go on the big ride. TypeMonkey will test it with age 9 (${C("Little kid ride")}) and age 12 (${C("Big kid ride")}).</p>`,
+  start:`age = input("Age: ")\nif age >= "10":\n    print("Big kid ride")\nelse:\n    print("Little kid ride")\n`,tests:[{input:"9",out:["Little kid ride"]},{input:"12",out:["Big kid ride"]}],
+  hints:["Try age 9. Why would 9 count as \"10 or more\"?","<code class=\"i\">input()</code> gives <b>text</b>. Text is compared letter by letter, and \"9\" comes after \"1\"."],
+  explain:"Comparing text works like the dictionary: <code class=\"i\">\"9\" >= \"10\"</code> is true because 9 comes after 1. Turn the answer into a number and compare with a number: <code class=\"i\">age = int(input(\"Age: \"))</code> and <code class=\"i\">if age >= 10:</code>",
+  hint:`age = int(input("Age: "))\nif age >= 10:\n    print("Big kid ride")\nelse:\n    print("Little kid ride")`},
+ {type:"done"}]}
+]},
+{name:"Level 7 · Boss bugs",lessons:[
+{id:"bug7",title:"Boss bugs",sub:"mini programs with several sneaky bugs",steps:[
+ BUG_INTRO(7,"Level 7: the boss level! Each mini program has <b>three bugs</b>, and most of them don't show an error. Fix one, run again, compare the output, repeat. You can do this!"),
+ {type:"bug",title:"The shopping cart",body:`<p>Adding an item that's already in the cart should add to how many there are. With 3 apples, 1 bread and 2 milk, it should print ${C("Items: 6")} and ${C("Total: 6.0")} <i>(3 bugs)</i></p>`,
+  start:`cart = {"apple": 2, "bread": 1}\nprices = {"apple": 0.5, "bread": 2.0, "milk": 1.25}\n\ndef add(item, qty):\n    cart[item] = qty\n\ndef total():\n    t = 0\n    for item in cart:\n        t += prices[item]\n    return t\n\nadd("milk", 2)\nadd("apple", 1)\nprint("Items:", len(cart))\nprint("Total:", total())\n`,out:["Items: 6","Total: 6.0"],
+  hints:["Start with <code class=\"i\">add()</code>: after adding 1 apple, how many apples are in the cart? Should it replace or add?","Then <code class=\"i\">total()</code>: 2 milks cost more than 1 milk. And <code class=\"i\">len(cart)</code> counts kinds of things, not how many."],
+  explain:"1) <code class=\"i\">cart[item] = qty</code> replaces the amount; use <code class=\"i\">cart[item] = cart.get(item, 0) + qty</code>. 2) Multiply by how many: <code class=\"i\">t += prices[item] * cart[item]</code>. 3) <code class=\"i\">len(cart)</code> is 3 kinds of things; count them all with <code class=\"i\">sum(cart.values())</code>.",
+  hint:`cart = {"apple": 2, "bread": 1}\nprices = {"apple": 0.5, "bread": 2.0, "milk": 1.25}\n\ndef add(item, qty):\n    cart[item] = cart.get(item, 0) + qty\n\ndef total():\n    t = 0\n    for item in cart:\n        t += prices[item] * cart[item]\n    return t\n\nadd("milk", 2)\nadd("apple", 1)\nprint("Items:", sum(cart.values()))\nprint("Total:", total())`},
+ {type:"bug",title:"The quiz scorer",body:`<p>The player answers 3 questions. Capital or small letters should both count. It prints the score, and ${C("Perfect!")} for 3 out of 3. <i>(3 bugs)</i></p>`,
+  start:`answers = ["b", "a", "c"]\nscore = 0\nfor i in range(1, len(answers)):\n    guess = input("Answer: ")\n    if guess == answers[i]:\n        score =+ 1\nprint(f"Score: {score}/{len(answers)}")\nif score == len(answers):\n    print("Perfect!")\n`,tests:[{input:"B\na\nc",out:["Score: 3/3","Perfect!"]},{input:"b\nc\nc",out:["Score: 2/3"]},{input:"a\nA\na",out:["Score: 1/3"]}],
+  hints:["Count the questions it asks. Where does <code class=\"i\">range(1, ...)</code> start? Lists start at 0!","Look very closely at <code class=\"i\">=+</code>. And what if the player types a capital <code class=\"i\">B</code>?"],
+  explain:"1) <code class=\"i\">range(1, 3)</code> skips question 0; use <code class=\"i\">range(len(answers))</code>. 2) <code class=\"i\">score =+ 1</code> means <code class=\"i\">score = +1</code>, so it's always 1. You want <code class=\"i\">score += 1</code>. 3) <code class=\"i\">\"B\" == \"b\"</code> is false, so make the guess small: <code class=\"i\">input(\"Answer: \").lower()</code>",
+  hint:`answers = ["b", "a", "c"]\nscore = 0\nfor i in range(len(answers)):\n    guess = input("Answer: ").lower()\n    if guess == answers[i]:\n        score += 1\nprint(f"Score: {score}/{len(answers)}")\nif score == len(answers):\n    print("Perfect!")`},
+ {type:"bug",title:"The pet simulator",body:`<p>Playing makes a pet 1 hungrier, food makes it 2 less hungry, and a pet is hungry when hunger is <b>more than</b> 5. It should print ${C("Kiki is happy with 2 toys")} and ${C("Mo is hungry with 2 toys")} <i>(3 bugs)</i></p>`,
+  start:`def make_pet(name, toys=[]):\n    return {"name": name, "hunger": 5, "toys": toys}\n\ndef feed(pet):\n    pet["hunger"] - 2\n\ndef play(pet, toy):\n    pet["toys"].append(toy)\n    pet["hunger"] += 1\n\ndef status(pet):\n    if pet["hunger"] >= 5:\n        mood = "hungry"\n    else:\n        mood = "happy"\n    print(pet["name"], "is", mood, "with", len(pet["toys"]), "toys")\n\nkiki = make_pet("Kiki")\nmo = make_pet("Mo")\nplay(kiki, "ball")\nplay(kiki, "rope")\nfeed(kiki)\nplay(mo, "bell")\nplay(mo, "drum")\nstatus(kiki)\nstatus(mo)\n`,out:["Kiki is happy with 2 toys","Mo is hungry with 2 toys"],
+  hints:["Both pets say 4 toys! The <code class=\"i\">toys=[]</code> list is made only once, so every pet shares the same one. Make a new list inside the function instead.","Next: does <code class=\"i\">pet[\"hunger\"] - 2</code> change anything? And is 5 \"more than 5\"?"],
+  explain:"1) A default <code class=\"i\">[]</code> is made once and shared by every pet. Use <code class=\"i\">toys=None</code>, then <code class=\"i\">if toys is None: toys = []</code>. 2) <code class=\"i\">pet[\"hunger\"] - 2</code> works out a number and throws it away; use <code class=\"i\">-= 2</code>. 3) \"More than 5\" is <code class=\"i\">> 5</code>, not <code class=\"i\">>= 5</code>.",
+  hint:`def make_pet(name, toys=None):\n    if toys is None:\n        toys = []\n    return {"name": name, "hunger": 5, "toys": toys}\n\ndef feed(pet):\n    pet["hunger"] -= 2\n\ndef play(pet, toy):\n    pet["toys"].append(toy)\n    pet["hunger"] += 1\n\ndef status(pet):\n    if pet["hunger"] > 5:\n        mood = "hungry"\n    else:\n        mood = "happy"\n    print(pet["name"], "is", mood, "with", len(pet["toys"]), "toys")\n\nkiki = make_pet("Kiki")\nmo = make_pet("Mo")\nplay(kiki, "ball")\nplay(kiki, "rope")\nfeed(kiki)\nplay(mo, "bell")\nplay(mo, "drum")\nstatus(kiki)\nstatus(mo)`},
  {type:"talk",title:"🏆 Bug Lab complete",mood:"cheer",
-  body:`<p>You fixed syntax errors, variable mix-ups, logic errors, programs with several bugs, and whole broken projects. That's real debugging, the skill programmers use every single day.</p>`,
-  say:"Bug squasher certified! 🐛🔨"},
+  body:`<p>You fixed syntax errors, variable mix-ups, logic errors, sneaky bugs that never show an error, and whole programs with three bugs each. That's real debugging, the skill programmers use every single day.</p>`,
+  say:"Boss bugs defeated! Bug squasher certified! 🐛🔨"},
  {type:"done"}]}
 ]}
 ]};

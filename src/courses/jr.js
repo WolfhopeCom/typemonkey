@@ -241,4 +241,67 @@ const JR_UNIT6={name:"Detective work",lessons:[
  {type:"done"}]}
 ]};
 
-const COURSE_JR={id:"jr",name:"TypeMonkey Jr.",blurb:"Puzzle adventures for ages 7–12. Snap blocks together to guide TypeMonkey to his bananas. No typing needed! Unit 1 is free.",units:[JR_UNIT1,JR_UNIT2,JR_UNIT3,JR_UNIT4,JR_UNIT5,JR_UNIT6]};
+const BIGSTAIRS=["S######","...####","##...##","####..B"];
+const JR_UNIT7={name:"Creator",lessons:[
+{id:"jr21",title:"Remix!",sub:"steps and loops, mixed up",steps:[
+ {type:"talk",title:"Time to remix!",mood:"cheer",
+  body:`<p>You know SO much now: steps in order, loops, choices, banana boxes and your own ⭐ moves. In this unit we mix them all up in new ways, like a DJ remixing songs! 🎧</p>`,
+  say:"Let's start nice and easy."},
+ {type:"dance",title:"Warm-up wiggle",body:`<p>Watch the dance, then copy it. Three moves!</p>`,moves:["clap","jump","spin","wiggle"],target:["wiggle","spin","clap"],solution:{pattern:["wiggle","spin","clap"]},say:"Wiggle, spin, clap!"},
+ {type:"predict",title:"Guess the beat",body:`<p>Read the dance program. Which move comes next?</p>`,dance:{pattern:["jump","jump","wave"],times:2},ask:5,moves:["jump","wave","clap"],say:"Jump, jump, wave, jump, jump... then?"},
+ {type:"maze",title:"Loop the lake",grid:["S....","####.","B...."],dir:"E",blocks:[JF,JL,JRT,"rep"],max:8,solution:[jrep(4,JF),JRT,jrep(2,JF),JRT,jrep(4,JF)],say:"Across, down, and back again. Use loops for the long parts!"},
+ {type:"quiz",q:"Repeat 2 times: Clap, Jump. What does TypeMonkey do?",opts:["Clap, Jump, Clap, Jump","Clap, Clap, Jump, Jump","Clap, Jump"],a:0,why:"The whole inside part happens again: Clap, Jump, then Clap, Jump."},
+ {type:"order",title:"Party program",body:`<p>Put the party program in order.</p>`,lines:["Turn on the music","Repeat 3 times: clap","Take a bow"],why:"Music first, then the loop of claps, then the bow at the very end!"},
+ {type:"box",title:"Star collector",body:`<p>Get <b>stars</b> to 6 in only <b>2 taps</b>.</p>`,name:"stars",startVal:0,goal:6,ops:["+1","+3"],max:2,solution:["+3","+3"],say:"Which button is bigger?"},
+ {type:"done"}]},
+{id:"jr22",title:"Choice party",sub:"IF, ELSE and banana boxes together",steps:[
+ {type:"talk",title:"Choices everywhere",mood:"think",
+  body:`<p>Games make choices all the time. <b>IF</b> you have lives left, keep playing. <b>ELSE</b>, game over! Let's mix choices with boxes and mazes.</p>`,
+  say:"Remember: IF it's true, do the first thing. ELSE, do the other thing."},
+ {type:"sort",title:"Sky or ground?",rule:"IF it has wings ➜ ☁️ Sky<br>ELSE ➜ 🌱 Ground",bins:[{icon:"☁️",name:"Sky"},{icon:"🌱",name:"Ground"}],
+  items:[{icon:"🐦",bin:0},{icon:"🐘",bin:1,why:"No wings on an elephant! Ground."},{icon:"🦋",bin:0,why:"Butterflies have wings!"},{icon:"🐢",bin:1,why:"Turtles walk (slowly). Ground!"},{icon:"🐝",bin:0,why:"Bees have tiny wings. Buzz!"},{icon:"🐱",bin:1,why:"Cats don't have wings. Ground."}],
+  code:"if has_wings(animal):\n    sky.add(animal)\nelse:\n    ground.add(animal)",say:"Wings? Sky! No wings? Ground!"},
+ {type:"box",title:"Cookie time",body:`<p>The jar has 5 <b>cookies</b>. TypeMonkey eats some! Get the box down to 2 in <b>3 taps</b>.</p>`,name:"cookies",startVal:5,goal:2,ops:["-1"],max:3,solution:["-1","-1","-1"],say:"− 1 takes one cookie out. Nom!"},
+ {type:"quiz",q:"IF score is bigger than 5, say \"You win!\" ELSE say \"Try again\". The score is 5. What does it say?",opts:["Try again","You win!","Nothing"],a:0,why:"5 is not BIGGER than 5. It's the same! So the ELSE part happens."},
+ {type:"predict",title:"Smart guess",body:`<p>Forward, Forward, then the smart block, then Forward. Where will I stop?</p>`,grid:["S..#","##.#","##.#"],dir:"E",prog:[JF,JF,JIFR,JF],say:"Is there a tree in front of me after two steps?"},
+ {type:"maze",title:"Twisty trail",aim:"🟣 One loop and the smart block. Let it do all the turning!",grid:["S...#","###.#","#B..#","#####"],dir:"E",blocks:[JF,JL,JRT,JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],say:"Every step: tree ahead? Turn! Then Forward."},
+ {type:"done"}]},
+{id:"jr23",title:"Star power",sub:"your own moves, remixed",steps:[
+ {type:"talk",title:"⭐ is back!",mood:"cheer",
+  body:`<p>Remember <b>⭐ My move</b>? You build a move once, then use it again and again. Real coders call it a <b>function</b>.</p><p>Let's use ⭐ and loops for bigger adventures!</p>`,
+  say:"First, a loop dance to warm up."},
+ {type:"dance",title:"Loop warm-up",loop:true,body:`<p>Find the part that repeats. Put it in the loop and set how many times.</p>`,moves:["clap","jump","spin"],target:["clap","spin","clap","spin","clap","spin"],solution:{pattern:["clap","spin"],times:3},say:"Clap, spin... again and again!"},
+ {type:"maze",title:"Giant steps",func:true,grid:BIGSTAIRS,dir:"E",blocks:[JF,JL,JRT,JCALL],max:8,solution:{main:[JCALL,JCALL,JCALL],fn:[JRT,JF,JL,JF,JF]},
+  body:`<p>Each big stair is: turn right, step, turn left, step, step. Put it in ⭐ My move, then use ⭐ three times.</p>`,say:"Build the stair in ⭐ first!"},
+ {type:"predict",title:"Guess the move",body:`<p>Read the dance program. Which move comes next?</p>`,dance:{pattern:["wave","wiggle","wiggle"],times:2},ask:4,moves:["wave","wiggle","spin"],say:"Wave, wiggle, wiggle, wave... then?"},
+ {type:"quiz",q:"⭐ My move = Clap, Jump. Repeat 2 times: ⭐. How many moves does TypeMonkey do?",opts:["4","2","3"],a:0,why:"⭐ has 2 moves, and it runs 2 times. 2 + 2 is 4."},
+ {type:"maze",title:"Banana stairs",func:true,grid:["S######","..B####","##..B##","####..B"],dir:"E",blocks:[JF,JL,JRT,"until",JCALL],max:7,startFn:[JRT,JF,JL,JF,JF],solution:{main:[juntil(JCALL)],fn:[JRT,JF,JL,JF,JF]},say:"Your stair move is already in ⭐. Repeat it until every banana is gone!"},
+ {type:"order",title:"Make a move",body:`<p>How do you make your own block? Put the steps in order.</p>`,lines:["Tap ⭐ My move","Put blocks inside it","Use ⭐ in your program"],why:"Build the move first, then use it as many times as you like!"},
+ {type:"done"}]},
+{id:"jr24",title:"Code kitchen",sub:"boxes, loops and bug fixing",steps:[
+ {type:"talk",title:"Chef TypeMonkey",mood:"cheer",
+  body:`<p>Welcome to my kitchen! 👨‍🍳 Cooking is a lot like coding: recipes are programs, and the bowls are boxes that hold things.</p>`,
+  say:"Let's cook up some code!"},
+ {type:"box",title:"Pancake stack",body:`<p>Make a stack of 4 <b>pancakes</b> in <b>2 taps</b>.</p>`,name:"pancakes",startVal:0,goal:4,ops:["+1","+2"],max:2,solution:["+2","+2"],say:"Two big flips!"},
+ {type:"sort",title:"Smoothie or sandwich?",rule:"IF it's a fruit ➜ 🥤 Smoothie<br>ELSE ➜ 🥪 Sandwich",bins:[{icon:"🥤",name:"Smoothie"},{icon:"🥪",name:"Sandwich"}],
+  items:[{icon:"🍓",bin:0},{icon:"🧀",bin:1,why:"Cheese isn't a fruit. Sandwich!"},{icon:"🍌",bin:0,why:"Bananas are fruit. My favorite!"},{icon:"🥬",bin:1,why:"Lettuce is a vegetable. Sandwich!"},{icon:"🍍",bin:0,why:"Pineapple is a fruit!"},{icon:"🥚",bin:1,why:"An egg isn't a fruit. Sandwich!"}],
+  code:"if is_fruit(food):\n    smoothie.add(food)\nelse:\n    sandwich.add(food)"},
+ {type:"quiz",q:"pancakes = 3, then pancakes = pancakes × 2. How many pancakes now?",opts:["6","5","3"],a:0,why:"Doubling 3 makes 6. Yum!"},
+ {type:"box",title:"Coin doubler",body:`<p>Start with 1 <b>coin</b> and get to 10 in <b>4 taps</b>. You can add 1 or double!</p>`,name:"coins",startVal:1,goal:10,ops:["+1","x2"],max:4,solution:["x2","x2","+1","x2"],say:"Think backwards: what number doubles to make 10?"},
+ {type:"dance",title:"Buggy recipe dance",body:`<p>My cooking dance has a bug! Press <b>▶ Dance!</b>, then fix it.</p>`,moves:["clap","jump","spin","wave"],start:["wave","clap","clap","spin"],target:["wave","clap","jump","spin"],solution:{pattern:["wave","clap","jump","spin"]},say:"One move is wrong. Which one?"},
+ {type:"predict",title:"To the fridge",body:`<p>Where will I stop? Tap the square!</p>`,grid:["S...","#...","#..B"],dir:"E",prog:[jrep(3,JF),JRT,jrep(2,JF)],say:"Three steps, turn, two steps."},
+ {type:"done"}]},
+{id:"jr25",title:"Make your own level",sub:"you're the game designer",project:true,steps:[
+ {type:"talk",title:"You're the game designer!",mood:"cheer",
+  body:`<p>Real game makers build levels for other people to play. Now it's YOUR turn! Put me, some bananas 🍌 and some trees on the grid.</p><p>Try to make a level that needs a <b>loop</b> or a <b>turn</b>. Then press <b>▶ Play it!</b> and solve it yourself.</p>`,
+  say:"Easy, tricky, silly... it's your level!"},
+ {type:"build",title:"My level",say:"Pick a thing, then tap a square to put it there."},
+ {type:"order",title:"How game makers work",body:`<p>Put the game maker's steps in order.</p>`,lines:["Make the level","Play it yourself","Fix the tricky parts","Share it with a friend"],why:"Game makers always test their levels before they share them!"},
+ {type:"quiz",q:"What makes a really good level?",opts:["One you tested, so you know it can be solved","One where the banana can't be reached","One with no bananas at all"],a:0,why:"A good level is fun AND possible. Testing it yourself is how you know!"},
+ {type:"talk",title:"You're a real coder! 🏆",mood:"cheer",
+  body:`<p>WOW. You learned programs, loops, choices, boxes (variables), your own moves (functions) and debugging. Those are the same ideas real programmers use every day!</p><p><b>Ready for Python or JavaScript?</b> Ask a grown-up to help you open the <b>Python</b> or <b>JavaScript</b> course in TypeMonkey. There you'll type real code, and you already know how to think like a coder!</p>`,
+  say:"I'm SO proud of you. High five! ✋🍌"},
+ {type:"done"}]}
+]};
+
+const COURSE_JR={id:"jr",name:"TypeMonkey Jr.",blurb:"Puzzle adventures for ages 7–12. Snap blocks together to guide TypeMonkey to his bananas. No typing needed! Unit 1 is free.",units:[JR_UNIT1,JR_UNIT2,JR_UNIT3,JR_UNIT4,JR_UNIT5,JR_UNIT6,JR_UNIT7]};
