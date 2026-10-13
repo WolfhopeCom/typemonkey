@@ -536,6 +536,349 @@ html.calm *{animation:none!important;transition:none!important}
 .confetti i{position:absolute;top:0;width:9px;height:14px;border-radius:2px;animation:cfall var(--t) cubic-bezier(.3,.4,.6,1) var(--d) forwards;opacity:.95}
 @media (prefers-reduced-motion:reduce){.buddy .tm,.fin-stage .rays{animation:none}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* ===== 10-onboarding: first-run steps, Today card (goal ring + streak week), goal sheet ===== */
+body:has(.onb) .topbar,body:has(.onb) #foot{display:none}
+.app:has(.onb){padding-bottom:0}
+.onb{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;gap:14px;padding-top:calc(8px + env(safe-area-inset-top,0px))}
+.onb-top{display:flex;align-items:center;gap:8px;min-height:44px}
+.onb-top .progress{height:14px}
+.onb-top .progress span{background:var(--accent);transition:width .45s cubic-bezier(.3,1.3,.5,1)}
+.onb-gap{width:44px;flex:none}
+.onb-back{font-size:1.5rem;font-weight:800}
+.onb-skip{background:none;border:0;color:var(--muted);font-weight:800;font-size:.95rem;min-height:44px;min-width:44px;padding:0 6px;flex:none}
+.onb-talk{display:flex;gap:10px;align-items:flex-end}
+.onb-talk .bubble{animation:enterUp .35s cubic-bezier(.2,.8,.3,1) .1s both}
+.onb-m{flex:none;line-height:0}.onb-m .tm{width:72px;height:72px;transform-origin:50% 90%}
+.onb-hop .tm{animation:hop .55s ease-out .1s,breathe 3.6s ease-in-out .7s infinite}
+.onb-tilt .tm{animation:onbTilt 1.1s ease-in-out .1s,breathe 3.6s ease-in-out 1.2s infinite}
+@keyframes onbTilt{30%{transform:rotate(-12deg)}60%{transform:rotate(8deg)}}
+.onb-body{display:flex;flex-direction:column;gap:12px;flex:1}
+.onb-q{font-size:clamp(1.55rem,6.4vw,2rem);animation:enterUp .35s cubic-bezier(.2,.8,.3,1) both}
+.onb-opts{display:flex;flex-direction:column;gap:10px}
+.onb-opt{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;text-align:left;background:var(--surface);color:var(--fg);border:2px solid var(--line);border-radius:18px;padding:10px 14px;box-shadow:0 4px 0 var(--line);transition:transform .08s,border-color .15s,background .15s;animation:enterUp .38s cubic-bezier(.2,.8,.3,1) calc(.06s + var(--i,0) * .05s) both}
+.onb-opt:active,.onb-lang:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.onb-opt .oe{width:44px;height:44px;border-radius:14px;background:var(--surface2);display:grid;place-items:center;font-size:1.5rem;flex:none}
+.onb-opt .ot{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.onb-opt .ot b{font-family:var(--display);font-size:1.18rem;font-weight:800}
+.onb-opt .ot span{color:var(--muted);font-size:.88rem;font-weight:700}
+.onb-opt .oxp{flex:none;font-weight:900;font-size:.9rem;background:var(--surface2);border-radius:999px;padding:4px 10px;font-variant-numeric:tabular-nums}
+.onb-opt.sel,.onb-lang.sel{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface));box-shadow:0 4px 0 color-mix(in srgb,var(--accent) 70%,#000)}
+.onb-opt.sel .oe{background:var(--accent);animation:pop .35s ease}
+.onb-opt.sel .oxp{background:var(--accent);color:var(--accent-ink)}
+.onb-langs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.onb-lang{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-height:72px;min-width:0;text-align:left;background:var(--surface);color:var(--fg);border:2px solid var(--line);border-radius:16px;padding:10px 12px;box-shadow:0 4px 0 var(--line);animation:enterUp .38s cubic-bezier(.2,.8,.3,1) calc(.04s + var(--i,0) * .035s) both}
+.onb-lang b{font-family:var(--display);font-size:1.12rem;line-height:1.15}
+.onb-lang .tag{font-family:var(--mono);font-size:.72rem;color:var(--muted);overflow-wrap:anywhere;line-height:1.3}
+.onb-lang.rec{grid-column:1/-1;min-height:84px}
+.onb-lang.rec b{font-size:1.35rem}
+.onb-lang.kids:not(.sel){background:color-mix(in srgb,var(--banana) 35%,var(--surface));border-color:color-mix(in srgb,var(--banana) 70%,var(--line))}
+.onb-note{margin:0;color:var(--muted);font-weight:700;font-size:.9rem;text-align:center}
+.onb-foot{position:sticky;bottom:0;z-index:6;background:var(--bg);margin-inline:-16px;padding:10px 16px calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+.onb-cta{width:100%;min-height:54px;font-size:1.15rem;font-family:var(--display);letter-spacing:.01em}
+.onb-cta.onb-cta-big{min-height:60px;font-size:1.3rem}
+.onb-hello{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding-block:8px}
+.onb-hello h1{font-size:clamp(2rem,8vw,2.6rem);animation:enterUp .4s cubic-bezier(.2,.8,.3,1) .15s both}
+.onb-hello p{margin:0;color:var(--muted);font-weight:700;max-width:30ch;animation:enterUp .4s cubic-bezier(.2,.8,.3,1) .25s both}
+.onb-big{line-height:0}.onb-big .tm{width:150px;height:150px}
+.onb-wave .mwrap{animation:jumpIn .8s cubic-bezier(.3,.8,.3,1) both}
+.onb-wave .tm{transform-origin:50% 90%;animation:onbWave 1.4s ease-in-out .8s 2,breathe 3.4s ease-in-out 3.6s infinite}
+@keyframes onbWave{0%,100%{transform:rotate(0)}20%{transform:rotate(-10deg)}40%{transform:rotate(8deg)}60%{transform:rotate(-6deg)}80%{transform:rotate(4deg)}}
+.onb-fin{height:190px}
+.onb-sum{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;animation:enterUp .4s cubic-bezier(.2,.8,.3,1) .35s both}
+.onb-sum span{background:var(--surface);border:2px solid var(--line);border-radius:999px;padding:6px 14px;font-weight:800}
+@media (max-height:700px){.onb{gap:10px}.onb-opt{min-height:56px;padding-block:7px}.onb-opt .oe{width:40px;height:40px}.onb-m .tm{width:60px;height:60px}.onb-talk .bubble{padding:9px 12px}.onb-big .tm{width:120px;height:120px}.onb-fin{height:150px}.onb-lang{min-height:60px;padding:8px 10px}.onb-lang.rec{min-height:70px}}
+
+/* Today card: daily goal ring + this week's streak */
+.today{display:flex;align-items:center;gap:14px;width:100%;text-align:left;color:var(--fg);background:var(--surface);border:2px solid var(--line);border-radius:var(--r);padding:12px 14px;box-shadow:0 4px 0 var(--line);transition:transform .08s}
+.today:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.today.done{border-color:color-mix(in srgb,var(--leaf) 55%,var(--line));background:color-mix(in srgb,var(--leaf) 8%,var(--surface))}
+.tring{position:relative;width:68px;height:68px;flex:none;display:grid;place-items:center}
+.tring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.tring circle{fill:none;stroke-width:8}
+.tring .trk{stroke:var(--surface2)}
+.tring .bar{stroke:var(--accent);stroke-linecap:round;transition:stroke-dashoffset 1s cubic-bezier(.3,.9,.3,1),stroke .3s}
+.today.done .bar{stroke:var(--leaf)}
+.rin{position:relative;display:flex;flex-direction:column;align-items:center;line-height:1;font-variant-numeric:tabular-nums}
+.rin b{font-family:var(--display);font-size:1.3rem;font-weight:800}
+.rin small{font-size:.66rem;font-weight:800;color:var(--muted);margin-top:1px}
+.rin b.ok{color:var(--leaf);font-size:1.9rem}
+.today.cheer .tring{animation:pop .6s ease}
+.tbody{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.thead{display:flex;flex-direction:column;line-height:1.2}
+.thead b{font-family:var(--display);font-size:1.12rem}
+.thead span{color:var(--muted);font-size:.85rem;font-weight:700}
+.today.done .thead span{color:var(--leaf)}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;max-width:250px}
+.wd{display:flex;flex-direction:column;align-items:center;gap:2px}
+.wd i{width:100%;max-width:28px;aspect-ratio:1;border-radius:50%;background:var(--surface2);display:grid;place-items:center;font-style:normal;font-size:.85rem;line-height:1}
+.wd small{font-size:.62rem;font-weight:800;color:var(--muted);line-height:1}
+.wd.on i{background:color-mix(in srgb,var(--accent) 22%,var(--surface));box-shadow:inset 0 0 0 2px var(--accent)}
+.wd.now small{color:var(--accent)}
+.wd.now:not(.on) i{box-shadow:inset 0 0 0 2px var(--accent);background:transparent}
+.wd.fut i{opacity:.55}
+.goalhit{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 8px;width:100%;background:color-mix(in srgb,var(--leaf) 14%,var(--surface));border:2px solid var(--leaf);border-radius:14px;padding:8px 12px;animation:pop .5s ease .5s both}
+.goalhit span{font-size:1.3rem}.goalhit b{font-family:var(--display);font-size:1.1rem}.goalhit small{flex-basis:100%;color:var(--muted);font-weight:700}
+.onb-sheet{align-items:end}
+.onb-sheet .card{gap:10px;animation:sheetUp .25s ease;margin-bottom:env(safe-area-inset-bottom,0px)}
+.sheethead{display:flex;align-items:center;justify-content:space-between}
+#goalSeg button{min-width:40px;min-height:38px}
+
+/* ===== 20-delight: combo pill + chip, answer pop/shake, finish summary, streak milestone screen ===== */
+/* combo banner: pops in under the top bar, over the lesson progress */
+.tm-combo{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 62px);z-index:40;display:flex;align-items:center;gap:10px;padding:8px 18px 8px 12px;border-radius:999px;
+  background:linear-gradient(135deg,#FFB13B,#FA7A20 60%,#F2541B);color:#2A1300;box-shadow:0 6px 0 #B9420E,0 12px 24px -8px #F2541B99;
+  pointer-events:none;opacity:0;transform:translate(-50%,-30px) scale(.6);white-space:nowrap}
+.tm-combo.show{animation:tmComboIn 1.9s cubic-bezier(.3,1.4,.5,1) forwards}
+.tm-combo .tc-fire{font-size:1.9rem;line-height:1;display:inline-block;transform-origin:50% 90%;animation:tmFlick .5s ease-in-out infinite alternate}
+.tm-combo .tc-txt{display:flex;flex-direction:column;line-height:1.05}
+.tm-combo b{font-family:var(--display);font-weight:800;font-size:1.3rem;color:#fff;text-shadow:0 2px 0 #B9420E}
+.tm-combo small{font-weight:800;font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:#4A1E00}
+.tm-combo.lvl2{background:linear-gradient(135deg,#FFD34D,#FF8A1F 55%,#F2541B)}
+.tm-combo.lvl3{background:linear-gradient(135deg,#FFE27A,#FF7A1A 45%,#E8384F);box-shadow:0 6px 0 #A8263A,0 14px 30px -6px #E8384Faa}
+.tm-combo.lvl3 b{font-size:1.45rem}
+.tm-combo .tc-sp{position:absolute;font-style:normal;font-size:1rem;animation:tmTwinkle .9s ease-in-out infinite alternate}
+.tm-combo .tc-sp.s1{right:-8px;top:-10px}.tm-combo .tc-sp.s2{left:-6px;bottom:-10px;animation-delay:.35s}
+@keyframes tmComboIn{0%{opacity:0;transform:translate(-50%,-30px) scale(.6)}14%{opacity:1;transform:translate(-50%,0) scale(1.08)}22%{transform:translate(-50%,0) scale(1)}82%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,-16px) scale(.92)}}
+@keyframes tmFlick{from{transform:rotate(-6deg) scale(1)}to{transform:rotate(6deg) scale(1.12,1.06)}}
+@keyframes tmTwinkle{from{opacity:.3;transform:scale(.7) rotate(0)}to{opacity:1;transform:scale(1.15) rotate(25deg)}}
+html.calm .tm-combo.show,.tm-combo.show.calm{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){.tm-combo.show{opacity:1;transform:translate(-50%,0)}}
+
+/* small flame counter at the end of the lesson progress bar */
+.tm-chip{display:inline-flex;align-items:center;gap:2px;flex:none;font-weight:900;font-size:.95rem;color:var(--accent);font-variant-numeric:tabular-nums;min-width:44px;justify-content:center}
+.tm-chip b{font-family:var(--display);font-size:1.15rem;line-height:1}
+.tm-chip.bump{animation:tmBump .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes tmBump{0%{transform:scale(1)}40%{transform:scale(1.45) rotate(-8deg)}100%{transform:scale(1)}}
+.lessonbar .progress.hot span{background:linear-gradient(90deg,var(--leaf),#9BD34A 55%,var(--banana));position:relative;overflow:hidden}
+.lessonbar .progress.hot span::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,#fff8 50%,transparent 70%);transform:translateX(-100%);animation:tmSweep 1.6s ease-in-out infinite}
+@keyframes tmSweep{to{transform:translateX(100%)}}
+
+/* right answer: a little pop + shine; wrong: a soft side-to-side shake */
+.tm-pop{animation:tmPop .42s cubic-bezier(.3,1.6,.5,1) calc(var(--k,0) * 60ms) both;position:relative;overflow:hidden}
+.opt.tm-pop::after,.ln.tm-pop::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,#ffffff8c 50%,transparent 65%);transform:translateX(-110%);animation:tmShineX .7s ease-out .12s forwards;pointer-events:none}
+@keyframes tmPop{0%{transform:scale(1)}45%{transform:scale(1.045)}100%{transform:scale(1)}}
+@keyframes tmShineX{to{transform:translateX(110%)}}
+.tm-shake{animation:tmShake .42s ease both}
+@keyframes tmShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
+.console.tm-shine{animation:tmConsoleGlow .9s ease-out}
+@keyframes tmConsoleGlow{0%{box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--leaf) 90%,transparent)}100%{box-shadow:inset 0 0 0 2px transparent}}
+.console.tm-shake{animation:tmShake .38s ease}
+
+/* finish card: perfect lesson ribbon + best combo */
+.tm-fin{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%}
+.tm-perfect{display:flex;align-items:center;gap:10px;width:100%;justify-content:center;padding:10px 14px;border-radius:14px;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--banana) 55%,var(--surface)),color-mix(in srgb,var(--accent) 30%,var(--surface)));border:2px solid color-mix(in srgb,var(--banana) 80%,var(--accent));
+  animation:enterUp .45s cubic-bezier(.2,.8,.3,1) .45s both}
+.tm-perfect::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,#ffffffa0 50%,transparent 65%);transform:translateX(-110%);animation:tmShineX 1s ease-out 1.1s forwards;pointer-events:none}
+.tm-perfect .tp-star{font-size:1.9rem;line-height:1;animation:pop .6s ease 1s both}
+.tm-perfect .tp-t{display:flex;flex-direction:column;text-align:left;line-height:1.15}
+.tm-perfect b{font-family:var(--display);font-size:1.25rem;color:var(--fg)}
+.tm-perfect small{font-weight:700;color:var(--fg);opacity:.75;font-size:.85rem}
+.tm-best{font-weight:700;color:var(--muted);font-size:.95rem;animation:enterUp .4s cubic-bezier(.2,.8,.3,1) .6s both}
+.tm-best b{color:var(--accent)}
+
+/* streak milestone: full-screen warm celebration */
+.celebrate.tm-ms{z-index:65;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));overflow:auto;
+  background:radial-gradient(circle at 50% 30%,#FFE08A 0,#FFB347 38%,#FA7A20 72%,#D9480F 100%);color:#2A1300;animation:tmMsIn .35s ease both}
+.tm-ms.out{animation:tmMsOut .22s ease forwards}
+@keyframes tmMsIn{from{opacity:0}to{opacity:1}}
+@keyframes tmMsOut{to{opacity:0;transform:scale(1.04)}}
+.tm-ms-in{width:100%;max-width:400px;margin:auto;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px}
+.tm-ms-stage{position:relative;width:100%;height:clamp(190px,34vh,260px);display:grid;place-items:center}
+.tm-ms-rays{position:absolute;left:50%;top:50%;width:440px;height:440px;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 0deg,#fff5 0 9deg,transparent 9deg 22deg);animation:rays 22s linear infinite;
+  -webkit-mask:radial-gradient(circle closest-side,#000 20%,transparent 100%);mask:radial-gradient(circle closest-side,#000 20%,transparent 100%)}
+.tm-ms-fl{position:relative;width:clamp(120px,22vh,160px);aspect-ratio:100/120;animation:tmGrow 1s cubic-bezier(.3,1.5,.5,1) .15s both}
+.tm-flame{width:100%;height:100%;display:block;transform-origin:50% 95%;animation:tmFlame 1.1s ease-in-out 1.1s infinite alternate;filter:drop-shadow(0 8px 14px #B9420E88)}
+.tm-ms-n{position:absolute;left:0;right:0;bottom:12%;font-family:var(--display);font-weight:800;font-size:clamp(2.2rem,7vh,3.1rem);line-height:1;color:#fff;-webkit-text-stroke:1.5px #C2410C;paint-order:stroke fill;text-shadow:0 3px 0 #C2410C,0 0 16px #F2541B;animation:pop .6s ease .9s both}
+.tm-ms-mk{position:absolute;right:max(0px,calc(50% - 168px));bottom:-10px;width:118px;height:118px;filter:drop-shadow(0 6px 8px #B9420E66);animation:jumpIn .8s cubic-bezier(.3,.8,.3,1) .55s both}
+.tm-ms-mk .tm{width:100%;height:100%;animation:tmCheer .7s ease-in-out 1.4s infinite alternate;transform-origin:50% 90%}
+@keyframes tmGrow{0%{transform:scale(.15);opacity:0}60%{transform:scale(1.18);opacity:1}80%{transform:scale(.95)}100%{transform:scale(1)}}
+@keyframes tmFlame{from{transform:scale(1,1) skewX(-2deg)}to{transform:scale(1.04,1.08) skewX(2deg)}}
+@keyframes tmCheer{from{transform:translateY(0) rotate(-4deg)}to{transform:translateY(-8px) rotate(4deg)}}
+.tm-ms-label{font-size:.78rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#5A2600;animation:enterUp .4s ease .7s both}
+.tm-ms h2{font-size:clamp(1.9rem,8vw,2.4rem);color:#2A1300;animation:enterUp .45s cubic-bezier(.2,.8,.3,1) .8s both}
+.tm-ms p{margin:0;font-weight:800;font-size:1.1rem;color:#4A1E00;animation:enterUp .45s cubic-bezier(.2,.8,.3,1) .9s both}
+.tm-ms-week{display:flex;gap:6px;justify-content:center;margin-top:4px;animation:enterUp .45s ease 1s both}
+.tm-ms-week span{display:flex;flex-direction:column;align-items:center;gap:3px;font-weight:800;font-size:.75rem;color:#5A2600}
+.tm-ms-week i{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:1.05rem;background:#ffffff40;border:2px solid #ffffff70}
+.tm-ms-week .on i{background:#fff;border-color:#fff;box-shadow:0 3px 0 #C2410C55}
+.tm-ms-ban{font-weight:900;background:#fff;color:#2A1300;border-radius:999px;padding:6px 16px;box-shadow:0 3px 0 #C2410C66;animation:pop .6s ease 1.15s both}
+.tm-ms .tm-ms-ok{width:100%;max-width:320px;min-height:54px;font-size:1.15rem;margin-top:8px;background:#fff;color:#C2410C;box-shadow:0 5px 0 #C2410C;animation:enterUp .45s ease 1.25s both}
+.tm-ms .tm-ms-ok:active{box-shadow:0 2px 0 #C2410C}
+.tm-ms .tm-ms-ok:focus-visible{outline-color:#fff}
+
+/* Settings stays on one phone screen with the extra Vibration row */
+.setpage .setrow{padding-block:8px}
+
+/* ===== Course map v2: unit banners, dotted trail, treasure chests (see src/features/30-map.js) ===== */
+.unit.umap{--uc:#E8681A;--ubg:var(--surface);background:var(--ubg);padding-top:0;gap:6px}
+.unit.umap .unit-head.ubanner{position:sticky;top:var(--tbh,64px);z-index:4;margin:0 -14px 4px;padding:12px 14px;display:flex;align-items:center;gap:12px;flex-wrap:nowrap;
+  border-radius:calc(var(--r) - 1px) calc(var(--r) - 1px) 16px 16px;color:#fff;
+  background:radial-gradient(circle at 100% 0,#ffffff24 0 64px,transparent 65px),radial-gradient(circle at 100% 0,#ffffff14 0 104px,transparent 105px),linear-gradient(135deg,var(--uc),color-mix(in srgb,var(--uc) 78%,#000));
+  box-shadow:0 4px 0 color-mix(in srgb,var(--uc) 62%,#000)}
+.ubanner .ub-badge{flex:none;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:#ffffff2e;font-weight:900;font-size:1.35rem;font-family:var(--display,inherit);box-shadow:inset 0 -3px 0 #0000001f}
+.ubanner .ub-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.ubanner .ub-eye{font-size:.72rem;font-weight:900;letter-spacing:.09em;text-transform:uppercase;opacity:.92;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ubanner .ub-tag{background:#ffffff33;border-radius:999px;padding:1px 8px;letter-spacing:.05em;font-size:.66rem}
+.ubanner h3{font-size:1.12rem;line-height:1.2;color:#fff;margin:0;overflow-wrap:anywhere}
+.ubanner .ub-ring{flex:none;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;
+  background:conic-gradient(#fff calc(var(--p) * 360deg),#ffffff3d 0)}
+.ubanner .ub-ring b{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--uc) 82%,#000);font-size:.8rem;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.ubanner .ub-ring.full{background:conic-gradient(#FFD25C 360deg,#0000 0)}
+.ubanner .ub-ring.full b{background:#FFC845;color:#5A3B00;font-size:1.1rem}
+/* finished unit: soft golden card, golden badge */
+.unit.umap.ucomplete{--ubg:color-mix(in srgb,var(--banana) 9%,var(--surface));border:2px solid color-mix(in srgb,var(--banana) 70%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,var(--banana) 16%,transparent)}
+.unit.umap.ucomplete .ubanner{margin-inline:-14px}
+.unit.umap.ucomplete .ub-badge{background:#FFC845;color:#5A3B00}
+.unit.umap.ulocked .ubanner{filter:saturate(.55)}
+/* path + trail */
+.unit.umap .path{position:relative;gap:34px;padding-block:22px 10px}
+.unit.umap .path>.pnode{z-index:1}
+.unit.umap .path>.pnode.next{margin-top:30px}
+.unit.umap .pbtn.lesson[disabled]{opacity:1}
+.unit.umap .pbtn.lesson[disabled] .pic{opacity:.6}
+.unit.umap .pnode.locked .plabel b,.unit.umap .pnode.pro .plabel b{color:color-mix(in srgb,var(--fg) 70%,var(--ubg))}
+.unit.umap .plabel{background:var(--ubg);border-radius:10px;padding:2px 8px}
+.path>svg.trail{position:absolute;left:0;top:0;pointer-events:none;z-index:0;overflow:visible}
+.path>svg.trail path{fill:none;stroke:color-mix(in srgb,var(--line) 70%,var(--muted));stroke-width:7;stroke-linecap:round;stroke-dasharray:.1 12;opacity:.75}
+.path>svg.trail path.on{stroke:var(--leaf);opacity:1}
+/* treasure chest */
+.pnode.chest .pbtn.chestbtn{position:relative;width:88px;height:78px;border:0;border-radius:22px;padding:4px;background:transparent;box-shadow:none;display:grid;place-items:center;cursor:pointer}
+.pnode.chest .chestbtn:active{transform:translateY(3px)!important;box-shadow:none!important}
+.pnode.chest .chestbtn[disabled]{opacity:1;cursor:default}
+.chest-svg{width:76px;height:68px;overflow:visible;filter:drop-shadow(0 5px 0 #00000026)}
+.chest-svg .clid{transform-box:view-box;transform-origin:8px 30px;transition:transform .45s cubic-bezier(.3,1.6,.5,1)}
+.chest-svg .cglow{fill:#FFE680;opacity:0}
+.pnode.chest.locked .chest-svg,.pnode.chest.pro .chest-svg{filter:grayscale(.9) brightness(1.15) contrast(.7) drop-shadow(0 5px 0 #0000001a)}
+:root[data-theme="dark"] .pnode.chest.locked .chest-svg,:root[data-theme="dark"] .pnode.chest.pro .chest-svg{filter:grayscale(.9) brightness(.7) contrast(.8)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pnode.chest.locked .chest-svg,:root:not([data-theme="light"]) .pnode.chest.pro .chest-svg{filter:grayscale(.9) brightness(.7) contrast(.8)}}
+.chestbtn .clock{position:absolute;right:2px;bottom:4px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:.95rem;background:var(--surface);box-shadow:0 2px 0 var(--line)}
+.pnode.chest.ready .chestbtn::before{content:"";position:absolute;inset:-8px;border-radius:50%;pointer-events:none;background:radial-gradient(circle,color-mix(in srgb,var(--banana) 65%,transparent) 0,transparent 68%);animation:chestGlow 1.8s ease-in-out infinite}
+.pnode.chest .chest-svg{position:relative}
+.pnode.chest.ready .chest-svg{animation:chestWiggle 2.4s ease-in-out infinite;transform-origin:50% 90%}
+.pnode.chest.ready .plabel b{color:color-mix(in srgb,var(--accent) 80%,var(--fg))}
+.pnode.chest.opening .chest-svg{animation:chestShake .6s ease-in-out}
+.chest-svg .cloot{opacity:0;transition:opacity .3s}
+.pnode.chest.opened .chest-svg .clid{transform:translate(-4px,-15px) rotate(-22deg)}
+.pnode.chest.opened .chest-svg .cglow{opacity:.5}
+.pnode.chest.opened .chest-svg .cloot{opacity:1}
+.pnode.chest.opened .chestbtn{background:radial-gradient(circle,color-mix(in srgb,var(--banana) 30%,transparent) 0,transparent 66%)}
+.pnode.chest.opened .plabel span{color:color-mix(in srgb,var(--leaf) 85%,var(--fg));font-weight:800}
+@keyframes chestWiggle{0%,62%,100%{transform:rotate(0)}68%{transform:rotate(-7deg) scale(1.04)}74%{transform:rotate(6deg) scale(1.04)}80%{transform:rotate(-4deg)}86%{transform:rotate(2deg)}}
+@keyframes chestGlow{0%,100%{transform:scale(.9);opacity:.7}50%{transform:scale(1.1);opacity:1}}
+@keyframes chestShake{0%,100%{transform:none}20%{transform:translateX(-4px) rotate(-6deg)}40%{transform:translateX(4px) rotate(6deg)}60%{transform:translateX(-3px) rotate(-4deg) scale(1.08)}80%{transform:translateY(-6px) scale(1.12)}}
+.chest-pop{position:fixed;z-index:61;pointer-events:none;transform:translate(-50%,-20%);background:var(--banana);color:#2A1300;font-weight:900;font-size:1.05rem;padding:6px 14px;border-radius:999px;box-shadow:0 4px 0 color-mix(in srgb,var(--banana) 55%,#000);white-space:nowrap;animation:floatUp 1.5s ease-out forwards}
+.chest-pop span{color:#7A4E00;font-size:.85rem;margin-left:4px}
+html.calm .chest-pop{display:none}
+@media (prefers-reduced-motion:reduce){.chest-pop{display:none}}
+
+/* ===== 40-monkey: levels, mascot polish, profile ===== */
+/* living mascot: blink every few seconds; hop when tapped (both off in Calm mode / Reduce Motion via the core rules) */
+@keyframes tmBlink{0%,91%,100%{transform:scaleY(1)}94.5%{transform:scaleY(.08)}}
+.tm .tm-eyes{transform-box:fill-box;transform-origin:50% 55%;animation:tmBlink 5.2s ease-in-out infinite}
+@keyframes tmHop{0%{transform:translateY(0) scale(1)}22%{transform:translateY(2%) scale(1.08,.9)}50%{transform:translateY(-20%) scale(.95,1.07) rotate(-4deg)}78%{transform:translateY(0) scale(1.06,.94)}100%{transform:none}}
+.tm.tm-hop{animation:tmHop .55s cubic-bezier(.3,.7,.4,1)!important;transform-origin:50% 90%}
+.buddy .tm,.prof-stage .tm,#brandMonkey .tm{cursor:pointer}
+
+/* top bar: level chip on the mascot */
+#brandMonkey{position:relative;display:block;line-height:0;width:38px;height:38px;flex:none}
+#brandMonkey .tm{width:38px;height:38px;transform-origin:50% 90%}
+.tm-lvl{position:absolute;right:-7px;bottom:-4px;min-width:19px;height:19px;padding:0 4px;border-radius:999px;display:grid;place-items:center;font:900 .7rem/1 var(--body);font-variant-numeric:tabular-nums;color:#fff;background:var(--leaf);box-shadow:0 0 0 2px var(--bg);pointer-events:none}
+.tm-lvl.gold{background:var(--banana);color:#2A1300}
+.tm-lvl.legend{background:linear-gradient(135deg,#FFC845,#FF6FAE 60%,#7C5CFF);color:#fff}
+
+/* Home: slim level card */
+.lvcard{display:flex;align-items:center;gap:12px;width:100%;text-align:left;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px}
+.lvcard:active{transform:scale(.99)}
+.lvnum{flex:none;width:46px;height:46px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:color-mix(in srgb,var(--leaf) 16%,var(--surface));color:var(--leaf);font:800 1.35rem/1 var(--display);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--leaf) 45%,transparent)}
+.lvnum small{font:900 .58rem/1 var(--body);letter-spacing:.08em;margin-bottom:1px}
+.lvtext{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.lvtext b{font-family:var(--display);font-size:1.08rem;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lvbar,.prof-bar,.pc-bar{display:block;height:9px;border-radius:999px;background:var(--surface2);overflow:hidden}
+.lvbar>span,.prof-bar>span,.pc-bar>span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--leaf),color-mix(in srgb,var(--leaf) 60%,var(--banana)))}
+.lvsub{font-size:.8rem;font-weight:700;color:var(--muted)}
+.lvgo{flex:none;font-weight:800;font-size:.85rem;color:var(--accent)}
+@media (max-width:360px){.lvgo{display:none}}
+
+/* Profile */
+.prof{gap:14px}
+.prof-top{justify-content:space-between}
+.prof-hero{align-items:center;text-align:center;gap:6px;padding:0 0 18px;overflow:hidden;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--banana) 30%,var(--surface)) 0,var(--surface) 62%)}
+.prof-stage{position:relative;width:100%;height:calc(var(--ms) + 38px);display:grid;place-items:end center;padding-bottom:6px;overflow:hidden;
+  background:radial-gradient(ellipse 60% 18% at 50% 96%,color-mix(in srgb,var(--fg) 12%,transparent),transparent 70%)}
+.prof-stage .rays{position:absolute;left:50%;top:55%;width:420px;height:420px;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 0deg,color-mix(in srgb,var(--banana) 40%,transparent) 0 9deg,transparent 9deg 22deg);opacity:.55;animation:rays 28s linear infinite;-webkit-mask:radial-gradient(circle closest-side,#000 20%,transparent 100%);mask:radial-gradient(circle closest-side,#000 20%,transparent 100%)}
+.prof-stage .mwrap{position:relative}
+.prof-stage .tm{width:var(--ms);height:calc(var(--ms) * 1.13);transform-origin:50% 90%;animation:breathe 3.6s ease-in-out infinite}
+.prof-id{width:100%;padding:0 18px;display:flex;flex-direction:column;gap:6px;align-items:center}
+.prof-lv{display:inline-block;background:var(--leaf);color:#fff;font-weight:900;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:3px 12px}
+.prof-id h1{font-size:clamp(1.8rem,8vw,2.4rem)}
+.prof-bar{width:100%;height:14px;margin-top:4px}
+.prof-xp{width:100%;display:flex;justify-content:space-between;gap:8px;font-size:.85rem;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums}
+.ptiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.ptile{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 6px 9px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:1px;min-width:0}
+.ptile .pt-ic{font-size:1.3rem;line-height:1.2}
+.ptile b{font-family:var(--display);font-size:1.4rem;line-height:1.1;font-variant-numeric:tabular-nums;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.ptile b small{font-size:.8rem;color:var(--muted)}
+.ptile>span:last-child{font-size:.74rem;font-weight:800;color:var(--muted);line-height:1.2}
+.ptile.hot{border-color:color-mix(in srgb,var(--accent) 55%,var(--line));background:color-mix(in srgb,var(--accent) 9%,var(--surface))}
+.pw-head{display:flex;align-items:flex-end;justify-content:space-between;gap:8px}
+.pw-head h3{font-size:1.3rem}
+.pw-head .muted{font-size:.8rem;font-weight:700}
+.pw-bars{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;height:150px;align-items:end;border-bottom:1px solid var(--line);padding-bottom:0}
+.pw-col{height:100%;display:grid;grid-template-rows:18px 1fr 22px;align-items:end;justify-items:center;min-width:0}
+.pw-col .pw-bar{grid-row:2;width:min(28px,70%);border-radius:4px 4px 0 0;background:color-mix(in srgb,var(--accent) 45%,var(--surface2));align-self:end}
+.pw-col.today .pw-bar{background:var(--accent)}
+.pw-val{grid-row:1;font-size:.72rem;font-weight:800;color:var(--fg);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pw-lab{grid-row:3;font-size:.72rem;font-weight:800;color:var(--muted);align-self:center;white-space:nowrap}
+.pw-col.today .pw-lab{color:var(--fg)}
+.pw-bars{grid-template-rows:1fr}
+.pw-col{grid-template-rows:18px minmax(0,1fr) 22px}
+.pw-col .pw-bar{max-height:100%}
+.pw-empty{font-size:.88rem}
+.prof-road{gap:10px}
+.road{display:flex;gap:10px;overflow-x:auto;margin:0 -18px;padding:2px 18px 6px;scroll-snap-type:x proximity;scrollbar-width:none}
+.road::-webkit-scrollbar{display:none}
+.road-i{flex:none;width:104px;scroll-snap-align:start;background:var(--surface2);border-radius:14px;padding:8px 6px 10px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
+.road-i b{font-size:.78rem;line-height:1.15;min-height:2.3em;display:flex;align-items:center}
+.road-i .mini-monkey .tm{width:58px;height:66px}
+.road-i:not(.on) .mini-monkey{filter:grayscale(.85);opacity:.6}
+.road-i.next{box-shadow:inset 0 0 0 2px var(--accent)}
+.road-i.next .mini-monkey{filter:none;opacity:1}
+.road-i .pill{align-self:center}
+.prof-courses{gap:10px}
+.pcourse{display:flex;flex-direction:column;gap:6px;width:100%;text-align:left;background:var(--surface2);color:var(--fg);border:0;border-radius:12px;padding:10px 12px}
+.pc-t{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.pc-t b{font-family:var(--display);font-size:1.05rem}
+.pc-t span{font-size:.8rem;font-weight:700;color:var(--muted);white-space:nowrap}
+.pc-bar{height:8px;background:var(--surface)}
+.pbtns{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* Level-up celebration (uses the core .celebrate overlay so badge pop-ups wait their turn) */
+.celebrate.lvlup{background:color-mix(in srgb,#000 62%,transparent);z-index:31}
+.lvup-card{gap:8px;padding-top:0;animation:lvIn .45s cubic-bezier(.3,1.4,.5,1) both}
+@keyframes lvIn{from{opacity:0;transform:scale(.8) translateY(20px)}to{opacity:1;transform:none}}
+.lvup-stage{position:relative;width:calc(100% + 36px);margin:0 -18px 2px;height:200px;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 50% 58%,color-mix(in srgb,var(--banana) 60%,transparent),transparent 68%)}
+.lvup-stage .rays{position:absolute;left:50%;top:56%;width:440px;height:440px;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 0deg,color-mix(in srgb,var(--banana) 50%,transparent) 0 10deg,transparent 10deg 24deg);animation:rays 14s linear infinite;-webkit-mask:radial-gradient(circle closest-side,#000 25%,transparent 100%);mask:radial-gradient(circle closest-side,#000 25%,transparent 100%)}
+.lvup-stage .tm{position:relative;width:132px;height:150px;transform-origin:50% 90%;animation:lvGrow 1.2s cubic-bezier(.3,.8,.3,1) both,breathe 3s ease-in-out 1.3s infinite}
+@keyframes lvGrow{0%{transform:scale(.55);opacity:0}30%{transform:scale(.7) translateY(0);opacity:1}48%{transform:scale(.72) translateY(-14px)}62%{transform:scale(1.18,.92)}78%{transform:scale(.96,1.05) translateY(-4px)}100%{transform:none}}
+.lvup-sparks i{position:absolute;left:50%;top:54%;font-style:normal;font-size:1.15rem;opacity:0;animation:spark 1.6s ease-out var(--d) infinite}
+@keyframes spark{0%{opacity:0;transform:translate(-50%,-50%) rotate(var(--a)) translateY(-30px) scale(.4)}25%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) rotate(var(--a)) translateY(calc(var(--r) * -1)) scale(1.1)}}
+.lvup-num{font-size:2.4rem;color:var(--accent);animation:pop .6s ease .3s both}
+.lvup-title{font-family:var(--display);font-weight:800;font-size:1.45rem;line-height:1.1;margin-top:-6px}
+.lvup-card p{font-size:.95rem}
+.lvup-rewards{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.lvup-rewards .pill{font-size:.85rem;padding:4px 12px;text-transform:none;letter-spacing:0}
+.lvup-gift{display:flex;align-items:center;gap:10px;text-align:left;background:var(--surface2);border-radius:14px;padding:8px 12px;width:100%}
+.lvup-gift .mini-monkey .tm{width:56px;height:64px}
+.lvup-gift div:last-child{display:flex;flex-direction:column;min-width:0}
+.lvup-gift span{font-size:.82rem;color:var(--muted)}
+@media (max-height:700px){.lvup-stage{height:160px}.lvup-stage .tm{width:108px;height:122px}.lvup-num{font-size:2rem}}
+html.calm .lvup-sparks{display:none}
+@media (prefers-reduced-motion:reduce){.lvup-sparks{display:none}}
+/* dark mode: softer rays so the stage glows instead of turning muddy */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .lvup-stage .rays{opacity:.4}:root:not([data-theme="light"]) .prof-stage .rays{opacity:.3}}
+:root[data-theme="dark"] .lvup-stage .rays{opacity:.4}:root[data-theme="dark"] .prof-stage .rays{opacity:.3}
 
 </style>
 </head>
@@ -43435,7 +43778,7 @@ const BUG_INTRO=(level,what)=>({type:"talk",title:`🐛 Bug Lab · Level ${level
   body:`<p>${what}</p><p>All the code in Bug Lab is <b>Python</b> 🐍. For each one: press <b>▶ Run</b> to see what goes wrong, then fix the code until it does what it should. If you're stuck, hints come one at a time. Try to fix it without them!</p>`,
   say:"Finding bugs is a real programmer superpower. Let's train it!"});
 
-const COURSE_BUGLAB={id:"buglab",name:"Bug Lab",extra:true,blurb:"This code is broken. Fix it! Five levels, from typos to debugging a real mini-project. Hints come one at a time. In Python. Level 1 is free.",units:[
+const COURSE_BUGLAB={id:"buglab",name:"Bug Lab",extra:true,blurb:"This code is broken. Fix it! Seven levels, from typos to sneaky bugs and boss-level mini-projects. Hints come one at a time. In Python. Level 1 is free.",units:[
 {name:"Level 1 · Syntax slips",free:true,lessons:[
 {id:"bug1",title:"Syntax slips",sub:"missing colons, quotes and brackets",steps:[
  BUG_INTRO(1,"Level 1 bugs stop the program from running at all. Python can't understand the code, so it shows an error before anything prints. The error message is your best clue!"),
@@ -43544,9 +43887,54 @@ const COURSE_BUGLAB={id:"buglab",name:"Bug Lab",extra:true,blurb:"This code is b
   hints:["Ava gets C instead of A. Which check does Python try first?","The order of the checks matters: the first one that's true wins. Put the highest grade first.","For the average: <code class=\"i\">sum(scores)</code> on a dictionary adds up the <b>keys</b>. You want the values, rounded to 2 decimals."],
   explain:"1) The checks are in the wrong order: 95 is already >= 70, so it returns C. Check 90 first, then 80, then 70. 2) <code class=\"i\">sum(scores)</code> tries to add the names; use <code class=\"i\">sum(scores.values())</code>. 3) Round it: <code class=\"i\">round(..., 2)</code>.",
   hint:`def letter(score):\n    if score >= 90:\n        return "A"\n    elif score >= 80:\n        return "B"\n    elif score >= 70:\n        return "C"\n    else:\n        return "F"\n\nscores = {"Ava": 95, "Leo": 82, "Kai": 64}\nfor name in scores:\n    print(name, letter(scores[name]))\nprint("Average:", round(sum(scores.values()) / len(scores), 2))`},
+ {type:"done"}]}
+]},
+{name:"Level 6 · Sneaky bugs",lessons:[
+{id:"bug6",title:"Sneaky bugs",sub:"tiny mistakes Python happily runs",steps:[
+ BUG_INTRO(6,"Level 6 bugs are extra sneaky: Python runs them <b>without any error</b>, because the broken code is still real Python. It just doesn't mean what the coder wanted. Read each line slowly and ask: does this do what I think?"),
+ {type:"bug",title:"Countdown to liftoff",body:`<p>This should count 5, 4, 3, 2, 1 (each on its own line) and then print ${C("Liftoff!")}</p>`,
+  start:`n = 5\nwhile n > 1:\n    print(n)\n    n -= 1\nprint("Liftoff!")\n`,out:["5","4","3","2","1","Liftoff!"],
+  hints:["Run it. Which number is missing?","When n is 1, is <code class=\"i\">n > 1</code> true or false?"],
+  explain:"The loop stops as soon as <code class=\"i\">n > 1</code> is false, and that happens when n is 1, so 1 never prints. Use <code class=\"i\">while n > 0:</code> (or <code class=\"i\">n >= 1</code>). Another off-by-one!",
+  hint:`n = 5\nwhile n > 0:\n    print(n)\n    n -= 1\nprint("Liftoff!")`},
+ {type:"bug",title:"Wrong fruit bowl",body:`<p>Mo buys 4 more apples. It should print ${C("Apples: 7")} and ${C("Pears: 2")}</p>`,
+  start:`apples = 3\npears = 2\n\n# Mo buys 4 more apples\npears = pears + 4\n\nprint("Apples:", apples)\nprint("Pears:", pears)\n`,out:["Apples: 7","Pears: 2"],
+  hints:["Read the comment, then read the line under it. Do they match?","Which variable should get the extra 4?"],
+  explain:"The comment says apples, but the code changes <code class=\"i\">pears</code>. Python can't know what you meant! Update the right box: <code class=\"i\">apples = apples + 4</code>",
+  hint:`apples = 3\npears = 2\n\n# Mo buys 4 more apples\napples = apples + 4\n\nprint("Apples:", apples)\nprint("Pears:", pears)`},
+ {type:"bug",title:"Where's the dog?",body:`<p>This looks for "dog" in the list, so it should print ${C("Found dog: True")}</p>`,
+  start:`pets = ["cat", "dog", "fish"]\nfound = False\nfor p in pets:\n    if p == "dog":\n        found == True\nprint("Found dog:", found)\n`,out:["Found dog: True"],
+  hints:["The <code class=\"i\">if</code> works. Look at the line inside it.","Is <code class=\"i\">found == True</code> storing a value, or asking a question?"],
+  explain:"<code class=\"i\">==</code> <b>asks</b> \"are these equal?\" and then throws the answer away. To <b>store</b> a value, use one <code class=\"i\">=</code>: <code class=\"i\">found = True</code>",
+  hint:`pets = ["cat", "dog", "fish"]\nfound = False\nfor p in pets:\n    if p == "dog":\n        found = True\nprint("Found dog:", found)`},
+ {type:"bug",title:"The ride checker",body:`<p>Riders aged 10 or more go on the big ride. TypeMonkey will test it with age 9 (${C("Little kid ride")}) and age 12 (${C("Big kid ride")}).</p>`,
+  start:`age = input("Age: ")\nif age >= "10":\n    print("Big kid ride")\nelse:\n    print("Little kid ride")\n`,tests:[{input:"9",out:["Little kid ride"]},{input:"12",out:["Big kid ride"]}],
+  hints:["Try age 9. Why would 9 count as \"10 or more\"?","<code class=\"i\">input()</code> gives <b>text</b>. Text is compared letter by letter, and \"9\" comes after \"1\"."],
+  explain:"Comparing text works like the dictionary: <code class=\"i\">\"9\" >= \"10\"</code> is true because 9 comes after 1. Turn the answer into a number and compare with a number: <code class=\"i\">age = int(input(\"Age: \"))</code> and <code class=\"i\">if age >= 10:</code>",
+  hint:`age = int(input("Age: "))\nif age >= 10:\n    print("Big kid ride")\nelse:\n    print("Little kid ride")`},
+ {type:"done"}]}
+]},
+{name:"Level 7 · Boss bugs",lessons:[
+{id:"bug7",title:"Boss bugs",sub:"mini programs with several sneaky bugs",steps:[
+ BUG_INTRO(7,"Level 7: the boss level! Each mini program has <b>three bugs</b>, and most of them don't show an error. Fix one, run again, compare the output, repeat. You can do this!"),
+ {type:"bug",title:"The shopping cart",body:`<p>Adding an item that's already in the cart should add to how many there are. With 3 apples, 1 bread and 2 milk, it should print ${C("Items: 6")} and ${C("Total: 6.0")} <i>(3 bugs)</i></p>`,
+  start:`cart = {"apple": 2, "bread": 1}\nprices = {"apple": 0.5, "bread": 2.0, "milk": 1.25}\n\ndef add(item, qty):\n    cart[item] = qty\n\ndef total():\n    t = 0\n    for item in cart:\n        t += prices[item]\n    return t\n\nadd("milk", 2)\nadd("apple", 1)\nprint("Items:", len(cart))\nprint("Total:", total())\n`,out:["Items: 6","Total: 6.0"],
+  hints:["Start with <code class=\"i\">add()</code>: after adding 1 apple, how many apples are in the cart? Should it replace or add?","Then <code class=\"i\">total()</code>: 2 milks cost more than 1 milk. And <code class=\"i\">len(cart)</code> counts kinds of things, not how many."],
+  explain:"1) <code class=\"i\">cart[item] = qty</code> replaces the amount; use <code class=\"i\">cart[item] = cart.get(item, 0) + qty</code>. 2) Multiply by how many: <code class=\"i\">t += prices[item] * cart[item]</code>. 3) <code class=\"i\">len(cart)</code> is 3 kinds of things; count them all with <code class=\"i\">sum(cart.values())</code>.",
+  hint:`cart = {"apple": 2, "bread": 1}\nprices = {"apple": 0.5, "bread": 2.0, "milk": 1.25}\n\ndef add(item, qty):\n    cart[item] = cart.get(item, 0) + qty\n\ndef total():\n    t = 0\n    for item in cart:\n        t += prices[item] * cart[item]\n    return t\n\nadd("milk", 2)\nadd("apple", 1)\nprint("Items:", sum(cart.values()))\nprint("Total:", total())`},
+ {type:"bug",title:"The quiz scorer",body:`<p>The player answers 3 questions. Capital or small letters should both count. It prints the score, and ${C("Perfect!")} for 3 out of 3. <i>(3 bugs)</i></p>`,
+  start:`answers = ["b", "a", "c"]\nscore = 0\nfor i in range(1, len(answers)):\n    guess = input("Answer: ")\n    if guess == answers[i]:\n        score =+ 1\nprint(f"Score: {score}/{len(answers)}")\nif score == len(answers):\n    print("Perfect!")\n`,tests:[{input:"B\na\nc",out:["Score: 3/3","Perfect!"]},{input:"b\nc\nc",out:["Score: 2/3"]},{input:"a\nA\na",out:["Score: 1/3"]}],
+  hints:["Count the questions it asks. Where does <code class=\"i\">range(1, ...)</code> start? Lists start at 0!","Look very closely at <code class=\"i\">=+</code>. And what if the player types a capital <code class=\"i\">B</code>?"],
+  explain:"1) <code class=\"i\">range(1, 3)</code> skips question 0; use <code class=\"i\">range(len(answers))</code>. 2) <code class=\"i\">score =+ 1</code> means <code class=\"i\">score = +1</code>, so it's always 1. You want <code class=\"i\">score += 1</code>. 3) <code class=\"i\">\"B\" == \"b\"</code> is false, so make the guess small: <code class=\"i\">input(\"Answer: \").lower()</code>",
+  hint:`answers = ["b", "a", "c"]\nscore = 0\nfor i in range(len(answers)):\n    guess = input("Answer: ").lower()\n    if guess == answers[i]:\n        score += 1\nprint(f"Score: {score}/{len(answers)}")\nif score == len(answers):\n    print("Perfect!")`},
+ {type:"bug",title:"The pet simulator",body:`<p>Playing makes a pet 1 hungrier, food makes it 2 less hungry, and a pet is hungry when hunger is <b>more than</b> 5. It should print ${C("Kiki is happy with 2 toys")} and ${C("Mo is hungry with 2 toys")} <i>(3 bugs)</i></p>`,
+  start:`def make_pet(name, toys=[]):\n    return {"name": name, "hunger": 5, "toys": toys}\n\ndef feed(pet):\n    pet["hunger"] - 2\n\ndef play(pet, toy):\n    pet["toys"].append(toy)\n    pet["hunger"] += 1\n\ndef status(pet):\n    if pet["hunger"] >= 5:\n        mood = "hungry"\n    else:\n        mood = "happy"\n    print(pet["name"], "is", mood, "with", len(pet["toys"]), "toys")\n\nkiki = make_pet("Kiki")\nmo = make_pet("Mo")\nplay(kiki, "ball")\nplay(kiki, "rope")\nfeed(kiki)\nplay(mo, "bell")\nplay(mo, "drum")\nstatus(kiki)\nstatus(mo)\n`,out:["Kiki is happy with 2 toys","Mo is hungry with 2 toys"],
+  hints:["Both pets say 4 toys! The <code class=\"i\">toys=[]</code> list is made only once, so every pet shares the same one. Make a new list inside the function instead.","Next: does <code class=\"i\">pet[\"hunger\"] - 2</code> change anything? And is 5 \"more than 5\"?"],
+  explain:"1) A default <code class=\"i\">[]</code> is made once and shared by every pet. Use <code class=\"i\">toys=None</code>, then <code class=\"i\">if toys is None: toys = []</code>. 2) <code class=\"i\">pet[\"hunger\"] - 2</code> works out a number and throws it away; use <code class=\"i\">-= 2</code>. 3) \"More than 5\" is <code class=\"i\">> 5</code>, not <code class=\"i\">>= 5</code>.",
+  hint:`def make_pet(name, toys=None):\n    if toys is None:\n        toys = []\n    return {"name": name, "hunger": 5, "toys": toys}\n\ndef feed(pet):\n    pet["hunger"] -= 2\n\ndef play(pet, toy):\n    pet["toys"].append(toy)\n    pet["hunger"] += 1\n\ndef status(pet):\n    if pet["hunger"] > 5:\n        mood = "hungry"\n    else:\n        mood = "happy"\n    print(pet["name"], "is", mood, "with", len(pet["toys"]), "toys")\n\nkiki = make_pet("Kiki")\nmo = make_pet("Mo")\nplay(kiki, "ball")\nplay(kiki, "rope")\nfeed(kiki)\nplay(mo, "bell")\nplay(mo, "drum")\nstatus(kiki)\nstatus(mo)`},
  {type:"talk",title:"🏆 Bug Lab complete",mood:"cheer",
-  body:`<p>You fixed syntax errors, variable mix-ups, logic errors, programs with several bugs, and whole broken projects. That's real debugging, the skill programmers use every single day.</p>`,
-  say:"Bug squasher certified! 🐛🔨"},
+  body:`<p>You fixed syntax errors, variable mix-ups, logic errors, sneaky bugs that never show an error, and whole programs with three bugs each. That's real debugging, the skill programmers use every single day.</p>`,
+  say:"Boss bugs defeated! Bug squasher certified! 🐛🔨"},
  {type:"done"}]}
 ]}
 ]};
@@ -44703,7 +45091,70 @@ const JR_UNIT6={name:"Detective work",lessons:[
  {type:"done"}]}
 ]};
 
-const COURSE_JR={id:"jr",name:"TypeMonkey Jr.",blurb:"Puzzle adventures for ages 7–12. Snap blocks together to guide TypeMonkey to his bananas. No typing needed! Unit 1 is free.",units:[JR_UNIT1,JR_UNIT2,JR_UNIT3,JR_UNIT4,JR_UNIT5,JR_UNIT6]};
+const BIGSTAIRS=["S######","...####","##...##","####..B"];
+const JR_UNIT7={name:"Creator",lessons:[
+{id:"jr21",title:"Remix!",sub:"steps and loops, mixed up",steps:[
+ {type:"talk",title:"Time to remix!",mood:"cheer",
+  body:`<p>You know SO much now: steps in order, loops, choices, banana boxes and your own ⭐ moves. In this unit we mix them all up in new ways, like a DJ remixing songs! 🎧</p>`,
+  say:"Let's start nice and easy."},
+ {type:"dance",title:"Warm-up wiggle",body:`<p>Watch the dance, then copy it. Three moves!</p>`,moves:["clap","jump","spin","wiggle"],target:["wiggle","spin","clap"],solution:{pattern:["wiggle","spin","clap"]},say:"Wiggle, spin, clap!"},
+ {type:"predict",title:"Guess the beat",body:`<p>Read the dance program. Which move comes next?</p>`,dance:{pattern:["jump","jump","wave"],times:2},ask:5,moves:["jump","wave","clap"],say:"Jump, jump, wave, jump, jump... then?"},
+ {type:"maze",title:"Loop the lake",grid:["S....","####.","B...."],dir:"E",blocks:[JF,JL,JRT,"rep"],max:8,solution:[jrep(4,JF),JRT,jrep(2,JF),JRT,jrep(4,JF)],say:"Across, down, and back again. Use loops for the long parts!"},
+ {type:"quiz",q:"Repeat 2 times: Clap, Jump. What does TypeMonkey do?",opts:["Clap, Jump, Clap, Jump","Clap, Clap, Jump, Jump","Clap, Jump"],a:0,why:"The whole inside part happens again: Clap, Jump, then Clap, Jump."},
+ {type:"order",title:"Party program",body:`<p>Put the party program in order.</p>`,lines:["Turn on the music","Repeat 3 times: clap","Take a bow"],why:"Music first, then the loop of claps, then the bow at the very end!"},
+ {type:"box",title:"Star collector",body:`<p>Get <b>stars</b> to 6 in only <b>2 taps</b>.</p>`,name:"stars",startVal:0,goal:6,ops:["+1","+3"],max:2,solution:["+3","+3"],say:"Which button is bigger?"},
+ {type:"done"}]},
+{id:"jr22",title:"Choice party",sub:"IF, ELSE and banana boxes together",steps:[
+ {type:"talk",title:"Choices everywhere",mood:"think",
+  body:`<p>Games make choices all the time. <b>IF</b> you have lives left, keep playing. <b>ELSE</b>, game over! Let's mix choices with boxes and mazes.</p>`,
+  say:"Remember: IF it's true, do the first thing. ELSE, do the other thing."},
+ {type:"sort",title:"Sky or ground?",rule:"IF it has wings ➜ ☁️ Sky<br>ELSE ➜ 🌱 Ground",bins:[{icon:"☁️",name:"Sky"},{icon:"🌱",name:"Ground"}],
+  items:[{icon:"🐦",bin:0},{icon:"🐘",bin:1,why:"No wings on an elephant! Ground."},{icon:"🦋",bin:0,why:"Butterflies have wings!"},{icon:"🐢",bin:1,why:"Turtles walk (slowly). Ground!"},{icon:"🐝",bin:0,why:"Bees have tiny wings. Buzz!"},{icon:"🐱",bin:1,why:"Cats don't have wings. Ground."}],
+  code:"if has_wings(animal):\n    sky.add(animal)\nelse:\n    ground.add(animal)",say:"Wings? Sky! No wings? Ground!"},
+ {type:"box",title:"Cookie time",body:`<p>The jar has 5 <b>cookies</b>. TypeMonkey eats some! Get the box down to 2 in <b>3 taps</b>.</p>`,name:"cookies",startVal:5,goal:2,ops:["-1"],max:3,solution:["-1","-1","-1"],say:"− 1 takes one cookie out. Nom!"},
+ {type:"quiz",q:"IF score is bigger than 5, say \"You win!\" ELSE say \"Try again\". The score is 5. What does it say?",opts:["Try again","You win!","Nothing"],a:0,why:"5 is not BIGGER than 5. It's the same! So the ELSE part happens."},
+ {type:"predict",title:"Smart guess",body:`<p>Forward, Forward, then the smart block, then Forward. Where will I stop?</p>`,grid:["S..#","##.#","##.#"],dir:"E",prog:[JF,JF,JIFR,JF],say:"Is there a tree in front of me after two steps?"},
+ {type:"maze",title:"Twisty trail",aim:"🟣 One loop and the smart block. Let it do all the turning!",grid:["S...#","###.#","#B..#","#####"],dir:"E",blocks:[JF,JL,JRT,JIFR,"until"],max:3,solution:[juntil(JIFR,JF)],say:"Every step: tree ahead? Turn! Then Forward."},
+ {type:"done"}]},
+{id:"jr23",title:"Star power",sub:"your own moves, remixed",steps:[
+ {type:"talk",title:"⭐ is back!",mood:"cheer",
+  body:`<p>Remember <b>⭐ My move</b>? You build a move once, then use it again and again. Real coders call it a <b>function</b>.</p><p>Let's use ⭐ and loops for bigger adventures!</p>`,
+  say:"First, a loop dance to warm up."},
+ {type:"dance",title:"Loop warm-up",loop:true,body:`<p>Find the part that repeats. Put it in the loop and set how many times.</p>`,moves:["clap","jump","spin"],target:["clap","spin","clap","spin","clap","spin"],solution:{pattern:["clap","spin"],times:3},say:"Clap, spin... again and again!"},
+ {type:"maze",title:"Giant steps",func:true,grid:BIGSTAIRS,dir:"E",blocks:[JF,JL,JRT,JCALL],max:8,solution:{main:[JCALL,JCALL,JCALL],fn:[JRT,JF,JL,JF,JF]},
+  body:`<p>Each big stair is: turn right, step, turn left, step, step. Put it in ⭐ My move, then use ⭐ three times.</p>`,say:"Build the stair in ⭐ first!"},
+ {type:"predict",title:"Guess the move",body:`<p>Read the dance program. Which move comes next?</p>`,dance:{pattern:["wave","wiggle","wiggle"],times:2},ask:4,moves:["wave","wiggle","spin"],say:"Wave, wiggle, wiggle, wave... then?"},
+ {type:"quiz",q:"⭐ My move = Clap, Jump. Repeat 2 times: ⭐. How many moves does TypeMonkey do?",opts:["4","2","3"],a:0,why:"⭐ has 2 moves, and it runs 2 times. 2 + 2 is 4."},
+ {type:"maze",title:"Banana stairs",func:true,grid:["S######","..B####","##..B##","####..B"],dir:"E",blocks:[JF,JL,JRT,"until",JCALL],max:7,startFn:[JRT,JF,JL,JF,JF],solution:{main:[juntil(JCALL)],fn:[JRT,JF,JL,JF,JF]},say:"Your stair move is already in ⭐. Repeat it until every banana is gone!"},
+ {type:"order",title:"Make a move",body:`<p>How do you make your own block? Put the steps in order.</p>`,lines:["Tap ⭐ My move","Put blocks inside it","Use ⭐ in your program"],why:"Build the move first, then use it as many times as you like!"},
+ {type:"done"}]},
+{id:"jr24",title:"Code kitchen",sub:"boxes, loops and bug fixing",steps:[
+ {type:"talk",title:"Chef TypeMonkey",mood:"cheer",
+  body:`<p>Welcome to my kitchen! 👨‍🍳 Cooking is a lot like coding: recipes are programs, and the bowls are boxes that hold things.</p>`,
+  say:"Let's cook up some code!"},
+ {type:"box",title:"Pancake stack",body:`<p>Make a stack of 4 <b>pancakes</b> in <b>2 taps</b>.</p>`,name:"pancakes",startVal:0,goal:4,ops:["+1","+2"],max:2,solution:["+2","+2"],say:"Two big flips!"},
+ {type:"sort",title:"Smoothie or sandwich?",rule:"IF it's a fruit ➜ 🥤 Smoothie<br>ELSE ➜ 🥪 Sandwich",bins:[{icon:"🥤",name:"Smoothie"},{icon:"🥪",name:"Sandwich"}],
+  items:[{icon:"🍓",bin:0},{icon:"🧀",bin:1,why:"Cheese isn't a fruit. Sandwich!"},{icon:"🍌",bin:0,why:"Bananas are fruit. My favorite!"},{icon:"🥬",bin:1,why:"Lettuce is a vegetable. Sandwich!"},{icon:"🍍",bin:0,why:"Pineapple is a fruit!"},{icon:"🥚",bin:1,why:"An egg isn't a fruit. Sandwich!"}],
+  code:"if is_fruit(food):\n    smoothie.add(food)\nelse:\n    sandwich.add(food)"},
+ {type:"quiz",q:"pancakes = 3, then pancakes = pancakes × 2. How many pancakes now?",opts:["6","5","3"],a:0,why:"Doubling 3 makes 6. Yum!"},
+ {type:"box",title:"Coin doubler",body:`<p>Start with 1 <b>coin</b> and get to 10 in <b>4 taps</b>. You can add 1 or double!</p>`,name:"coins",startVal:1,goal:10,ops:["+1","x2"],max:4,solution:["x2","x2","+1","x2"],say:"Think backwards: what number doubles to make 10?"},
+ {type:"dance",title:"Buggy recipe dance",body:`<p>My cooking dance has a bug! Press <b>▶ Dance!</b>, then fix it.</p>`,moves:["clap","jump","spin","wave"],start:["wave","clap","clap","spin"],target:["wave","clap","jump","spin"],solution:{pattern:["wave","clap","jump","spin"]},say:"One move is wrong. Which one?"},
+ {type:"predict",title:"To the fridge",body:`<p>Where will I stop? Tap the square!</p>`,grid:["S...","#...","#..B"],dir:"E",prog:[jrep(3,JF),JRT,jrep(2,JF)],say:"Three steps, turn, two steps."},
+ {type:"done"}]},
+{id:"jr25",title:"Make your own level",sub:"you're the game designer",project:true,steps:[
+ {type:"talk",title:"You're the game designer!",mood:"cheer",
+  body:`<p>Real game makers build levels for other people to play. Now it's YOUR turn! Put me, some bananas 🍌 and some trees on the grid.</p><p>Try to make a level that needs a <b>loop</b> or a <b>turn</b>. Then press <b>▶ Play it!</b> and solve it yourself.</p>`,
+  say:"Easy, tricky, silly... it's your level!"},
+ {type:"build",title:"My level",say:"Pick a thing, then tap a square to put it there."},
+ {type:"order",title:"How game makers work",body:`<p>Put the game maker's steps in order.</p>`,lines:["Make the level","Play it yourself","Fix the tricky parts","Share it with a friend"],why:"Game makers always test their levels before they share them!"},
+ {type:"quiz",q:"What makes a really good level?",opts:["One you tested, so you know it can be solved","One where the banana can't be reached","One with no bananas at all"],a:0,why:"A good level is fun AND possible. Testing it yourself is how you know!"},
+ {type:"talk",title:"You're a real coder! 🏆",mood:"cheer",
+  body:`<p>WOW. You learned programs, loops, choices, boxes (variables), your own moves (functions) and debugging. Those are the same ideas real programmers use every day!</p><p><b>Ready for Python or JavaScript?</b> Ask a grown-up to help you open the <b>Python</b> or <b>JavaScript</b> course in TypeMonkey. There you'll type real code, and you already know how to think like a coder!</p>`,
+  say:"I'm SO proud of you. High five! ✋🍌"},
+ {type:"done"}]}
+]};
+
+const COURSE_JR={id:"jr",name:"TypeMonkey Jr.",blurb:"Puzzle adventures for ages 7–12. Snap blocks together to guide TypeMonkey to his bananas. No typing needed! Unit 1 is free.",units:[JR_UNIT1,JR_UNIT2,JR_UNIT3,JR_UNIT4,JR_UNIT5,JR_UNIT6,JR_UNIT7]};
 
 /* Hands-on code challenges for Python, SQL, C# and C++ (graded by actually running the learner's code).
    Each is inserted into its lesson just before the Output Rush game (or before the reward screen). */
@@ -54581,7 +55032,7 @@ function settingsPage(){SFX.stopMusic();
       ${Remind.ok()?`<div class="setrow"><b>Daily reminder <small>${st.remind?"skipped on days you practice":"a nudge to keep your streak"}</small></b><div class="setbtns">${seg("remind",st.remind?"on":"off",[["off","Off"],["on","On"]])}${st.remind?`<select id="remindAt" class="remindat" aria-label="Reminder time">${[7,8,12,15,16,17,18,19,20].map(h=>`<option value="${h}" ${+st.remindAt===h?"selected":""}>${h===12?"12 pm":h>12?(h-12)+" pm":h+" am"}</option>`).join("")}</select>`:""}</div></div>`:""}
     </div>
     <div class="card setlist">
-      <div class="setrow"><b>${S.pro?"✓ Full version unlocked":"Full version <small>one-time ${STORE.price}</small>"}</b><div class="setbtns">${S.pro?"":`<button class="btn banana sm" id="sbuy">Unlock</button>`}<button class="btn ghost sm" id="restore">Restore</button></div></div>
+      <div class="setrow"><b>${S.pro?"✓ Full version unlocked":`Full version <small>one-time ${STORE.price}</small>`}</b><div class="setbtns">${S.pro?"":`<button class="btn banana sm" id="sbuy">Unlock</button>`}<button class="btn ghost sm" id="restore">Restore</button></div></div>
       <div class="setrow"><b>Progress <small>${S.done.length} lessons · ${S.xp} XP · ${S.bananas} 🍌</small></b><div class="setbtns"><button class="btn sm" id="sbackup">Back up</button><button class="btn ghost sm" id="reset">Reset…</button></div></div>
       <div id="confirm"></div>
     </div>
@@ -54798,6 +55249,657 @@ function playground(lang="js"){SFX.stopMusic();
 /* ---------- v1.1 feature modules (src/features/*.js, inlined by build.py). They may wrap or replace functions above. ---------- */
 /* --- 00-readme.js --- */
 /* v1.1 feature modules live here. Each file is inlined into the app script after the core code. */
+
+/* --- 10-onboarding.js --- */
+/* ---------- 10-onboarding: first-run welcome, daily XP goal ring and streak week strip ----------
+   Hooks (all wraps, no edits to app.html):
+     save()          -> credits any XP gained since the last save to today's S.xpDays entry (and spots the daily goal being reached)
+     renderStats()   -> same bookkeeping, so a Cloud sync that swaps S never counts as "XP earned today"
+     home()          -> brand-new users get the onboarding instead; everyone else gets a "Today" card (ring + week)
+     finish()        -> adds a "Daily goal reached!" line to the lesson-complete card on the lesson that crosses the goal
+     settingsPage()  -> adds a compact "Daily goal" 10/20/30/50 row
+   State: S.onboarded, S.profile={why,level,firstCourse}, S.settings.goal, S.xpDays={"Y-M-D":xp}, S.goalHit, S.goalCheered */
+
+const GOALS=[[10,"Casual","about 5 min a day","🌱"],[20,"Regular","about 10 min a day","🍌"],[30,"Serious","about 15 min a day","💪"],[50,"Intense","about 20 min a day","🚀"]];
+const goalXp=()=>{const g=+(S.settings&&S.settings.goal);return GOALS.some(x=>x[0]===g)?g:20};
+const todayKey=()=>dayStr(new Date());
+const xpToday=()=>((S.xpDays||{})[todayKey()]||0);
+const ONB_CALM=()=>calmMotion()||!!(S.settings&&S.settings.calm);
+
+/* ---- XP per day ---- */
+const XPD={s:S,xp:S.xp,crossed:false};
+function keyDate(k){const [y,m,d]=String(k).split("-").map(Number);return new Date(y,(m||1)-1,d||1)}
+function trackXp(){
+  if(S!==XPD.s){XPD.s=S;XPD.xp=S.xp;return}           // a whole new state (reset, restore, cloud merge): not "earned today"
+  const gain=(+S.xp||0)-(+XPD.xp||0);XPD.xp=S.xp;if(gain<=0)return;
+  const t=todayKey(),D=S.xpDays=S.xpDays&&typeof S.xpDays==="object"?S.xpDays:{};
+  const before=D[t]||0;D[t]=before+gain;
+  const old=Date.now()-60*864e5;for(const k of Object.keys(D))if(keyDate(k).getTime()<old)delete D[k];
+  const g=goalXp();if(before<g&&D[t]>=g&&S.goalHit!==t){S.goalHit=t;XPD.crossed=true}
+}
+{const _save=save;save=function(){try{trackXp()}catch(e){}return _save.apply(this,arguments)}}
+{const _rs=renderStats;renderStats=function(){try{trackXp()}catch(e){}return _rs.apply(this,arguments)}}
+
+/* ---- Streak week (Mon..Sun) ---- */
+function practicedDays(){
+  const set=new Set(Object.entries(S.xpDays||{}).filter(([,v])=>v>0).map(([k])=>k));
+  if(S.lastDay&&S.streak>0){const L=keyDate(S.lastDay);for(let i=0;i<Math.min(S.streak,14);i++)set.add(dayStr(new Date(L.getFullYear(),L.getMonth(),L.getDate()-i)))}
+  return set;
+}
+function liveStreak(){const t=todayKey(),y=dayStr(new Date(Date.now()-864e5));return S.lastDay===t||S.lastDay===y?S.streak:0}
+function weekInfo(){
+  const now=new Date(),dow=(now.getDay()+6)%7,P=practicedDays(),N=["M","T","W","T","F","S","S"],F=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+  return N.map((n,i)=>{const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()-dow+i),k=dayStr(d);
+    return {n,full:F[i],key:k,on:P.has(k),today:i===dow,future:i>dow}});
+}
+
+/* ---- Today card on Home ---- */
+const RING_C=2*Math.PI*27;
+let ringShown={day:null,frac:0};
+function todayCard(){
+  const g=goalXp(),x=xpToday(),frac=Math.min(1,x/g),done=x>=g,sk=liveStreak(),W=weekInfo();
+  const start=ringShown.day===todayKey()?ringShown.frac:0;
+  const head=sk?`🔥 ${sk}-day streak`:W.some(d=>d.on&&!d.future)?"Start a new streak!":"Start your streak!";
+  const sub=done?"Goal reached! 🎉":x?`${g-x} XP to go today`:"Do a lesson to fill the ring";
+  return `<button class="today ${done?"done":""}" id="todayCard" aria-label="Today: ${x} of ${g} XP. ${sk?sk+" day streak. ":""}Tap to change your daily goal.">
+    <span class="tring" aria-hidden="true"><svg viewBox="0 0 64 64"><circle class="trk" cx="32" cy="32" r="27"/><circle class="bar" cx="32" cy="32" r="27" stroke-dasharray="${RING_C.toFixed(2)}" stroke-dashoffset="${(RING_C*(1-start)).toFixed(2)}" data-to="${(RING_C*(1-frac)).toFixed(2)}"/></svg>
+      <span class="rin">${done?`<b class="ok">✓</b>`:`<b>${x}</b><small>of ${g}</small>`}</span></span>
+    <span class="tbody"><span class="thead"><b>${head}</b><span>${sub}</span></span>
+      <span class="week">${W.map(d=>`<span class="wd ${d.on?"on":""} ${d.today?"now":""} ${d.future?"fut":""}" title="${d.full}${d.on?": practiced":""}"><i>${d.on?"🔥":""}</i><small>${d.n}</small></span>`).join("")}</span></span>
+  </button>`;
+}
+function wireToday(){
+  const card=$("#todayCard");if(!card)return;
+  const bar=card.querySelector(".bar"),to=bar.dataset.to;
+  const fin=()=>{bar.setAttribute("stroke-dashoffset",to)};
+  if(ONB_CALM())fin();else requestAnimationFrame(()=>requestAnimationFrame(fin));
+  ringShown={day:todayKey(),frac:Math.min(1,xpToday()/goalXp())};
+  card.onclick=goalSheet;
+  const t=todayKey();
+  if(S.goalHit===t&&S.goalCheered!==t&&xpToday()>=goalXp()){S.goalCheered=t;save();
+    setTimeout(()=>{if(!card.isConnected)return;card.classList.add("cheer");sfx("tada");toast("🎯 Daily goal reached! Great job!");if(!ONB_CALM())confetti(90)},ONB_CALM()?100:900)}
+}
+function goalSheet(){
+  const g=goalXp();const box=document.createElement("div");box.className="gate onb-sheet";box.setAttribute("role","dialog");box.setAttribute("aria-label","Daily goal");
+  box.innerHTML=`<div class="card"><div class="sheethead"><h2>Daily goal</h2><button class="x" id="gsx" aria-label="Close">×</button></div>
+    <p class="muted">How much XP do you want each day? One lesson is about 30–60 XP.</p>
+    <div class="onb-opts">${GOALS.map(([v,n,m,e])=>`<button class="onb-opt ${v===g?"sel":""}" data-g="${v}" aria-pressed="${v===g}"><span class="oe">${e}</span><span class="ot"><b>${n}</b><span>${v} XP · ${m}</span></span></button>`).join("")}</div></div>`;
+  document.body.appendChild(box);
+  const close=()=>box.remove();
+  box.onclick=e=>{if(e.target===box)close()};box.querySelector("#gsx").onclick=close;
+  box.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>{S.settings.goal=+b.dataset.g;save();close();toast(`Daily goal: ${b.dataset.g} XP a day 🎯`);if(rerender===home)home()});
+}
+
+/* ---- Onboarding ---- */
+const needsOnboarding=()=>!S.onboarded&&!(S.done||[]).length&&!S.xp&&!Object.keys(S.progress||{}).length;
+const ONB={step:0,why:null,level:null,course:null,goal:null};
+const WHY=[["fun","🎉","Just for fun","Make cool stuff"],["school","🎒","For school","Classes and homework"],["job","💼","For a job or career","Get job-ready skills"],["kid","🧒","For my kid / I'm a kid","Ages 7 to 12"]];
+const LEVEL=[["new","🌱","I'm brand new","Never written code"],["little","🌿","I know a little","I've tried it before"],["code","🌳","I already code","I know another language"]];
+function onbCourses(){return COURSES.filter(c=>c.units&&!c.extra&&!c.soon)}
+function onbRec(){
+  const has=id=>onbCourses().some(c=>c.id===id);
+  const r=ONB.why==="kid"?"jr":(ONB.why==="school"||ONB.level==="little")?"py":"js";
+  return has(r)?r:onbCourses()[0].id;
+}
+const REC_WHY={jr:"TypeMonkey Jr. has puzzles made just for kids. No typing needed!",py:"Python reads almost like English. It's a great first language!",js:"JavaScript runs every website. You'll see your code work right away!"};
+function onbShell(inner,{mood="happy",say="",anim="",cta="Continue",ctaOff=false,back=true,id=""}){
+  const N=5,pct=Math.round(ONB.step/N*100);
+  $("#foot").innerHTML="";
+  $("#screen").innerHTML=`<div class="onb" data-step="${ONB.step}" id="onb">
+    <div class="onb-top">${back&&ONB.step?`<button class="x onb-back" id="onbBack" aria-label="Back">←</button>`:`<span class="onb-gap"></span>`}
+      <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><span style="width:${pct}%"></span></div>
+      <button class="onb-skip" id="onbSkip">Skip</button></div>
+    ${say?`<div class="onb-talk"><span class="onb-m ${anim}">${monkey(mood)}</span><div class="bubble">${say}</div></div>`:""}
+    <div class="onb-body">${inner}</div>
+    <div class="onb-foot"><button class="btn onb-cta" id="onbGo" ${ctaOff?"disabled":""}>${cta}</button></div>
+  </div>`;
+  $("#onbSkip").onclick=onbSkip;
+  if($("#onbBack"))$("#onbBack").onclick=()=>{ONB.step--;onbRender()};
+  window.scrollTo(0,0);
+}
+function onbPick(sel,key,after){
+  $$(sel+" [data-v]").forEach(b=>b.onclick=()=>{ONB[key]=b.dataset.v;$$(sel+" [data-v]").forEach(x=>{const on=x===b;x.classList.toggle("sel",on);x.setAttribute("aria-pressed",on)});
+    $("#onbGo").disabled=false;if(after)after(b.dataset.v)});
+}
+const optCards=(list,key)=>list.map(([v,e,t,s],i)=>`<button class="onb-opt ${ONB[key]===v?"sel":""}" data-v="${v}" aria-pressed="${ONB[key]===v}" style="--i:${i}"><span class="oe">${e}</span><span class="ot"><b>${t}</b><span>${esc(s)}</span></span></button>`).join("");
+function onbRender(){
+  const s=ONB.step;
+  if(s===0){
+    onbShell(`<div class="onb-hello"><div class="onb-big onb-wave">${withPet("cheer")}</div>
+      <h1>Hi! I'm TypeMonkey!</h1><p>I'll teach you to code with tiny lessons, games and bananas. It's easy, and it's fun!</p></div>`,{cta:"Let's go!",back:false});
+    $("#onbGo").onclick=()=>{ONB.step=1;onbRender()};
+  }else if(s===1){
+    onbShell(`<h1 class="onb-q">What brings you here?</h1><div class="onb-opts" id="oWhy">${optCards(WHY,"why")}</div>`,{say:"First, a quick question!",anim:"onb-hop",ctaOff:!ONB.why});
+    onbPick("#oWhy","why",v=>{const t=$(".onb-talk .bubble");if(t)t.textContent={fun:"Fun is the best reason! 🎉",school:"Great! I can help with school.",job:"Awesome! Let's build real skills.",kid:"Yay! I love coding with kids! 🍌"}[v]});
+    $("#onbGo").onclick=()=>{ONB.course=null;ONB.step=2;onbRender()};
+  }else if(s===2){
+    onbShell(`<h1 class="onb-q">How much coding do you know?</h1><div class="onb-opts" id="oLvl">${optCards(LEVEL,"level")}</div>`,{say:"Any answer is great. We start easy!",mood:"think",anim:"onb-tilt",ctaOff:!ONB.level});
+    onbPick("#oLvl","level");
+    $("#onbGo").onclick=()=>{ONB.course=null;ONB.step=3;onbRender()};
+  }else if(s===3){
+    const rec=onbRec();if(!ONB.course)ONB.course=rec;
+    const cs=onbCourses().sort((a,b)=>(b.id===rec)-(a.id===rec));
+    onbShell(`<h1 class="onb-q">Pick your first course</h1><div class="onb-langs" id="oLang">${cs.map((c,i)=>`<button class="onb-lang ${c.id===rec?"rec":""} ${c.kids?"kids":""} ${ONB.course===c.id?"sel":""}" data-v="${c.id}" aria-pressed="${ONB.course===c.id}" style="--i:${i}">${c.id===rec?`<span class="pill go">⭐ Best for you</span>`:""}<b>${esc(c.name)}</b><span class="tag">${esc(c.tag)}</span></button>`).join("")}</div>
+      <p class="onb-note">You can try the others any time.</p>`,{say:REC_WHY[rec]||"This one is a great start!",anim:"onb-hop"});
+    onbPick("#oLang","course");
+    $("#onbGo").onclick=()=>{ONB.step=4;onbRender()};
+  }else if(s===4){
+    if(!ONB.goal)ONB.goal=String(goalXp());
+    onbShell(`<h1 class="onb-q">Pick a daily goal</h1><div class="onb-opts" id="oGoal">${GOALS.map(([v,n,m,e],i)=>`<button class="onb-opt ${ONB.goal==v?"sel":""}" data-v="${v}" aria-pressed="${ONB.goal==v}" style="--i:${i}"><span class="oe">${e}</span><span class="ot"><b>${n}</b><span>${m}</span></span><span class="oxp">${v} XP</span></button>`).join("")}</div>
+      <p class="onb-note">A little every day is the secret! You can change this in Settings.</p>`,{say:"How much do you want to practice each day?",anim:"onb-tilt"});
+    onbPick("#oGoal","goal");
+    $("#onbGo").onclick=()=>{ONB.step=5;onbSave(true);onbRender()};
+  }else{
+    const c=courseById(ONB.course)||onbCourses()[0];const g=goalXp();
+    onbShell(`<div class="onb-hello"><div class="fin-stage onb-fin" aria-hidden="true"><div class="rays"></div>${monkey("cheer")}</div>
+      <h1>You're all set!</h1><p>Your first lesson takes about 3 minutes. Let's write some code!</p>
+      <div class="onb-sum"><span>📚 ${esc(c.name)}</span><span>🎯 ${g} XP a day</span></div></div>`,{cta:"Start my first lesson ▶",back:true});
+    $("#onbGo").classList.add("onb-cta-big");
+    $("#onbGo").onclick=()=>onbStart(c);
+    if(!ONB_CALM())setTimeout(()=>confetti(70),250);sfx("complete");
+  }
+}
+function onbSave(done){
+  S.profile={...(S.profile||{}),why:ONB.why,level:ONB.level,firstCourse:ONB.course};
+  if(ONB.goal)S.settings.goal=+ONB.goal;
+  const c=courseById(ONB.course);if(c&&c.units&&!c.extra)S.lastCourse=c.id;
+  if(done)S.onboarded=true;save();
+}
+function onbStart(c){
+  onbSave(true);
+  const nu=nextUp(c);
+  if(nu&&nu.l.steps&&status(c,nu)!=="pro")startLesson(nu.l.id);else coursePage(c.id);
+}
+function onbSkip(){S.onboarded=true;if(ONB.why||ONB.level)onbSave(true);else save();home()}
+function onboarding(){ONB.step=0;rerender=onboarding;try{SFX.stopMusic()}catch(e){}onbRender()}
+
+/* ---- Home wrap: onboarding first, then the Today card ---- */
+{const _home=home;home=function(){
+  if(needsOnboarding())return onboarding();
+  if(!S.onboarded&&((S.done||[]).length||S.xp))S.onboarded=true;   // long-time users: never ask
+  const r=_home.apply(this,arguments);
+  try{const st=$("#screen>.stack");if(st&&!$("#todayCard")){
+    const html=todayCard(),anchor=$("#daily")||(st.querySelector(".continue")||{}).nextElementSibling||st.querySelector(".buddy");
+    if(anchor)anchor.insertAdjacentHTML("beforebegin",html);else st.insertAdjacentHTML("afterbegin",html);wireToday()}}catch(e){console.warn(e)}
+  return r}}
+
+/* ---- Lesson finish: say so when this lesson reached the daily goal ---- */
+{const _finish=finish;finish=function(){XPD.crossed=false;const r=_finish.apply(this,arguments);
+  try{if(XPD.crossed){XPD.crossed=false;const card=$("#screen .card");const rw=card&&card.querySelector(".reward");
+    if(rw)rw.insertAdjacentHTML("afterend",`<div class="goalhit" role="status"><span>🎯</span><b>Daily goal reached!</b><small>${xpToday()} / ${goalXp()} XP today</small></div>`)}}catch(e){}
+  return r}}
+
+/* ---- Settings: daily goal row ---- */
+{const _sp=settingsPage;settingsPage=function(){const r=_sp.apply(this,arguments);
+  try{const list=$("#screen .setlist");if(list&&!$("#goalSeg")){const g=goalXp();
+    list.insertAdjacentHTML("afterbegin",`<div class="setrow"><b>Daily goal <small>XP a day</small></b><div class="seg" role="radiogroup" id="goalSeg" aria-label="Daily goal in XP">${GOALS.map(([v,n])=>`<button role="radio" aria-checked="${v===g}" data-v="${v}" aria-label="${n}: ${v} XP a day">${v}</button>`).join("")}</div></div>`);
+    $$("#goalSeg button").forEach(b=>b.onclick=()=>{S.settings.goal=+b.dataset.v;save();settingsPage()})}}catch(e){console.warn(e)}
+  return r}}
+
+/* --- 20-delight.js --- */
+/* ===== 20-delight: in-lesson combos, haptics, streak milestones, answer micro-animations =====
+   Hooks (no edits to src/app.html):
+   - every answer: a MutationObserver on #screen sees each new `.feedback` inside `#fb` (good = right, bad/oops = miss).
+     The FIRST feedback of a step decides it, so "solved first try / without a miss" is what counts.
+   - shell()        wrapped: adds the small 🔥 combo chip to the lesson bar
+   - renderStep()   wrapped: starts the combo record (cur.earned.cmb, so it survives leaving and resuming a lesson)
+   - finish()       wrapped: perfect-lesson bonus + combo summary on the finish card, haptics
+   - bumpStreak()   wrapped: streak milestones (3, 7, 14, 30, 50, 100 days) -> full-screen celebration once per streak run
+   - showBadge()    wrapped: heavy haptic when a badge pops
+   - settingsPage() wrapped: compact "Vibration" On/Off row under Sounds
+   Public: haptic(kind) / window.haptic(kind) with kind "tap" | "success" | "warning" | "heavy" (never throws). */
+
+/* ---------- Haptics: Capacitor Haptics in the app, navigator.vibrate on the web (Android), else nothing ---------- */
+const HAPTIC_PAT={tap:8,success:[14,60,22],warning:[24],heavy:[30,40,60]};
+let hapticLast=0;
+function hapticPlugin(){try{const C=window.Capacitor;return C&&C.isNativePlatform&&C.isNativePlatform()&&C.Plugins&&C.Plugins.Haptics||null}catch(e){return null}}
+function hapticsAvailable(){try{return !!hapticPlugin()||typeof navigator.vibrate==="function"}catch(e){return false}}
+function haptic(kind="tap"){
+  try{
+    if(S&&S.settings&&S.settings.haptics===false)return false;
+    if(kind==="tap"){const now=Date.now();if(now-hapticLast<40)return false;hapticLast=now}
+    const H=hapticPlugin();
+    if(H){let p;
+      if(kind==="success")p=H.notification({type:"SUCCESS"});
+      else if(kind==="warning")p=H.notification({type:"WARNING"});
+      else p=H.impact({style:kind==="heavy"?"HEAVY":kind==="medium"?"MEDIUM":"LIGHT"});
+      if(p&&typeof p.catch==="function")p.catch(()=>{});return true}
+    if(typeof navigator.vibrate==="function")return !!navigator.vibrate(HAPTIC_PAT[kind]||HAPTIC_PAT.tap);
+  }catch(e){}
+  return false;
+}
+window.haptic=haptic;
+/* light tap when a tile, token, line or Jr. block is placed */
+document.addEventListener("click",e=>{try{const t=e.target.closest&&e.target.closest("#ttray .tile,#tbuild .tile,.token,.slot.filled,.lines .ln,.palette .blk,.bin,.repadd,.dchip,.chip");if(t&&!t.disabled&&$(".lessonbar"))haptic("tap")}catch(_){}},true);
+
+/* ---------- Combo: "🔥 3 in a row!" inside a lesson ---------- */
+const COMBO_TYPES=new Set(["quiz","fill","order","code","bug","maze","dance","sort","box","predict"]);
+const COMBO_AT=n=>n===3||n===5||(n>=10&&n%5===0);
+const calmNow=()=>{try{return document.documentElement.classList.contains("calm")||matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){return false}};
+function comboRec(){if(!cur||!cur.earned)return null;if(!cur.earned.cmb)cur.earned.cmb={n:0,b:0,m:0,d:[],u:cur.step>0?1:0};return cur.earned.cmb}
+window.tmCombo=()=>cur&&cur.earned&&cur.earned.cmb||null;   // for tests and other modules
+
+function comboLine(n){const kid=cur&&cur.c&&cur.c.kids;
+  if(n>=10)return kid?"Super coder!":"Unstoppable!";if(n>=5)return kid?"Wow wow wow!":"Amazing!";return kid?"Keep going!":"Nice streak!"}
+function comboSound(n){const seq=n>=10?[2,3,4,5,6,7,8]:n>=5?[3,4,5,6,7]:[3,4,5];
+  const t0=cur&&cur.c&&cur.c.kids?620:380;   // after the right-answer chime (Jr. plays a longer tada)
+  seq.forEach((k,i)=>setTimeout(()=>sfx("ding",k),t0+i*85));}
+function comboBanner(n){
+  let el=$("#tmCombo");
+  if(!el){el=document.createElement("div");el.id="tmCombo";el.className="tm-combo";el.setAttribute("role","status");el.setAttribute("aria-live","polite");document.body.appendChild(el)}
+  const lvl=n>=10?3:n>=5?2:1;
+  el.className="tm-combo lvl"+lvl;el.innerHTML=`<span class="tc-fire" aria-hidden="true">🔥</span><span class="tc-txt"><b>${n} in a row!</b><small>${comboLine(n)}</small></span>${lvl>1?'<i class="tc-sp s1" aria-hidden="true">✨</i><i class="tc-sp s2" aria-hidden="true">✨</i>':""}`;
+  void el.offsetWidth;el.classList.add("show");clearTimeout(el._h);el._h=setTimeout(()=>el.classList.remove("show"),calmNow()?2200:1900);
+}
+function comboChip(){
+  const bar=$(".lessonbar");if(!bar)return;const c=comboRec();let chip=$("#tmChip");
+  if(!chip){chip=document.createElement("span");chip.id="tmChip";chip.className="tm-chip";chip.setAttribute("aria-label","Answers in a row");bar.appendChild(chip)}
+  const n=c?c.n:0;chip.hidden=n<2;chip.innerHTML=`🔥<b>${n}</b>`;
+  const pr=bar.querySelector(".progress");if(pr)pr.classList.toggle("hot",n>=3);
+}
+function bumpChip(){const chip=$("#tmChip");if(!chip||calmNow())return;chip.classList.remove("bump");void chip.offsetWidth;chip.classList.add("bump")}
+
+/* small motion on the answer itself: a pop on what you got right, a gentle shake on a miss (fills gaps in the motion pack) */
+function answerFx(ok){
+  if(calmNow())return;
+  const sel=ok?".opt.right,.slot.right,#ans .ln.right":".opt.wrong,.slot.wrong,#ans .ln.wrong";
+  $$(sel).forEach((el,i)=>{el.classList.remove("tm-pop","tm-shake");void el.offsetWidth;el.style.setProperty("--k",i);el.classList.add(ok?"tm-pop":"tm-shake")});
+  const con=$("#out-c");if(con&&cur&&cur.l.steps[cur.step]&&/^(code|bug)$/.test(cur.l.steps[cur.step].type)){con.classList.remove("tm-shine","tm-shake");void con.offsetWidth;con.classList.add(ok?"tm-shine":"tm-shake")}
+}
+
+function judge(ok){
+  if(!cur||!cur.l||!$(".lessonbar"))return;
+  const s=cur.l.steps[cur.step];if(!s||!COMBO_TYPES.has(s.type)||s.sandbox)return;
+  const c=comboRec();if(!c)return;
+  answerFx(ok);haptic(ok?"success":"warning");
+  if(c.d.includes(cur.step))return;              // this step already counted (2nd try, "try with fewer", …)
+  if(s.type==="bug"&&!ok)return;                 // Bug Lab asks you to run the broken code first: not a miss
+  c.d.push(cur.step);
+  if(ok){
+    const peek=$("#peek");if(peek&&peek.textContent.trim())return;   // solved with help: fine, but no combo point
+    c.n++;c.b=Math.max(c.b,c.n);comboChip();bumpChip();
+    if(COMBO_AT(c.n)){comboBanner(c.n);comboSound(c.n);setTimeout(()=>haptic(c.n>=10?"heavy":"success"),cur.c.kids?620:380)}
+  }else{c.m++;c.n=0;comboChip();const b=$("#tmCombo");if(b)b.classList.remove("show")}   // quietly back to zero, no message
+}
+new MutationObserver(muts=>{
+  for(const m of muts)for(const n of m.addedNodes){
+    if(n.nodeType!==1||!n.classList.contains("feedback")||!n.parentElement||n.parentElement.id!=="fb")continue;
+    try{judge(n.classList.contains("good"))}catch(e){}
+  }
+}).observe($("#screen"),{childList:true,subtree:true});
+
+{const _shell=shell;shell=function(inner){const r=_shell.apply(this,arguments);try{const s=cur&&cur.l&&cur.l.steps[cur.step];if(s&&s.type!=="done")comboChip()}catch(e){}return r}}
+{const _rs=renderStep;renderStep=function(){try{comboRec()}catch(e){}return _rs.apply(this,arguments)}}
+
+/* ---------- Lesson complete: perfect lesson + best combo on the existing finish card ---------- */
+{const _fin=finish;finish=function(){
+  let info=null;
+  try{const c=cur&&cur.earned&&cur.earned.cmb;
+    if(c){const judged=c.d.length,perfect=!c.u&&judged>=2&&c.m===0;info={perfect,best:c.b,bonus:0,kind:cur.review?"review":cur.daily?"challenge":cur.l.project?"project":"lesson"};
+      if(perfect&&!cur.review&&!cur.daily){cur.earned.ban+=5;info.bonus=5}}}catch(e){}
+  const r=_fin.apply(this,arguments);
+  try{
+    if(info&&(info.perfect||info.best>=2)){
+      const box=document.createElement("div");box.className="tm-fin";
+      box.innerHTML=(info.perfect?`<div class="tm-perfect"><span class="tp-star" aria-hidden="true">⭐</span><span class="tp-t"><b>Perfect ${info.kind}!</b><small>No misses${info.bonus?` · +${info.bonus} 🍌 bonus`:""}</small></span></div>`:"")+
+        (info.best>=2?`<div class="tm-best"><span aria-hidden="true">🔥</span> Best combo: <b>${info.best} in a row</b></div>`:"");
+      const rw=$("#screen .reward"),h=$("#screen .card h2");
+      if(rw)rw.after(box);else if(h)h.after(box);
+      if(info.perfect)setTimeout(()=>sfx("badge"),1100);
+    }
+    const big=info&&info.perfect||!!$("#screen .cert");
+    haptic("success");if(big)setTimeout(()=>haptic("heavy"),700);
+  }catch(e){}
+  return r;
+}}
+
+/* ---------- Streak milestones: 3, 7, 14, 30, 50, 100 days in a row ---------- */
+const STREAK_MS=[[3,10,"3 days in a row!","You're warming up! 🔥"],[7,25,"7 days in a row!","You're on fire!"],[14,40,"14 days in a row!","Two whole weeks. Unstoppable!"],
+  [30,75,"30 days in a row!","A whole month of code. Legendary!"],[50,100,"50 days in a row!","Fifty days! TypeMonkey is amazed."],[100,200,"100 days in a row!","One hundred days! You're a coding legend. 👑"]];
+const parseDay=s=>{const [y,m,d]=String(s).split("-").map(Number);return new Date(y,m-1,d)};
+function streakRun(){if(!S.lastDay||!S.streak)return null;const d=parseDay(S.lastDay);d.setDate(d.getDate()-(S.streak-1));return dayStr(d)}   // first day of this streak
+function msRec(){const run=streakRun();let m=S.streakMs;if(!m||typeof m!=="object"||m.run!==run||!Array.isArray(m.got)){m=S.streakMs={run,got:[]}}return m}
+/* first launch with this feature: streaks already reached before don't pop up again */
+if(!S.streakMs)S.streakMs={run:streakRun(),got:STREAK_MS.filter(x=>x[0]<=S.streak).map(x=>x[0])};
+let msPending=null;
+function checkStreakMilestone(){
+  const m=msRec();const hit=STREAK_MS.filter(x=>x[0]<=S.streak&&!m.got.includes(x[0]));if(!hit.length)return null;
+  hit.forEach(x=>m.got.push(x[0]));const top=hit[hit.length-1];S.bananas+=top[1];   // the caller saves right after bumpStreak()
+  msPending=top;setTimeout(showStreakMilestone,1600);return top;
+}
+function flameSvg(){return `<svg class="tm-flame" viewBox="0 0 100 120" aria-hidden="true"><defs><linearGradient id="tmfo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFB13B"/><stop offset="1" stop-color="#F2541B"/></linearGradient><linearGradient id="tmfi" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF3B0"/><stop offset="1" stop-color="#FFC845"/></linearGradient></defs>
+  <path fill="url(#tmfo)" d="M50 3C60 27 86 42 86 76c0 25-17 41-36 41S14 101 14 76c0-19 10-30 17-42 2 14 8 21 15 23-3-20 0-36 4-54z"/>
+  <path fill="url(#tmfi)" d="M51 50c6 13 19 21 19 39 0 15-9 23-20 23s-20-8-20-23c0-10 6-17 10-23 1 8 5 12 9 13-2-10-1-20 2-29z"/></svg>`}
+function showStreakMilestone(){
+  if(!msPending)return;
+  if($(".celebrate")||document.hidden){setTimeout(showStreakMilestone,700);return}
+  const [days,ban,title,line]=msPending;msPending=null;
+  const today=new Date(),wk=[];for(let i=6;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);wk.push([d.toLocaleDateString(undefined,{weekday:"narrow"}),i<Math.min(days,7)])}
+  const g=document.createElement("div");g.className="celebrate tm-ms";g.setAttribute("role","dialog");g.setAttribute("aria-modal","true");g.setAttribute("aria-label",`${days} day streak`);
+  g.innerHTML=`<div class="tm-ms-in">
+    <div class="tm-ms-stage" aria-hidden="true"><div class="tm-ms-rays"></div><div class="tm-ms-fl">${flameSvg()}<b class="tm-ms-n">${days}</b></div><div class="tm-ms-mk">${monkey("cheer")}</div></div>
+    <div class="tm-ms-label">Streak milestone</div><h2>${title}</h2><p>${line}</p>
+    <div class="tm-ms-week" aria-hidden="true">${wk.map(([l,on])=>`<span class="${on?"on":""}"><i>${on?"🔥":""}</i>${l}</span>`).join("")}</div>
+    <div class="tm-ms-ban">+${ban} 🍌 bonus bananas</div>
+    <button class="btn tm-ms-ok" id="msOk">Continue</button></div>`;
+  document.body.appendChild(g);
+  sfx("badge");setTimeout(()=>sfx("success"),520);haptic("heavy");setTimeout(()=>haptic("success"),600);
+  setTimeout(()=>confetti(110),350);
+  const ok=g.querySelector("#msOk");try{ok.focus({preventScroll:true})}catch(e){}
+  ok.onclick=()=>{g.classList.add("out");setTimeout(()=>{g.remove();if(typeof showBadge==="function")showBadge()},calmNow()?0:220)};
+}
+window.tmStreakMilestone=checkStreakMilestone;
+{const _bs=bumpStreak;bumpStreak=function(){const r=_bs.apply(this,arguments);try{checkStreakMilestone()}catch(e){}return r}}
+
+/* ---------- Badges: a strong buzz when one pops ---------- */
+{const _sb=showBadge;showBadge=function(){const had=!!$(".celebrate"),n=badgeQueue.length;const r=_sb.apply(this,arguments);try{if(!had&&n&&$(".celebrate"))haptic("heavy")}catch(e){}return r}}
+
+/* ---------- Settings: Vibration On/Off (only where the device can buzz) ---------- */
+{const _sp=settingsPage;settingsPage=function(){const r=_sp.apply(this,arguments);
+  try{const snd=$("#sound");if(!snd||!hapticsAvailable()||$("#haptics"))return r;
+    const on=S.settings.haptics!==false,row=document.createElement("div");row.className="setrow";
+    row.innerHTML=`<b>Vibration</b><div class="seg" role="radiogroup" id="haptics" aria-label="Vibration">${[["on","On"],["off","Off"]].map(([v,l])=>`<button role="radio" aria-checked="${(on?"on":"off")===v}" data-v="${v}">${l}</button>`).join("")}</div>`;
+    snd.closest(".setrow").after(row);
+    row.querySelectorAll("button").forEach(b=>b.onclick=()=>{S.settings.haptics=b.dataset.v==="on";save();if(S.settings.haptics)haptic("success");settingsPage()});
+  }catch(e){}
+  return r}}
+
+/* --- 30-map.js --- */
+/* ===== Course map v2 (Duolingo-style path) =====
+   Runs right after the core coursePage() has drawn the page and dresses it up, so the core page code stays as it is:
+   - every unit gets a colorful banner ("UNIT 2", name, 3/5 ring, Free/Pro). The banner sticks to the top while you scroll its unit.
+   - a dotted trail joins the lesson circles along the zigzag (green behind you, grey ahead)
+   - a treasure chest waits after the last lesson of each unit; finish the unit, tap it, get bananas + XP (once)
+   - finished units get a soft golden look
+   Hook points: wraps coursePage (global), uses status/flat/S/save/sfx/toast/bananaBurst/calmMotion from the core. */
+const MAP_COLORS=["#E8681A","#7357E8","#138A7E","#D9406F","#2C7FD0","#4E9A2E"];
+const MAP_JR_COLORS=["#3E9A45","#1E8FCB","#4F82BE","#C2702A","#3B3970","#D9548F"];   // Jungle, Beach, Snowy peaks, Desert, Space, Candy
+const CHEST_REWARD={ban:20,xp:10};
+const chestKey=(c,u,ui)=>c.id+":"+((u.lessons[0]&&u.lessons[0].id)||ui);
+const mapCalm=()=>calmMotion()||document.documentElement.classList.contains("calm");
+function unitInfo(c,L,ui){
+  const items=L.filter(x=>x.ui===ui&&x.l.steps),u=c.units[ui];
+  const done=items.filter(x=>S.done.includes(x.l.id)).length;
+  return {u,items,done,total:items.length,complete:items.length>0&&done===items.length,locked:!u.free&&!S.pro};
+}
+function chestState(c,ui,info){
+  if(!info.total)return null;
+  if((S.chests||{})[chestKey(c,info.u,ui)])return "opened";
+  if(info.locked)return "pro";
+  return info.complete?"ready":"locked";
+}
+function chestSVG(){
+  return `<svg class="chest-svg" viewBox="0 0 72 64" aria-hidden="true">
+    <ellipse class="cglow" cx="36" cy="26" rx="34" ry="20"/>
+    <g class="cloot"><ellipse cx="36" cy="30" rx="27" ry="6" fill="#5A2E0C"/>
+      <circle cx="24" cy="27" r="6" fill="#FFD25C" stroke="#C88A10" stroke-width="1.5"/><circle cx="47" cy="27" r="6" fill="#FFD25C" stroke="#C88A10" stroke-width="1.5"/>
+      <path d="M28 27c4 6 14 6 18-4 1 5-2 10-9 11s-10-3-9-7z" fill="#FFE14D" stroke="#B88A00" stroke-width="1.5"/><circle cx="36" cy="23" r="5.5" fill="#FFE07A" stroke="#C88A10" stroke-width="1.5"/></g>
+    <g class="cbody"><rect x="6" y="28" width="60" height="30" rx="6" fill="#B06A2B" stroke="#6E3D12" stroke-width="2.5"/>
+      <rect x="8" y="30" width="56" height="7" rx="3" fill="#C98143" opacity=".7"/>
+      <rect x="15" y="28" width="7" height="30" fill="#F2B632" stroke="#9A6A10" stroke-width="1.5"/><rect x="50" y="28" width="7" height="30" fill="#F2B632" stroke="#9A6A10" stroke-width="1.5"/></g>
+    <g class="clid"><path d="M6 30V20C6 9 18 4 36 4S66 9 66 20V30Z" fill="#C47A35" stroke="#6E3D12" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M12 15C18 9 26 8 36 8" stroke="#E7A160" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M15 30V12.5" stroke="#F2B632" stroke-width="7"/><path d="M57 30V12.5" stroke="#F2B632" stroke-width="7"/>
+      <rect x="28" y="22" width="16" height="16" rx="3.5" fill="#FFD25C" stroke="#9A6A10" stroke-width="2"/>
+      <circle cx="36" cy="28.5" r="2.6" fill="#6E3D12"/><rect x="34.8" y="29" width="2.4" height="5" rx="1" fill="#6E3D12"/></g>
+  </svg>`;
+}
+function chestNodeHTML(c,ui,info,k){
+  const st=chestState(c,ui,info);if(!st)return "";
+  const sub={locked:`Finish all ${info.total} lessons to open`,pro:"Pro",ready:"Tap to open!",opened:`Opened · +${CHEST_REWARD.ban} 🍌`}[st];
+  return `<div class="pnode chest ${st}" style="--off:${[0,1,2,1,0,-1,-2,-1][k%8]}">
+    <button class="pbtn chestbtn" data-chest="${ui}" aria-label="Treasure chest for unit ${ui+1}${st==="ready"?": tap to open":st==="opened"?" (opened)":" (locked)"}" ${st==="ready"?"":"disabled"}>${chestSVG()}${st==="locked"||st==="pro"?`<span class="clock">🔒</span>`:""}</button>
+    <div class="plabel"><b>${st==="opened"?"Treasure found!":"Treasure chest"}</b><span>${sub}</span></div></div>`;
+}
+function bannerHTML(c,ui,info){
+  const W=c.kids?WORLDS[ui%WORLDS.length]:null,p=info.total?info.done/info.total:0;
+  const tag=info.u.free?"Free":S.pro?"Unlocked":"🔒 Pro";
+  return `<div class="ub-badge">${W?W.emoji:info.complete?"★":ui+1}</div>
+    <div class="ub-txt"><span class="ub-eye">Unit ${ui+1}${W?` · ${W.name}`:""} <span class="ub-tag">${tag}</span></span><h3>${esc(info.u.name)}</h3></div>
+    <div class="ub-ring${info.complete?" full":""}" style="--p:${p}" aria-label="${info.done} of ${info.total} lessons done"><b>${info.complete?"✓":`${info.done}/${info.total}`}</b></div>`;
+}
+/* Trail: one curvy dotted segment between each pair of circles, worked out from layout positions (ignores the pop-in animation) */
+function drawTrail(path){
+  const btns=[...path.querySelectorAll(":scope > .pnode > .pbtn")];let svg=path.querySelector(":scope > svg.trail");
+  if(btns.length<2){if(svg)svg.remove();return}
+  const W=path.clientWidth,H=path.scrollHeight;if(!W)return;
+  const pts=btns.map(b=>{const pn=b.parentElement;let dx=0;try{dx=new DOMMatrixReadOnly(getComputedStyle(pn).transform).m41}catch(e){}
+    return {x:pn.offsetLeft+b.offsetLeft+b.offsetWidth/2+dx,y:pn.offsetTop+b.offsetTop+b.offsetHeight/2,done:pn.classList.contains("done")||pn.classList.contains("opened"),shut:/\b(locked|pro)\b/.test(pn.className)}});
+  const seg=pts.slice(1).map((b,i)=>{const a=pts[i],m=(b.y-a.y)*.5;
+    return `<path class="${a.done&&!b.shut?"on":""}" d="M${a.x.toFixed(1)} ${a.y.toFixed(1)}C${a.x.toFixed(1)} ${(a.y+m).toFixed(1)} ${b.x.toFixed(1)} ${(b.y-m).toFixed(1)} ${b.x.toFixed(1)} ${b.y.toFixed(1)}"/>`}).join("");
+  if(!svg){svg=document.createElementNS("http://www.w3.org/2000/svg","svg");svg.setAttribute("class","trail");svg.setAttribute("aria-hidden","true");path.prepend(svg)}
+  svg.setAttribute("width",W);svg.setAttribute("height",H);svg.setAttribute("viewBox",`0 0 ${W} ${H}`);svg.innerHTML=seg;
+}
+let mapRO=null;
+function openChest(c,ui,btn){
+  const info=unitInfo(c,flat(c),ui),key=chestKey(c,info.u,ui);
+  if(chestState(c,ui,info)!=="ready")return;
+  S.chests=S.chests&&typeof S.chests==="object"?S.chests:{};
+  S.chests[key]=true;S.bananas+=CHEST_REWARD.ban;S.xp+=CHEST_REWARD.xp;save();renderStats();
+  const pn=btn.closest(".pnode");btn.disabled=true;
+  const finish=()=>{pn.classList.remove("ready","opening");pn.classList.add("opened");
+    btn.setAttribute("aria-label",`Treasure chest for unit ${ui+1} (opened)`);
+    pn.querySelector(".plabel").innerHTML=`<b>Treasure found!</b><span>Opened · +${CHEST_REWARD.ban} 🍌</span>`;
+    const r=btn.getBoundingClientRect(),f=document.createElement("div");f.className="chest-pop";f.setAttribute("aria-hidden","true");
+    f.innerHTML=`+${CHEST_REWARD.ban} 🍌 <span>+${CHEST_REWARD.xp} XP</span>`;f.style.left=(r.left+r.width/2)+"px";f.style.top=(r.top)+"px";document.body.appendChild(f);setTimeout(()=>f.remove(),1600);
+    if(typeof bananaBurst==="function"){bananaBurst();const bs=document.querySelectorAll("body > .burst"),bx=bs[bs.length-1];if(bx){bx.style.left=(r.left+r.width/2)+"px";bx.style.top=(r.top+r.height/2)+"px"}}
+    sfx("complete");setTimeout(()=>sfx("coins"),350);
+    toast(`Treasure! +${CHEST_REWARD.ban} 🍌 bananas and +${CHEST_REWARD.xp} XP`);
+    const p=pn.closest(".path");if(p)drawTrail(p)};
+  if(mapCalm()){finish();return}
+  pn.classList.add("opening");sfx("tap");setTimeout(finish,620);
+}
+function decorateMap(c){
+  const L=flat(c),units=[...document.querySelectorAll("#screen .unit")];if(units.length!==c.units.length)return;
+  const tb=document.querySelector(".topbar");document.documentElement.style.setProperty("--tbh",(tb?tb.offsetHeight:0)+"px");
+  if(mapRO){mapRO.disconnect();mapRO=null}
+  units.forEach((el,ui)=>{
+    const info=unitInfo(c,L,ui),pal=c.kids?MAP_JR_COLORS:MAP_COLORS;
+    el.classList.add("umap");if(info.complete)el.classList.add("ucomplete");if(info.locked)el.classList.add("ulocked");
+    el.style.setProperty("--uc",pal[ui%pal.length]);
+    const head=el.querySelector(":scope > .unit-head");if(head){head.classList.add("ubanner");head.innerHTML=bannerHTML(c,ui,info)}
+    const path=el.querySelector(":scope > .path");if(!path)return;
+    const k=path.querySelectorAll(":scope > .pnode").length;
+    path.insertAdjacentHTML("beforeend",chestNodeHTML(c,ui,info,k));
+    const cb=path.querySelector(".chestbtn");if(cb)cb.onclick=()=>openChest(c,ui,cb);
+    drawTrail(path);
+  });
+  if(typeof ResizeObserver==="function"){let raf=0;mapRO=new ResizeObserver(()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>document.querySelectorAll("#screen .path").forEach(drawTrail))});
+    document.querySelectorAll("#screen .path").forEach(p=>mapRO.observe(p))}
+}
+/* The core page places the hopping TypeMonkey while it draws; hold that until the map is dressed so his hop starts from the final positions */
+{const core=coursePage,coreWalk=placeWalker;let held=null;
+  placeWalker=function(){held=arguments};
+  coursePage=function(cid){held=null;const r=core.apply(this,arguments);
+    try{const c=courseById(cid);if(c&&c.units)decorateMap(c)}catch(e){console.error("map",e)}
+    if(held){const a=held;held=null;coreWalk.apply(this,a)}return r};}
+
+/* --- 40-monkey.js --- */
+/* ===== 40-monkey: TypeMonkey grows with you (levels from XP), a livelier mascot, and a Profile page =====
+   Everything lives in this IIFE so names never clash with other feature files. Public bits are on window:
+   TMLevel (level math + titles), profilePage. Core functions are wrapped chain-safely (call the previous one first). */
+(function(){
+  /* ---------- Levels: gentle curve, L2 at 50 XP, L3 at 120, ... L30 at 9,570 ---------- */
+  const MAX=30;
+  const TITLES=["Baby Banana","Banana Sprout","Curious Climber","Loop Swinger","Bug Squasher","Variable Wrangler","Function Friend","Treetop Tinkerer","String Juggler","Code Captain",
+    "Array Acrobat","Logic Explorer","Debug Detective","Loop Master","Jungle Engineer","Class Climber","Algorithm Ace","Recursion Ranger","Canopy Coder","Code Wizard",
+    "Byte Boss","Data Dynamo","Syntax Sensei","Pixel Pioneer","Jungle Architect","Silverback Coder","Compiler Whisperer","Galaxy Brain","Grand Banana","Banana Legend"];
+  /* free shop items at milestone levels (if already owned you get its price in bananas instead) */
+  const GIFTS={3:["hat","party"],5:["neck","bowtie"],10:["hat","grad"],15:["hat","headphones"],20:["hat","wizard"],25:["neck","cape"],30:["hat","crown"]};
+  const need=L=>{const k=Math.max(0,L-1);return 40*k+10*k*k};
+  const bananasFor=L=>10+2*L;
+  function info(xp){
+    xp=Math.max(0,Math.floor(+xp||0));let L=1;while(L<MAX&&xp>=need(L+1))L++;
+    const base=need(L),next=L<MAX?need(L+1):base,span=Math.max(1,next-base);
+    return {lvl:L,title:TITLES[L-1],xp,base,next,into:xp-base,span,toGo:Math.max(0,next-xp),pct:L>=MAX?100:Math.min(100,(xp-base)/span*100),max:L>=MAX};
+  }
+  const slotTable=slot=>({fur:FURS,hat:HATS,eyes:EYES,neck:NECKS,pet:typeof PETS!=="undefined"?PETS:{}})[slot]||{};
+  const giftItem=L=>{const g=GIFTS[L];if(!g)return null;const it=slotTable(g[0])[g[1]];return it?{slot:g[0],id:g[1],name:it.name,price:it.price}:null};
+  const stage=L=>L>=30?"Legend":L>=20?"Grown-up":L>=10?"Big kid":L>=5?"Little monkey":"Baby";
+  window.TMLevel={MAX,TITLES,GIFTS,need,info,bananasFor,giftItem,stage};
+  const calm=()=>{try{return !!(S.settings&&S.settings.calm)||matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){return false}};
+  const fmt=n=>Number(n).toLocaleString("en-US");
+
+  /* ---------- Mascot polish: blinking eyes, a curious (not sad) "think" face, a hop when tapped ---------- */
+  const _monkey=monkey;
+  monkey=function(mood,look){
+    let s=_monkey.apply(this,arguments);
+    try{
+      s=s.replace(/(<circle cx="47" cy="[-\d.]+" r="4\.6"[\s\S]*?<circle cx="74\.6"[^>]*\/>)/,(m)=>{
+        if(mood==="think")m=m.replace(/cx="47"/,'cx="48.6"').replace(/cx="73"/,'cx="74.6"').replace(/cx="48\.6" cy="([-\d.]+)" r="1\.5"/,'cx="50.2" cy="$1" r="1.5"').replace(/cx="74\.6" cy="([-\d.]+)" r="1\.5"/,'cx="76.2" cy="$1" r="1.5"');
+        return `<g class="tm-eyes" style="animation-delay:${(-Math.random()*5).toFixed(2)}s">${m}</g>`});
+      if(mood==="think"){
+        s=s.replace('<path d="M52 79 Q60 77 69 80" stroke="#3A1A05" stroke-width="3" fill="none" stroke-linecap="round"/>',
+          '<path d="M52 78 Q60 85.5 69 77" stroke="#3A1A05" stroke-width="3.1" fill="none" stroke-linecap="round"/>');
+        // raised, curious eyebrows (right one higher), drawn just before the nose
+        s=s.replace('<circle cx="56" cy="68"','<path class="tm-brow" d="M39 39.5 Q46 35.5 53 38.5" stroke="#3A1A05" stroke-width="2.6" fill="none" stroke-linecap="round"/><path class="tm-brow" d="M67 35.5 Q74 30 81 34" stroke="#3A1A05" stroke-width="2.6" fill="none" stroke-linecap="round"/><circle cx="56" cy="68"');
+      }
+    }catch(e){}
+    return s;
+  };
+  const HOPPABLE=".buddy .tm,.mwrap .tm,#brandMonkey .tm,.prof-stage .tm,.stage-monkey .tm,.fin-stage .tm,.lvup-stage .tm";
+  document.addEventListener("click",e=>{
+    const t=e.target.closest&&e.target.closest(".tm");if(!t||!t.matches(HOPPABLE)||t.closest(".shopitem"))return;
+    if(calm())return;t.classList.remove("tm-hop");void t.getBoundingClientRect();t.classList.add("tm-hop");
+    t.addEventListener("animationend",function f(ev){if(ev.animationName==="tmHop"){t.classList.remove("tm-hop");t.removeEventListener("animationend",f)}});
+    if(!t.closest("#brandMonkey"))try{sfx("tap")}catch(_){}
+  });
+
+  /* ---------- Top bar: level chip on the mascot; tapping the mascot opens the Profile ---------- */
+  const _renderStats=renderStats;
+  renderStats=function(){
+    _renderStats.apply(this,arguments);
+    try{const bm=$("#brandMonkey");if(!bm)return;const I=info(S.xp);
+      let chip=bm.querySelector(".tm-lvl");if(!chip){chip=document.createElement("span");chip.className="tm-lvl";chip.setAttribute("aria-hidden","true");bm.appendChild(chip)}
+      chip.textContent=I.lvl;chip.classList.toggle("gold",I.lvl>=10);chip.classList.toggle("legend",I.max);
+      bm.title=`Level ${I.lvl} · ${I.title}. Tap for your profile`;
+      const hb=$("#homeBtn");if(hb)hb.setAttribute("aria-label",`TypeMonkey, level ${I.lvl}. Open your profile`);
+    }catch(e){}
+  };
+  (function wireBrand(){const bm=document.getElementById("brandMonkey");if(!bm)return;
+    bm.addEventListener("click",e=>{e.stopPropagation();sfx("tap");profilePage()});
+    // keyboard: the brand button itself (Enter/Space) also opens the profile; the "TypeMonkey" word still goes home on a mouse click
+    const hb=document.getElementById("homeBtn");if(hb)hb.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();profilePage()}});
+  })();
+
+  /* ---------- Save hook: best streak + level-up detection (chain-safe wrapper) ---------- */
+  let granting=false,pendingTimer=null;
+  const _save=save;
+  save=function(){
+    try{if(!granting){S.bestStreak=Math.max(+S.bestStreak||0,+S.streak||0);
+      const L=info(S.xp).lvl;if(typeof S.mlevel!=="number"||S.mlevel>L)S.mlevel=L;}}catch(e){}
+    _save.apply(this,arguments);
+    try{if(!granting&&info(S.xp).lvl>S.mlevel)queueLevelUp(1500)}catch(e){}
+  };
+  function queueLevelUp(ms){clearTimeout(pendingTimer);pendingTimer=setTimeout(tryShow,ms)}
+  function tryShow(){
+    if(info(S.xp).lvl<=S.mlevel)return;
+    if(document.querySelector(".celebrate,.gate")){queueLevelUp(800);return}   // wait for badges / grown-up gate
+    showLevelUp();
+  }
+  function showLevelUp(){
+    const from=S.mlevel,I=info(S.xp),to=I.lvl;let ban=0;const gifts=[];
+    for(let L=from+1;L<=to;L++){ban+=bananasFor(L);const g=giftItem(L);
+      if(g){if(S.owned[g.slot]&&!S.owned[g.slot].includes(g.id)){S.owned[g.slot].push(g.id);gifts.push(g)}else ban+=g.price||0}}
+    S.bananas+=ban;S.mlevel=to;granting=true;try{save()}finally{granting=false}
+    const gift=gifts[gifts.length-1];
+    const g=document.createElement("div");g.className="celebrate lvlup";g.setAttribute("role","dialog");g.setAttribute("aria-modal","true");g.setAttribute("aria-label",`Level ${to}: ${I.title}`);
+    const sparks=Array.from({length:14},(_,i)=>`<i style="--a:${i*360/14}deg;--r:${80+(i%3)*22}px;--d:${(i%5)*.12}s">${["✨","⭐","🍌","✨","💫"][i%5]}</i>`).join("");
+    g.innerHTML=`<div class="card lvup-card">
+      <div class="lvup-stage" aria-hidden="true"><div class="rays"></div><div class="lvup-sparks">${sparks}</div>${monkey("cheer")}</div>
+      <div class="label">Level up!${to-from>1?` · +${to-from} levels`:""}</div>
+      <h2 class="lvup-num">Level ${to}!</h2>
+      <div class="lvup-title">${esc(I.title)}</div>
+      <p class="muted">${to>=MAX?"You reached the top. TypeMonkey is a true legend, thanks to you!":`TypeMonkey grew a little! ${stage(to)!==stage(from)?`Now a <b>${stage(to)}</b>. `:""}${fmt(I.toGo)} XP to Level ${to+1}.`}</p>
+      <div class="lvup-rewards"><span class="pill kid">+${ban} 🍌</span>${gifts.map(x=>`<span class="pill ok">🎁 ${esc(x.name)}</span>`).join("")}</div>
+      ${gift?`<div class="lvup-gift"><div class="mini-monkey">${withPet("happy",{...S.look,[gift.slot]:gift.id})}</div><div><b>Free gift: ${esc(gift.name)}</b><span>It's in your closet. Want TypeMonkey to wear it?</span></div></div>`:""}
+      <div class="row" style="justify-content:center">${gift?`<button class="btn banana" id="lv-wear">Wear it!</button>`:""}<button class="btn${gift?" ghost":""}" id="lv-ok">${gift?"Later":"Yay!"}</button></div>
+    </div>`;
+    document.body.appendChild(g);
+    try{sfx("complete");setTimeout(()=>sfx("badge"),500)}catch(e){}
+    if(!calm())setTimeout(()=>confetti(90),200);
+    const close=()=>{g.remove();try{if(typeof rerender==="function"&&rerender===profilePage)profilePage()}catch(e){}if(typeof showBadge==="function")showBadge()};
+    g.querySelector("#lv-ok").onclick=close;
+    if(gift)g.querySelector("#lv-wear").onclick=()=>{S.look[gift.slot]=gift.id;save();toast(`TypeMonkey is wearing: ${gift.name}`);close()};
+    setTimeout(()=>{try{g.querySelector(gift?"#lv-wear":"#lv-ok").focus()}catch(e){}},60);
+  }
+  // celebrate a level reached while the app was closed (never on a first load: S.mlevel starts at the current level)
+  setTimeout(()=>{try{if(typeof S.mlevel!=="number"){S.mlevel=info(S.xp).lvl;S.bestStreak=Math.max(+S.bestStreak||0,+S.streak||0)}else if(info(S.xp).lvl>S.mlevel)queueLevelUp(1200)}catch(e){}},0);
+
+  /* ---------- Home: a slim level card under TypeMonkey's greeting ---------- */
+  const levelCard=()=>{const I=info(S.xp);return `<button class="lvcard" id="lvcard" aria-label="Level ${I.lvl}, ${esc(I.title)}. Open your profile">
+    <span class="lvnum"><small>LV</small>${I.lvl}</span>
+    <span class="lvtext"><b>${esc(I.title)}</b><span class="lvbar"><span style="width:${I.pct}%"></span></span><span class="lvsub">${I.max?"Max level reached!":`${fmt(I.toGo)} XP to Level ${I.lvl+1}`}</span></span>
+    <span class="lvgo" aria-hidden="true">Profile ›</span></button>`};
+  const _home=home;
+  home=function(){
+    _home.apply(this,arguments);
+    try{if($("#lvcard"))return;const st=$("#screen .stack");if(!st)return;const anchor=st.querySelector(":scope > .buddy");
+      const tmp=document.createElement("div");tmp.innerHTML=levelCard();const el=tmp.firstElementChild;
+      if(anchor)anchor.after(el);else st.prepend(el);el.onclick=profilePage}catch(e){}
+  };
+
+  /* ---------- Profile page ---------- */
+  function weekXp(){
+    const d=S.xpDays;if(!d||typeof d!=="object")return null;
+    const out=[];for(let i=6;i>=0;i--){const t=new Date();t.setHours(12,0,0,0);t.setDate(t.getDate()-i);
+      out.push({k:dayStr(t),lab:t.toLocaleDateString("en-US",{weekday:"short"}),full:t.toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"}),xp:Math.max(0,Math.floor(+d[dayStr(t)]||0)),today:i===0})}
+    return out;
+  }
+  function chart(days){
+    const max=Math.max(...days.map(x=>x.xp)),tot=days.reduce((n,x)=>n+x.xp,0);const top=days.findIndex(x=>x.xp===max&&max>0);
+    return `<div class="card prof-week"><div class="pw-head"><div><div class="label">This week</div><h3>${fmt(tot)} XP</h3></div><span class="muted">last 7 days</span></div>
+      <div class="pw-bars" role="img" aria-label="XP per day, last 7 days: ${days.map(x=>`${x.lab} ${x.xp}`).join(", ")}">${days.map((x,i)=>`<div class="pw-col${x.today?" today":""}" title="${x.full}: ${fmt(x.xp)} XP">
+        <span class="pw-val">${(x.today||i===top)&&x.xp?fmt(x.xp):""}</span><span class="pw-bar" style="height:${max?Math.max(x.xp?6:0,x.xp/max*100):0}%"></span><span class="pw-lab">${x.today?"Today":x.lab}</span></div>`).join("")}</div>
+      ${max?"":`<p class="muted pw-empty">No XP yet this week. One lesson fills the first bar!</p>`}</div>`;
+  }
+  function startedCourses(){
+    try{return COURSES.filter(c=>c.units&&!c.soon).map(c=>{const [d,n]=countLessons(c);const inProg=flat(c).some(x=>S.progress[x.l.id]);return {c,d,n,go:d>0||inProg}}).filter(x=>x.go).sort((a,b)=>(b.c.id===S.lastCourse)-(a.c.id===S.lastCourse)||b.d/b.n-a.d/a.n)}catch(e){return []}
+  }
+  function profilePage(){
+    try{SFX.stopMusic()}catch(e){}
+    const back=rerender===profilePage?home:rerender;rerender=profilePage;try{setMode(false)}catch(e){}
+    if(typeof S.mlevel!=="number")S.mlevel=info(S.xp).lvl;
+    const I=info(S.xp),list=badgeList(),got=list.filter(b=>S.badges[b.id]).length,best=Math.max(+S.bestStreak||0,S.streak);
+    const days=weekXp(),courses=startedCourses();
+    const size=Math.round(118+Math.min(I.lvl,MAX)/MAX*38);   // TypeMonkey literally grows on the profile stage
+    const nextGift=Object.keys(GIFTS).map(Number).find(L=>L>I.lvl);
+    const tile=(icon,val,lab,cls="")=>`<div class="ptile ${cls}"><span class="pt-ic" aria-hidden="true">${icon}</span><b>${val}</b><span>${lab}</span></div>`;
+    $("#screen").innerHTML=`<div class="stack prof">
+      <div class="row prof-top"><button class="btn ghost sm" id="back">← Back</button><span class="label">Your profile</span></div>
+      <section class="card prof-hero">
+        <div class="prof-stage" style="--ms:${size}px"><div class="rays" aria-hidden="true"></div>${withPet("happy")}</div>
+        <div class="prof-id">
+          <span class="prof-lv">Level ${I.lvl} · ${stage(I.lvl)}</span>
+          <h1>${esc(I.title)}</h1>
+          <div class="prof-bar" role="progressbar" aria-label="XP to next level" aria-valuemin="0" aria-valuemax="${I.span}" aria-valuenow="${I.max?I.span:I.into}"><span style="width:${I.pct}%"></span></div>
+          <div class="prof-xp"><span>${I.max?`${fmt(S.xp)} XP`:`${fmt(I.into)} / ${fmt(I.span)} XP`}</span><span>${I.max?"Max level 🏆":`${fmt(I.toGo)} XP to Lv ${I.lvl+1}`}</span></div>
+        </div>
+      </section>
+      <div class="ptiles">
+        ${tile("⚡",fmt(S.xp),"Total XP")}
+        ${tile("🔥",S.streak,`Day streak`,S.streak?"hot":"")}
+        ${tile("🏔️",best,"Best streak")}
+        ${tile("📚",S.done.length,"Lessons done")}
+        ${tile("🍌",fmt(S.bananas),"Bananas")}
+        ${tile("🏆",`${got}<small>/${list.length}</small>`,"Badges")}
+      </div>
+      ${days?chart(days):""}
+      <div class="card prof-road"><div class="pw-head"><div><div class="label">Level rewards</div><h3>${nextGift?`Next gift at Level ${nextGift}`:"Every gift unlocked!"}</h3></div></div>
+        <div class="road">${Object.keys(GIFTS).map(Number).map(L=>{const gi=giftItem(L);if(!gi)return "";const on=I.lvl>=L;
+          return `<div class="road-i ${on?"on":""} ${L===nextGift?"next":""}"><div class="mini-monkey">${withPet("happy",{...S.look,[gi.slot]:gi.id})}</div><b>${esc(gi.name)}</b><span class="pill ${on?"ok":L===nextGift?"go":""}">${on?"✓ Lv "+L:"Lv "+L}</span></div>`}).join("")}</div></div>
+      <div class="card prof-courses"><div class="label">Your courses</div>
+        ${courses.length?courses.map(x=>`<button class="pcourse" data-c="${x.c.id}"><span class="pc-t"><b>${esc(x.c.name)}</b><span>${x.d} of ${x.n} lessons${x.d===x.n&&x.n?" · complete 🎉":""}</span></span><span class="pc-bar"><span style="width:${x.n?x.d/x.n*100:0}%"></span></span></button>`).join("")
+          :`<p class="muted">No courses started yet. Pick one on Home and TypeMonkey starts growing!</p>`}
+      </div>
+      <div class="pbtns"><button class="tool" id="pshop"><b>🛍️ Shop</b><span>Outfits for TypeMonkey</span></button><button class="tool" id="pbadges"><b>🏆 Badges</b><span>${got} of ${list.length} earned</span></button></div>
+    </div>`;
+    $("#back").onclick=()=>back();$("#pshop").onclick=()=>shop();$("#pbadges").onclick=badgesPage;
+    $$(".pcourse").forEach(b=>b.onclick=()=>coursePage(b.dataset.c));
+    try{foot()}catch(e){}window.scrollTo(0,0);
+  }
+  window.profilePage=profilePage;
+})();
 
 $("#homeBtn").onclick=home;$("#gearBtn").onclick=settingsPage;
 $("#sndBtn").onclick=()=>{S.settings.sound=S.settings.sound===false;save();if(!S.settings.sound)SFX.stopMusic(true);else if(cur&&cur.l&&$(".lessonbar"))setTimeout(()=>jrMusic(cur.l.steps[cur.step]),60);toast(S.settings.sound?"Sounds on 🔊":"Sounds off 🔇");if(S.settings.sound)setTimeout(()=>sfx("correct"),40);if(rerender===settingsPage)settingsPage()};

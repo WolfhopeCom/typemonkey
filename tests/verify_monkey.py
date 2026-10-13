@@ -26,6 +26,7 @@ with sync_playwright() as p:
     b = p.chromium.launch()
     def page(w=390, h=844, scheme="light", state=None):
         ctx = b.new_context(viewport={"width": w, "height": h}, color_scheme=scheme, has_touch=True, is_mobile=True)
+        state = {"onboarded": True, **(state or {})}
         if state is not None:
             ctx.add_init_script(f"localStorage.setItem({json.dumps(KEY)}, {json.dumps(json.dumps(state))})")
         pg = ctx.new_page(); errs = []

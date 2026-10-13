@@ -2620,7 +2620,7 @@ function settingsPage(){SFX.stopMusic();
       ${Remind.ok()?`<div class="setrow"><b>Daily reminder <small>${st.remind?"skipped on days you practice":"a nudge to keep your streak"}</small></b><div class="setbtns">${seg("remind",st.remind?"on":"off",[["off","Off"],["on","On"]])}${st.remind?`<select id="remindAt" class="remindat" aria-label="Reminder time">${[7,8,12,15,16,17,18,19,20].map(h=>`<option value="${h}" ${+st.remindAt===h?"selected":""}>${h===12?"12 pm":h>12?(h-12)+" pm":h+" am"}</option>`).join("")}</select>`:""}</div></div>`:""}
     </div>
     <div class="card setlist">
-      <div class="setrow"><b>${S.pro?"✓ Full version unlocked":"Full version <small>one-time ${STORE.price}</small>"}</b><div class="setbtns">${S.pro?"":`<button class="btn banana sm" id="sbuy">Unlock</button>`}<button class="btn ghost sm" id="restore">Restore</button></div></div>
+      <div class="setrow"><b>${S.pro?"✓ Full version unlocked":`Full version <small>one-time ${STORE.price}</small>`}</b><div class="setbtns">${S.pro?"":`<button class="btn banana sm" id="sbuy">Unlock</button>`}<button class="btn ghost sm" id="restore">Restore</button></div></div>
       <div class="setrow"><b>Progress <small>${S.done.length} lessons · ${S.xp} XP · ${S.bananas} 🍌</small></b><div class="setbtns"><button class="btn sm" id="sbackup">Back up</button><button class="btn ghost sm" id="reset">Reset…</button></div></div>
       <div id="confirm"></div>
     </div>

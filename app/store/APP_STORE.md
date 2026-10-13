@@ -1,7 +1,7 @@
 # TypeMonkey: App Store submission kit
 
-Everything to copy into App Store Connect, plus the exact steps. Screenshots are in `app/store/screenshots/`
-(iPhone 6.9", 1290 × 2796; Apple scales them for smaller iPhones). Remake them any time with
+Everything to copy into App Store Connect, plus the exact steps. Screenshots are in `app/store/screenshots/`:
+`iphone-6.3/` (1206 × 2622, the iPhone size App Store Connect asks for), the 6.9" set (1290 × 2796) in the folder itself, and `ipad/` (2048 × 2732). Remake them any time with
 `python3 tools/store_shots.py`.
 
 ---
@@ -139,6 +139,42 @@ On the 1.0 version page, under **Build**, click **+** and pick the uploaded buil
 Review usually takes 1–3 days.
 
 ---
+
+## Version 1.1 (the next update)
+
+Submit this only after 1.0 is approved and live.
+
+**On your Mac:**
+```
+cd ~/Downloads/TypeMonkey/app
+npm install
+python3 build_app.py --set-version 1.1 --build 2
+python3 build_app.py
+npx cap open ios
+```
+`npm install` adds the new vibration, reminder and iCloud plugins. In Xcode check **General → Version 1.1, Build 2**, and under **Signing & Capabilities** add **iCloud** (tick **Key-value storage**) and keep **In-App Purchase**. Then **Product → Archive → Distribute App → Upload**.
+
+**App Store Connect:** on the app page, click **+** next to iOS App and type **1.1**. Pick the new build, paste the text below into **What's New in This Version**, and drag in the new screenshots from `iphone-6.3/` and `ipad/` (the 6th one is now the Profile). Then **Add for Review → Submit**.
+
+**What's New in This Version:**
+> The biggest TypeMonkey update yet!
+>
+> • Level up: TypeMonkey now grows with you through 30 levels, with free outfits along the way
+> • Your new Profile: stats, best streak and a chart of your week. Tap the monkey at the top to see it
+> • Daily goals: pick 10, 20, 30 or 50 XP a day and fill your ring
+> • A brand-new lesson map with unit banners and treasure chests to open
+> • Combos, streak milestones and "Perfect lesson" bonuses
+> • Gentle vibration on answers (turn it off in Settings)
+> • Daily reminders, if you want them
+> • Progress syncs with iCloud across your iPhone and iPad
+> • New for TypeMonkey Jr.: Unit 7, "Creator", with 5 new lessons
+> • Bug Lab: two new levels, Sneaky Bugs and Boss Bugs
+> • Fresh daily challenge puzzles, smoother animations and lots of small fixes
+
+**Promotional text (optional update):**
+> New: level up your monkey, open treasure chests, set a daily goal and track your week. Plus new Jr. lessons and Boss Bugs!
+
+**Privacy:** still **Data Not Collected**. iCloud sync stores progress in the user's own iCloud account, which Apple does not count as you collecting data.
 
 ### After launch: updating the app
 1. Make changes.
