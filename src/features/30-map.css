@@ -1,0 +1,61 @@
+/* ===== Course map v2: unit banners, dotted trail, treasure chests (see src/features/30-map.js) ===== */
+.unit.umap{--uc:#E8681A;--ubg:var(--surface);background:var(--ubg);padding-top:0;gap:6px}
+.unit.umap .unit-head.ubanner{position:sticky;top:var(--tbh,64px);z-index:4;margin:0 -14px 4px;padding:12px 14px;display:flex;align-items:center;gap:12px;flex-wrap:nowrap;
+  border-radius:calc(var(--r) - 1px) calc(var(--r) - 1px) 16px 16px;color:#fff;
+  background:radial-gradient(circle at 100% 0,#ffffff24 0 64px,transparent 65px),radial-gradient(circle at 100% 0,#ffffff14 0 104px,transparent 105px),linear-gradient(135deg,var(--uc),color-mix(in srgb,var(--uc) 78%,#000));
+  box-shadow:0 4px 0 color-mix(in srgb,var(--uc) 62%,#000)}
+.ubanner .ub-badge{flex:none;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:#ffffff2e;font-weight:900;font-size:1.35rem;font-family:var(--display,inherit);box-shadow:inset 0 -3px 0 #0000001f}
+.ubanner .ub-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.ubanner .ub-eye{font-size:.72rem;font-weight:900;letter-spacing:.09em;text-transform:uppercase;opacity:.92;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ubanner .ub-tag{background:#ffffff33;border-radius:999px;padding:1px 8px;letter-spacing:.05em;font-size:.66rem}
+.ubanner h3{font-size:1.12rem;line-height:1.2;color:#fff;margin:0;overflow-wrap:anywhere}
+.ubanner .ub-ring{flex:none;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;
+  background:conic-gradient(#fff calc(var(--p) * 360deg),#ffffff3d 0)}
+.ubanner .ub-ring b{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--uc) 82%,#000);font-size:.8rem;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.ubanner .ub-ring.full{background:conic-gradient(#FFD25C 360deg,#0000 0)}
+.ubanner .ub-ring.full b{background:#FFC845;color:#5A3B00;font-size:1.1rem}
+/* finished unit: soft golden card, golden badge */
+.unit.umap.ucomplete{--ubg:color-mix(in srgb,var(--banana) 9%,var(--surface));border:2px solid color-mix(in srgb,var(--banana) 70%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,var(--banana) 16%,transparent)}
+.unit.umap.ucomplete .ubanner{margin-inline:-14px}
+.unit.umap.ucomplete .ub-badge{background:#FFC845;color:#5A3B00}
+.unit.umap.ulocked .ubanner{filter:saturate(.55)}
+/* path + trail */
+.unit.umap .path{position:relative;gap:34px;padding-block:22px 10px}
+.unit.umap .path>.pnode{z-index:1}
+.unit.umap .path>.pnode.next{margin-top:30px}
+.unit.umap .pbtn.lesson[disabled]{opacity:1}
+.unit.umap .pbtn.lesson[disabled] .pic{opacity:.6}
+.unit.umap .pnode.locked .plabel b,.unit.umap .pnode.pro .plabel b{color:color-mix(in srgb,var(--fg) 70%,var(--ubg))}
+.unit.umap .plabel{background:var(--ubg);border-radius:10px;padding:2px 8px}
+.path>svg.trail{position:absolute;left:0;top:0;pointer-events:none;z-index:0;overflow:visible}
+.path>svg.trail path{fill:none;stroke:color-mix(in srgb,var(--line) 70%,var(--muted));stroke-width:7;stroke-linecap:round;stroke-dasharray:.1 12;opacity:.75}
+.path>svg.trail path.on{stroke:var(--leaf);opacity:1}
+/* treasure chest */
+.pnode.chest .pbtn.chestbtn{position:relative;width:88px;height:78px;border:0;border-radius:22px;padding:4px;background:transparent;box-shadow:none;display:grid;place-items:center;cursor:pointer}
+.pnode.chest .chestbtn:active{transform:translateY(3px)!important;box-shadow:none!important}
+.pnode.chest .chestbtn[disabled]{opacity:1;cursor:default}
+.chest-svg{width:76px;height:68px;overflow:visible;filter:drop-shadow(0 5px 0 #00000026)}
+.chest-svg .clid{transform-box:view-box;transform-origin:8px 30px;transition:transform .45s cubic-bezier(.3,1.6,.5,1)}
+.chest-svg .cglow{fill:#FFE680;opacity:0}
+.pnode.chest.locked .chest-svg,.pnode.chest.pro .chest-svg{filter:grayscale(.9) brightness(1.15) contrast(.7) drop-shadow(0 5px 0 #0000001a)}
+:root[data-theme="dark"] .pnode.chest.locked .chest-svg,:root[data-theme="dark"] .pnode.chest.pro .chest-svg{filter:grayscale(.9) brightness(.7) contrast(.8)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pnode.chest.locked .chest-svg,:root:not([data-theme="light"]) .pnode.chest.pro .chest-svg{filter:grayscale(.9) brightness(.7) contrast(.8)}}
+.chestbtn .clock{position:absolute;right:2px;bottom:4px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:.95rem;background:var(--surface);box-shadow:0 2px 0 var(--line)}
+.pnode.chest.ready .chestbtn::before{content:"";position:absolute;inset:-8px;border-radius:50%;pointer-events:none;background:radial-gradient(circle,color-mix(in srgb,var(--banana) 65%,transparent) 0,transparent 68%);animation:chestGlow 1.8s ease-in-out infinite}
+.pnode.chest .chest-svg{position:relative}
+.pnode.chest.ready .chest-svg{animation:chestWiggle 2.4s ease-in-out infinite;transform-origin:50% 90%}
+.pnode.chest.ready .plabel b{color:color-mix(in srgb,var(--accent) 80%,var(--fg))}
+.pnode.chest.opening .chest-svg{animation:chestShake .6s ease-in-out}
+.chest-svg .cloot{opacity:0;transition:opacity .3s}
+.pnode.chest.opened .chest-svg .clid{transform:translate(-4px,-15px) rotate(-22deg)}
+.pnode.chest.opened .chest-svg .cglow{opacity:.5}
+.pnode.chest.opened .chest-svg .cloot{opacity:1}
+.pnode.chest.opened .chestbtn{background:radial-gradient(circle,color-mix(in srgb,var(--banana) 30%,transparent) 0,transparent 66%)}
+.pnode.chest.opened .plabel span{color:color-mix(in srgb,var(--leaf) 85%,var(--fg));font-weight:800}
+@keyframes chestWiggle{0%,62%,100%{transform:rotate(0)}68%{transform:rotate(-7deg) scale(1.04)}74%{transform:rotate(6deg) scale(1.04)}80%{transform:rotate(-4deg)}86%{transform:rotate(2deg)}}
+@keyframes chestGlow{0%,100%{transform:scale(.9);opacity:.7}50%{transform:scale(1.1);opacity:1}}
+@keyframes chestShake{0%,100%{transform:none}20%{transform:translateX(-4px) rotate(-6deg)}40%{transform:translateX(4px) rotate(6deg)}60%{transform:translateX(-3px) rotate(-4deg) scale(1.08)}80%{transform:translateY(-6px) scale(1.12)}}
+.chest-pop{position:fixed;z-index:61;pointer-events:none;transform:translate(-50%,-20%);background:var(--banana);color:#2A1300;font-weight:900;font-size:1.05rem;padding:6px 14px;border-radius:999px;box-shadow:0 4px 0 color-mix(in srgb,var(--banana) 55%,#000);white-space:nowrap;animation:floatUp 1.5s ease-out forwards}
+.chest-pop span{color:#7A4E00;font-size:.85rem;margin-left:4px}
+html.calm .chest-pop{display:none}
+@media (prefers-reduced-motion:reduce){.chest-pop{display:none}}

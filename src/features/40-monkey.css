@@ -1,0 +1,107 @@
+/* ===== 40-monkey: levels, mascot polish, profile ===== */
+/* living mascot: blink every few seconds; hop when tapped (both off in Calm mode / Reduce Motion via the core rules) */
+@keyframes tmBlink{0%,91%,100%{transform:scaleY(1)}94.5%{transform:scaleY(.08)}}
+.tm .tm-eyes{transform-box:fill-box;transform-origin:50% 55%;animation:tmBlink 5.2s ease-in-out infinite}
+@keyframes tmHop{0%{transform:translateY(0) scale(1)}22%{transform:translateY(2%) scale(1.08,.9)}50%{transform:translateY(-20%) scale(.95,1.07) rotate(-4deg)}78%{transform:translateY(0) scale(1.06,.94)}100%{transform:none}}
+.tm.tm-hop{animation:tmHop .55s cubic-bezier(.3,.7,.4,1)!important;transform-origin:50% 90%}
+.buddy .tm,.prof-stage .tm,#brandMonkey .tm{cursor:pointer}
+
+/* top bar: level chip on the mascot */
+#brandMonkey{position:relative;display:block;line-height:0;width:38px;height:38px;flex:none}
+#brandMonkey .tm{width:38px;height:38px;transform-origin:50% 90%}
+.tm-lvl{position:absolute;right:-7px;bottom:-4px;min-width:19px;height:19px;padding:0 4px;border-radius:999px;display:grid;place-items:center;font:900 .7rem/1 var(--body);font-variant-numeric:tabular-nums;color:#fff;background:var(--leaf);box-shadow:0 0 0 2px var(--bg);pointer-events:none}
+.tm-lvl.gold{background:var(--banana);color:#2A1300}
+.tm-lvl.legend{background:linear-gradient(135deg,#FFC845,#FF6FAE 60%,#7C5CFF);color:#fff}
+
+/* Home: slim level card */
+.lvcard{display:flex;align-items:center;gap:12px;width:100%;text-align:left;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px}
+.lvcard:active{transform:scale(.99)}
+.lvnum{flex:none;width:46px;height:46px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:color-mix(in srgb,var(--leaf) 16%,var(--surface));color:var(--leaf);font:800 1.35rem/1 var(--display);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--leaf) 45%,transparent)}
+.lvnum small{font:900 .58rem/1 var(--body);letter-spacing:.08em;margin-bottom:1px}
+.lvtext{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.lvtext b{font-family:var(--display);font-size:1.08rem;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lvbar,.prof-bar,.pc-bar{display:block;height:9px;border-radius:999px;background:var(--surface2);overflow:hidden}
+.lvbar>span,.prof-bar>span,.pc-bar>span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--leaf),color-mix(in srgb,var(--leaf) 60%,var(--banana)))}
+.lvsub{font-size:.8rem;font-weight:700;color:var(--muted)}
+.lvgo{flex:none;font-weight:800;font-size:.85rem;color:var(--accent)}
+@media (max-width:360px){.lvgo{display:none}}
+
+/* Profile */
+.prof{gap:14px}
+.prof-top{justify-content:space-between}
+.prof-hero{align-items:center;text-align:center;gap:6px;padding:0 0 18px;overflow:hidden;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--banana) 30%,var(--surface)) 0,var(--surface) 62%)}
+.prof-stage{position:relative;width:100%;height:calc(var(--ms) + 38px);display:grid;place-items:end center;padding-bottom:6px;overflow:hidden;
+  background:radial-gradient(ellipse 60% 18% at 50% 96%,color-mix(in srgb,var(--fg) 12%,transparent),transparent 70%)}
+.prof-stage .rays{position:absolute;left:50%;top:55%;width:420px;height:420px;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 0deg,color-mix(in srgb,var(--banana) 40%,transparent) 0 9deg,transparent 9deg 22deg);opacity:.55;animation:rays 28s linear infinite;-webkit-mask:radial-gradient(circle closest-side,#000 20%,transparent 100%);mask:radial-gradient(circle closest-side,#000 20%,transparent 100%)}
+.prof-stage .mwrap{position:relative}
+.prof-stage .tm{width:var(--ms);height:calc(var(--ms) * 1.13);transform-origin:50% 90%;animation:breathe 3.6s ease-in-out infinite}
+.prof-id{width:100%;padding:0 18px;display:flex;flex-direction:column;gap:6px;align-items:center}
+.prof-lv{display:inline-block;background:var(--leaf);color:#fff;font-weight:900;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:3px 12px}
+.prof-id h1{font-size:clamp(1.8rem,8vw,2.4rem)}
+.prof-bar{width:100%;height:14px;margin-top:4px}
+.prof-xp{width:100%;display:flex;justify-content:space-between;gap:8px;font-size:.85rem;font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums}
+.ptiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.ptile{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 6px 9px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:1px;min-width:0}
+.ptile .pt-ic{font-size:1.3rem;line-height:1.2}
+.ptile b{font-family:var(--display);font-size:1.4rem;line-height:1.1;font-variant-numeric:tabular-nums;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.ptile b small{font-size:.8rem;color:var(--muted)}
+.ptile>span:last-child{font-size:.74rem;font-weight:800;color:var(--muted);line-height:1.2}
+.ptile.hot{border-color:color-mix(in srgb,var(--accent) 55%,var(--line));background:color-mix(in srgb,var(--accent) 9%,var(--surface))}
+.pw-head{display:flex;align-items:flex-end;justify-content:space-between;gap:8px}
+.pw-head h3{font-size:1.3rem}
+.pw-head .muted{font-size:.8rem;font-weight:700}
+.pw-bars{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;height:150px;align-items:end;border-bottom:1px solid var(--line);padding-bottom:0}
+.pw-col{height:100%;display:grid;grid-template-rows:18px 1fr 22px;align-items:end;justify-items:center;min-width:0}
+.pw-col .pw-bar{grid-row:2;width:min(28px,70%);border-radius:4px 4px 0 0;background:color-mix(in srgb,var(--accent) 45%,var(--surface2));align-self:end}
+.pw-col.today .pw-bar{background:var(--accent)}
+.pw-val{grid-row:1;font-size:.72rem;font-weight:800;color:var(--fg);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pw-lab{grid-row:3;font-size:.72rem;font-weight:800;color:var(--muted);align-self:center;white-space:nowrap}
+.pw-col.today .pw-lab{color:var(--fg)}
+.pw-bars{grid-template-rows:1fr}
+.pw-col{grid-template-rows:18px minmax(0,1fr) 22px}
+.pw-col .pw-bar{max-height:100%}
+.pw-empty{font-size:.88rem}
+.prof-road{gap:10px}
+.road{display:flex;gap:10px;overflow-x:auto;margin:0 -18px;padding:2px 18px 6px;scroll-snap-type:x proximity;scrollbar-width:none}
+.road::-webkit-scrollbar{display:none}
+.road-i{flex:none;width:104px;scroll-snap-align:start;background:var(--surface2);border-radius:14px;padding:8px 6px 10px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
+.road-i b{font-size:.78rem;line-height:1.15;min-height:2.3em;display:flex;align-items:center}
+.road-i .mini-monkey .tm{width:58px;height:66px}
+.road-i:not(.on) .mini-monkey{filter:grayscale(.85);opacity:.6}
+.road-i.next{box-shadow:inset 0 0 0 2px var(--accent)}
+.road-i.next .mini-monkey{filter:none;opacity:1}
+.road-i .pill{align-self:center}
+.prof-courses{gap:10px}
+.pcourse{display:flex;flex-direction:column;gap:6px;width:100%;text-align:left;background:var(--surface2);color:var(--fg);border:0;border-radius:12px;padding:10px 12px}
+.pc-t{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.pc-t b{font-family:var(--display);font-size:1.05rem}
+.pc-t span{font-size:.8rem;font-weight:700;color:var(--muted);white-space:nowrap}
+.pc-bar{height:8px;background:var(--surface)}
+.pbtns{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* Level-up celebration (uses the core .celebrate overlay so badge pop-ups wait their turn) */
+.celebrate.lvlup{background:color-mix(in srgb,#000 62%,transparent);z-index:31}
+.lvup-card{gap:8px;padding-top:0;animation:lvIn .45s cubic-bezier(.3,1.4,.5,1) both}
+@keyframes lvIn{from{opacity:0;transform:scale(.8) translateY(20px)}to{opacity:1;transform:none}}
+.lvup-stage{position:relative;width:calc(100% + 36px);margin:0 -18px 2px;height:200px;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 50% 58%,color-mix(in srgb,var(--banana) 60%,transparent),transparent 68%)}
+.lvup-stage .rays{position:absolute;left:50%;top:56%;width:440px;height:440px;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 0deg,color-mix(in srgb,var(--banana) 50%,transparent) 0 10deg,transparent 10deg 24deg);animation:rays 14s linear infinite;-webkit-mask:radial-gradient(circle closest-side,#000 25%,transparent 100%);mask:radial-gradient(circle closest-side,#000 25%,transparent 100%)}
+.lvup-stage .tm{position:relative;width:132px;height:150px;transform-origin:50% 90%;animation:lvGrow 1.2s cubic-bezier(.3,.8,.3,1) both,breathe 3s ease-in-out 1.3s infinite}
+@keyframes lvGrow{0%{transform:scale(.55);opacity:0}30%{transform:scale(.7) translateY(0);opacity:1}48%{transform:scale(.72) translateY(-14px)}62%{transform:scale(1.18,.92)}78%{transform:scale(.96,1.05) translateY(-4px)}100%{transform:none}}
+.lvup-sparks i{position:absolute;left:50%;top:54%;font-style:normal;font-size:1.15rem;opacity:0;animation:spark 1.6s ease-out var(--d) infinite}
+@keyframes spark{0%{opacity:0;transform:translate(-50%,-50%) rotate(var(--a)) translateY(-30px) scale(.4)}25%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) rotate(var(--a)) translateY(calc(var(--r) * -1)) scale(1.1)}}
+.lvup-num{font-size:2.4rem;color:var(--accent);animation:pop .6s ease .3s both}
+.lvup-title{font-family:var(--display);font-weight:800;font-size:1.45rem;line-height:1.1;margin-top:-6px}
+.lvup-card p{font-size:.95rem}
+.lvup-rewards{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.lvup-rewards .pill{font-size:.85rem;padding:4px 12px;text-transform:none;letter-spacing:0}
+.lvup-gift{display:flex;align-items:center;gap:10px;text-align:left;background:var(--surface2);border-radius:14px;padding:8px 12px;width:100%}
+.lvup-gift .mini-monkey .tm{width:56px;height:64px}
+.lvup-gift div:last-child{display:flex;flex-direction:column;min-width:0}
+.lvup-gift span{font-size:.82rem;color:var(--muted)}
+@media (max-height:700px){.lvup-stage{height:160px}.lvup-stage .tm{width:108px;height:122px}.lvup-num{font-size:2rem}}
+html.calm .lvup-sparks{display:none}
+@media (prefers-reduced-motion:reduce){.lvup-sparks{display:none}}
+/* dark mode: softer rays so the stage glows instead of turning muddy */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .lvup-stage .rays{opacity:.4}:root:not([data-theme="light"]) .prof-stage .rays{opacity:.3}}
+:root[data-theme="dark"] .lvup-stage .rays{opacity:.4}:root[data-theme="dark"] .prof-stage .rays{opacity:.3}

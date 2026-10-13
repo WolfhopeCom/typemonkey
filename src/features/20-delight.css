@@ -1,0 +1,86 @@
+/* ===== 20-delight: combo pill + chip, answer pop/shake, finish summary, streak milestone screen ===== */
+/* combo banner: pops in under the top bar, over the lesson progress */
+.tm-combo{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 62px);z-index:40;display:flex;align-items:center;gap:10px;padding:8px 18px 8px 12px;border-radius:999px;
+  background:linear-gradient(135deg,#FFB13B,#FA7A20 60%,#F2541B);color:#2A1300;box-shadow:0 6px 0 #B9420E,0 12px 24px -8px #F2541B99;
+  pointer-events:none;opacity:0;transform:translate(-50%,-30px) scale(.6);white-space:nowrap}
+.tm-combo.show{animation:tmComboIn 1.9s cubic-bezier(.3,1.4,.5,1) forwards}
+.tm-combo .tc-fire{font-size:1.9rem;line-height:1;display:inline-block;transform-origin:50% 90%;animation:tmFlick .5s ease-in-out infinite alternate}
+.tm-combo .tc-txt{display:flex;flex-direction:column;line-height:1.05}
+.tm-combo b{font-family:var(--display);font-weight:800;font-size:1.3rem;color:#fff;text-shadow:0 2px 0 #B9420E}
+.tm-combo small{font-weight:800;font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:#4A1E00}
+.tm-combo.lvl2{background:linear-gradient(135deg,#FFD34D,#FF8A1F 55%,#F2541B)}
+.tm-combo.lvl3{background:linear-gradient(135deg,#FFE27A,#FF7A1A 45%,#E8384F);box-shadow:0 6px 0 #A8263A,0 14px 30px -6px #E8384Faa}
+.tm-combo.lvl3 b{font-size:1.45rem}
+.tm-combo .tc-sp{position:absolute;font-style:normal;font-size:1rem;animation:tmTwinkle .9s ease-in-out infinite alternate}
+.tm-combo .tc-sp.s1{right:-8px;top:-10px}.tm-combo .tc-sp.s2{left:-6px;bottom:-10px;animation-delay:.35s}
+@keyframes tmComboIn{0%{opacity:0;transform:translate(-50%,-30px) scale(.6)}14%{opacity:1;transform:translate(-50%,0) scale(1.08)}22%{transform:translate(-50%,0) scale(1)}82%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,-16px) scale(.92)}}
+@keyframes tmFlick{from{transform:rotate(-6deg) scale(1)}to{transform:rotate(6deg) scale(1.12,1.06)}}
+@keyframes tmTwinkle{from{opacity:.3;transform:scale(.7) rotate(0)}to{opacity:1;transform:scale(1.15) rotate(25deg)}}
+html.calm .tm-combo.show,.tm-combo.show.calm{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){.tm-combo.show{opacity:1;transform:translate(-50%,0)}}
+
+/* small flame counter at the end of the lesson progress bar */
+.tm-chip{display:inline-flex;align-items:center;gap:2px;flex:none;font-weight:900;font-size:.95rem;color:var(--accent);font-variant-numeric:tabular-nums;min-width:44px;justify-content:center}
+.tm-chip b{font-family:var(--display);font-size:1.15rem;line-height:1}
+.tm-chip.bump{animation:tmBump .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes tmBump{0%{transform:scale(1)}40%{transform:scale(1.45) rotate(-8deg)}100%{transform:scale(1)}}
+.lessonbar .progress.hot span{background:linear-gradient(90deg,var(--leaf),#9BD34A 55%,var(--banana));position:relative;overflow:hidden}
+.lessonbar .progress.hot span::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,#fff8 50%,transparent 70%);transform:translateX(-100%);animation:tmSweep 1.6s ease-in-out infinite}
+@keyframes tmSweep{to{transform:translateX(100%)}}
+
+/* right answer: a little pop + shine; wrong: a soft side-to-side shake */
+.tm-pop{animation:tmPop .42s cubic-bezier(.3,1.6,.5,1) calc(var(--k,0) * 60ms) both;position:relative;overflow:hidden}
+.opt.tm-pop::after,.ln.tm-pop::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,#ffffff8c 50%,transparent 65%);transform:translateX(-110%);animation:tmShineX .7s ease-out .12s forwards;pointer-events:none}
+@keyframes tmPop{0%{transform:scale(1)}45%{transform:scale(1.045)}100%{transform:scale(1)}}
+@keyframes tmShineX{to{transform:translateX(110%)}}
+.tm-shake{animation:tmShake .42s ease both}
+@keyframes tmShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
+.console.tm-shine{animation:tmConsoleGlow .9s ease-out}
+@keyframes tmConsoleGlow{0%{box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--leaf) 90%,transparent)}100%{box-shadow:inset 0 0 0 2px transparent}}
+.console.tm-shake{animation:tmShake .38s ease}
+
+/* finish card: perfect lesson ribbon + best combo */
+.tm-fin{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%}
+.tm-perfect{display:flex;align-items:center;gap:10px;width:100%;justify-content:center;padding:10px 14px;border-radius:14px;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--banana) 55%,var(--surface)),color-mix(in srgb,var(--accent) 30%,var(--surface)));border:2px solid color-mix(in srgb,var(--banana) 80%,var(--accent));
+  animation:enterUp .45s cubic-bezier(.2,.8,.3,1) .45s both}
+.tm-perfect::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,#ffffffa0 50%,transparent 65%);transform:translateX(-110%);animation:tmShineX 1s ease-out 1.1s forwards;pointer-events:none}
+.tm-perfect .tp-star{font-size:1.9rem;line-height:1;animation:pop .6s ease 1s both}
+.tm-perfect .tp-t{display:flex;flex-direction:column;text-align:left;line-height:1.15}
+.tm-perfect b{font-family:var(--display);font-size:1.25rem;color:var(--fg)}
+.tm-perfect small{font-weight:700;color:var(--fg);opacity:.75;font-size:.85rem}
+.tm-best{font-weight:700;color:var(--muted);font-size:.95rem;animation:enterUp .4s cubic-bezier(.2,.8,.3,1) .6s both}
+.tm-best b{color:var(--accent)}
+
+/* streak milestone: full-screen warm celebration */
+.celebrate.tm-ms{z-index:65;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));overflow:auto;
+  background:radial-gradient(circle at 50% 30%,#FFE08A 0,#FFB347 38%,#FA7A20 72%,#D9480F 100%);color:#2A1300;animation:tmMsIn .35s ease both}
+.tm-ms.out{animation:tmMsOut .22s ease forwards}
+@keyframes tmMsIn{from{opacity:0}to{opacity:1}}
+@keyframes tmMsOut{to{opacity:0;transform:scale(1.04)}}
+.tm-ms-in{width:100%;max-width:400px;margin:auto;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px}
+.tm-ms-stage{position:relative;width:100%;height:clamp(190px,34vh,260px);display:grid;place-items:center}
+.tm-ms-rays{position:absolute;left:50%;top:50%;width:440px;height:440px;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 0deg,#fff5 0 9deg,transparent 9deg 22deg);animation:rays 22s linear infinite;
+  -webkit-mask:radial-gradient(circle closest-side,#000 20%,transparent 100%);mask:radial-gradient(circle closest-side,#000 20%,transparent 100%)}
+.tm-ms-fl{position:relative;width:clamp(120px,22vh,160px);aspect-ratio:100/120;animation:tmGrow 1s cubic-bezier(.3,1.5,.5,1) .15s both}
+.tm-flame{width:100%;height:100%;display:block;transform-origin:50% 95%;animation:tmFlame 1.1s ease-in-out 1.1s infinite alternate;filter:drop-shadow(0 8px 14px #B9420E88)}
+.tm-ms-n{position:absolute;left:0;right:0;bottom:12%;font-family:var(--display);font-weight:800;font-size:clamp(2.2rem,7vh,3.1rem);line-height:1;color:#fff;-webkit-text-stroke:1.5px #C2410C;paint-order:stroke fill;text-shadow:0 3px 0 #C2410C,0 0 16px #F2541B;animation:pop .6s ease .9s both}
+.tm-ms-mk{position:absolute;right:max(0px,calc(50% - 168px));bottom:-10px;width:118px;height:118px;filter:drop-shadow(0 6px 8px #B9420E66);animation:jumpIn .8s cubic-bezier(.3,.8,.3,1) .55s both}
+.tm-ms-mk .tm{width:100%;height:100%;animation:tmCheer .7s ease-in-out 1.4s infinite alternate;transform-origin:50% 90%}
+@keyframes tmGrow{0%{transform:scale(.15);opacity:0}60%{transform:scale(1.18);opacity:1}80%{transform:scale(.95)}100%{transform:scale(1)}}
+@keyframes tmFlame{from{transform:scale(1,1) skewX(-2deg)}to{transform:scale(1.04,1.08) skewX(2deg)}}
+@keyframes tmCheer{from{transform:translateY(0) rotate(-4deg)}to{transform:translateY(-8px) rotate(4deg)}}
+.tm-ms-label{font-size:.78rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#5A2600;animation:enterUp .4s ease .7s both}
+.tm-ms h2{font-size:clamp(1.9rem,8vw,2.4rem);color:#2A1300;animation:enterUp .45s cubic-bezier(.2,.8,.3,1) .8s both}
+.tm-ms p{margin:0;font-weight:800;font-size:1.1rem;color:#4A1E00;animation:enterUp .45s cubic-bezier(.2,.8,.3,1) .9s both}
+.tm-ms-week{display:flex;gap:6px;justify-content:center;margin-top:4px;animation:enterUp .45s ease 1s both}
+.tm-ms-week span{display:flex;flex-direction:column;align-items:center;gap:3px;font-weight:800;font-size:.75rem;color:#5A2600}
+.tm-ms-week i{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:1.05rem;background:#ffffff40;border:2px solid #ffffff70}
+.tm-ms-week .on i{background:#fff;border-color:#fff;box-shadow:0 3px 0 #C2410C55}
+.tm-ms-ban{font-weight:900;background:#fff;color:#2A1300;border-radius:999px;padding:6px 16px;box-shadow:0 3px 0 #C2410C66;animation:pop .6s ease 1.15s both}
+.tm-ms .tm-ms-ok{width:100%;max-width:320px;min-height:54px;font-size:1.15rem;margin-top:8px;background:#fff;color:#C2410C;box-shadow:0 5px 0 #C2410C;animation:enterUp .45s ease 1.25s both}
+.tm-ms .tm-ms-ok:active{box-shadow:0 2px 0 #C2410C}
+.tm-ms .tm-ms-ok:focus-visible{outline-color:#fff}
+
+/* Settings stays on one phone screen with the extra Vibration row */
+.setpage .setrow{padding-block:8px}
