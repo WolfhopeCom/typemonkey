@@ -110,6 +110,8 @@ Web Audio and `localStorage` work in both WebViews (WKWebView on iOS, Android Sy
 
 **Daily reminders.** `@capacitor/local-notifications` (official). Opt-in from Settings: the first time it asks for notification permission, then schedules the next 14 days at the chosen hour (7 am to 8 pm), skipping a day the player already practiced. The window rolls forward each time the app opens. Nothing leaves the device.
 
+**Haptics.** `@capacitor/haptics` (official). A light tap when tiles or Jr. blocks are placed, a success buzz on right answers and finished lessons, a soft warning buzz on a miss, a strong one for badges and streak milestones. Settings → Vibration turns it off. No permission needed; on the web it falls back to `navigator.vibrate` (Android browsers) or nothing.
+
 ### Things to check on a real device
 
 - **iCloud sync:** sign in to the same Apple Account on an iPhone and an iPad (or two iPhones), finish a lesson on one, then open the app on the other. It should say "Progress synced from your other device". iCloud can take a few seconds to a minute.
