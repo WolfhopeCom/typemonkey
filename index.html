@@ -536,6 +536,7 @@ html.calm *{animation:none!important;transition:none!important}
 .confetti i{position:absolute;top:0;width:9px;height:14px;border-radius:2px;animation:cfall var(--t) cubic-bezier(.3,.4,.6,1) var(--d) forwards;opacity:.95}
 @media (prefers-reduced-motion:reduce){.buddy .tm,.fin-stage .rays{animation:none}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
 </style>
 </head>
 <body>
@@ -54793,6 +54794,10 @@ function playground(lang="js"){SFX.stopMusic();
   if(P.web){renderWeb($("#out-p"),ta.value);$("#run-p").onclick=()=>renderWeb($("#out-p"),ta.value)}
   foot();window.scrollTo(0,0);
 }
+
+/* ---------- v1.1 feature modules (src/features/*.js, inlined by build.py). They may wrap or replace functions above. ---------- */
+/* --- 00-readme.js --- */
+/* v1.1 feature modules live here. Each file is inlined into the app script after the core code. */
 
 $("#homeBtn").onclick=home;$("#gearBtn").onclick=settingsPage;
 $("#sndBtn").onclick=()=>{S.settings.sound=S.settings.sound===false;save();if(!S.settings.sound)SFX.stopMusic(true);else if(cur&&cur.l&&$(".lessonbar"))setTimeout(()=>jrMusic(cur.l.steps[cur.step]),60);toast(S.settings.sound?"Sounds on 🔊":"Sounds off 🔇");if(S.settings.sound)setTimeout(()=>sfx("correct"),40);if(rerender===settingsPage)settingsPage()};

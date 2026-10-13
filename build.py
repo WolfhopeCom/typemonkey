@@ -55,6 +55,12 @@ def build(artifact: bool) -> pathlib.Path:
         b64 = base64.b64encode((ROOT / "src" / "fonts" / file).read_bytes()).decode()
         return f"@font-face{{font-family:\"{fam}\";src:url(data:font/woff;base64,{b64}) format(\"woff\");font-weight:{weights};font-style:normal;font-display:swap}}"
     fonts = "\n".join([face("Baloo 2", "baloo2.woff", "400 800"), face("Nunito", "nunito.woff", "200 1000"), face("JetBrains Mono", "jbmono.woff", "100 800")])
+    # v1.1 feature modules: every src/features/*.css and *.js, in name order
+    feat = ROOT / "src" / "features"
+    fcss = "\n".join(f.read_text() for f in sorted(feat.glob("*.css"))) if feat.is_dir() else ""
+    fjs = "\n".join(f"/* --- {f.name} --- */\n" + f.read_text() for f in sorted(feat.glob("*.js"))) if feat.is_dir() else ""
+    assert "/*FEATURES*/" in app and "/*FEATURE_CSS*/" in app, "feature placeholders missing from src/app.html"
+    app = app.replace("/*FEATURE_CSS*/", fcss).replace("/*FEATURES*/", fjs.replace("</script", "<\\/script"))
     assert "/*FONTS*/" in app, "fonts placeholder missing from src/app.html"
     app = app.replace("/*FONTS*/", fonts)
     assert "/*COURSE_DATA*/" in app, "placeholder missing from src/app.html"
