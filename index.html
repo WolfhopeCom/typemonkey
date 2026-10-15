@@ -421,6 +421,10 @@ span.repn{display:inline-block}
 .mini-monkey .tm{width:72px;height:82px}
 .shopitem{position:relative}
 .shopitem.away{opacity:.55}
+.shopitem.lvonly{border-color:color-mix(in srgb,var(--banana,#F5B82E) 70%,transparent);background:linear-gradient(180deg,color-mix(in srgb,var(--banana,#F5B82E) 16%,var(--surface)),var(--surface))}
+.shopitem.lvlocked .mini-monkey{filter:saturate(.35);opacity:.75}
+.season.lvtag{color:color-mix(in srgb,var(--banana) 50%,var(--fg))}
+.pill.lvpill{background:color-mix(in srgb,var(--banana,#F5B82E) 30%,transparent);color:var(--fg)}
 .shopitem:has(.season){padding-top:26px}
 .season{position:absolute;top:6px;left:6px;font-size:.68rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
 .legal h3{font-size:1.1rem;margin-top:6px}
@@ -54985,18 +54989,20 @@ function dailyDone(){
 
 /* ---------- TypeMonkey shop ---------- */
 const SHOP=[["fur","Fur",FURS],["hat","Hats",HATS],["eyes","Glasses",EYES],["neck","Neckwear",NECKS],["pet","Pets",PETS]];
+/* Level rewards (src/features/40-monkey.js, TMLevel.GIFTS) are earned only by levelling up, never sold. Returns that level, or 0. */
+function levelOnly(slot,id){try{const G=window.TMLevel&&TMLevel.GIFTS;if(!G)return 0;for(const L in G)if(G[L][0]===slot&&G[L][1]===id)return +L}catch(e){}return 0}
 function shop(tab="hat",preview){SFX.stopMusic();
   rerender=()=>shop(tab);setMode(false);
   const look=preview||S.look;const [slot,label,items]=SHOP.find(x=>x[0]===tab);
   $("#screen").innerHTML=`<div class="stack">
     <div class="row"><button class="btn ghost sm" id="back">← Home</button></div>
-    <section class="hero"><div class="label">Shop</div><h1>Dress up TypeMonkey</h1><p>Earn bananas in lessons, games and reviews, then spend them here. Your look shows up everywhere TypeMonkey does.</p></section>
-    <div class="shopstage"><div class="stage-monkey">${withPet("cheer",look)}</div><div class="stage-info"><div class="label">Your bananas</div><div class="big">🍌 ${S.bananas}</div>${preview?`<p>Previewing. Tap Buy to keep it!</p>`:`<p>Tap an item to try it on.</p>`}</div></div>
+    <section class="hero"><div class="label">Shop</div><h1>Dress up TypeMonkey</h1><p>Earn bananas in lessons, games and reviews, then spend them here. Items marked ⭐ Rare can't be bought: they're level rewards.</p></section>
+    <div class="shopstage"><div class="stage-monkey">${withPet("cheer",look)}</div><div class="stage-info"><div class="label">Your bananas</div><div class="big">🍌 ${S.bananas}</div>${preview?(levelOnly(slot,preview[slot])?`<p>Previewing a ⭐ rare level reward.</p>`:`<p>Previewing. Tap Buy to keep it!</p>`):`<p>Tap an item to try it on.</p>`}</div></div>
     <div class="langs" role="tablist">${SHOP.map(([k,l])=>`<button class="lang" data-tab="${k}" aria-pressed="${k===tab}">${l}</button>`).join("")}</div>
     <div class="shopgrid">${Object.entries(items).map(([id,it])=>{
-      const owned=S.owned[slot].includes(id),on=S.look[slot]===id,tryLook={...S.look,[slot]:id},away=!owned&&!inSeason(it);
-      return `<button class="shopitem ${on?"on":""} ${away?"away":""}" data-id="${id}" ${away?"disabled":""}>${it.season?`<span class="season">${it.season==="oct"?"🎃":"❄️"} Seasonal</span>`:""}<div class="mini-monkey">${withPet("happy",tryLook)}</div><b>${it.name}</b>
-        <span class="pill ${on?"ok":owned?"":"kid"}">${on?(slot==="pet"?"With you":"Wearing"):owned?"Owned":away?`Back in ${seasonName(it)}`:`🍌 ${it.price}`}</span></button>`}).join("")}</div>
+      const owned=S.owned[slot].includes(id),on=S.look[slot]===id,tryLook={...S.look,[slot]:id},away=!owned&&!inSeason(it),lv=levelOnly(slot,id);
+      return `<button class="shopitem ${on?"on":""} ${away?"away":""} ${lv?"lvonly":""} ${lv&&!owned?"lvlocked":""}" data-id="${id}" ${away?"disabled":""}>${it.season?`<span class="season">${it.season==="oct"?"🎃":"❄️"} Seasonal</span>`:lv?`<span class="season lvtag">⭐ Rare</span>`:""}<div class="mini-monkey">${withPet("happy",tryLook)}</div><b>${it.name}</b>
+        <span class="pill ${on?"ok":owned?"":lv?"lvpill":"kid"}">${on?(slot==="pet"?"With you":"Wearing"):owned?"Owned":away?`Back in ${seasonName(it)}`:lv?`⭐ Level ${lv}`:`🍌 ${it.price}`}</span></button>`}).join("")}</div>
     <div id="buybar"></div>
   </div>`;
   $("#back").onclick=home;
@@ -55005,6 +55011,11 @@ function shop(tab="hat",preview){SFX.stopMusic();
     const id=b.dataset.id,it=items[id];
     if(S.owned[slot].includes(id)){S.look[slot]=id;save();toast(`TypeMonkey is wearing: ${it.name}`);shop(tab);return}
     shop(tab,{...S.look,[slot]:id});
+    const lv=levelOnly(slot,id);
+    if(lv){const now=window.TMLevel?TMLevel.info(S.xp).lvl:1;
+      $("#buybar").innerHTML=`<div class="paywall lvgate"><div><h3>⭐ ${it.name}</h3><p>A rare level reward. You can't buy it with bananas: reach <b>Level ${lv}</b> and it's yours for free.${now<lv?` You're Level ${now}, keep going!`:""}</p></div>
+        <button class="btn ghost" id="nobuy">OK</button></div>`;
+      $("#buybar").scrollIntoView({block:"nearest"});$("#nobuy").onclick=()=>shop(tab);return}
     $("#buybar").innerHTML=`<div class="paywall"><div><h3>${it.name}</h3><p>${S.bananas>=it.price?`Costs ${it.price} bananas. You have ${S.bananas}.`:`You need ${it.price-S.bananas} more bananas. Finish lessons and games to earn them!`}</p></div>
       <button class="btn banana" id="buy" ${S.bananas>=it.price?"":"disabled"}>Buy · 🍌 ${it.price}</button><button class="btn ghost" id="nobuy">Cancel</button></div>`;
     $("#buybar").scrollIntoView({block:"nearest"});
@@ -55812,7 +55823,7 @@ function decorateMap(c){
       <div class="lvup-title">${esc(I.title)}</div>
       <p class="muted">${to>=MAX?"You reached the top. TypeMonkey is a true legend, thanks to you!":`TypeMonkey grew a little! ${stage(to)!==stage(from)?`Now a <b>${stage(to)}</b>. `:""}${fmt(I.toGo)} XP to Level ${to+1}.`}</p>
       <div class="lvup-rewards"><span class="pill kid">+${ban} 🍌</span>${gifts.map(x=>`<span class="pill ok">🎁 ${esc(x.name)}</span>`).join("")}</div>
-      ${gift?`<div class="lvup-gift"><div class="mini-monkey">${withPet("happy",{...S.look,[gift.slot]:gift.id})}</div><div><b>Free gift: ${esc(gift.name)}</b><span>It's in your closet. Want TypeMonkey to wear it?</span></div></div>`:""}
+      ${gift?`<div class="lvup-gift"><div class="mini-monkey">${withPet("happy",{...S.look,[gift.slot]:gift.id})}</div><div><b>⭐ Rare reward: ${esc(gift.name)}</b><span>You can only get this by levelling up. Want TypeMonkey to wear it?</span></div></div>`:""}
       <div class="row" style="justify-content:center">${gift?`<button class="btn banana" id="lv-wear">Wear it!</button>`:""}<button class="btn${gift?" ghost":""}" id="lv-ok">${gift?"Later":"Yay!"}</button></div>
     </div>`;
     document.body.appendChild(g);
@@ -55885,7 +55896,7 @@ function decorateMap(c){
         ${tile("🏆",`${got}<small>/${list.length}</small>`,"Badges")}
       </div>
       ${days?chart(days):""}
-      <div class="card prof-road"><div class="pw-head"><div><div class="label">Level rewards</div><h3>${nextGift?`Next gift at Level ${nextGift}`:"Every gift unlocked!"}</h3></div></div>
+      <div class="card prof-road"><div class="pw-head"><div><div class="label">⭐ Rare level rewards</div><h3>${nextGift?`Next gift at Level ${nextGift}`:"Every gift unlocked!"}</h3><p class="muted" style="margin:2px 0 0">Not sold in the shop. The only way to get them is to level up.</p></div></div>
         <div class="road">${Object.keys(GIFTS).map(Number).map(L=>{const gi=giftItem(L);if(!gi)return "";const on=I.lvl>=L;
           return `<div class="road-i ${on?"on":""} ${L===nextGift?"next":""}"><div class="mini-monkey">${withPet("happy",{...S.look,[gi.slot]:gi.id})}</div><b>${esc(gi.name)}</b><span class="pill ${on?"ok":L===nextGift?"go":""}">${on?"✓ Lv "+L:"Lv "+L}</span></div>`}).join("")}</div></div>
       <div class="card prof-courses"><div class="label">Your courses</div>

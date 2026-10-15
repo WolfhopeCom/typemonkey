@@ -116,6 +116,16 @@ with sync_playwright() as p:
             tb = pg.evaluate("document.querySelector('.topbar').scrollWidth<=innerWidth")
             ok(tb, f"top bar overflows at {w}px")
             ok(not errs, f"page errors {w} {scheme}: {errs[:3]}")
+    # 6. level rewards are exclusive: never for sale in the shop
+    pg, errs = page(state={"xp": 200, "mlevel": 3, "bananas": 9999})
+    pg.evaluate("shop('hat')")
+    for L, (slot, gid) in pg.evaluate("TMLevel.GIFTS").items():
+        pg.evaluate(f"shop({json.dumps(slot)})"); pg.click(f'.shopitem[data-id="{gid}"]', force=True)
+        ok(pg.locator("#buy").count() == 0, f"level {L} reward {gid} can be bought")
+        ok(f"Level {L}" in pg.inner_text("#buybar"), f"level {L} reward {gid}: no 'reach Level' note")
+    pg.evaluate("shop('hat')"); pg.click('.shopitem[data-id="cowboy"]', force=True)
+    ok(pg.locator("#buy").count() == 1, "normal shop items should still be for sale")
+    ok(not errs, f"shop errors: {errs[:3]}")
     b.close()
 
 for x in fails: print("FAIL:", x)

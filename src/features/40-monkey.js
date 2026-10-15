@@ -95,7 +95,7 @@
       <div class="lvup-title">${esc(I.title)}</div>
       <p class="muted">${to>=MAX?"You reached the top. TypeMonkey is a true legend, thanks to you!":`TypeMonkey grew a little! ${stage(to)!==stage(from)?`Now a <b>${stage(to)}</b>. `:""}${fmt(I.toGo)} XP to Level ${to+1}.`}</p>
       <div class="lvup-rewards"><span class="pill kid">+${ban} 🍌</span>${gifts.map(x=>`<span class="pill ok">🎁 ${esc(x.name)}</span>`).join("")}</div>
-      ${gift?`<div class="lvup-gift"><div class="mini-monkey">${withPet("happy",{...S.look,[gift.slot]:gift.id})}</div><div><b>Free gift: ${esc(gift.name)}</b><span>It's in your closet. Want TypeMonkey to wear it?</span></div></div>`:""}
+      ${gift?`<div class="lvup-gift"><div class="mini-monkey">${withPet("happy",{...S.look,[gift.slot]:gift.id})}</div><div><b>⭐ Rare reward: ${esc(gift.name)}</b><span>You can only get this by levelling up. Want TypeMonkey to wear it?</span></div></div>`:""}
       <div class="row" style="justify-content:center">${gift?`<button class="btn banana" id="lv-wear">Wear it!</button>`:""}<button class="btn${gift?" ghost":""}" id="lv-ok">${gift?"Later":"Yay!"}</button></div>
     </div>`;
     document.body.appendChild(g);
@@ -168,7 +168,7 @@
         ${tile("🏆",`${got}<small>/${list.length}</small>`,"Badges")}
       </div>
       ${days?chart(days):""}
-      <div class="card prof-road"><div class="pw-head"><div><div class="label">Level rewards</div><h3>${nextGift?`Next gift at Level ${nextGift}`:"Every gift unlocked!"}</h3></div></div>
+      <div class="card prof-road"><div class="pw-head"><div><div class="label">⭐ Rare level rewards</div><h3>${nextGift?`Next gift at Level ${nextGift}`:"Every gift unlocked!"}</h3><p class="muted" style="margin:2px 0 0">Not sold in the shop. The only way to get them is to level up.</p></div></div>
         <div class="road">${Object.keys(GIFTS).map(Number).map(L=>{const gi=giftItem(L);if(!gi)return "";const on=I.lvl>=L;
           return `<div class="road-i ${on?"on":""} ${L===nextGift?"next":""}"><div class="mini-monkey">${withPet("happy",{...S.look,[gi.slot]:gi.id})}</div><b>${esc(gi.name)}</b><span class="pill ${on?"ok":L===nextGift?"go":""}">${on?"✓ Lv "+L:"Lv "+L}</span></div>`}).join("")}</div></div>
       <div class="card prof-courses"><div class="label">Your courses</div>
