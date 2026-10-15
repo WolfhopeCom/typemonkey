@@ -52,7 +52,8 @@ def add_platforms():
         else:
             run(["npx", "cap", "add", "ios", "--packagemanager", "SPM"])
     if not ANDROID.is_dir():
-        run(["npx", "cap", "add", "android"])
+        # Android is optional: never let it stop the iPhone setup.
+        run(["npx", "cap", "add", "android"], check=False)
 
 
 # ---------- native settings (safe to run every build) ----------
