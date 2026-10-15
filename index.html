@@ -55269,6 +55269,7 @@ function playground(lang="js"){SFX.stopMusic();
      home()          -> brand-new users get the onboarding instead; everyone else gets a "Today" card (ring + week)
      finish()        -> adds a "Daily goal reached!" line to the lesson-complete card on the lesson that crosses the goal
      settingsPage()  -> adds a compact "Daily goal" 10/20/30/50 row
+   Onboarding is hello + 2 questions, then Home (the daily goal is set from the Today card or Settings).
    State: S.onboarded, S.profile={why,level,firstCourse}, S.settings.goal, S.xpDays={"Y-M-D":xp}, S.goalHit, S.goalCheered */
 
 const GOALS=[[10,"Casual","about 5 min a day","🌱"],[20,"Regular","about 10 min a day","🍌"],[30,"Serious","about 15 min a day","💪"],[50,"Intense","about 20 min a day","🚀"]];
@@ -55354,7 +55355,7 @@ function onbRec(){
 }
 const REC_WHY={jr:"TypeMonkey Jr. has puzzles made just for kids. No typing needed!",py:"Python reads almost like English. It's a great first language!",js:"JavaScript runs every website. You'll see your code work right away!"};
 function onbShell(inner,{mood="happy",say="",anim="",cta="Continue",ctaOff=false,back=true,id=""}){
-  const N=5,pct=Math.round(ONB.step/N*100);
+  const N=2,pct=Math.round(ONB.step/N*100);
   $("#foot").innerHTML="";
   $("#screen").innerHTML=`<div class="onb" data-step="${ONB.step}" id="onb">
     <div class="onb-top">${back&&ONB.step?`<button class="x onb-back" id="onbBack" aria-label="Back">←</button>`:`<span class="onb-gap"></span>`}
@@ -55384,31 +55385,15 @@ function onbRender(){
     onbPick("#oWhy","why",v=>{const t=$(".onb-talk .bubble");if(t)t.textContent={fun:"Fun is the best reason! 🎉",school:"Great! I can help with school.",job:"Awesome! Let's build real skills.",kid:"Yay! I love coding with kids! 🍌"}[v]});
     $("#onbGo").onclick=()=>{ONB.course=null;ONB.step=2;onbRender()};
   }else if(s===2){
-    onbShell(`<h1 class="onb-q">How much coding do you know?</h1><div class="onb-opts" id="oLvl">${optCards(LEVEL,"level")}</div>`,{say:"Any answer is great. We start easy!",mood:"think",anim:"onb-tilt",ctaOff:!ONB.level});
+    onbShell(`<h1 class="onb-q">How much coding do you know?</h1><div class="onb-opts" id="oLvl">${optCards(LEVEL,"level")}</div>`,{say:"Any answer is great. We start easy!",mood:"think",anim:"onb-tilt",ctaOff:!ONB.level,cta:"Done!"});
     onbPick("#oLvl","level");
-    $("#onbGo").onclick=()=>{ONB.course=null;ONB.step=3;onbRender()};
-  }else if(s===3){
-    const rec=onbRec();if(!ONB.course)ONB.course=rec;
-    const cs=onbCourses().sort((a,b)=>(b.id===rec)-(a.id===rec));
-    onbShell(`<h1 class="onb-q">Pick your first course</h1><div class="onb-langs" id="oLang">${cs.map((c,i)=>`<button class="onb-lang ${c.id===rec?"rec":""} ${c.kids?"kids":""} ${ONB.course===c.id?"sel":""}" data-v="${c.id}" aria-pressed="${ONB.course===c.id}" style="--i:${i}">${c.id===rec?`<span class="pill go">⭐ Best for you</span>`:""}<b>${esc(c.name)}</b><span class="tag">${esc(c.tag)}</span></button>`).join("")}</div>
-      <p class="onb-note">You can try the others any time.</p>`,{say:REC_WHY[rec]||"This one is a great start!",anim:"onb-hop"});
-    onbPick("#oLang","course");
-    $("#onbGo").onclick=()=>{ONB.step=4;onbRender()};
-  }else if(s===4){
-    if(!ONB.goal)ONB.goal=String(goalXp());
-    onbShell(`<h1 class="onb-q">Pick a daily goal</h1><div class="onb-opts" id="oGoal">${GOALS.map(([v,n,m,e],i)=>`<button class="onb-opt ${ONB.goal==v?"sel":""}" data-v="${v}" aria-pressed="${ONB.goal==v}" style="--i:${i}"><span class="oe">${e}</span><span class="ot"><b>${n}</b><span>${m}</span></span><span class="oxp">${v} XP</span></button>`).join("")}</div>
-      <p class="onb-note">A little every day is the secret! You can change this in Settings.</p>`,{say:"How much do you want to practice each day?",anim:"onb-tilt"});
-    onbPick("#oGoal","goal");
-    $("#onbGo").onclick=()=>{ONB.step=5;onbSave(true);onbRender()};
-  }else{
-    const c=courseById(ONB.course)||onbCourses()[0];const g=goalXp();
-    onbShell(`<div class="onb-hello"><div class="fin-stage onb-fin" aria-hidden="true"><div class="rays"></div>${monkey("cheer")}</div>
-      <h1>You're all set!</h1><p>Your first lesson takes about 3 minutes. Let's write some code!</p>
-      <div class="onb-sum"><span>📚 ${esc(c.name)}</span><span>🎯 ${g} XP a day</span></div></div>`,{cta:"Start my first lesson ▶",back:true});
-    $("#onbGo").classList.add("onb-cta-big");
-    $("#onbGo").onclick=()=>onbStart(c);
-    if(!ONB_CALM())setTimeout(()=>confetti(70),250);sfx("complete");
+    $("#onbGo").onclick=onbFinish;
   }
+}
+/* Two questions, then straight to Home: the recommended course becomes the big "Continue" card there. */
+function onbFinish(){
+  ONB.course=onbRec();onbSave(true);home();
+  try{sfx("complete");if(!ONB_CALM())confetti(60)}catch(e){}
 }
 function onbSave(done){
   S.profile={...(S.profile||{}),why:ONB.why,level:ONB.level,firstCourse:ONB.course};
@@ -55421,7 +55406,7 @@ function onbStart(c){
   const nu=nextUp(c);
   if(nu&&nu.l.steps&&status(c,nu)!=="pro")startLesson(nu.l.id);else coursePage(c.id);
 }
-function onbSkip(){S.onboarded=true;if(ONB.why||ONB.level)onbSave(true);else save();home()}
+function onbSkip(){S.onboarded=true;if(ONB.why||ONB.level){ONB.course=onbRec();onbSave(true)}else save();home()}
 function onboarding(){ONB.step=0;rerender=onboarding;try{SFX.stopMusic()}catch(e){}onbRender()}
 
 /* ---- Home wrap: onboarding first, then the Today card ---- */

@@ -161,6 +161,7 @@ npx cap open ios
 >
 > • Level up: TypeMonkey now grows with you through 30 levels, with rare outfits you can only get by levelling up
 > • Your new Profile: stats, best streak and a chart of your week. Tap the monkey at the top to see it
+> • A quick hello when you first open the app, then right to Home
 > • Daily goals: pick 10, 20, 30 or 50 XP a day and fill your ring
 > • A brand-new lesson map with unit banners and treasure chests to open
 > • Combos, streak milestones and "Perfect lesson" bonuses
