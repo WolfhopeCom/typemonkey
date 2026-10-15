@@ -1,0 +1,23 @@
+/* 50-beginner: word helper + tap coach */
+.term{cursor:pointer;text-decoration:underline dotted color-mix(in srgb,var(--accent) 80%,transparent);text-decoration-thickness:2px;text-underline-offset:4px;border-radius:4px;-webkit-tap-highlight-color:transparent}
+.term:hover,.term:focus-visible{background:color-mix(in srgb,var(--accent) 14%,transparent);outline:none}
+code.i.term{text-decoration-color:var(--accent)}
+.gloss-tip{margin:0;padding:8px 12px;border-radius:12px;background:color-mix(in srgb,var(--accent) 10%,var(--surface));color:var(--fg);font-size:.92rem;font-weight:600}
+.term-demo{text-decoration:underline dotted var(--accent);text-decoration-thickness:2px;text-underline-offset:4px}
+.gloss-pop{position:fixed;z-index:80;background:var(--surface);color:var(--fg);border:2px solid var(--accent);border-radius:16px;padding:12px 14px 14px;box-shadow:0 12px 30px #0003;animation:gpIn .18s ease-out}
+.gloss-pop::before{content:"";position:absolute;left:calc(var(--ax) - 8px);width:14px;height:14px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.gloss-pop.below::before{top:-9px;border-right:0;border-bottom:0}
+.gloss-pop.above::before{bottom:-9px;border-left:0;border-top:0}
+.gloss-pop .gp-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.gloss-pop .gp-head b{font-family:var(--display,inherit);font-size:1.05rem}
+.gloss-pop .x{min-width:36px;min-height:36px}
+.gloss-pop p{margin:4px 0 0;line-height:1.45}
+@keyframes gpIn{from{opacity:0;transform:translateY(4px) scale(.97)}to{opacity:1;transform:none}}
+
+.coach-hand{position:fixed;left:0;top:0;z-index:70;pointer-events:none;display:flex;flex-direction:column;align-items:flex-start;gap:2px;transition:transform .25s cubic-bezier(.3,1.4,.5,1)}
+.coach-hand[hidden]{display:none}
+.coach-hand .ch-f{font-size:2.1rem;line-height:1;filter:drop-shadow(0 3px 2px #0004);animation:chTap 1s ease-in-out infinite}
+@keyframes chTap{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+.coach-glow{position:relative;animation:coachGlow 1.2s ease-in-out infinite;z-index:1}
+@keyframes coachGlow{0%,100%{box-shadow:0 0 0 3px var(--accent),0 0 0 0 color-mix(in srgb,var(--accent) 45%,transparent)}50%{box-shadow:0 0 0 3px var(--accent),0 0 0 9px color-mix(in srgb,var(--accent) 0%,transparent)}}
+@media (prefers-reduced-motion:reduce){.coach-hand .ch-f,.coach-glow{animation:none}.coach-glow{box-shadow:0 0 0 3px var(--accent)}.coach-hand{transition:none}}

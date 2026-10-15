@@ -884,6 +884,30 @@ html.calm .lvup-sparks{display:none}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .lvup-stage .rays{opacity:.4}:root:not([data-theme="light"]) .prof-stage .rays{opacity:.3}}
 :root[data-theme="dark"] .lvup-stage .rays{opacity:.4}:root[data-theme="dark"] .prof-stage .rays{opacity:.3}
 
+/* 50-beginner: word helper + tap coach */
+.term{cursor:pointer;text-decoration:underline dotted color-mix(in srgb,var(--accent) 80%,transparent);text-decoration-thickness:2px;text-underline-offset:4px;border-radius:4px;-webkit-tap-highlight-color:transparent}
+.term:hover,.term:focus-visible{background:color-mix(in srgb,var(--accent) 14%,transparent);outline:none}
+code.i.term{text-decoration-color:var(--accent)}
+.gloss-tip{margin:0;padding:8px 12px;border-radius:12px;background:color-mix(in srgb,var(--accent) 10%,var(--surface));color:var(--fg);font-size:.92rem;font-weight:600}
+.term-demo{text-decoration:underline dotted var(--accent);text-decoration-thickness:2px;text-underline-offset:4px}
+.gloss-pop{position:fixed;z-index:80;background:var(--surface);color:var(--fg);border:2px solid var(--accent);border-radius:16px;padding:12px 14px 14px;box-shadow:0 12px 30px #0003;animation:gpIn .18s ease-out}
+.gloss-pop::before{content:"";position:absolute;left:calc(var(--ax) - 8px);width:14px;height:14px;background:var(--surface);border:2px solid var(--accent);transform:rotate(45deg)}
+.gloss-pop.below::before{top:-9px;border-right:0;border-bottom:0}
+.gloss-pop.above::before{bottom:-9px;border-left:0;border-top:0}
+.gloss-pop .gp-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.gloss-pop .gp-head b{font-family:var(--display,inherit);font-size:1.05rem}
+.gloss-pop .x{min-width:36px;min-height:36px}
+.gloss-pop p{margin:4px 0 0;line-height:1.45}
+@keyframes gpIn{from{opacity:0;transform:translateY(4px) scale(.97)}to{opacity:1;transform:none}}
+
+.coach-hand{position:fixed;left:0;top:0;z-index:70;pointer-events:none;display:flex;flex-direction:column;align-items:flex-start;gap:2px;transition:transform .25s cubic-bezier(.3,1.4,.5,1)}
+.coach-hand[hidden]{display:none}
+.coach-hand .ch-f{font-size:2.1rem;line-height:1;filter:drop-shadow(0 3px 2px #0004);animation:chTap 1s ease-in-out infinite}
+@keyframes chTap{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+.coach-glow{position:relative;animation:coachGlow 1.2s ease-in-out infinite;z-index:1}
+@keyframes coachGlow{0%,100%{box-shadow:0 0 0 3px var(--accent),0 0 0 0 color-mix(in srgb,var(--accent) 45%,transparent)}50%{box-shadow:0 0 0 3px var(--accent),0 0 0 9px color-mix(in srgb,var(--accent) 0%,transparent)}}
+@media (prefers-reduced-motion:reduce){.coach-hand .ch-f,.coach-glow{animation:none}.coach-glow{box-shadow:0 0 0 3px var(--accent)}.coach-hand{transition:none}}
+
 </style>
 </head>
 <body>
@@ -40105,30 +40129,34 @@ for(var key in docs){if(__BRYTHON__.builtins[key]){if(['object','function'].incl
 const C=s=>`<code class="i">${s}</code>`;
 
 const JS_UNIT1={name:"Talking to the computer",free:true,lessons:[
-{id:"js1",title:"Hello, console",sub:"console.log, strings, variables",steps:[
- {type:"talk",title:"Hey, I'm TypeMonkey.",mood:"cheer",
-  body:`<p>We're going to learn JavaScript, the language that runs inside every web browser. Websites, games, apps, even some robots use it.</p><p>Today you'll make the computer talk back to you.</p>`,
-  say:"I'll be right here the whole way. Tap Continue!"},
+{id:"js1",title:"Hello, console",sub:"your first line of code",steps:[
+ {type:"talk",title:"Hey, I'm TypeMonkey!",mood:"cheer",
+  body:`<p><b>Code</b> is a list of instructions for a computer, like a recipe. You write it in a coding language. This one is <b>JavaScript</b>, the language that runs every website.</p><p>Today you'll make the computer talk. No experience needed!</p>`,
+  say:"I'll show you every tap. Tap Continue!"},
  {type:"talk",title:"Make the computer talk",
-  body:`<p>${C("console.log()")} prints whatever you put inside the parentheses. Text goes inside quotes, and text in quotes is called a <b>string</b>.</p>`,
-  demo:`console.log("Hello, world!");\nconsole.log("I'm learning JavaScript");`,
-  say:"Press ▶ Run and watch the console. Change the text and run it again!"},
+  body:`<p>${C("console.log()")} means <b>show this message</b>. Whatever you put inside the ${C("( )")} shows up in the <b>console</b>: the box under the code where the computer's answers appear.</p><p>Words go inside quotes ${C('" "')} so the computer knows they're text.</p>`,
+  demo:`console.log("Hello, world!");`,
+  say:"Tap ▶ Run the example, then look in the box under the code. The computer said it!"},
+ {type:"quiz",q:"Which line makes the computer show Hi?",opts:['console.log("Hi");',"Hi",'"Hi" console.log;'],a:0,mono:true,
+  why:"console.log( ) shows whatever is inside it. Hi goes in quotes because it's text."},
+ {type:"fill",title:"Your first line of code",body:`<p>Make the computer say ${C("Ook!")}. Tap the right piece to drop it in the gap.</p>`,
+  code:`[0]("Ook!");`,blanks:["console.log"],tokens:["console.log","hello","print"],
+  why:"console.log( ) is how JavaScript shows a message. You just wrote code!"},
  {type:"talk",title:"Boxes with names",mood:"think",
-  body:`<p>A <b>variable</b> is a labeled box that holds a value. Use ${C("const")} for a box you won't change, and ${C("let")} for one you will.</p>`,
-  demo:`const snack = "banana";\nlet count = 3;\nconsole.log(snack);\nconsole.log(count);`,
-  say:"Notice: no quotes around snack when we print it. We want what's IN the box."},
- {type:"fill",title:"Fill in the blanks",body:`<p>Make a box called ${C("city")} and print what's inside it.</p>`,
+  body:`<p>A <b>variable</b> is a box with a name on it. You put something in the box, and later you use the name to get it back.</p><p>${C("const")} makes a new box. Here the box is called ${C("snack")} and holds ${C('"banana"')}.</p>`,
+  demo:`const snack = "banana";\nconsole.log(snack);`,
+  say:"See? No quotes around snack when we show it. We want what's IN the box, not the word snack."},
+ {type:"fill",title:"Fill in the blanks",body:`<p>Make a box called ${C("city")} and show what's inside it.</p>`,
   code:`[0] city = "Paris";\nconsole.log([1]);`,blanks:["const","city"],tokens:["const","city","\"city\"","print"],
   why:"const makes the box, and city (no quotes) reads what's inside."},
  {type:"code",title:"Your turn: introduce yourself",
-  body:`<p>Make a ${C("const")} called ${C("name")} with your name in it. Then print ${C("Hi, I'm")} followed by your name. You can glue strings together with ${C("+")}.</p>`,
+  body:`<p>Make a box called ${C("name")} with your name in it. Then show ${C("Hi, I'm")} followed by your name. The ${C("+")} sign glues two pieces of text together.</p>`,
   start:`// Your code here\nconst name = \n`,
   use:[[/\bconst\s+name\s*=/,"Create the box with: const name = \"...\""]],
   outRe:[[/^Hi, I'm \S+/,"Print it exactly like: Hi, I'm Sam   (hint: \"Hi, I'm \" + name)"]],
   hint:`const name = "Sam";\nconsole.log("Hi, I'm " + name);`},
- {type:"quiz",q:"Which keyword makes a variable you can't reassign?",opts:["const","let","var","fixed"],a:0,why:"const locks the box. let lets you put a new value in later."},
- {type:"quiz",q:"What does this print?",code:`console.log("2" + 2);`,opts:["22","4","\"2\" + 2","An error"],a:0,mono:true,why:"\"2\" is a string, so + glues instead of adds. Sneaky, right?"},
- {type:"quiz",q:"Which one is a valid string?",opts:["'hello'","hello","<hello>","(hello)"],a:0,mono:true,why:"Strings need quotes. Single ' or double \" both work."},
+ {type:"quiz",q:"What does const do?",opts:["Makes a box (a variable) with a name","Shows a message","Deletes the code","Adds two numbers"],a:0,why:"const makes a named box. Later you'll meet let, a box you can change."},
+ {type:"quiz",q:"Which one is text the computer will show as-is?",opts:["'hello'","hello","<hello>","(hello)"],a:0,mono:true,why:"Text needs quotes. Text in quotes is called a string. Single ' or double \" both work."},
  {type:"game"},{type:"done"}],
  pool:[
   [`console.log("Hi" + "!");`,["Hi!","Hi +!","Hi !"]],
@@ -43945,21 +43973,27 @@ const COURSE_BUGLAB={id:"buglab",name:"Bug Lab",extra:true,blurb:"This code is b
 
 /* Python course, Units 1–3. Read-and-reason in the preview; every answer is checked with python3 (tests/verify_compiled.py py). */
 const PY_UNIT1={name:"Python basics",free:true,lessons:[
-{id:"py1",title:"Hello, Python",sub:"print and your first program",steps:[
+{id:"py1",title:"Hello, Python",sub:"your first line of code",steps:[
  {type:"talk",title:"Meet Python",mood:"cheer",
-  body:`<p>Python is famous for being readable. It's used for AI, data science, websites, automation and even NASA tools. No semicolons, no curly braces.</p>`,
-  say:"Python reads almost like English. You're going to like this one."},
- {type:"talk",title:"print()",
-  body:`<p>${C("print()")} shows text on the screen. Text goes in quotes. You can print several things at once, separated by commas, and Python puts a space between them.</p>`,
-  demo:`print("Hello, world!")\nprint("I'm learning", "Python")\nprint(2 + 3)`,
-  say:"Output:\nHello, world!\nI'm learning Python\n5"},
- {type:"talk",title:"Comments",mood:"think",
-  body:`<p>Anything after ${C("#")} is a comment. Python ignores it. It's a note for humans.</p>`,
-  demo:`# This line is ignored\nprint("Ook!")  # so is this part`,
-  say:"Output: Ook!"},
- {type:"quiz",q:"What does this print?",code:`print("Type", "Monkey")`,opts:["Type Monkey","TypeMonkey","Type, Monkey"],a:0,mono:true,why:"Commas in print() add a space between the items."},
- {type:"fill",title:"Say hi",body:`<p>Print the word hi.</p>`,code:`[0]("hi")`,blanks:["print"],tokens:["print","console.log","echo","say"],why:"print() is Python's way to show output."},
- {type:"quiz",q:"What does this print?",code:`print("2" + "2")`,opts:["22","4","2 2"],a:0,mono:true,why:"Two strings joined with + stick together."},
+  body:`<p><b>Code</b> is a list of instructions for a computer, like a recipe. You write it in a coding language. <b>Python</b> is one that reads almost like English. It's used for AI, games, websites and even at NASA.</p><p>No experience needed!</p>`,
+  say:"I'll show you every tap. Tap Continue!"},
+ {type:"talk",title:"Make the computer talk",
+  body:`<p>${C("print()")} means <b>show this on the screen</b>. Whatever you put inside the ${C("( )")} shows up in the <b>output</b>: the box under the code where the computer's answers appear.</p><p>Words go inside quotes ${C('" "')} so Python knows they're text. Numbers don't need quotes.</p>`,
+  demo:`print("Hello, world!")\nprint(2 + 3)`,
+  say:"Tap ▶ Run the example, then look under the code. Python even did the math!"},
+ {type:"quiz",q:"Which line shows Hi on the screen?",opts:['print("Hi")',"Hi",'"Hi" print'],a:0,mono:true,
+  why:"print( ) shows whatever is inside it. Hi goes in quotes because it's text."},
+ {type:"fill",title:"Your first line of code",body:`<p>Make Python say ${C("hi")}. Tap the right piece to drop it in the gap.</p>`,code:`[0]("hi")`,blanks:["print"],tokens:["print","hello","show"],why:"print() is Python's way to show something. You just wrote code!"},
+ {type:"talk",title:"Show a few things at once",
+  body:`<p>Put commas between things inside ${C("print()")} and Python shows them all, with a space between each.</p>`,
+  demo:`print("I'm learning", "Python")`,
+  say:"Run it: I'm learning Python"},
+ {type:"quiz",q:"What does this show?",code:`print("Type", "Monkey")`,opts:["Type Monkey","TypeMonkey","Type, Monkey"],a:0,mono:true,why:"Commas in print() add a space between the items."},
+ {type:"talk",title:"Notes for humans",mood:"think",
+  body:`<p>Anything after a ${C("#")} is a <b>comment</b>: a note for people. Python skips it.</p>`,
+  demo:`# This line is skipped\nprint("Ook!")  # so is this part`,
+  say:"Run it. Only Ook! shows up."},
+ {type:"quiz",q:"What does this show?",code:`# print("hidden")\nprint("shown")`,opts:["shown","hidden shown","Nothing"],a:0,mono:true,why:"The first line starts with #, so it's a comment and Python skips it."},
  {type:"game"},{type:"done"}],
  pool:[
   [`print("Hi" + "!")`,["Hi!","Hi +!","Hi !"]],
@@ -55896,6 +55930,194 @@ function decorateMap(c){
   }
   window.profilePage=profilePage;
 })();
+
+/* --- 50-beginner.js --- */
+/* ---------- 50-beginner: help for people who have never coded ----------
+   1. Word helper: coding words in lesson text (bold words and inline code like console.log()) get a dotted
+      underline. Tap one for a plain-English meaning. Works in every course.
+   2. Tap coach: the first few times you meet a demo, a fill-in-the-gap puzzle or a tile puzzle, a bouncing
+      hand points at exactly what to tap next (the right piece, then Check / Run, then Continue), with a
+      short "do this" line. Wrong piece placed? The hand points at it to take it back. Skipped for people
+      who told onboarding "I already code".
+   Hooks: renderStep (decorate words, start the coach), wireTiles (remembers the tile plan).
+   State: S.coach={demo,fill,tiles} (times shown), S.glossTip (the one-time "tap a word" tip was shown). */
+
+const GLOSS={
+  "code":["Code","Instructions for a computer, written in a coding language. Like a recipe the computer follows step by step."],
+  "program":["Program","A set of code instructions that does something, like a game or an app."],
+  "javascript":["JavaScript","A coding language. It runs inside every web browser, so websites and web games use it."],
+  "python":["Python","A coding language that reads almost like English. Used for AI, games, science and more."],
+  "console":["The console","The box under your code where the computer shows its answers and messages."],
+  "console.log":["console.log( )","JavaScript's way to say “show this message”. Whatever is inside the ( ) appears in the console."],
+  "print":["print( )","Python's way to say “show this on the screen”. Whatever is inside the ( ) appears in the output box."],
+  "output":["Output","What your code shows when it runs. It appears in the box under the code."],
+  "( )":["Parentheses ( )","Round brackets. The thing inside them is what the instruction works with. print(\"hi\") shows hi."],
+  "\" \"":["Quotes \" \"","Quotes go around words so the computer knows they're text to show, not instructions to follow."],
+  "string":["String","Text, like a word or a sentence. Strings go inside quotes: \"banana\"."],
+  "strings":["String","Text, like a word or a sentence. Strings go inside quotes: \"banana\"."],
+  "str":["str (string)","Python's name for text, like \"banana\". It goes inside quotes."],
+  "variable":["Variable","A box with a name on it. You put something in it, then use the name to get it back later."],
+  "const":["const","Makes a new named box (a variable) in JavaScript. A const box keeps the same thing inside."],
+  "let":["let","Makes a new named box (a variable) in JavaScript that you can change later."],
+  "var":["var","An old way to make a variable. let and const are the modern ways."],
+  "value":["Value","The thing stored in a box, like 3, \"banana\" or True."],
+  "number":["Number","A number the computer can do math with, like 7 or 3.5. Numbers don't need quotes."],
+  "int":["int","A whole number, like 3 or 100. No decimal point."],
+  "float":["float","A number with a decimal point, like 3.5."],
+  "bool":["bool (true or false)","A value that's only ever yes or no: True or False."],
+  "boolean":["Boolean","A value that's only ever yes or no: true or false."],
+  "comment":["Comment","A note for people. The computer skips it. Starts with # in Python or // in JavaScript."],
+  "#":["# (comment)","In Python, everything after # on a line is a note for people. The computer skips it."],
+  "=":["= (equals sign)","Puts a value into a box. snack = \"banana\" puts banana in the box called snack."],
+  "==":["== (double equals)","Asks a question: are these two the same? The answer is true or false."],
+  "+":["+ (plus)","Adds numbers (2 + 3 is 5). With text, it glues words together (\"Ty\" + \"pe\" is \"Type\")."],
+  "operator":["Operator","A symbol that does something with values, like + to add or > to compare."],
+  "if":["if","Lets the code make a choice: do this part only if something is true."],
+  "else":["else","Goes with if: what to do when the if part is not true."],
+  "elif":["elif","Short for “else if”: check another choice when the first if wasn't true."],
+  "loop":["Loop","Code that repeats. Instead of writing the same thing 10 times, a loop does it for you."],
+  "for":["for","Starts a loop: do something once for each item, or a set number of times."],
+  "while":["while","Starts a loop that keeps repeating while something stays true."],
+  "function":["Function","A named set of instructions you can use again and again, like a recipe card with a title."],
+  "def":["def","Python's word for making a new function (a reusable set of instructions)."],
+  "return":["return","Sends an answer back out of a function to whoever used it."],
+  "parameter":["Parameter","A named input a function asks for, like the size in “make a pizza of size large”."],
+  "argument":["Argument","The actual value you hand to a function when you use it."],
+  "list":["List","A box that holds many things in order, like a shopping list: [\"apple\", \"banana\"]."],
+  "array":["Array","A box that holds many things in order, like a shopping list: [\"apple\", \"banana\"]."],
+  "index":["Index","An item's position in a list. Computers start counting at 0, so the first item is index 0."],
+  "dictionary":["Dictionary","A box of labeled values: each label (key) points to a value, like a real dictionary."],
+  "key":["Key","The label used to look up a value, like a word you look up in a dictionary."],
+  "object":["Object","A bundle of related values with names, like a pet with a name, age and favorite food."],
+  "class":["Class","A blueprint for making objects. One Pet class can make lots of different pets."],
+  "method":["Method","A function that belongs to something, like a list's append() that adds an item to it."],
+  "input":["Input","Information the user types in while the program runs."],
+  "error":["Error","The computer couldn't follow an instruction. It's normal! The message gives a clue about what to fix."],
+  "bug":["Bug","A mistake in code that makes it do the wrong thing. Fixing it is called debugging."],
+  "syntax":["Syntax","The spelling and grammar rules of a coding language."],
+  "keyword":["Keyword","A special word the language already knows, like if, for or print."],
+  "html":["HTML","The language that builds the parts of a web page: headings, text, pictures and buttons."],
+  "css":["CSS","The language that styles a web page: colors, sizes and layout."],
+  "tag":["Tag","An HTML label in angle brackets, like <h1>, that tells the browser what something is."],
+  "sql":["SQL","A language for asking questions to a database, like “show me every player with over 100 points”."],
+  "query":["Query","A question you ask a database with SQL."],
+  "table":["Table","Data in rows and columns, like a spreadsheet."],
+  "database":["Database","An organized place that stores lots of information, made of tables."],
+  "run":["Run","Tell the computer to follow your code now. Press ▶ Run to see what it does."]
+};
+function glossKey(t){
+  let k=String(t||"").replace(/\s+/g," ").trim().toLowerCase();
+  if(GLOSS[k])return k;
+  const n=k.replace(/\(\s*[^)]*\)\s*;?$/,"").replace(/[;:,.!]+$/,"").trim();
+  if(GLOSS[n])return n;
+  if(n.endsWith("s")&&GLOSS[n.slice(0,-1)])return n.slice(0,-1);
+  return null;
+}
+function glossDecorate(){
+  const els=$$("#screen .card p b, #screen .card p code.i, #screen .card li b, #screen .card li code.i, #screen .card h2 code.i");
+  let any=false;
+  for(const el of els){if(el.classList.contains("term")||el.closest("button"))continue;
+    const k=glossKey(el.textContent);if(!k)continue;
+    el.classList.add("term");el.dataset.term=k;el.setAttribute("role","button");el.tabIndex=0;el.setAttribute("aria-label",`${el.textContent}: what does this mean?`);
+    el.onclick=e=>{e.stopPropagation();glossShow(el)};el.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();glossShow(el)}};any=true}
+  if(any&&!S.glossTip&&!(S.profile&&S.profile.level==="code")){
+    const card=$("#screen .card");if(card&&!card.querySelector(".gloss-tip")){
+      const tip=document.createElement("p");tip.className="gloss-tip";tip.innerHTML=`💬 New word? Tap any <span class="term-demo">underlined word</span> to see what it means.`;
+      const h=card.querySelector("h2");(h||card.firstChild)&&card.insertBefore(tip,h?h.nextSibling:card.firstChild);
+      S.glossTip=true;save()}}
+}
+function glossClose(){const p=$("#glossPop");if(p)p.remove();document.removeEventListener("pointerdown",glossOutside,true)}
+function glossOutside(e){const p=$("#glossPop");if(p&&!p.contains(e.target)&&!e.target.classList.contains("term"))glossClose()}
+function glossShow(el){
+  glossClose();const [title,text]=GLOSS[el.dataset.term]||[];if(!title)return;
+  try{sfx("tap")}catch(e){}
+  const p=document.createElement("div");p.id="glossPop";p.className="gloss-pop";p.setAttribute("role","dialog");p.setAttribute("aria-label",title);
+  p.innerHTML=`<div class="gp-head"><b>${esc(title)}</b><button class="x" aria-label="Close">×</button></div><p>${esc(text)}</p>`;
+  document.body.appendChild(p);glossY=scrollY;
+  const r=el.getBoundingClientRect(),W=innerWidth,pw=Math.min(320,W-24);p.style.width=pw+"px";
+  const left=Math.max(12,Math.min(W-pw-12,r.left+r.width/2-pw/2));p.style.left=left+"px";
+  const h=p.offsetHeight,below=r.bottom+10+h<innerHeight-8;
+  p.style.top=(below?r.bottom+10:Math.max(8,r.top-10-h))+"px";p.classList.add(below?"below":"above");
+  p.style.setProperty("--ax",Math.max(16,Math.min(pw-16,r.left+r.width/2-left))+"px");
+  p.querySelector(".x").onclick=glossClose;
+  setTimeout(()=>document.addEventListener("pointerdown",glossOutside,true),0);
+}
+let glossY=0;addEventListener("scroll",()=>{if($("#glossPop")&&Math.abs(scrollY-glossY)>40)glossClose()},{passive:true});
+
+/* ---- Tap coach ---- */
+const COACH_TIMES=3;
+const COACH={on:false,kind:null,s:null,hand:null,raf:0,ran:false,lastMsg:""};
+let TILE_PLAN=null;
+{const _wt=wireTiles;wireTiles=function(s,p){TILE_PLAN=p;return _wt.apply(this,arguments)}}
+const coachWanted=kind=>{if(S.profile&&S.profile.level==="code")return false;if(cur&&(cur.review||cur.daily))return false;
+  const C=S.coach=S.coach&&typeof S.coach==="object"?S.coach:{};return (C[kind]||0)<COACH_TIMES};
+const visible=el=>{if(!el||el.hidden||el.disabled)return false;const r=el.getBoundingClientRect();return r.width>0&&r.height>0&&getComputedStyle(el).visibility!=="hidden"};
+const txt=el=>(el.textContent||"").trim();
+function coachStop(){COACH.on=false;cancelAnimationFrame(COACH.raf);if(COACH.hand)COACH.hand.remove();COACH.hand=null;$$(".coach-glow").forEach(e=>e.classList.remove("coach-glow"))}
+function coachTarget(){
+  const s=COACH.s;
+  if(COACH.kind==="demo"){
+    if(!COACH.ran&&visible($("#trund")))return [$("#trund"),"Tap ▶ Run to see what this code does"];
+    return [$("#go"),"Now tap Continue"];
+  }
+  if(COACH.kind==="fill"){
+    if(visible($("#go")))return [$("#go"),"Great job! Tap Continue"];
+    const slots=$$(".slot");
+    const wrong=slots.find(b=>b.classList.contains("filled")&&!b.classList.contains("right")&&txt(b)!==s.blanks[+b.dataset.s]);
+    if(wrong)return [wrong,"Oops! Tap this piece to take it back"];
+    const empty=slots.find(b=>!b.classList.contains("filled"));
+    if(empty){const want=s.blanks[+empty.dataset.s];const tok=$$(".token").find(b=>!b.disabled&&txt(b)===want);
+      if(tok)return [tok,`Tap <b>${esc(want)}</b> to drop it into the gap`]}
+    return [$("#check"),"All filled in! Tap Check"];
+  }
+  if(COACH.kind==="tiles"){
+    const p=TILE_PLAN;if(!p||!$("#screen").classList.contains("tapmode"))return [null,""];
+    if(visible($("#go"))&&!$("#go").disabled)return [$("#go"),"You did it! Tap Continue"];
+    const placed=$$("#tbuild .tile.on"),want=p.pieces.map(x=>x.trim());
+    for(let k=0;k<placed.length;k++)if(txt(placed[k])!==want[k])return [placed[k],"Oops! Tap this one to take it back"];
+    if(placed.length<want.length){const t=$$("#ttray .tile").find(b=>txt(b)===want[placed.length]);
+      if(t)return [t,placed.length?"Now tap this piece next":`These are puzzle pieces of code. Tap this one first`]}
+    const run=[$("#trun"),$("#run-c")].find(visible);
+    return [run,"All pieces in place! Tap ▶ Run to try your code"];
+  }
+  return [null,""];
+}
+function coachTick(){
+  if(!COACH.on)return;
+  if(!COACH.hand||!COACH.card||!COACH.card.isConnected){coachStop();return}
+  const [el,msg]=coachTarget();
+  $$(".coach-glow").forEach(e=>{if(e!==el)e.classList.remove("coach-glow")});
+  if(el&&visible(el)){
+    el.classList.add("coach-glow");
+    const r=el.getBoundingClientRect(),H=COACH.hand;H.hidden=false;
+    const x=Math.min(innerWidth-40,Math.max(4,r.right-Math.min(34,r.width/2))),y=Math.min(innerHeight-40,r.bottom-20);
+    H.style.transform=`translate(${x}px,${y}px)`;
+    if(msg!==COACH.lastMsg){COACH.lastMsg=msg;const t=$("#screen .card .todo span");if(t)t.innerHTML="👉 "+msg;}
+  }else if(COACH.hand)COACH.hand.hidden=true;
+  COACH.raf=requestAnimationFrame(coachTick);
+}
+function coachStart(kind,s){
+  coachStop();if(!coachWanted(kind))return;
+  S.coach[kind]=(S.coach[kind]||0)+1;save();
+  Object.assign(COACH,{on:true,kind,s,ran:false,lastMsg:""});
+  const H=document.createElement("div");H.className="coach-hand";H.setAttribute("aria-hidden","true");H.hidden=true;
+  H.innerHTML=`<span class="ch-f">👆</span>`;
+  document.body.appendChild(H);COACH.hand=H;COACH.card=$("#screen .card");
+  if(kind==="demo"){const b=$("#trund");if(b)b.addEventListener("click",()=>{COACH.ran=true},{once:true})}
+  COACH.raf=requestAnimationFrame(coachTick);
+}
+
+{const _rs=renderStep;renderStep=function(){
+  coachStop();glossClose();TILE_PLAN=null;
+  const r=_rs.apply(this,arguments);
+  try{const s=cur&&cur.l&&cur.l.steps[cur.step];
+    glossDecorate();
+    if(s&&!(cur.c&&cur.c.kids)){
+      if(s.type==="talk"&&s.demo&&cur.c.runnable&&$("#trund"))coachStart("demo",s);
+      else if(s.type==="fill"&&!s.auto)coachStart("fill",s);
+      else if(s.type==="code"&&TILE_PLAN&&$("#screen").classList.contains("tapmode"))coachStart("tiles",s);
+    }}catch(e){console.warn(e)}
+  return r}}
 
 $("#homeBtn").onclick=home;$("#gearBtn").onclick=settingsPage;
 $("#sndBtn").onclick=()=>{S.settings.sound=S.settings.sound===false;save();if(!S.settings.sound)SFX.stopMusic(true);else if(cur&&cur.l&&$(".lessonbar"))setTimeout(()=>jrMusic(cur.l.steps[cur.step]),60);toast(S.settings.sound?"Sounds on 🔊":"Sounds off 🔇");if(S.settings.sound)setTimeout(()=>sfx("correct"),40);if(rerender===settingsPage)settingsPage()};
