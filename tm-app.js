@@ -216,7 +216,13 @@ const SFX=(()=>{
     }catch(e){ctx=null}
   }
   if(typeof document!=="undefined")["pointerdown","touchend","click","keydown"].forEach(ev=>document.addEventListener(ev,wake,{capture:true,passive:true}));
-  if(typeof document!=="undefined")document.addEventListener("visibilitychange",()=>{if(!document.hidden&&ctx&&ctx.state!=="running")ctx.resume().catch(()=>{})});
+  // After a phone call or a long time in the background, iPhone audio can come back "running" but silent
+  // (WebKit bug 243727). If we were away for a while, start a fresh sound engine on the next tap.
+  let hiddenAt=0;
+  if(typeof document!=="undefined")document.addEventListener("visibilitychange",()=>{
+    if(document.hidden){hiddenAt=Date.now();return}
+    if(ctx&&hiddenAt&&Date.now()-hiddenAt>20000){try{ctx.close()}catch(e){}ctx=null;master=null;return}
+    if(ctx&&ctx.state!=="running")ctx.resume().catch(()=>{})});
   function play(name,arg){
     try{
       const r=R[name];if(!r||!on()||!gestured||!AC)return false;
@@ -3131,8 +3137,40 @@ function coachStart(kind,s){
     }}catch(e){console.warn(e)}
   return r}}
 
+/* --- 60-safekeep.js --- */
+/* ---------- 60-safekeep: a second copy of progress on the device (iPhone/iPad app only) ----------
+   iOS treats a web view's localStorage as "best effort": the system may clear it. Losing a long streak is the thing
+   players of streak apps get angriest about, so every save is also written to the app's own settings storage
+   (UserDefaults, via the TMCloud plugin's localGet/localSet). At launch, if that copy is newer than what the web view
+   has (for example the web view's storage was wiped), it is merged back in with mergeState() (newest wins, and a
+   newer "Erase everything" still wins). Does nothing on the web. */
+const Safe={
+  KEY:"progress",timer:null,last:null,s:null,
+  plugin(){try{const C=window.Capacitor,P=C&&C.isNativePlatform&&C.isNativePlatform()&&C.Plugins&&C.Plugins.TMCloud;return P&&P.localSet?P:null}catch(e){return null}},
+  write(){const P=Safe.plugin();if(!P)return;clearTimeout(Safe.timer);Safe.timer=null;
+    try{const v=JSON.stringify(S);if(v===Safe.last)return;Safe.last=v;P.localSet({key:Safe.KEY,value:v}).catch(()=>{})}catch(e){}},
+  queue(){if(!Safe.plugin())return;
+    if(S!==Safe.s){Safe.s=S;Safe.write();return}          // a whole new state (erase, restore, sync): write right away
+    clearTimeout(Safe.timer);Safe.timer=setTimeout(Safe.write,1200)},
+  async restore(){const P=Safe.plugin();if(!P)return;
+    try{const r=await P.localGet({key:Safe.KEY});if(!r||!r.value)return Safe.write();
+      const got=JSON.parse(r.value);if(!got||typeof got!=="object")return;
+      if((+got.savedAt||0)<=(+S.savedAt||0)+1000)return Safe.write();
+      S=mergeState(S,normState({...got,settings:{...(got.settings||{}),...(S.savedAt?S.settings:{})}}));
+      try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+      Safe.s=S;renderStats();
+      if($("#onb")&&S.onboarded)home();else if(!$("#quit")&&typeof rerender==="function")rerender();
+      Safe.write();
+    }catch(e){}}
+};
+{const _save=save;save=function(){const r=_save.apply(this,arguments);try{Safe.queue()}catch(e){}return r}}
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&Safe.timer)Safe.write()});
+Safe.s=S;setTimeout(()=>Safe.restore(),300);
+
 $("#homeBtn").onclick=home;$("#gearBtn").onclick=settingsPage;
 $("#sndBtn").onclick=()=>{S.settings.sound=S.settings.sound===false;save();if(!S.settings.sound)SFX.stopMusic(true);else if(cur&&cur.l&&$(".lessonbar"))setTimeout(()=>jrMusic(cur.l.steps[cur.step]),60);toast(S.settings.sound?"Sounds on 🔊":"Sounds off 🔇");if(S.settings.sound)setTimeout(()=>sfx("correct"),40);if(rerender===settingsPage)settingsPage()};
 try{addWarmups()}catch(e){console.warn(e)}
 renderStats();home();
+/* App: hide the launch screen the moment Home has painted (capacitor.config.json keeps a 3 s safety limit) */
+try{requestAnimationFrame(()=>requestAnimationFrame(()=>{try{const SP=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.SplashScreen;if(SP&&SP.hide)SP.hide({fadeOutDuration:200})}catch(e){}}))}catch(e){}
 try{storeInit()}catch(e){}   // App Store / Google Play: real price + already-bought check (does nothing on the web)

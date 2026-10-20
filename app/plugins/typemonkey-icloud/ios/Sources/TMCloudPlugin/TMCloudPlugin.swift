@@ -11,7 +11,9 @@ public class TMCloudPlugin: CAPPlugin, CAPBridgedPlugin {
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "available", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "get", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "set", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "set", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "localGet", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "localSet", returnType: CAPPluginReturnPromise)
     ]
 
     private let store = NSUbiquitousKeyValueStore.default
@@ -53,6 +55,25 @@ public class TMCloudPlugin: CAPPlugin, CAPBridgedPlugin {
         }
         store.set(value, forKey: key)
         store.synchronize()
+        call.resolve()
+    }
+
+    /// A safety copy of progress on this device (UserDefaults). The web view's own storage is "best effort" on iOS
+    /// and can be cleared by the system; this copy is not, so the app can restore progress if that happens.
+    @objc func localGet(_ call: CAPPluginCall) {
+        guard let key = call.getString("key") else { call.reject("key is required"); return }
+        if let value = UserDefaults.standard.string(forKey: "tm.local." + key) {
+            call.resolve(["value": value])
+        } else {
+            call.resolve([:])
+        }
+    }
+
+    @objc func localSet(_ call: CAPPluginCall) {
+        guard let key = call.getString("key"), let value = call.getString("value") else {
+            call.reject("key and value are required"); return
+        }
+        UserDefaults.standard.set(value, forKey: "tm.local." + key)
         call.resolve()
     }
 }

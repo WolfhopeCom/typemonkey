@@ -37,9 +37,11 @@ Everything to copy into App Store Connect, plus the exact steps. Screenshots are
 - Review screenshot: a screenshot of the "Unlock · $4.99" button (Home screen, bottom).
 - Review notes: The full version unlocks every course. Buy it from Settings → Unlock, or from any "Unlock" button. A grown-up check (a multiplication question) comes first. Restore is in Settings.
 
+> **Store-text rule (Guideline 2.3.8):** TypeMonkey is not in the Kids category, so the name, subtitle, keywords, description, screenshots and icon must not say or imply "for kids", "for children" or an age range like "ages 7–12". Say "beginners", "all ages", "families" or "no typing" instead. (In-app text and the privacy policy can still describe Jr.)
+
 ## 4. App information
 
-- **Subtitle (30 max):** Python, JavaScript & more (or: Coding for kids & beginners)
+- **Subtitle (30 max):** Python, JavaScript & more (or: Coding for beginners)
 - **Category:** Primary **Education**, Secondary **Developer Tools**
 - **Content rights:** Does not contain third-party content (Brython and the fonts are open-source and credited in Settings).
 - **Age rating questionnaire:** answer **None / No** to everything (no violence, no mature themes, no gambling, no unrestricted web access, no user-generated content shared with others, no chat). Result: **4+**.
@@ -53,7 +55,7 @@ Everything to copy into App Store Connect, plus the exact steps. Screenshots are
 ## 6. Version page (1.0)
 
 **Promotional text (170 max):**
-> Learn to code with a monkey buddy! Bite-size lessons, tap-to-build code, real projects and puzzles for kids. No ads, no accounts, works offline.
+> Learn to code with a monkey buddy! Bite-size lessons, tap-to-build code, real projects and no-typing puzzles. No ads, no accounts, works offline.
 
 **Description:**
 > TypeMonkey makes learning to code fun, friendly and bite-size, for all ages.
@@ -72,7 +74,7 @@ Everything to copy into App Store Connect, plus the exact steps. Screenshots are
 > • Bug Lab: fix broken code with hints that come one at a time
 > • Playground: write and run anything you want
 >
-> TYPEMONKEY JR. (AGES 7–12)
+> TYPEMONKEY JR.: CODING PUZZLES, NO TYPING
 > • Guide TypeMonkey through mazes with blocks: no typing, no reading walls of text
 > • Dance parties that teach loops, sorting machines that teach if/else, banana boxes that teach variables
 > • See your blocks turned into real code after every win
@@ -91,7 +93,7 @@ Everything to copy into App Store Connect, plus the exact steps. Screenshots are
 > Unit 1 of every course is free. One purchase unlocks everything, forever. No subscription.
 
 **Keywords (100 max):**
-> coding,programming,python,javascript,kids,swift,html,sql,java,c++,beginner,games,lessons
+> coding,programming,python,javascript,swift,html,sql,java,c++,beginner,learn,games,lessons,family
 
 **Support URL:** https://wolfhopecom.github.io/typemonkey/support.html
 **Marketing URL:** https://wolfhopecom.github.io/typemonkey/

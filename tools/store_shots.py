@@ -12,7 +12,7 @@ SHOTS = [
   ("01-home", "Learn to code,<br>one banana at a time", "home()"),
   ("02-path", "Bite-size lessons<br>on a fun path", "coursePage('py');window.scrollTo(0,330)"),
   ("03-tiles", "Tap to build real code.<br>No heavy typing.", "startLesson('py2');cur.step=cur.l.steps.findIndex(s=>s.type==='code');renderStep();(()=>{const t=[...document.querySelectorAll('#ttray .tile')];if(t[0])t[0].click()})()"),
-  ("04-jr", "TypeMonkey Jr.<br>for ages 7–12", "startLesson('jr1');cur.step=cur.l.steps.findIndex(s=>s.type==='dance');renderStep()"),
+  ("04-jr", "TypeMonkey Jr.<br>puzzles, no typing", "startLesson('jr1');cur.step=cur.l.steps.findIndex(s=>s.type==='dance');renderStep()"),
   ("05-projects", "Build real games<br>and apps", "coursePage('projects')"),
   ("06-profile", "Level up your<br>monkey buddy", "profilePage()"),
 ]

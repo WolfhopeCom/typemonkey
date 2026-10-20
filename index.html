@@ -49,6 +49,10 @@ button{font:inherit;cursor:pointer}
 html{overflow-x:hidden;background:var(--bg);overscroll-behavior-y:none}body{overscroll-behavior-y:none}
 /* iPhone: a solid strip behind the clock/battery so page content never shows above the top bar while scrolling */
 body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:50;pointer-events:none}html,body{max-width:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{overflow-x:clip;touch-action:manipulation}
+/* app feel: no text-selection loupe or long-press menus on buttons and cards; code, inputs and output stay selectable */
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+textarea,input,[contenteditable],pre,.console,.webview{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+img,svg{-webkit-user-drag:none}
 
 .buddy{display:flex;gap:12px;align-items:flex-end}
 .buddy .tm{width:88px;height:88px;flex:none}

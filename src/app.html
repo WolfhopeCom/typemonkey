@@ -40,6 +40,10 @@ button{font:inherit;cursor:pointer}
 html{overflow-x:hidden;background:var(--bg);overscroll-behavior-y:none}body{overscroll-behavior-y:none}
 /* iPhone: a solid strip behind the clock/battery so page content never shows above the top bar while scrolling */
 body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:50;pointer-events:none}html,body{max-width:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{overflow-x:clip;touch-action:manipulation}
+/* app feel: no text-selection loupe or long-press menus on buttons and cards; code, inputs and output stay selectable */
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+textarea,input,[contenteditable],pre,.console,.webview{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+img,svg{-webkit-user-drag:none}
 
 .buddy{display:flex;gap:12px;align-items:flex-end}
 .buddy .tm{width:88px;height:88px;flex:none}
@@ -775,7 +779,13 @@ const SFX=(()=>{
     }catch(e){ctx=null}
   }
   if(typeof document!=="undefined")["pointerdown","touchend","click","keydown"].forEach(ev=>document.addEventListener(ev,wake,{capture:true,passive:true}));
-  if(typeof document!=="undefined")document.addEventListener("visibilitychange",()=>{if(!document.hidden&&ctx&&ctx.state!=="running")ctx.resume().catch(()=>{})});
+  // After a phone call or a long time in the background, iPhone audio can come back "running" but silent
+  // (WebKit bug 243727). If we were away for a while, start a fresh sound engine on the next tap.
+  let hiddenAt=0;
+  if(typeof document!=="undefined")document.addEventListener("visibilitychange",()=>{
+    if(document.hidden){hiddenAt=Date.now();return}
+    if(ctx&&hiddenAt&&Date.now()-hiddenAt>20000){try{ctx.close()}catch(e){}ctx=null;master=null;return}
+    if(ctx&&ctx.state!=="running")ctx.resume().catch(()=>{})});
   function play(name,arg){
     try{
       const r=R[name];if(!r||!on()||!gestured||!AC)return false;
@@ -2868,5 +2878,7 @@ $("#homeBtn").onclick=home;$("#gearBtn").onclick=settingsPage;
 $("#sndBtn").onclick=()=>{S.settings.sound=S.settings.sound===false;save();if(!S.settings.sound)SFX.stopMusic(true);else if(cur&&cur.l&&$(".lessonbar"))setTimeout(()=>jrMusic(cur.l.steps[cur.step]),60);toast(S.settings.sound?"Sounds on 🔊":"Sounds off 🔇");if(S.settings.sound)setTimeout(()=>sfx("correct"),40);if(rerender===settingsPage)settingsPage()};
 try{addWarmups()}catch(e){console.warn(e)}
 renderStats();home();
+/* App: hide the launch screen the moment Home has painted (capacitor.config.json keeps a 3 s safety limit) */
+try{requestAnimationFrame(()=>requestAnimationFrame(()=>{try{const SP=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.SplashScreen;if(SP&&SP.hide)SP.hide({fadeOutDuration:200})}catch(e){}}))}catch(e){}
 try{storeInit()}catch(e){}   // App Store / Google Play: real price + already-bought check (does nothing on the web)
 </script>
