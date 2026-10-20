@@ -31,10 +31,11 @@ def have_capacitor():
 
 def build_web():
     run([sys.executable, "build.py"], cwd=ROOT)
-    src = ROOT / "index.html"
     WWW.mkdir(exist_ok=True)
-    shutil.copy2(src, WWW / "index.html")
-    print(f"copied index.html -> {WWW.relative_to(ROOT)}/index.html ({src.stat().st_size // 1024} KB)")
+    for name in ["index.html", "tm-data.js", "tm-app.js", "tm-brython.js"]:
+        src = ROOT / name
+        shutil.copy2(src, WWW / name)
+        print(f"copied {name} -> {WWW.relative_to(ROOT)}/{name} ({src.stat().st_size // 1024} KB)")
 
 
 def platforms():

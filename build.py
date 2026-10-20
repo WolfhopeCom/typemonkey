@@ -41,6 +41,9 @@ HEAD = """<!doctype html>
 """
 
 
+APP_FILES = ["index.html", "tm-data.js", "tm-app.js", "tm-brython.js"]  # what the native app ships (see app/build_app.py)
+
+
 def build(artifact: bool) -> pathlib.Path:
     app = (ROOT / "src" / "app.html").read_text()
     data = "\n".join((ROOT / "src" / "courses" / f).read_text() for f in COURSE_FILES) + "\n" + (ROOT / "src" / "legal.js").read_text()
@@ -70,10 +73,25 @@ def build(artifact: bool) -> pathlib.Path:
         out.parent.mkdir(exist_ok=True)
         out.write_text(page)
     else:
+        # The app build is split into a small page plus script files: the browser reads a 3 MB page much more slowly
+        # than a small page with separate scripts. The Python engine is only fetched when Python is first used.
+        bry_tag = '<script type="text/plain" id="tm-brython">'
+        a = page.index(bry_tag) + len(bry_tag); b = page.index("</script>", a)
+        (ROOT / "tm-brython.js").write_text(page[a:b])
+        page = page[:a - len(bry_tag)] + '<script type="text/plain" id="tm-brython" data-src="tm-brython.js"></script>' + page[b + len("</script>"):]
+        data_block = "<script>\n" + data + "\n</script>"
+        assert data_block in page, "course data block not found"
+        (ROOT / "tm-data.js").write_text(data)
+        page = page.replace(data_block, '<script src="tm-data.js"></script>', 1)
+        app_start = page.index("<script>\n/* ---------- TypeMonkey mascot")
+        app_end = page.rindex("</script>")
+        (ROOT / "tm-app.js").write_text(page[app_start + len("<script>\n"):app_end])
+        page = page[:app_start] + '<script src="tm-app.js"></script>' + page[app_end + len("</script>"):]
         head, sep, body = page.partition("</style>")
         out = ROOT / "index.html"
         out.write_text(HEAD + head + sep + "\n</head>\n<body>\n" + body + "\n</body>\n</html>\n")
-    print(f"built {out.relative_to(ROOT)} ({out.stat().st_size // 1024} KB)")
+    extra = "" if artifact else " + " + ", ".join(f"{n} ({(ROOT / n).stat().st_size // 1024} KB)" for n in APP_FILES[1:])
+    print(f"built {out.relative_to(ROOT)} ({out.stat().st_size // 1024} KB){extra}")
     return out
 
 
