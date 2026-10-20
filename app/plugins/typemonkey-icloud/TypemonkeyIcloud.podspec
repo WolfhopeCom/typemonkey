@@ -8,6 +8,7 @@ Pod::Spec.new do |s|
   s.source = { :git => 'https://github.com/WolfhopeCom/typemonkey.git', :tag => s.version.to_s }
   s.source_files = 'ios/Sources/**/*.{swift,h,m}'
   s.ios.deployment_target = '15.0'
+  s.frameworks = 'StoreKit'
   s.dependency 'Capacitor'
   s.swift_version = '5.1'
 end

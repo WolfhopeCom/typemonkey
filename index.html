@@ -912,6 +912,66 @@ code.i.term{text-decoration-color:var(--accent)}
 @keyframes coachGlow{0%,100%{box-shadow:0 0 0 3px var(--accent),0 0 0 0 color-mix(in srgb,var(--accent) 45%,transparent)}50%{box-shadow:0 0 0 3px var(--accent),0 0 0 9px color-mix(in srgb,var(--accent) 0%,transparent)}}
 @media (prefers-reduced-motion:reduce){.coach-hand .ch-f,.coach-glow{animation:none}.coach-glow{box-shadow:0 0 0 3px var(--accent)}.coach-hand{transition:none}}
 
+/* 70-streak: Banana Freezes + daily streak card */
+.fzchip{display:inline-flex;align-items:center;gap:2px;margin-left:8px;padding:1px 8px;border-radius:999px;font-size:.78rem;font-weight:800;background:color-mix(in srgb,#5BC0EB 22%,var(--surface));color:var(--fg);vertical-align:middle}
+.today .week .wd.fz i{background:color-mix(in srgb,#5BC0EB 30%,var(--surface))}
+.fzcard{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;border:2px solid color-mix(in srgb,#5BC0EB 55%,var(--line));background:linear-gradient(180deg,color-mix(in srgb,#5BC0EB 14%,var(--surface)),var(--surface))}
+.fzcard .fz-ic{font-size:2rem;line-height:1}
+.fzcard .fz-t{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.fzcard .fz-t span{color:var(--muted);font-size:.88rem}
+.fzcard .btn{flex:none}
+.fznote{margin:12px 0 0;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,#5BC0EB 14%,var(--surface));font-size:.92rem}
+.tm-ice{display:block;font-size:5.2rem;line-height:1;animation:tmIce .7s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes tmIce{from{transform:scale(.3) rotate(-20deg);opacity:0}to{transform:none;opacity:1}}
+.tm-ms-week span.fz i{background:color-mix(in srgb,#5BC0EB 35%,transparent)}
+.tm-ms-week span.now{font-weight:900}
+.tm-day .tm-ms-n{animation:tmDayN .6s .25s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes tmDayN{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.tm-ice,.tm-day .tm-ms-n{animation:none}}
+
+/* 80-syntax: syntax colors (light surfaces, dark surfaces, and the always-dark code panels) */
+:root{--sy-k:#7A35C8;--sy-s:#0B7F45;--sy-n:#B9470B;--sy-f:#1A62C4;--sy-c:#6A7B73}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--sy-k:#C9A8FF;--sy-s:#74E2A9;--sy-n:#FDBA74;--sy-f:#86BEFF;--sy-c:#8FA39A}}
+:root[data-theme="dark"]{--sy-k:#C9A8FF;--sy-s:#74E2A9;--sy-n:#FDBA74;--sy-f:#86BEFF;--sy-c:#8FA39A}
+.editor pre,.tbuild{--sy-k:#C9A8FF;--sy-s:#8BE5B3;--sy-n:#FDBA74;--sy-f:#8CC4FF;--sy-c:#8A9C94}
+.tile.on{--sy-k:#6A23B5;--sy-s:#0A6B3A;--sy-n:#A13A05;--sy-f:#154FA3;--sy-c:#5C5048}
+.sy-k{color:var(--sy-k);font-weight:700}
+.sy-s{color:var(--sy-s)}
+.sy-n{color:var(--sy-n)}
+.sy-f{color:var(--sy-f)}
+.sy-c{color:var(--sy-c);font-style:italic}
+.tile.tilewrong{animation:tileWrong .5s ease;box-shadow:0 0 0 3px #E5484D,0 3px 0 #B4282D!important}
+@keyframes tileWrong{0%,100%{transform:none}20%{transform:translateX(-6px) rotate(-2deg)}40%{transform:translateX(5px) rotate(1.5deg)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+@media (prefers-reduced-motion:reduce){.tile.tilewrong{animation:none}}
+
+/* 85-quests */
+.quests{display:flex;flex-direction:column;gap:10px}
+.quests .qhead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.quests .qhead h3{margin:2px 0 0}
+.quests .qbonus{flex:none;font-weight:800;font-size:.85rem;padding:4px 10px;border-radius:999px;background:color-mix(in srgb,var(--banana) 35%,var(--surface));color:var(--fg)}
+.quests .qbonus.got{background:color-mix(in srgb,var(--leaf) 30%,var(--surface))}
+.qrow{display:flex;align-items:center;gap:12px;min-width:0}
+.qrow .qic{flex:none;width:36px;height:36px;display:grid;place-items:center;border-radius:12px;background:color-mix(in srgb,var(--accent) 12%,var(--surface));font-size:1.1rem}
+.qrow .qt{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.qrow .qt b{font-size:.95rem}
+.qrow .qbar{height:8px;border-radius:999px;background:var(--line);overflow:hidden}
+.qrow .qbar i{display:block;height:100%;border-radius:inherit;background:var(--banana);transition:width .6s cubic-bezier(.3,1.2,.5,1)}
+.qrow .qn{flex:none;font-weight:800;font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums;min-width:44px;text-align:right}
+.qrow.done .qic{background:color-mix(in srgb,var(--leaf) 22%,var(--surface))}
+.qrow.done .qbar i{background:var(--leaf)}
+.qrow.done .qn{color:var(--leaf)}
+.qrow.done .qt b{color:var(--muted);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--muted) 60%,transparent)}
+
+/* 90-name */
+.nm-tag{align-self:center;border:0;border-radius:999px;padding:6px 14px;min-height:36px;font:inherit;font-weight:800;font-size:.95rem;background:var(--surface);color:var(--fg);box-shadow:0 0 0 2px var(--line) inset,0 3px 0 var(--line);cursor:pointer}
+.nm-tag.empty{background:color-mix(in srgb,var(--accent) 14%,var(--surface));box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 50%,transparent) inset,0 3px 0 color-mix(in srgb,var(--accent) 35%,transparent)}
+.nm-tag:active{transform:translateY(2px);box-shadow:0 0 0 2px var(--line) inset,0 1px 0 var(--line)}
+.nm-stage{display:grid;place-items:center;margin:4px 0 10px}.nm-stage .tm{width:110px;height:110px}
+.nm-ideas{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:12px}
+.nm-in{width:100%;box-sizing:border-box;min-height:48px;border-radius:14px;border:2px solid var(--line);background:var(--bg);color:var(--fg);font:inherit;font-size:1.1rem;font-weight:700;padding:0 14px;margin-bottom:12px}
+.nm-in:focus{outline:none;border-color:var(--accent)}
+.nm-on{color:var(--accent)}
+
 </style>
 </head>
 <body>

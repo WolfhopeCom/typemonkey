@@ -1949,11 +1949,21 @@ function mazeHint(prog,fn,s,open){
 }
 /* ---------- Motion pack helpers ---------- */
 const calmMotion=()=>{try{return matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){return false}};
-function confetti(n=70){if(calmMotion())return;const box=document.createElement("div");box.className="confetti";box.setAttribute("aria-hidden","true");
+/* Confetti on one canvas with one animation loop (smoother on older phones than dozens of moving elements). */
+function confetti(n=70){if(calmMotion())return;
+  const cv=document.createElement("canvas");cv.className="confetti";cv.setAttribute("aria-hidden","true");
+  const dpr=Math.min(2,window.devicePixelRatio||1),W=innerWidth,H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+"px";cv.style.height=H+"px";
+  const g=cv.getContext("2d");if(!g)return;g.scale(dpr,dpr);
   const C=["#FA7A20","#FFC845","#22986A","#7C5CFF","#FF6FAE","#4FB6E8"];
-  for(let i=0;i<n;i++){const e=document.createElement("i");const t=1.8+Math.random()*1.6;
-    e.style.cssText=`left:${Math.random()*100}%;background:${C[i%C.length]};--t:${t}s;--d:${Math.random()*.6}s;--dx:${(Math.random()-.5)*160}px;--rot:${(Math.random()-.5)*1080}deg;${Math.random()<.3?"border-radius:50%;width:10px;height:10px;":""}`;box.appendChild(e)}
-  document.body.appendChild(box);setTimeout(()=>box.remove(),4200)}
+  const P=[...Array(n)].map((_,i)=>({x:Math.random()*W,y:-20-Math.random()*H*.25,vx:(Math.random()-.5)*2.2,vy:2+Math.random()*3,
+    r:Math.random()*6.3,vr:(Math.random()-.5)*.3,w:7+Math.random()*4,h:10+Math.random()*6,c:C[i%C.length],round:Math.random()<.3,wob:Math.random()*6.3,d:Math.random()*25}));
+  document.body.appendChild(cv);let t=0;
+  const step=()=>{if(!cv.isConnected)return;t++;g.clearRect(0,0,W,H);let alive=0;
+    for(const p of P){if(t<p.d){alive++;continue}p.vy=Math.min(p.vy+.06,6.5);p.wob+=.08;p.x+=p.vx+Math.sin(p.wob)*.6;p.y+=p.vy;p.r+=p.vr;
+      if(p.y>H+30)continue;alive++;g.save();g.translate(p.x,p.y);g.rotate(p.r);g.fillStyle=p.c;
+      if(p.round){g.beginPath();g.arc(0,0,p.w*.6,0,6.283);g.fill()}else{g.scale(1,Math.abs(Math.cos(p.wob))*.8+.2);g.fillRect(-p.w/2,-p.h/2,p.w,p.h)}g.restore()}
+    if(alive&&t<330)requestAnimationFrame(step);else cv.remove()};
+  requestAnimationFrame(step);setTimeout(()=>cv.remove(),6000)}
 function countUp(el,to,ms=900){if(!el)return;if(calmMotion()||!to){el.textContent=el.dataset.pre+to;return}const t0=performance.now();
   const f=t=>{const k=Math.min(1,(t-t0)/ms),v=Math.round(to*(1-Math.pow(1-k,3)));el.textContent=el.dataset.pre+v;if(k<1&&el.isConnected)requestAnimationFrame(f)};requestAnimationFrame(f)}
 /* Jr. maze effects: a hop each step, a dust puff, a wobble + 💫 on a bonk, a floating +1 🍌 when a banana is eaten */

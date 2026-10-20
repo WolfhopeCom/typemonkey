@@ -1,0 +1,16 @@
+/* 70-streak: Banana Freezes + daily streak card */
+.fzchip{display:inline-flex;align-items:center;gap:2px;margin-left:8px;padding:1px 8px;border-radius:999px;font-size:.78rem;font-weight:800;background:color-mix(in srgb,#5BC0EB 22%,var(--surface));color:var(--fg);vertical-align:middle}
+.today .week .wd.fz i{background:color-mix(in srgb,#5BC0EB 30%,var(--surface))}
+.fzcard{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;border:2px solid color-mix(in srgb,#5BC0EB 55%,var(--line));background:linear-gradient(180deg,color-mix(in srgb,#5BC0EB 14%,var(--surface)),var(--surface))}
+.fzcard .fz-ic{font-size:2rem;line-height:1}
+.fzcard .fz-t{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.fzcard .fz-t span{color:var(--muted);font-size:.88rem}
+.fzcard .btn{flex:none}
+.fznote{margin:12px 0 0;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,#5BC0EB 14%,var(--surface));font-size:.92rem}
+.tm-ice{display:block;font-size:5.2rem;line-height:1;animation:tmIce .7s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes tmIce{from{transform:scale(.3) rotate(-20deg);opacity:0}to{transform:none;opacity:1}}
+.tm-ms-week span.fz i{background:color-mix(in srgb,#5BC0EB 35%,transparent)}
+.tm-ms-week span.now{font-weight:900}
+.tm-day .tm-ms-n{animation:tmDayN .6s .25s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes tmDayN{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.tm-ice,.tm-day .tm-ms-n{animation:none}}

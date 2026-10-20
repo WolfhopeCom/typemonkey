@@ -1,0 +1,9 @@
+/* 90-name */
+.nm-tag{align-self:center;border:0;border-radius:999px;padding:6px 14px;min-height:36px;font:inherit;font-weight:800;font-size:.95rem;background:var(--surface);color:var(--fg);box-shadow:0 0 0 2px var(--line) inset,0 3px 0 var(--line);cursor:pointer}
+.nm-tag.empty{background:color-mix(in srgb,var(--accent) 14%,var(--surface));box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 50%,transparent) inset,0 3px 0 color-mix(in srgb,var(--accent) 35%,transparent)}
+.nm-tag:active{transform:translateY(2px);box-shadow:0 0 0 2px var(--line) inset,0 1px 0 var(--line)}
+.nm-stage{display:grid;place-items:center;margin:4px 0 10px}.nm-stage .tm{width:110px;height:110px}
+.nm-ideas{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:12px}
+.nm-in{width:100%;box-sizing:border-box;min-height:48px;border-radius:14px;border:2px solid var(--line);background:var(--bg);color:var(--fg);font:inherit;font-size:1.1rem;font-weight:700;padding:0 14px;margin-bottom:12px}
+.nm-in:focus{outline:none;border-color:var(--accent)}
+.nm-on{color:var(--accent)}

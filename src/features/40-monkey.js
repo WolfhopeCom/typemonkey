@@ -180,6 +180,7 @@
     $("#back").onclick=()=>back();$("#pshop").onclick=()=>shop();$("#pbadges").onclick=badgesPage;
     $$(".pcourse").forEach(b=>b.onclick=()=>coursePage(b.dataset.c));
     try{foot()}catch(e){}window.scrollTo(0,0);
+    (window.tmProfileHooks||[]).forEach(f=>{try{f()}catch(e){console.warn(e)}});   // later modules add to the profile here
   }
   window.profilePage=profilePage;
 })();

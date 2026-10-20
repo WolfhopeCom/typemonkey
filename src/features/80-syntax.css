@@ -1,0 +1,14 @@
+/* 80-syntax: syntax colors (light surfaces, dark surfaces, and the always-dark code panels) */
+:root{--sy-k:#7A35C8;--sy-s:#0B7F45;--sy-n:#B9470B;--sy-f:#1A62C4;--sy-c:#6A7B73}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--sy-k:#C9A8FF;--sy-s:#74E2A9;--sy-n:#FDBA74;--sy-f:#86BEFF;--sy-c:#8FA39A}}
+:root[data-theme="dark"]{--sy-k:#C9A8FF;--sy-s:#74E2A9;--sy-n:#FDBA74;--sy-f:#86BEFF;--sy-c:#8FA39A}
+.editor pre,.tbuild{--sy-k:#C9A8FF;--sy-s:#8BE5B3;--sy-n:#FDBA74;--sy-f:#8CC4FF;--sy-c:#8A9C94}
+.tile.on{--sy-k:#6A23B5;--sy-s:#0A6B3A;--sy-n:#A13A05;--sy-f:#154FA3;--sy-c:#5C5048}
+.sy-k{color:var(--sy-k);font-weight:700}
+.sy-s{color:var(--sy-s)}
+.sy-n{color:var(--sy-n)}
+.sy-f{color:var(--sy-f)}
+.sy-c{color:var(--sy-c);font-style:italic}
+.tile.tilewrong{animation:tileWrong .5s ease;box-shadow:0 0 0 3px #E5484D,0 3px 0 #B4282D!important}
+@keyframes tileWrong{0%,100%{transform:none}20%{transform:translateX(-6px) rotate(-2deg)}40%{transform:translateX(5px) rotate(1.5deg)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+@media (prefers-reduced-motion:reduce){.tile.tilewrong{animation:none}}

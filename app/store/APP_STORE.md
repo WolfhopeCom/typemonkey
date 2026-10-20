@@ -161,23 +161,31 @@ npx cap open ios
 **What's New in This Version:**
 > The biggest TypeMonkey update yet!
 >
-> • Level up: TypeMonkey now grows with you through 30 levels, with rare outfits you can only get by levelling up
-> • Your new Profile: stats, best streak and a chart of your week. Tap the monkey at the top to see it
-> • A quick hello when you first open the app, then right to Home
-> • Never coded before? A pointing hand shows you exactly what to tap, and you can tap any coding word to see what it means in plain English
-> • Friendlier first lessons for JavaScript and Python
-> • Daily goals: pick 10, 20, 30 or 50 XP a day and fill your ring
-> • A brand-new lesson map with unit banners and treasure chests to open
-> • Combos, streak milestones and "Perfect lesson" bonuses
-> • Gentle vibration on answers (turn it off in Settings)
-> • Daily reminders, if you want them
-> • Progress syncs with iCloud across your iPhone and iPad
-> • New for TypeMonkey Jr.: Unit 7, "Creator", with 5 new lessons
-> • Bug Lab: two new levels, Sneaky Bugs and Boss Bugs
-> • Fresh daily challenge puzzles, smoother animations and lots of small fixes
+> • Banana Freezes: miss a day and your streak is safe
+> • Daily quests: three small goals every day, with banana rewards
+> • Level up: TypeMonkey grows with you through 30 levels, with rare outfits you can only get by levelling up
+> • Name your monkey, and see your stats and week on your new Profile (tap the monkey at the top)
+> • Never coded before? A pointing hand shows you exactly what to tap, and you can tap any coding word to see what it means
+> • Friendlier first lessons for JavaScript and Python, and code tiles in real code colors
+> • A daily goal ring, a streak celebration every day and bigger streak milestones
+> • A brand-new lesson map with unit banners and treasure chests
+> • Combos, "Perfect lesson" bonuses and gentle vibration (you can turn it off)
+> • Starts about twice as fast
+> • Your progress is backed up on your device and syncs with iCloud
+> • TypeMonkey Jr.: Unit 7, "Creator", with 5 new lessons
+> • Bug Lab: Sneaky Bugs and Boss Bugs
+> • Fresh daily challenges, smoother animations and lots of small fixes
 
 **Promotional text (optional update):**
-> New: level up your monkey, open treasure chests, set a daily goal and track your week. Plus new Jr. lessons and Boss Bugs!
+> New: Banana Freezes protect your streak, daily quests, name your monkey and level it up. Plus new Jr. lessons and Boss Bugs!
+
+**Before you submit 1.1 (from the research):**
+- **Xcode 26:** Apple requires every update to be built with Xcode 26 (iOS 26 SDK) since April 28, 2026. Update Xcode from the Mac App Store first.
+- **Age rating:** in App Store Connect → App Information → Age Rating, check the new questionnaire is answered (Apple blocks updates until it is). Answer None/No again; it stays 4+.
+- **Family Sharing (optional):** In-App Purchases → Unlock everything → turn on **Family Sharing** so one purchase covers a family. This can't be turned off later.
+- **New layered icon (optional, nice for iOS 26):** open the icon in Apple's free **Icon Composer** app to make light, dark and tinted versions, save the `.icon` file, and drag it into Xcode's AppIcon.
+- **Get featured:** in App Store Connect → **Featuring → Nominations**, nominate 1.1 at least 2 weeks before release. Mention: offline, no ads or accounts, beginners get a step-by-step guide, real code in 9 languages.
+- **Rating prompt:** the app now shows Apple's own "Enjoying TypeMonkey?" prompt after the 5th, 15th and 40th lesson (never in Jr.). Nothing to set up.
 
 **Privacy:** still **Data Not Collected**. iCloud sync stores progress in the user's own iCloud account, which Apple does not count as you collecting data.
 

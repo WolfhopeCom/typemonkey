@@ -1,5 +1,7 @@
 import Foundation
 import Capacitor
+import StoreKit
+import UIKit
 
 /// TypeMonkey progress in iCloud: a few small strings in the iCloud key-value store
 /// (NSUbiquitousKeyValueStore, up to 1 MB). No server and no account of ours: Apple syncs it between
@@ -13,7 +15,8 @@ public class TMCloudPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "get", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "set", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "localGet", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "localSet", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "localSet", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "requestReview", returnType: CAPPluginReturnPromise)
     ]
 
     private let store = NSUbiquitousKeyValueStore.default
@@ -75,5 +78,21 @@ public class TMCloudPlugin: CAPPlugin, CAPBridgedPlugin {
         }
         UserDefaults.standard.set(value, forKey: "tm.local." + key)
         call.resolve()
+    }
+
+    /// Apple's own "Enjoying TypeMonkey?" rating prompt. iOS decides whether it actually appears
+    /// (at most 3 times a year), so the web app only asks after a happy moment.
+    @objc func requestReview(_ call: CAPPluginCall) {
+        Task { @MainActor in
+            if let scene = UIApplication.shared.connectedScenes
+                .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
+                if #available(iOS 16.0, *) {
+                    AppStore.requestReview(in: scene)
+                } else {
+                    SKStoreReviewController.requestReview(in: scene)
+                }
+            }
+            call.resolve()
+        }
     }
 }

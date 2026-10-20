@@ -7,7 +7,7 @@ from playwright.async_api import async_playwright
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "app" / "store" / "screenshots"
 SETUP = """S.done=['js1','js2','js3','py1','py2','jr1','jr2'];S.xp=860;S.bananas=145;S.streak=6;S.lastDay=dayStr(new Date());
-S.onboarded=true;S.mlevel=TMLevel.info(860).lvl;S.settings.codeInput='tap';S.daily={};save();renderStats();"""
+S.onboarded=true;S.mlevel=TMLevel.info(860).lvl;S.coach={demo:9,fill:9,tiles:9};S.glossTip=true;S.monkeyName='Bongo';S.settings.codeInput='tap';S.daily={};save();renderStats();"""
 SHOTS = [
   ("01-home", "Learn to code,<br>one banana at a time", "home()"),
   ("02-path", "Bite-size lessons<br>on a fun path", "coursePage('py');window.scrollTo(0,330)"),

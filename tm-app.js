@@ -1386,11 +1386,21 @@ function mazeHint(prog,fn,s,open){
 }
 /* ---------- Motion pack helpers ---------- */
 const calmMotion=()=>{try{return matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){return false}};
-function confetti(n=70){if(calmMotion())return;const box=document.createElement("div");box.className="confetti";box.setAttribute("aria-hidden","true");
+/* Confetti on one canvas with one animation loop (smoother on older phones than dozens of moving elements). */
+function confetti(n=70){if(calmMotion())return;
+  const cv=document.createElement("canvas");cv.className="confetti";cv.setAttribute("aria-hidden","true");
+  const dpr=Math.min(2,window.devicePixelRatio||1),W=innerWidth,H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+"px";cv.style.height=H+"px";
+  const g=cv.getContext("2d");if(!g)return;g.scale(dpr,dpr);
   const C=["#FA7A20","#FFC845","#22986A","#7C5CFF","#FF6FAE","#4FB6E8"];
-  for(let i=0;i<n;i++){const e=document.createElement("i");const t=1.8+Math.random()*1.6;
-    e.style.cssText=`left:${Math.random()*100}%;background:${C[i%C.length]};--t:${t}s;--d:${Math.random()*.6}s;--dx:${(Math.random()-.5)*160}px;--rot:${(Math.random()-.5)*1080}deg;${Math.random()<.3?"border-radius:50%;width:10px;height:10px;":""}`;box.appendChild(e)}
-  document.body.appendChild(box);setTimeout(()=>box.remove(),4200)}
+  const P=[...Array(n)].map((_,i)=>({x:Math.random()*W,y:-20-Math.random()*H*.25,vx:(Math.random()-.5)*2.2,vy:2+Math.random()*3,
+    r:Math.random()*6.3,vr:(Math.random()-.5)*.3,w:7+Math.random()*4,h:10+Math.random()*6,c:C[i%C.length],round:Math.random()<.3,wob:Math.random()*6.3,d:Math.random()*25}));
+  document.body.appendChild(cv);let t=0;
+  const step=()=>{if(!cv.isConnected)return;t++;g.clearRect(0,0,W,H);let alive=0;
+    for(const p of P){if(t<p.d){alive++;continue}p.vy=Math.min(p.vy+.06,6.5);p.wob+=.08;p.x+=p.vx+Math.sin(p.wob)*.6;p.y+=p.vy;p.r+=p.vr;
+      if(p.y>H+30)continue;alive++;g.save();g.translate(p.x,p.y);g.rotate(p.r);g.fillStyle=p.c;
+      if(p.round){g.beginPath();g.arc(0,0,p.w*.6,0,6.283);g.fill()}else{g.scale(1,Math.abs(Math.cos(p.wob))*.8+.2);g.fillRect(-p.w/2,-p.h/2,p.w,p.h)}g.restore()}
+    if(alive&&t<330)requestAnimationFrame(step);else cv.remove()};
+  requestAnimationFrame(step);setTimeout(()=>cv.remove(),6000)}
 function countUp(el,to,ms=900){if(!el)return;if(calmMotion()||!to){el.textContent=el.dataset.pre+to;return}const t0=performance.now();
   const f=t=>{const k=Math.min(1,(t-t0)/ms),v=Math.round(to*(1-Math.pow(1-k,3)));el.textContent=el.dataset.pre+v;if(k<1&&el.isConnected)requestAnimationFrame(f)};requestAnimationFrame(f)}
 /* Jr. maze effects: a hop each step, a dust puff, a wobble + 💫 on a bonk, a floating +1 🍌 when a banana is eaten */
@@ -2945,6 +2955,7 @@ function decorateMap(c){
     $("#back").onclick=()=>back();$("#pshop").onclick=()=>shop();$("#pbadges").onclick=badgesPage;
     $$(".pcourse").forEach(b=>b.onclick=()=>coursePage(b.dataset.c));
     try{foot()}catch(e){}window.scrollTo(0,0);
+    (window.tmProfileHooks||[]).forEach(f=>{try{f()}catch(e){console.warn(e)}});   // later modules add to the profile here
   }
   window.profilePage=profilePage;
 })();
@@ -3166,6 +3177,275 @@ const Safe={
 {const _save=save;save=function(){const r=_save.apply(this,arguments);try{Safe.queue()}catch(e){}return r}}
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&Safe.timer)Safe.write()});
 Safe.s=S;setTimeout(()=>Safe.restore(),300);
+
+/* --- 70-streak.js --- */
+/* ---------- 70-streak: a forgiving streak ----------
+   Duolingo's published streak experiments show that a streak which is easy to keep and hard to lose keeps people
+   coming back. So:
+   - Banana Freezes 🧊: hold up to 2. If you miss a day, one is used automatically and your streak is kept. Everyone
+     starts with 1; more cost bananas in the Shop.
+   - A short "🔥 N day streak!" celebration after the first lesson of each day (milestone days keep their big one).
+   - Missed days the freeze covered show as 🧊 in the week strip.
+   - Lost a streak anyway? A kind welcome-back (your best streak is never lost) instead of a scolding.
+   Hooks: bumpStreak (daily celebration), home (freeze/welcome notices, 🧊 chip and frozen days), shop (Freeze card),
+   goalSheet (explains freezes). State: S.freezes, S.frozen=[days], S.freezeNote, S.lostStreak. */
+const FREEZE_MAX=2,FREEZE_PRICE=60;
+if(typeof S.freezes!=="number")S.freezes=1;
+if(!Array.isArray(S.frozen))S.frozen=[];
+function dayDiff(a,b){return Math.round((parseDay(b)-parseDay(a))/864e5)}
+function applyFreezes(){
+  if(!S.streak||!S.lastDay)return;
+  const now=new Date(),today=dayStr(now),y=dayStr(new Date(now.getFullYear(),now.getMonth(),now.getDate()-1));
+  if(S.lastDay===today||S.lastDay===y)return;
+  const missed=dayDiff(S.lastDay,today)-1;if(missed<1)return;
+  if(missed<=(S.freezes||0)){
+    const L=parseDay(S.lastDay);
+    for(let i=1;i<=missed;i++)S.frozen.push(dayStr(new Date(L.getFullYear(),L.getMonth(),L.getDate()+i)));
+    S.frozen=S.frozen.slice(-30);S.freezes-=missed;S.lastDay=y;
+    try{if(S.streakMs&&typeof streakRun==="function")S.streakMs.run=streakRun()}catch(e){}   // same streak: milestones already won stay won
+    S.freezeNote={used:missed,streak:S.streak,day:today};save();
+  }else if(!S.lostStreak||S.lostStreak.day!==S.lastDay){
+    S.lostStreak={n:S.streak,day:S.lastDay,shown:false};save();
+  }
+}
+applyFreezes();
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){const b=S.freezeNote;applyFreezes();if(S.freezeNote!==b&&typeof rerender==="function"&&rerender===home)home()}});
+
+/* ---- little overlays (reuse the milestone look) ---- */
+function streakCard({label,title,line,days,extra="",mood="cheer",big=false}){
+  if($(".celebrate")||document.hidden){setTimeout(()=>streakCard(...arguments),700);return}
+  const now=new Date(),dow=(now.getDay()+6)%7,P=typeof practicedDays==="function"?practicedDays():new Set(),FZ=new Set(S.frozen||[]);
+  const wk=[...Array(7)].map((_,i)=>{const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()-dow+i),k=dayStr(d);
+    return [["M","T","W","T","F","S","S"][i],FZ.has(k)?"fz":P.has(k)?"on":"",i===dow]});
+  const g=document.createElement("div");g.className="celebrate tm-ms tm-day";g.setAttribute("role","dialog");g.setAttribute("aria-modal","true");g.setAttribute("aria-label",title);
+  g.innerHTML=`<div class="tm-ms-in">
+    <div class="tm-ms-stage" aria-hidden="true">${big?`<div class="tm-ms-rays"></div>`:""}<div class="tm-ms-fl">${label==="Banana Freeze"?`<span class="tm-ice">🧊</span>`:flameSvg()}${days!=null?`<b class="tm-ms-n">${days}</b>`:""}</div><div class="tm-ms-mk">${monkey(mood)}</div></div>
+    <div class="tm-ms-label">${label}</div><h2>${title}</h2><p>${line}</p>
+    <div class="tm-ms-week" aria-hidden="true">${wk.map(([l,k,t])=>`<span class="${k==="on"?"on":""} ${k==="fz"?"fz":""} ${t?"now":""}"><i>${k==="on"?"🔥":k==="fz"?"🧊":""}</i>${l}</span>`).join("")}</div>
+    ${extra}<button class="btn tm-ms-ok" id="dsOk">Continue</button></div>`;
+  document.body.appendChild(g);
+  try{sfx(label==="Banana Freeze"?"hint":"success");haptic("success")}catch(e){}
+  const ok=g.querySelector("#dsOk");try{ok.focus({preventScroll:true})}catch(e){}
+  ok.onclick=()=>{g.classList.add("out");setTimeout(()=>{g.remove();if(typeof showBadge==="function")showBadge()},calmNow()?0:220)};
+}
+const DAY_LINES=["One lesson a day keeps the bananas coming!","TypeMonkey is doing a happy dance.","Come back tomorrow to keep it going!","Your coding brain is growing!","Little steps every day add up."];
+
+/* first lesson of the day: celebrate the streak (unless a milestone celebration is already coming) */
+{const _bs=bumpStreak;bumpStreak=function(){
+  const before=S.lastDay;const r=_bs.apply(this,arguments);
+  try{if(S.lastDay!==before&&!msPending&&!(cur&&cur.review)){const n=S.streak;
+    setTimeout(()=>streakCard({label:"Daily streak",title:n===1?"You started a streak!":`${n} day streak!`,
+      line:n===1?"Do a lesson tomorrow to make it 2. 🔥":DAY_LINES[n%DAY_LINES.length],days:n,mood:"cheer"}),1700)}}catch(e){}
+  return r}}
+
+/* ---- Home: notices, the 🧊 chip and frozen days in the week strip ---- */
+{const _home=home;home=function(){const r=_home.apply(this,arguments);
+  try{
+    const card=$("#todayCard");
+    if(card){
+      const head=card.querySelector(".thead b");if(head&&!card.querySelector(".fzchip"))head.insertAdjacentHTML("beforeend",`<span class="fzchip" title="Banana Freezes">🧊 ${S.freezes||0}</span>`);
+      const now=new Date(),dow=(now.getDay()+6)%7,FZ=new Set(S.frozen||[]);
+      card.querySelectorAll(".week .wd").forEach((el,i)=>{const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()-dow+i);
+        if(FZ.has(dayStr(d))){el.classList.add("fz");const ic=el.querySelector("i");if(ic)ic.textContent="🧊"}});
+    }
+    const N=S.freezeNote;
+    if(N&&N.day===dayStr(new Date())&&!N.shown){N.shown=true;save();
+      setTimeout(()=>streakCard({label:"Banana Freeze",title:"Your streak is safe!",
+        line:`You missed ${N.used===1?"a day":N.used+" days"}, so ${N.used===1?"a Banana Freeze was":"Banana Freezes were"} used. Your ${N.streak}-day streak is still going!`,
+        days:null,mood:"happy",extra:`<div class="tm-ms-ban">🧊 ${S.freezes||0} left · get more in the Shop</div>`}),500)}
+    const L=S.lostStreak;
+    if(L&&!L.shown&&L.n>=2&&S.lastDay===L.day){L.shown=true;save();
+      setTimeout(()=>{toast(`Welcome back! 🐵 Your best streak is still ${Math.max(S.bestStreak||0,L.n)} days. Do a lesson to start a new one!`)},600)}
+  }catch(e){console.warn(e)}
+  return r}}
+
+/* ---- Shop: Banana Freeze card ---- */
+{const _shop=shop;shop=function(){const r=_shop.apply(this,arguments);
+  try{const stage=$(".shopstage");if(stage&&!$("#fzcard")){
+    const n=S.freezes||0,full=n>=FREEZE_MAX,can=S.bananas>=FREEZE_PRICE;
+    stage.insertAdjacentHTML("afterend",`<div class="fzcard" id="fzcard"><span class="fz-ic" aria-hidden="true">🧊</span>
+      <div class="fz-t"><b>Banana Freeze</b><span>Miss a day and keep your streak. Used automatically. You have ${n} of ${FREEZE_MAX}.</span></div>
+      <button class="btn banana sm" id="fzbuy" ${full||!can?"disabled":""}>${full?"Full":`🍌 ${FREEZE_PRICE}`}</button></div>`);
+    $("#fzbuy").onclick=()=>{if((S.freezes||0)>=FREEZE_MAX||S.bananas<FREEZE_PRICE)return;S.bananas-=FREEZE_PRICE;S.freezes=(S.freezes||0)+1;
+      try{sfx("coins");haptic("success")}catch(e){}save();toast(`🧊 Banana Freeze ready! You have ${S.freezes}.`);shop.apply(this,arguments)};
+  }}catch(e){console.warn(e)}
+  return r}}
+
+/* ---- Daily goal sheet: explain freezes ---- */
+if(typeof goalSheet==="function"){const _gs=goalSheet;goalSheet=function(){const r=_gs.apply(this,arguments);
+  try{const c=$(".onb-sheet .card");if(c&&!c.querySelector(".fznote"))c.insertAdjacentHTML("beforeend",`<p class="fznote">🧊 <b>Banana Freezes: ${S.freezes||0}</b>. Miss a day and one is used automatically, so your streak stays. Get more in the Shop.</p>`)}catch(e){}
+  return r}}
+
+/* --- 75-review.js --- */
+/* ---------- 75-review: Apple's own rating prompt, only after a happy moment ----------
+   Apple's rules: use the system prompt only (no custom "rate us" screens), and iOS shows it at most 3 times a year.
+   Best practice: ask after a success, never at launch, mid-task, in the kids section or right after a purchase.
+   TypeMonkey asks after finishing the 5th, 15th and 40th lesson (and after a 7- or 30-day streak), at most once every
+   3 weeks and 3 times a year, once any celebration on screen has closed. Native app only (TMCloud.requestReview).
+   State: S.reviewAsks=[timestamps]. */
+const Review={
+  plugin(){try{const C=window.Capacitor,P=C&&C.isNativePlatform&&C.isNativePlatform()&&C.Plugins&&C.Plugins.TMCloud;return P&&P.requestReview?P:null}catch(e){return null}},
+  okNow(){
+    const now=Date.now(),A=(S.reviewAsks||[]).filter(t=>now-t<365*864e5);
+    if(A.length>=3)return false;if(A.length&&now-Math.max(...A)<21*864e5)return false;
+    if(S.boughtAt&&now-S.boughtAt<2*864e5)return false;
+    return true},
+  ask(){if(!Review.plugin()||!Review.okNow())return false;
+    let tries=0;const go=()=>{if(++tries>40)return;if($(".celebrate")||document.hidden||($("#quit")&&!$("#screen .reward"))){setTimeout(go,1500);return}
+      S.reviewAsks=[...(S.reviewAsks||[]).filter(t=>Date.now()-t<365*864e5),Date.now()];save();
+      try{Review.plugin().requestReview().catch(()=>{})}catch(e){}};
+    setTimeout(go,2500);return true}
+};
+const REVIEW_AT=[5,15,40];
+{const _fin=finish;finish=function(){
+  const kid=!!(cur&&cur.c&&cur.c.kids),special=!!(cur&&(cur.daily||cur.review)),before=(S.done||[]).length;
+  const r=_fin.apply(this,arguments);
+  try{const n=(S.done||[]).length;
+    if(!kid&&!special&&n>before&&REVIEW_AT.includes(n))Review.ask();
+    else if(!kid&&!special&&(S.streak===7||S.streak===30)&&S.lastDay===dayStr(new Date())&&!(S.reviewStreaks||[]).includes(S.streak)){
+      S.reviewStreaks=[...(S.reviewStreaks||[]),S.streak];if(Review.ask())save()}
+  }catch(e){}
+  return r}}
+/* remember when the full version was bought, so we never ask right after paying */
+{const _u=unlockFull;unlockFull=function(after){return _u.call(this,function(){try{S.boughtAt=Date.now();save()}catch(e){}if(after)return after.apply(this,arguments)})}}
+
+/* --- 80-syntax.js --- */
+/* ---------- 80-syntax: code that looks like real code ----------
+   - Syntax colors (keywords, text in quotes, numbers, comments, function names) on code tiles, the line you are
+     building, read-only code examples and quiz code. The editor box itself stays plain (it's a text field).
+   - After a run that doesn't pass in tap mode, the first tile that's out of place wiggles with a red outline, so you
+     can see exactly what to fix (Grasshopper-style), instead of just "not quite".
+   Purely visual: the text of every tile stays exactly the same. */
+const SYN_KW=new Set(("if else elif for while do return function def class const let var new this self import from as in of not and or is "+
+  "True False None true false null undefined print try catch except finally raise throw break continue switch case default "+
+  "public private static void int float double bool boolean string String char long using namespace struct func guard "+
+  "SELECT FROM WHERE ORDER BY GROUP JOIN ON AS INSERT INTO VALUES UPDATE SET DELETE LIMIT DESC ASC COUNT SUM AVG AND OR NOT LEFT HAVING DISTINCT "+
+  "lambda with yield async await interface extends implements override virtual auto std cout cin endl include println Console WriteLine").split(" "));
+function synHTML(src){
+  const re=/(#(?![a-z]*include)[^\n]*|\/\/[^\n]*|--\s[^\n]*)|("(?:\\.|[^"\\])*"?|'(?:\\.|[^'\\])*'?|`[^`]*`?)|(\b\d+(?:\.\d+)?\b)|([A-Za-z_$][\w$]*)(?=\s*\()|([A-Za-z_$][\w$]*)/g;
+  let out="",i=0,m;
+  while((m=re.exec(src))){out+=esc(src.slice(i,m.index));const t=esc(m[0]);
+    if(m[1])out+=`<span class="sy-c">${t}</span>`;
+    else if(m[2])out+=`<span class="sy-s">${t}</span>`;
+    else if(m[3])out+=`<span class="sy-n">${t}</span>`;
+    else if(m[4])out+=SYN_KW.has(m[4])?`<span class="sy-k">${t}</span>`:`<span class="sy-f">${t}</span>`;
+    else out+=SYN_KW.has(m[5])?`<span class="sy-k">${t}</span>`:t;
+    i=m.index+m[0].length}
+  return out+esc(src.slice(i));
+}
+function synPaint(root){
+  if(!root)return;
+  const lang=(cur&&cur.c&&kindOf(cur.c))||"";if(lang==="web"||(cur&&cur.c&&cur.c.kids))return;   // HTML/CSS and Jr. blocks: leave as they are
+  root.querySelectorAll(".tile:not([data-sy]),.editor pre:not([data-sy]):not(#fcode)").forEach(el=>{
+    if(el.children.length)return;const t=el.textContent;if(!t.trim())return;
+    el.innerHTML=synHTML(t);el.dataset.sy="1"});
+}
+const synObs=new MutationObserver(()=>{try{synPaint($("#screen"));synPaint($(".actionbar"))}catch(e){}});
+try{synObs.observe(document.getElementById("screen"),{childList:true,subtree:true})}catch(e){}
+
+/* wrong tile after a run that didn't pass */
+const wrongObs=new MutationObserver(()=>{try{
+  const fb=$("#fb .feedback.bad");if(!fb||fb.dataset.tw)return;fb.dataset.tw="1";
+  if(!$("#screen").classList.contains("tapmode")||typeof TILE_PLAN==="undefined"||!TILE_PLAN)return;
+  const want=TILE_PLAN.pieces.map(x=>x.trim()),placed=$$("#tbuild .tile.on");
+  const k=placed.findIndex((el,i)=>el.textContent.trim()!==want[i]);
+  if(k<0)return;const el=placed[k];el.classList.remove("tilewrong");void el.offsetWidth;el.classList.add("tilewrong");
+  setTimeout(()=>{try{el.classList.remove("tilewrong")}catch(e){}},2600);
+  try{haptic("warning")}catch(e){}
+}catch(e){}});
+try{wrongObs.observe(document.getElementById("screen"),{childList:true,subtree:true})}catch(e){}
+
+/* --- 85-quests.js --- */
+/* ---------- 85-quests: three small daily quests ----------
+   A fresh set of 3 every day (the same 3 all day), shown on Home under the Today card. Each one done gives
+   +10 bananas; all three done gives a +25 banana bonus and a little celebration. Everything is counted on the
+   device. Hooks: finish, dailyDone, answered, Run buttons, home. State: S.quests={day,p:{lessons,right,runs},done:[],all}. */
+const QUESTS={
+  lesson1:{t:"Finish a lesson",n:1,get:p=>p.lessons},
+  lesson2:{t:"Finish 2 lessons",n:2,get:p=>p.lessons},
+  xp30:{t:"Earn 30 XP",n:30,get:()=>xpToday()},
+  xp60:{t:"Earn 60 XP",n:60,get:()=>xpToday()},
+  right8:{t:"Get 8 answers right",n:8,get:p=>p.right},
+  right15:{t:"Get 15 answers right",n:15,get:p=>p.right},
+  runs3:{t:"Run your code 3 times",n:3,get:p=>p.runs},
+  daily:{t:"Do the daily challenge",n:1,get:()=>dailyDoneToday()?1:0}
+};
+const QUEST_ICON={lesson1:"📘",lesson2:"📚",xp30:"⚡",xp60:"⚡",right8:"💡",right15:"💡",runs3:"▶️",daily:"🎯"};
+const QUEST_BAN=10,QUEST_ALL=25;
+function questDay(){
+  const t=dayStr(new Date());let Q=S.quests;
+  if(!Q||Q.day!==t){
+    const [y,m,d]=t.split("-").map(Number),seed=y*372+m*31+d,pick=(a,k)=>a[(seed*(k+7)+k)%a.length];
+    const kid=!!(S.profile&&S.profile.why==="kid");
+    const ids=[pick(["lesson1","lesson1","lesson2"],1),pick(kid?["right8","xp30"]:["xp30","right8","xp60","right15"],2),pick(kid?["daily","right8"]:["runs3","daily"],3)];
+    if(ids[1]===ids[2])ids[2]="daily";
+    Q=S.quests={day:t,ids,p:{lessons:0,right:0,runs:0},done:[],all:false};
+  }
+  return Q;
+}
+function questCheck(quiet){
+  const Q=questDay();let got=[];
+  for(const id of Q.ids){const q=QUESTS[id];if(!q||Q.done.includes(id))continue;if(q.get(Q.p)>=q.n){Q.done.push(id);got.push(id)}}
+  if(!got.length)return;
+  S.bananas+=QUEST_BAN*got.length;
+  const all=!Q.all&&Q.done.length>=Q.ids.length;if(all){Q.all=true;S.bananas+=QUEST_ALL}
+  save();renderStats();
+  if(quiet)return;
+  setTimeout(()=>{try{
+    if(all){toast(`🏆 All 3 daily quests done! +${QUEST_ALL} bonus bananas`);sfx("badge");haptic("success");if(!calmNow())confetti(60)}
+    else{toast(`✅ Quest done: ${QUESTS[got[0]].t} · +${QUEST_BAN} 🍌`);sfx("coins")}
+  }catch(e){}},1200);
+}
+function questCard(){
+  const Q=questDay();
+  const rows=Q.ids.map(id=>{const q=QUESTS[id];if(!q)return "";const v=Math.min(q.n,q.get(Q.p)),done=Q.done.includes(id);
+    return `<div class="qrow ${done?"done":""}"><span class="qic" aria-hidden="true">${done?"✔️":QUEST_ICON[id]||"⭐"}</span>
+      <span class="qt"><b>${q.t}</b><span class="qbar"><i style="width:${Math.round(v/q.n*100)}%"></i></span></span>
+      <span class="qn">${done?`+${QUEST_BAN} 🍌`:`${v}/${q.n}`}</span></div>`}).join("");
+  return `<section class="card quests" id="quests" aria-label="Daily quests"><div class="qhead"><div><div class="label">Daily quests</div><h3>${Q.all?"All done! 🏆":`${Q.done.length} of 3 done`}</h3></div>
+    <span class="qbonus ${Q.all?"got":""}" title="Bonus for all three">🎁 +${QUEST_ALL}</span></div>${rows}</section>`;
+}
+{const _fin=finish;finish=function(){const counts=!!(cur&&!cur.daily);const r=_fin.apply(this,arguments);
+  try{if(counts){questDay().p.lessons++;questCheck()}}catch(e){}return r}}
+{const _dd=dailyDone;dailyDone=function(){const r=_dd.apply(this,arguments);try{questCheck()}catch(e){}return r}}
+{const _an=answered;answered=function(ok){const r=_an.apply(this,arguments);try{if(ok){questDay().p.right++;questCheck()}}catch(e){}return r}}
+document.addEventListener("click",e=>{try{const b=e.target.closest&&e.target.closest("button.run,#trun,#trund");if(!b||!$("#quit"))return;
+  questDay().p.runs++;setTimeout(()=>questCheck(),900)}catch(_){}},true);
+{const _home=home;home=function(){const r=_home.apply(this,arguments);
+  try{questCheck(true);if(!$("#quests")){const anchor=$("#todayCard")||$("#daily");if(anchor)anchor.insertAdjacentHTML("afterend",questCard())}}catch(e){console.warn(e)}
+  return r}}
+
+/* --- 90-name.js --- */
+/* ---------- 90-name: name your monkey ----------
+   Finch's players name their pet, and that small choice is a big part of why they care about it. On the Profile,
+   a name tag under the monkey ("Name your monkey ✏️") opens a little sheet with ideas and a text box. The name then
+   shows on the Profile and on the Home level card. State: S.monkeyName (empty = not named yet). */
+const NAME_IDEAS=["Bongo","Coco","Pixel","Byte","Mango","Ziggy","Loop","Nana"];
+const monkeyName=()=>String(S.monkeyName||"").trim();
+function nameSheet(){
+  const box=document.createElement("div");box.className="gate onb-sheet";box.setAttribute("role","dialog");box.setAttribute("aria-label","Name your monkey");
+  const nm=monkeyName();
+  box.innerHTML=`<div class="card"><div class="sheethead"><h2>Name your monkey</h2><button class="x" id="nmx" aria-label="Close">×</button></div>
+    <div class="nm-stage" aria-hidden="true">${withPet("cheer")}</div>
+    <div class="nm-ideas">${NAME_IDEAS.map(n=>`<button class="lang nm-idea" data-n="${n}" aria-pressed="${n===nm}">${n}</button>`).join("")}</div>
+    <input class="nm-in" id="nmIn" maxlength="14" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Or type a name" value="${esc(nm)}" aria-label="Monkey name">
+    <div class="row"><button class="btn" id="nmOk">Save name</button>${nm?`<button class="btn ghost" id="nmClear">No name</button>`:""}</div></div>`;
+  document.body.appendChild(box);
+  const close=()=>box.remove(),inp=box.querySelector("#nmIn");
+  box.onclick=e=>{if(e.target===box)close()};box.querySelector("#nmx").onclick=close;
+  box.querySelectorAll(".nm-idea").forEach(b=>b.onclick=()=>{inp.value=b.dataset.n;box.querySelectorAll(".nm-idea").forEach(x=>x.setAttribute("aria-pressed",x===b));try{sfx("tap")}catch(e){}});
+  const done=v=>{S.monkeyName=v;save();close();if(v){toast(`Hi, ${v}! 🐵`);try{sfx("success");haptic("success")}catch(e){}}if(typeof window.profilePage==="function"&&$(".prof"))window.profilePage()};
+  box.querySelector("#nmOk").onclick=()=>done(inp.value.replace(/[<>]/g,"").replace(/\s+/g," ").trim().slice(0,14));
+  inp.onkeydown=e=>{if(e.key==="Enter")box.querySelector("#nmOk").click()};
+  const c=box.querySelector("#nmClear");if(c)c.onclick=()=>done("");
+}
+(window.tmProfileHooks=window.tmProfileHooks||[]).push(()=>{
+  const id=$(".prof-id");if(!id||$("#nmTag"))return;const nm=monkeyName();
+  id.insertAdjacentHTML("afterbegin",`<button class="nm-tag ${nm?"":"empty"}" id="nmTag" type="button">${nm?`🐵 ${esc(nm)} <span aria-hidden="true">✏️</span>`:"Name your monkey ✏️"}</button>`);
+  $("#nmTag").onclick=nameSheet});
+{const _home=home;home=function(){const r=_home.apply(this,arguments);
+  try{const nm=monkeyName(),t=$("#lvcard b");if(nm&&t&&!t.dataset.nm){t.dataset.nm="1";t.insertAdjacentHTML("afterbegin",`<span class="nm-on">${esc(nm)} · </span>`)}}catch(e){}
+  return r}}
 
 $("#homeBtn").onclick=home;$("#gearBtn").onclick=settingsPage;
 $("#sndBtn").onclick=()=>{S.settings.sound=S.settings.sound===false;save();if(!S.settings.sound)SFX.stopMusic(true);else if(cur&&cur.l&&$(".lessonbar"))setTimeout(()=>jrMusic(cur.l.steps[cur.step]),60);toast(S.settings.sound?"Sounds on 🔊":"Sounds off 🔇");if(S.settings.sound)setTimeout(()=>sfx("correct"),40);if(rerender===settingsPage)settingsPage()};
