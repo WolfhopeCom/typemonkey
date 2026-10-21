@@ -142,6 +142,22 @@ Review usually takes 1–3 days.
 
 ---
 
+## Resubmitting 1.0 after the iOS 27 launch crash (October 2026)
+
+Apple's crash logs (iPhone 17 Pro Max and iPad Air, iOS 27.0.1) all showed `_UIApplicationEvaluateRuntimeIssueForNoSceneLifecycleAdoption`:
+starting with iOS 27, apps must use the UIScene life cycle or they stop at launch. Capacitor 7's iPhone project doesn't, so
+`build_app.py` now adds a `SceneDelegate` (in `AppDelegate.swift`) and a scene manifest in `Info.plist` on every build.
+
+Ship the current code (with all the 1.1 improvements) as **Version 1.0, Build 2**:
+1. `python3 build_app.py --set-version 1.0 --build 2`, then `python3 build_app.py`. It should print
+   "added SceneDelegate…" and "added the scene manifest…" the first time.
+2. In Xcode, run it on your phone once (and on an iOS 27 simulator if your Xcode has one), then Archive → Upload.
+3. App Store Connect → the 1.0 version page → **Build**: remove build 1, add build 2.
+4. Update the 1.0 **subtitle, keywords and description** with the "for kids"-free text in sections 4 and 6 (Apple rule 2.3.8),
+   and optionally the new screenshots from `iphone-6.3/` and `ipad/`.
+5. **Add for Review → Submit**. Optional reply to the message: "Thank you. The crash was caused by the UIScene life cycle
+   requirement on iOS 27. Build 2 adopts the UIScene life cycle and launches correctly."
+
 ## Version 1.1 (the next update)
 
 Submit this only after 1.0 is approved and live.
@@ -162,7 +178,6 @@ npx cap open ios
 > The biggest TypeMonkey update yet!
 >
 > • Banana Freezes: miss a day and your streak is safe
-> • Daily quests: three small goals every day, with banana rewards
 > • Level up: TypeMonkey grows with you through 30 levels, with rare outfits you can only get by levelling up
 > • Name your monkey, and see your stats and week on your new Profile (tap the monkey at the top)
 > • Never coded before? A pointing hand shows you exactly what to tap, and you can tap any coding word to see what it means
@@ -177,7 +192,7 @@ npx cap open ios
 > • Fresh daily challenges, smoother animations and lots of small fixes
 
 **Promotional text (optional update):**
-> New: Banana Freezes protect your streak, daily quests, name your monkey and level it up. Plus new Jr. lessons and Boss Bugs!
+> New: Banana Freezes protect your streak, name your monkey and level it up. Plus new Jr. lessons and Boss Bugs!
 
 **Before you submit 1.1 (from the research):**
 - **Xcode 26:** Apple requires every update to be built with Xcode 26 (iOS 26 SDK) since April 28, 2026. Update Xcode from the Mac App Store first.

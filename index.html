@@ -944,24 +944,6 @@ code.i.term{text-decoration-color:var(--accent)}
 @keyframes tileWrong{0%,100%{transform:none}20%{transform:translateX(-6px) rotate(-2deg)}40%{transform:translateX(5px) rotate(1.5deg)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
 @media (prefers-reduced-motion:reduce){.tile.tilewrong{animation:none}}
 
-/* 85-quests */
-.quests{display:flex;flex-direction:column;gap:10px}
-.quests .qhead{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.quests .qhead h3{margin:2px 0 0}
-.quests .qbonus{flex:none;font-weight:800;font-size:.85rem;padding:4px 10px;border-radius:999px;background:color-mix(in srgb,var(--banana) 35%,var(--surface));color:var(--fg)}
-.quests .qbonus.got{background:color-mix(in srgb,var(--leaf) 30%,var(--surface))}
-.qrow{display:flex;align-items:center;gap:12px;min-width:0}
-.qrow .qic{flex:none;width:36px;height:36px;display:grid;place-items:center;border-radius:12px;background:color-mix(in srgb,var(--accent) 12%,var(--surface));font-size:1.1rem}
-.qrow .qt{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
-.qrow .qt b{font-size:.95rem}
-.qrow .qbar{height:8px;border-radius:999px;background:var(--line);overflow:hidden}
-.qrow .qbar i{display:block;height:100%;border-radius:inherit;background:var(--banana);transition:width .6s cubic-bezier(.3,1.2,.5,1)}
-.qrow .qn{flex:none;font-weight:800;font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums;min-width:44px;text-align:right}
-.qrow.done .qic{background:color-mix(in srgb,var(--leaf) 22%,var(--surface))}
-.qrow.done .qbar i{background:var(--leaf)}
-.qrow.done .qn{color:var(--leaf)}
-.qrow.done .qt b{color:var(--muted);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--muted) 60%,transparent)}
-
 /* 90-name */
 .nm-tag{align-self:center;border:0;border-radius:999px;padding:6px 14px;min-height:36px;font:inherit;font-weight:800;font-size:.95rem;background:var(--surface);color:var(--fg);box-shadow:0 0 0 2px var(--line) inset,0 3px 0 var(--line);cursor:pointer}
 .nm-tag.empty{background:color-mix(in srgb,var(--accent) 14%,var(--surface));box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 50%,transparent) inset,0 3px 0 color-mix(in srgb,var(--accent) 35%,transparent)}

@@ -153,9 +153,57 @@ def patch_entitlements():
             print("NOTE: add the iCloud capability (Key-value storage) to the App target in Xcode for progress sync")
 
 
+SCENE_MARK = "// TypeMonkey: UIScene lifecycle"
+SCENE_DELEGATE = SCENE_MARK + """ (iOS 27 refuses to launch apps without it).
+// Main.storyboard (UISceneStoryboardFile in Info.plist) creates the window and Capacitor's web view for the scene.
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+    var window: UIWindow?
+
+    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+        guard scene is UIWindowScene else { return }
+    }
+}
+"""
+
+
+def patch_scene_lifecycle():
+    """Apple: starting with iOS 27, apps must adopt the UIScene life cycle or they crash at launch
+    (_UIApplicationEvaluateRuntimeIssueForNoSceneLifecycleAdoption). Capacitor 7's iOS template has no scene, so:
+    add a SceneDelegate (in AppDelegate.swift, which is already in the Xcode project) and a scene manifest to
+    Info.plist that loads Main.storyboard for the scene."""
+    ad = IOS / "App" / "App" / "AppDelegate.swift"
+    plist = IOS / "App" / "App" / "Info.plist"
+    if not ad.exists() or not plist.exists():
+        return
+    s = ad.read_text()
+    if SCENE_MARK not in s:
+        if "import UIKit" not in s:
+            s = "import UIKit\n" + s
+        ad.write_text(s.rstrip() + "\n\n" + SCENE_DELEGATE)
+        print("added SceneDelegate to ios/App/App/AppDelegate.swift (required on iOS 27)")
+    data = plistlib.loads(plist.read_bytes())
+    before = dict(data)
+    storyboard = data.pop("UIMainStoryboardFile", None) or data.get("UIApplicationSceneManifest", {}).get(
+        "UISceneConfigurations", {}).get("UIWindowSceneSessionRoleApplication", [{}])[0].get("UISceneStoryboardFile", "Main")
+    data["UIApplicationSceneManifest"] = {
+        "UIApplicationSupportsMultipleScenes": False,
+        "UISceneConfigurations": {
+            "UIWindowSceneSessionRoleApplication": [{
+                "UISceneConfigurationName": "Default Configuration",
+                "UISceneDelegateClassName": "$(PRODUCT_MODULE_NAME).SceneDelegate",
+                "UISceneStoryboardFile": storyboard,
+            }]
+        },
+    }
+    if data != before:
+        plist.write_bytes(plistlib.dumps(data, sort_keys=False))
+        print("added the scene manifest to ios/App/App/Info.plist (required on iOS 27)")
+
+
 def patch_ios():
     patch_podfile()
     patch_app_delegate()
+    patch_scene_lifecycle()
     patch_entitlements()
     plist = IOS / "App" / "App" / "Info.plist"
     if not plist.exists():

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """v1.1 engagement features: Banana Freezes (70-streak), the review prompt (75-review), syntax colors and the
-wrong-tile wiggle (80-syntax), daily quests (85-quests), naming the monkey (90-name), canvas confetti.
+wrong-tile wiggle (80-syntax), naming the monkey (90-name), canvas confetti.
 Usage: PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers python3 tests/verify_engage.py
 """
 import datetime, json, pathlib, sys
@@ -45,16 +45,6 @@ with sync_playwright() as p:
     pg.evaluate("startLesson('js2');finish()"); pg.wait_for_timeout(2300)
     ok(pg.evaluate("S.streak") == 6, "lesson should extend the streak")
     ok(pg.locator(".tm-day").count() == 1 or pg.locator(".celebrate").count() >= 1, "daily streak celebration missing")
-    ok(not errs, f"page errors: {errs[:3]}")
-    # --- quests
-    pg, errs = page(base)
-    q = pg.evaluate("S.quests"); ok(len(q["ids"]) == 3 and len(set(q["ids"])) == 3, f"quests: {q}")
-    ok(pg.locator("#quests .qrow").count() == 3, "Home: quest card missing")
-    pg.evaluate("S.quests.ids=['lesson1','right8','runs3'];S.quests.done=[];S.quests.all=false;S.bananas=0;save()")
-    pg.evaluate("startLesson('js2');finish()"); ok(pg.evaluate("S.quests.done") == ["lesson1"] and pg.evaluate("S.bananas") >= 10, f"lesson quest: {pg.evaluate('S.quests')}")
-    pg.evaluate("for(let i=0;i<8;i++)answered(true)"); ok("right8" in pg.evaluate("S.quests.done"), "answers quest")
-    ban = pg.evaluate("S.bananas"); pg.evaluate("S.quests.p.runs=3;questCheck(true)")
-    ok(pg.evaluate("S.quests.all") and pg.evaluate("S.bananas") == ban + 35, f"all quests bonus: {pg.evaluate('S.bananas')} vs {ban}")
     ok(not errs, f"page errors: {errs[:3]}")
     # --- review prompt (fake native plugin)
     pg, errs = page({"onboarded": True, "xp": 300, "done": ["js1", "js2", "js3", "js4"]}, native=True)

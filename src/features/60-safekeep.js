@@ -15,7 +15,10 @@ const Safe={
   async restore(){const P=Safe.plugin();if(!P)return;
     try{const r=await P.localGet({key:Safe.KEY});if(!r||!r.value)return Safe.write();
       const got=JSON.parse(r.value);if(!got||typeof got!=="object")return;
-      if((+got.savedAt||0)<=(+S.savedAt||0)+1000)return Safe.write();
+      // Restore when the device copy is newer OR simply has more progress (the web view may have been wiped and
+      // then saved a fresh state before this ran). mergeState keeps the best of both, and a newer "Erase everything" wins.
+      const more=(+got.xp||0)>(+S.xp||0)||(got.done||[]).length>(S.done||[]).length;
+      if(!more&&(+got.savedAt||0)<=(+S.savedAt||0)+1000)return Safe.write();
       S=mergeState(S,normState({...got,settings:{...(got.settings||{}),...(S.savedAt?S.settings:{})}}));
       try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
       Safe.s=S;renderStats();

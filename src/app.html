@@ -1208,12 +1208,6 @@ function home(){
     ${buddy(greet,resume?"cheer":"happy")}
     ${nu?`<button class="continue" id="cont"><span class="cicon" aria-hidden="true">▶</span><span class="ctext"><small>${resume?"Pick up where you left off":S.done.length?"Continue":"Start here"} · ${esc(js.name)}</small><b>${esc(nu.l.title)}</b><span>${resume?`Step ${resume.step+1} of ${nu.l.steps.length-1} · saved`:`Unit ${nu.ui+1} · ${esc(nu.u.name)}`}</span></span><span class="cgo">${resume?"Resume":S.done.length?"Continue":"Start"}</span></button>`:nextPro?`<div class="row"><button class="btn banana" id="unl">See the full course</button></div>`:""}
     <button class="daily ${dailyDoneToday()?"done":""}" id="daily"><span class="dicon">🎯</span><span class="dtext"><b>${dailyDoneToday()?"Daily challenge done!":"Daily challenge · "+DAY_THEMES[new Date().getDay()][1]+" "+DAY_THEMES[new Date().getDay()][2]}</b><span>${dailyDoneToday()?`Come back tomorrow for a new one · 🔥 ${(S.daily||{}).streak||1}-day daily streak`:`3 fresh challenges, new every day · bonus bananas${(S.daily||{}).streak?` · keep your ${(S.daily||{}).streak}-day streak going`:""}`}</span></span><span class="pill ${dailyDoneToday()?"ok":"kid"}">${dailyDoneToday()?"✓":"+10 🍌"}</span></button>
-    <div class="tools">
-      <button class="tool" id="review"><b>🧠 Review${dueCount()?` <span class="due">${dueCount()}</span>`:""}</b><span>${dueCount()?"Questions you missed are ready to try again":reviewSize()?"All caught up! Missed questions come back here":"Questions you miss come back here later"}</span></button>
-      <button class="tool" id="play"><b>›_ Playground</b><span>Write any code you want and run it</span></button>
-      <button class="tool" id="projects"><b>🏗️ Build Projects</b><span>Make real games and apps in Python, one mission at a time</span></button>
-      <button class="tool" id="buglab"><b>🐛 Bug Lab</b><span>This Python code is broken. Can you fix it?</span></button>
-    </div>
     <div class="label">Courses</div>
     <div class="courses">${COURSES.filter(c=>!c.extra).map(c=>{
       if(c.soon)return `<button class="course locked" data-c="${c.id}"><span class="pill ${c.kids?"kid":""}">${c.kids?"Kids section":"Coming soon"}</span><h3>${c.name}</h3><span class="tag">${esc(c.tag)}</span></button>`;
@@ -1222,6 +1216,13 @@ function home(){
         <h3>${c.name}</h3><span class="tag">${esc(c.tag)}</span><span class="meta">${c.units.length} units · ${n} lessons${all>n?" (more coming)":""}</span>
         <div class="mini"><span style="width:${n?d/n*100:0}%"></span></div></button>`}).join("")}</div>
     ${S.pro?`<div class="unlocked">✓ Full version unlocked. Thanks for supporting TypeMonkey!</div>`:`<div class="paywall"><div><h3>Unlock the full version</h3><p>All ${COURSES.reduce((n,c)=>n+countLessons(c)[1],0)} lessons in all ${COURSES.filter(c=>!c.extra).length} courses, every Build Project and Bug Lab level, and everything we add later. One-time purchase, no subscription.</p></div><button class="btn banana" id="homebuy">Unlock · ${STORE.price}</button></div>`}
+    <div class="label">Practice &amp; build</div>
+    <div class="tools">
+      <button class="tool" id="review"><b>🧠 Review${dueCount()?` <span class="due">${dueCount()}</span>`:""}</b><span>${dueCount()?"Questions you missed are ready to try again":reviewSize()?"All caught up! Missed questions come back here":"Questions you miss come back here later"}</span></button>
+      <button class="tool" id="play"><b>›_ Playground</b><span>Write any code you want and run it</span></button>
+      <button class="tool" id="projects"><b>🏗️ Build Projects</b><span>Make real games and apps in Python, one mission at a time</span></button>
+      <button class="tool" id="buglab"><b>🐛 Bug Lab</b><span>This Python code is broken. Can you fix it?</span></button>
+    </div>
     <div class="label">Rewards</div>
     <div class="tools">
       <button class="tool" id="shop"><b>🛍️ Shop</b><span>Spend bananas on outfits for TypeMonkey</span></button>
