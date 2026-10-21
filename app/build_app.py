@@ -200,10 +200,42 @@ def patch_scene_lifecycle():
         print("added the scene manifest to ios/App/App/Info.plist (required on iOS 27)")
 
 
+def patch_native_assets():
+    """Put TypeMonkey's icon and launch image into the iPhone project on every build (plain file copies, so it works
+    without Pillow or sharp). A freshly created ios/ folder otherwise keeps Capacitor's blank placeholder icon."""
+    xc = IOS / "App" / "App" / "Assets.xcassets"
+    res = APP / "resources"
+    if not xc.is_dir() or not (res / "icon.png").exists():
+        return
+    icon_dir = xc / "AppIcon.appiconset"
+    icon_dir.mkdir(exist_ok=True)
+    target = icon_dir / "AppIcon-512@2x.png"
+    src = (res / "icon.png").read_bytes()
+    changed = not target.exists() or target.read_bytes() != src
+    for old in icon_dir.glob("*.png"):
+        if old != target:
+            old.unlink(); changed = True
+    contents = json.dumps({"images": [{"filename": "AppIcon-512@2x.png", "idiom": "universal", "platform": "ios", "size": "1024x1024"}],
+                           "info": {"author": "xcode", "version": 1}}, indent=2) + "\n"
+    cj = icon_dir / "Contents.json"
+    if changed or not cj.exists() or cj.read_text() != contents:
+        target.write_bytes(src); cj.write_text(contents)
+        print("set the app icon in ios/App/App/Assets.xcassets/AppIcon.appiconset")
+    splash_dir = xc / "Splash.imageset"
+    if splash_dir.is_dir() and (res / "splash.png").exists():
+        sp = (res / "splash.png").read_bytes(); n = 0
+        for f in splash_dir.glob("*.png"):
+            if f.read_bytes() != sp:
+                f.write_bytes(sp); n += 1
+        if n:
+            print(f"set the launch image in ios/App/App/Assets.xcassets/Splash.imageset ({n} files)")
+
+
 def patch_ios():
     patch_podfile()
     patch_app_delegate()
     patch_scene_lifecycle()
+    patch_native_assets()
     patch_entitlements()
     plist = IOS / "App" / "App" / "Info.plist"
     if not plist.exists():
