@@ -158,41 +158,36 @@ Ship the current code (with all the 1.1 improvements) as **Version 1.0, Build 2*
 5. **Add for Review → Submit**. Optional reply to the message: "Thank you. The crash was caused by the UIScene life cycle
    requirement on iOS 27. Build 2 adopts the UIScene life cycle and launches correctly."
 
-## Version 1.1 (the next update)
+## Version 1.1 (the next update): a fresh new look
 
-Submit this only after 1.0 is approved and live.
+Everything planned earlier for 1.1 shipped inside 1.0 (Build 3). The next update is the graphics update.
+Submit it only after 1.0 is approved and live.
 
-**On your Mac:**
+**On your Mac** (download the new zip first, then the usual steps):
 ```
 cd ~/Downloads/TypeMonkey/app
 npm install
-python3 build_app.py --set-version 1.1 --build 2
+python3 build_app.py --set-version 1.1 --build 4
 python3 build_app.py
 npx cap open ios
 ```
-`npm install` adds the new vibration, reminder and iCloud plugins. In Xcode check **General → Version 1.1, Build 2**, and under **Signing & Capabilities** add **iCloud** (tick **Key-value storage**) and keep **In-App Purchase**. Then **Product → Archive → Distribute App → Upload**.
+In Xcode: **▶ Run** on your phone to check it, then **Product → Archive → Distribute App → Upload**.
 
-**App Store Connect:** on the app page, click **+** next to iOS App and type **1.1**. Pick the new build, paste the text below into **What's New in This Version**, and drag in the new screenshots from `iphone-6.3/` and `ipad/` (the 6th one is now the Profile). Then **Add for Review → Submit**.
+**App Store Connect:** on the app page, click **+** next to iOS App, type **1.1**, pick build 1.1 (4), paste the text below into
+**What's New in This Version**, replace the screenshots with the new ones, then **Add for Review → Submit**.
 
 **What's New in This Version:**
-> The biggest TypeMonkey update yet!
+> A fresh new look for TypeMonkey!
 >
-> • Banana Freezes: miss a day and your streak is safe
-> • Level up: TypeMonkey grows with you through 30 levels, with rare outfits you can only get by levelling up
-> • Name your monkey, and see your stats and week on your new Profile (tap the monkey at the top)
-> • Never coded before? A pointing hand shows you exactly what to tap, and you can tap any coding word to see what it means
-> • Friendlier first lessons for JavaScript and Python, and code tiles in real code colors
-> • A daily goal ring, a streak celebration every day and bigger streak milestones
-> • A brand-new lesson map with unit banners and treasure chests
-> • Combos, "Perfect lesson" bonuses and gentle vibration (you can turn it off)
-> • Starts about twice as fast
-> • Your progress is backed up on your device and syncs with iCloud
-> • TypeMonkey Jr.: Unit 7, "Creator", with 5 new lessons
-> • Bug Lab: Sneaky Bugs and Boss Bugs
-> • Fresh daily challenges, smoother animations and lots of small fixes
+> • Every button, answer and course is now a chunky, tappable block that presses down when you tap it
+> • A clear green or red result bar after every answer
+> • Courses in a neat two-column grid, each with its own language badge
+> • A cleaner Home that gets you to your next lesson faster
+> • Smooth transitions between screens and livelier progress bars
+> • Lots of small fixes and polish
 
 **Promotional text (optional update):**
-> New: Banana Freezes protect your streak, name your monkey and level it up. Plus new Jr. lessons and Boss Bugs!
+> TypeMonkey has a fresh new look! Chunky tap-to-build blocks, clearer answers and a cleaner Home. Same friendly monkey, same offline fun.
 
 **Before you submit 1.1 (from the research):**
 - **Xcode 26:** Apple requires every update to be built with Xcode 26 (iOS 26 SDK) since April 28, 2026. Update Xcode from the Mac App Store first.

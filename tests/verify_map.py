@@ -90,7 +90,7 @@ with sync_playwright() as p:
         check(pg.evaluate("!!document.querySelector('.pwalker.walking,.pwalker.arrived')"), f"{theme}: TypeMonkey did not hop")
         # tapping lesson circles still starts lessons
         for cid in ("js", "jr", "py"):
-            pg.evaluate(f"S.done=[];S.progress={{}};save();coursePage('{cid}')")
+            pg.evaluate(f"S.done=[];S.progress={{}};save();coursePage('{cid}')"); pg.wait_for_timeout(350)  # let the screen finish sliding in
             lid = pg.evaluate("document.querySelector('.pnode.open .pbtn').dataset.l")
             pg.click(f".pbtn[data-l='{lid}']", timeout=5000, force=True)  # the next circle gently bobs, so skip the 'stable' wait
             check(pg.evaluate("cur&&cur.l.id") == lid and pg.evaluate("!!document.querySelector('.lessonbar')"), f"{theme}: tapping {lid} did not start it")

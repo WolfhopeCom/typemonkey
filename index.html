@@ -954,6 +954,125 @@ code.i.term{text-decoration-color:var(--accent)}
 .nm-in:focus{outline:none;border-color:var(--accent)}
 .nm-on{color:var(--accent)}
 
+/* ===== 95-polish: the TypeMonkey 1.2 look =====
+   One idea, used everywhere: anything you can tap is a chunky toy block (2px outline + a solid edge underneath)
+   that sinks when you press it, like the code tiles. Things you only read stay flat and quiet.
+   Loaded last, so it refines the earlier styles without changing any markup they rely on. */
+:root{
+  --r-sm:12px; --r:18px; --r-lg:22px;
+  --edge:#C8D6CD; --edge-acc:#C25A0E; --edge-leaf:#167650; --edge-bad:#A8352D; --edge-ban:#C99512;
+  --good-bg:#DDF4E7; --good-ink:#145C3D; --bad-bg:#FBE2DF; --bad-ink:#8C2A23;
+  --press:cubic-bezier(.2,.8,.2,1); --spring:cubic-bezier(.3,1.35,.5,1);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --edge:#0B1411; --edge-acc:#9C4610; --edge-leaf:#1E6E4C; --edge-bad:#8F332C; --edge-ban:#9C7612;
+  --good-bg:#173A2B; --good-ink:#9BE7C2; --bad-bg:#3E201E; --bad-ink:#FFB7AF}}
+:root[data-theme="dark"]{
+  --edge:#0B1411; --edge-acc:#9C4610; --edge-leaf:#1E6E4C; --edge-bad:#8F332C; --edge-ban:#9C7612;
+  --good-bg:#173A2B; --good-ink:#9BE7C2; --bad-bg:#3E201E; --bad-ink:#FFB7AF}
+
+/* ---------- type ---------- */
+h1,h2,h3{letter-spacing:-.012em;text-wrap:balance}
+.card h2{font-size:1.5rem;line-height:1.2}
+.label{text-transform:none;letter-spacing:0;font-size:.92rem;font-weight:800;color:var(--muted)}
+.pill{text-transform:none;letter-spacing:0;font-size:.78rem;padding:3px 10px}
+
+/* ---------- surfaces: flat, calm ---------- */
+.card{border:1.5px solid var(--line);border-radius:var(--r-lg);padding:20px}
+.bubble{border:2px solid var(--line);border-radius:20px 20px 20px 6px;box-shadow:0 3px 0 var(--line);font-weight:700;line-height:1.45}
+.todo{background:color-mix(in srgb,var(--banana) 16%,var(--surface));border-left:4px solid var(--banana);border-radius:6px 14px 14px 6px;padding:10px 14px}
+
+/* ---------- blocks: everything you tap ---------- */
+.btn{border-radius:14px;min-height:46px;box-shadow:0 4px 0 var(--edge-acc);transition:transform .09s var(--press),box-shadow .09s var(--press),background-color .15s}
+.btn:active:not([disabled]){transform:translateY(3px);box-shadow:0 1px 0 var(--edge-acc)}
+.btn.banana{box-shadow:0 4px 0 var(--edge-ban)}
+.btn.banana:active:not([disabled]){box-shadow:0 1px 0 var(--edge-ban)}
+.btn.ghost{background:var(--surface);border:2px solid var(--line);box-shadow:0 4px 0 var(--line)}
+.btn.ghost:active:not([disabled]){box-shadow:0 1px 0 var(--line)}
+.btn.sm{min-height:36px;border-radius:12px}
+.btn[disabled],.btn.banana[disabled]{opacity:1;background:var(--surface2);color:color-mix(in srgb,var(--muted) 75%,var(--surface2));box-shadow:0 4px 0 var(--line);border-color:transparent}
+
+.opt{background:var(--surface);border:2px solid var(--line);border-radius:var(--r-sm);box-shadow:0 4px 0 var(--line);padding:14px 16px;transition:transform .09s var(--press),box-shadow .09s var(--press),background-color .15s,border-color .15s}
+.opt:hover:not([disabled]){border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.opt:active:not([disabled]){transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.opt.right{border-color:var(--leaf);box-shadow:0 4px 0 var(--edge-leaf);background:var(--good-bg);color:var(--good-ink)}
+.opt.wrong{border-color:var(--bad);box-shadow:0 4px 0 var(--edge-bad);background:var(--bad-bg);color:var(--bad-ink)}
+.opt[disabled]:not(.right):not(.wrong){opacity:.55}
+
+.token{background:var(--surface);border-radius:12px;box-shadow:0 3px 0 var(--line);transition:transform .09s var(--press),box-shadow .09s var(--press)}
+.token:active:not([disabled]){transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.tile{transition:transform .09s var(--press),box-shadow .09s var(--press)}
+.tile:active{transform:translateY(2px)}
+
+.lvcard,.today,.daily{border:2px solid var(--line);box-shadow:0 4px 0 var(--line);border-radius:var(--r);transition:transform .09s var(--press),box-shadow .09s var(--press)}
+.lvcard:active,.today:active,.daily:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.daily{border-color:var(--banana);box-shadow:0 4px 0 var(--edge-ban)}
+.daily.done{border-color:var(--line);box-shadow:0 4px 0 var(--line)}
+.continue{border-radius:var(--r-lg);box-shadow:0 5px 0 var(--edge-acc)}
+.continue:active{box-shadow:0 2px 0 var(--edge-acc)}
+
+.tool{border-radius:var(--r);box-shadow:0 4px 0 var(--edge);transition:transform .09s var(--press),box-shadow .09s var(--press);min-height:108px}
+.tool:active{transform:translateY(3px);box-shadow:0 1px 0 var(--edge)}
+
+/* ---------- Home: course grid with language badges ---------- */
+.courses{grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:340px){.courses{grid-template-columns:1fr}}
+.course{position:relative;border:2px solid var(--line);border-radius:var(--r);box-shadow:0 4px 0 var(--line);padding:14px 14px 12px;gap:3px;min-width:0;transition:transform .09s var(--press),box-shadow .09s var(--press)}
+.course:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.course.live{border:2px solid var(--accent);box-shadow:0 4px 0 var(--edge-acc)}
+.course.kids{border-color:var(--edge-ban);box-shadow:0 4px 0 var(--edge-ban)}
+.course::before{content:"JS";display:grid;place-items:center;width:44px;height:44px;border-radius:13px;margin-bottom:6px;font-family:var(--mono);font-weight:800;font-size:.95rem;letter-spacing:-.02em;background:#F7DF1E;color:#2B2600;box-shadow:inset 0 -3px 0 #0000001f}
+.course[data-c="game"]::before{content:"▶";background:#7C5CFF;color:#fff;font-size:1.1rem}
+.course[data-c="py"]::before{content:"Py";background:#3776AB;color:#FFE873}
+.course[data-c="web"]::before{content:"</>";background:#E8572A;color:#fff;font-size:.85rem}
+.course[data-c="sql"]::before{content:"SQL";background:#0F7F88;color:#fff;font-size:.8rem}
+.course[data-c="cs"]::before{content:"C#";background:#6B2D8C;color:#fff}
+.course[data-c="cpp"]::before{content:"C++";background:#1E5FA8;color:#fff;font-size:.82rem}
+.course[data-c="java"]::before{content:"Jv";background:#D9661C;color:#fff}
+.course[data-c="swift"]::before{content:"Sw";background:#F05138;color:#fff}
+.course[data-c="jr"]::before{content:"Jr";background:#fff;color:#7A4E00}
+.course .pill{position:absolute;top:14px;right:12px;max-width:calc(100% - 76px);overflow:hidden;text-overflow:ellipsis}
+.course h3{font-size:1.15rem;line-height:1.2;margin:0}
+.course .tag{font-size:.76rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.course .meta{font-size:.8rem}
+.course .mini{height:7px;margin-top:6px}
+.continue small{text-transform:none;letter-spacing:0;font-size:.85rem}
+/* returning players: skip the big tagline, start with the monkey's greeting */
+.stack.tm-returning>.hero{display:none}
+
+/* ---------- progress bars with a little shine ---------- */
+.lessonbar .progress{height:14px}
+.progress span,.mini span{position:relative}
+.lessonbar .progress span::after{content:"";position:absolute;left:8px;right:8px;top:3px;height:3px;border-radius:3px;background:#FFFFFF59}
+.progress span{transition:width .5s var(--spring)}
+
+/* ---------- answer result sheet ---------- */
+.feedback{position:relative;border-radius:16px;padding:14px 16px;line-height:1.45}
+.feedback.good,.feedback.bad{padding-left:56px;min-height:58px}
+.feedback.good::before,.feedback.bad::before{position:absolute;left:14px;top:13px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:1rem;color:#fff}
+.feedback.good{background:var(--good-bg);color:var(--good-ink)}
+.feedback.good::before{content:"✓";background:var(--leaf);box-shadow:0 2px 0 var(--edge-leaf)}
+.feedback.bad{background:var(--bad-bg);color:var(--bad-ink)}
+.feedback.bad::before{content:"✕";background:var(--bad);box-shadow:0 2px 0 var(--edge-bad)}
+.actionbar:has(.feedback.good) .btn:not(.ghost):not([disabled]):not(.banana){background:var(--leaf);color:#fff;box-shadow:0 4px 0 var(--edge-leaf)}
+.actionbar:has(.feedback.good) .btn:not(.ghost):not([disabled]):not(.banana):active{box-shadow:0 1px 0 var(--edge-leaf)}
+.actionbar:has(.feedback.good){background:color-mix(in srgb,var(--leaf) 9%,var(--bg))}
+.actionbar:has(.feedback.bad){background:color-mix(in srgb,var(--bad) 7%,var(--bg))}
+
+/* ---------- screen changes: a short rise, so you see where you went ---------- */
+@keyframes tmEnter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+#screen>.tm-enter{animation:tmEnter .24s var(--press) both}
+
+/* ---------- focus you can see (keyboards, switch control) ---------- */
+:where(button,[role="button"],a,input,textarea):focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 70%,transparent);outline-offset:2px}
+
+@media (prefers-reduced-motion:reduce){#screen>.tm-enter{animation:none}.btn,.opt,.course,.tool,.token,.tile,.lvcard,.today,.daily{transition:none}}
+
+/* order puzzle: the lines to pick are blocks too */
+.lines.pick .ln{background:var(--surface);border:2px solid var(--line);border-radius:12px;box-shadow:0 3px 0 var(--line);transition:transform .09s var(--press),box-shadow .09s var(--press)}
+.lines.pick .ln:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.lines:not(.pick) .ln{border-radius:10px}
+
 </style>
 </head>
 <body>

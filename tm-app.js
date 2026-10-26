@@ -855,7 +855,7 @@ function bananaBurst(){if(matchMedia("(prefers-reduced-motion: reduce)").matches
 const todo=(txt,extra="")=>`<p class="todo"><span>👉 ${txt}</span>${extra}</p>`;
 function talk(s,R){
   shell(`<div class="card">${s.demo&&R?todo("Read this, press ▶ Run to try the code, then tap Continue."):cur.step===0?todo("Read this, then tap Continue."):""}<h2>${s.title}</h2>${s.body}${(s.show||[]).map(t=>tableHTML(cur.c,t)).join("")}${s.demo?editorBlock("d",s.demo,R,cur.c.lang,s.input):""}</div>
-    ${buddy(s.say||"",s.mood||"happy")}<div class="row">${s.demo&&R?`<button class="btn banana" id="trund">${R==="web"?"▶ Show the example":"▶ Run the example"}</button>`:""}<button class="btn" id="go">Continue</button>${readAloudBtn()}</div>`);
+    ${buddy(s.say||"",s.mood||"happy")}<div class="row">${s.demo&&R?`<button class="btn banana" id="trund">${R==="web"?"▶ Show it":"▶ Run it"}</button>`:""}<button class="btn" id="go">Continue</button>${readAloudBtn()}</div>`);
   if(s.demo&&R)wireEditor("d");$("#go").onclick=next;wireReadAloud();
   if($("#trund"))$("#trund").onclick=()=>{const b=$("#run-d");if(b)b.click();setTimeout(()=>{try{$("#out-d").scrollIntoView({block:"nearest",behavior:"smooth"})}catch(e){}},400)};
 }
@@ -3389,6 +3389,22 @@ function nameSheet(){
   $("#nmTag").onclick=nameSheet});
 {const _home=home;home=function(){const r=_home.apply(this,arguments);
   try{const nm=monkeyName(),t=$("#lvcard b");if(nm&&t&&!t.dataset.nm){t.dataset.nm="1";t.insertAdjacentHTML("afterbegin",`<span class="nm-on">${esc(nm)} · </span>`)}}catch(e){}
+  return r}}
+
+/* --- 95-polish.js --- */
+/* ---------- 95-polish: small behaviours for the 1.2 look (styles are in 95-polish.css) ----------
+   - A short rise when the screen changes (not in Calm mode or with Reduce Motion).
+   - Returning players get a compact Home: the big "Learn to code" tagline is only for first visits. */
+(()=>{
+  const scr=document.getElementById("screen");if(!scr)return;
+  const calm=()=>{try{return calmMotion()||!!(S.settings&&S.settings.calm)}catch(e){return false}};
+  let last=null;
+  new MutationObserver(()=>{const el=scr.firstElementChild;if(!el||el===last)return;last=el;if(calm())return;
+    el.classList.add("tm-enter");el.addEventListener("animationend",()=>el.classList.remove("tm-enter"),{once:true});
+    setTimeout(()=>el.classList.remove("tm-enter"),400)}).observe(scr,{childList:true});
+})();
+{const _home=home;home=function(){const r=_home.apply(this,arguments);
+  try{const st=$("#screen>.stack");if(st&&((S.done||[]).length||S.xp))st.classList.add("tm-returning")}catch(e){}
   return r}}
 
 $("#homeBtn").onclick=home;$("#gearBtn").onclick=settingsPage;

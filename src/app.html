@@ -1418,7 +1418,7 @@ function bananaBurst(){if(matchMedia("(prefers-reduced-motion: reduce)").matches
 const todo=(txt,extra="")=>`<p class="todo"><span>👉 ${txt}</span>${extra}</p>`;
 function talk(s,R){
   shell(`<div class="card">${s.demo&&R?todo("Read this, press ▶ Run to try the code, then tap Continue."):cur.step===0?todo("Read this, then tap Continue."):""}<h2>${s.title}</h2>${s.body}${(s.show||[]).map(t=>tableHTML(cur.c,t)).join("")}${s.demo?editorBlock("d",s.demo,R,cur.c.lang,s.input):""}</div>
-    ${buddy(s.say||"",s.mood||"happy")}<div class="row">${s.demo&&R?`<button class="btn banana" id="trund">${R==="web"?"▶ Show the example":"▶ Run the example"}</button>`:""}<button class="btn" id="go">Continue</button>${readAloudBtn()}</div>`);
+    ${buddy(s.say||"",s.mood||"happy")}<div class="row">${s.demo&&R?`<button class="btn banana" id="trund">${R==="web"?"▶ Show it":"▶ Run it"}</button>`:""}<button class="btn" id="go">Continue</button>${readAloudBtn()}</div>`);
   if(s.demo&&R)wireEditor("d");$("#go").onclick=next;wireReadAloud();
   if($("#trund"))$("#trund").onclick=()=>{const b=$("#run-d");if(b)b.click();setTimeout(()=>{try{$("#out-d").scrollIntoView({block:"nearest",behavior:"smooth"})}catch(e){}},400)};
 }
