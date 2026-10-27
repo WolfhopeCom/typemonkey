@@ -5,16 +5,16 @@
    has (for example the web view's storage was wiped), it is merged back in with mergeState() (newest wins, and a
    newer "Erase everything" still wins). Does nothing on the web. */
 const Safe={
-  KEY:"progress",timer:null,last:null,s:null,
+  KEY:"progress",timer:null,last:null,s:null,ready:false,   // ready: the launch check is done (never overwrite the copy before reading it)
   plugin(){try{const C=window.Capacitor,P=C&&C.isNativePlatform&&C.isNativePlatform()&&C.Plugins&&C.Plugins.TMCloud;return P&&P.localSet?P:null}catch(e){return null}},
-  write(){const P=Safe.plugin();if(!P)return;clearTimeout(Safe.timer);Safe.timer=null;
+  write(){const P=Safe.plugin();if(!P||!Safe.ready)return;clearTimeout(Safe.timer);Safe.timer=null;
     try{const v=JSON.stringify(S);if(v===Safe.last)return;Safe.last=v;P.localSet({key:Safe.KEY,value:v}).catch(()=>{})}catch(e){}},
-  queue(){if(!Safe.plugin())return;
+  queue(){if(!Safe.plugin()||!Safe.ready)return;
     if(S!==Safe.s){Safe.s=S;Safe.write();return}          // a whole new state (erase, restore, sync): write right away
     clearTimeout(Safe.timer);Safe.timer=setTimeout(Safe.write,1200)},
   async restore(){const P=Safe.plugin();if(!P)return;
-    try{const r=await P.localGet({key:Safe.KEY});if(!r||!r.value)return Safe.write();
-      const got=JSON.parse(r.value);if(!got||typeof got!=="object")return;
+    try{const r=await P.localGet({key:Safe.KEY});Safe.ready=true;if(!r||!r.value)return Safe.write();
+      const got=JSON.parse(r.value);if(!got||typeof got!=="object")return Safe.write();
       // Restore when the device copy is newer OR simply has more progress (the web view may have been wiped and
       // then saved a fresh state before this ran). mergeState keeps the best of both, and a newer "Erase everything" wins.
       const more=(+got.xp||0)>(+S.xp||0)||(got.done||[]).length>(S.done||[]).length;
@@ -24,7 +24,7 @@ const Safe={
       Safe.s=S;renderStats();
       if($("#onb")&&S.onboarded)home();else if(!$("#quit")&&typeof rerender==="function")rerender();
       Safe.write();
-    }catch(e){}}
+    }catch(e){Safe.ready=true}}
 };
 {const _save=save;save=function(){const r=_save.apply(this,arguments);try{Safe.queue()}catch(e){}return r}}
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&Safe.timer)Safe.write()});

@@ -1014,28 +1014,15 @@ h1,h2,h3{letter-spacing:-.012em;text-wrap:balance}
 .tool{border-radius:var(--r);box-shadow:0 4px 0 var(--edge);transition:transform .09s var(--press),box-shadow .09s var(--press);min-height:108px}
 .tool:active{transform:translateY(3px);box-shadow:0 1px 0 var(--edge)}
 
-/* ---------- Home: course grid with language badges ---------- */
-.courses{grid-template-columns:1fr 1fr;gap:12px}
+/* ---------- Home: the original course cards, two to a row (less scrolling) ---------- */
+.courses{grid-template-columns:1fr 1fr;gap:10px}
 @media (max-width:340px){.courses{grid-template-columns:1fr}}
-.course{position:relative;border:2px solid var(--line);border-radius:var(--r);box-shadow:0 4px 0 var(--line);padding:14px 14px 12px;gap:3px;min-width:0;transition:transform .09s var(--press),box-shadow .09s var(--press)}
-.course:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
-.course.live{border:2px solid var(--accent);box-shadow:0 4px 0 var(--edge-acc)}
-.course.kids{border-color:var(--edge-ban);box-shadow:0 4px 0 var(--edge-ban)}
-.course::before{content:"JS";display:grid;place-items:center;width:44px;height:44px;border-radius:13px;margin-bottom:6px;font-family:var(--mono);font-weight:800;font-size:.95rem;letter-spacing:-.02em;background:#F7DF1E;color:#2B2600;box-shadow:inset 0 -3px 0 #0000001f}
-.course[data-c="game"]::before{content:"▶";background:#7C5CFF;color:#fff;font-size:1.1rem}
-.course[data-c="py"]::before{content:"Py";background:#3776AB;color:#FFE873}
-.course[data-c="web"]::before{content:"</>";background:#E8572A;color:#fff;font-size:.85rem}
-.course[data-c="sql"]::before{content:"SQL";background:#0F7F88;color:#fff;font-size:.8rem}
-.course[data-c="cs"]::before{content:"C#";background:#6B2D8C;color:#fff}
-.course[data-c="cpp"]::before{content:"C++";background:#1E5FA8;color:#fff;font-size:.82rem}
-.course[data-c="java"]::before{content:"Jv";background:#D9661C;color:#fff}
-.course[data-c="swift"]::before{content:"Sw";background:#F05138;color:#fff}
-.course[data-c="jr"]::before{content:"Jr";background:#fff;color:#7A4E00}
-.course .pill{position:absolute;top:14px;right:12px;max-width:calc(100% - 76px);overflow:hidden;text-overflow:ellipsis}
-.course h3{font-size:1.15rem;line-height:1.2;margin:0}
-.course .tag{font-size:.76rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.course .meta{font-size:.8rem}
-.course .mini{height:7px;margin-top:6px}
+.course{padding:12px 13px;gap:4px;min-width:0}
+.course h3{font-size:1.12rem;line-height:1.2;margin:0}
+.course .tag{font-size:.74rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.course .meta{font-size:.78rem}
+.course .pill{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.course:active{transform:scale(.98)}
 .continue small{text-transform:none;letter-spacing:0;font-size:.85rem}
 /* returning players: skip the big tagline, start with the monkey's greeting */
 .stack.tm-returning>.hero{display:none}

@@ -69,12 +69,24 @@ async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(); pg = await b.new_page()
         await pg.goto((ROOT / "index.html").as_uri()); await pg.wait_for_timeout(800)
-        res = await pg.evaluate(GEN); await b.close()
+        res = await pg.evaluate(GEN)
+        # other languages (HTML, SQL, C#, C++, Java, Swift): always 3 puzzles, a different set every day, even after 1 lesson
+        other = await pg.evaluate("""()=>{const bad=[];
+          for(const c of COURSES){if(!c.units||c.kids||c.extra||["js","game","py"].includes(c.id))continue;
+            for(const n of [1,3,8]){S.done=flat(c).filter(x=>x.l.steps).slice(0,n).map(x=>x.l.id);S.daily={};const days=[];
+              for(let d=0;d<14;d++){const st=dailyFromLessons(seeded("typemonkey-t"+c.id+n+"-"+d),c);
+                if(st.length!==3)bad.push(c.id+" after "+n+" lesson(s), day "+d+": "+st.length+" puzzle(s), want 3");
+                if(new Set(st.map(x=>x._key)).size!==st.length)bad.push(c.id+" day "+d+": the same puzzle twice in one daily");
+                days.push(st.map(x=>x._key).join(","));S.daily={seen:[...st.map(x=>x._key),...((S.daily||{}).seen||[])].slice(0,24)}}
+              for(let d=1;d<days.length;d++)if(days[d]===days[d-1])bad.push(c.id+" after "+n+" lesson(s): day "+d+" is the same as the day before")}}
+          return bad}""")
+        res["bad"] += other
+        await b.close()
     bad = res["bad"]
     for code, ans in res["py"]:
         got = subprocess.run([sys.executable, "-I", "-c", code], capture_output=True, text=True, timeout=5).stdout.strip()
         if got != ans: bad.append(f"py: answer {ans} but python3 prints {got}\n{code}")
     for x in bad[:20]: print("FAIL", x)
-    print(f"Daily: 360 generated days x (JS, Python, Jr.) checked, {len(res['py'])} Python puzzles vs python3. {len(bad)} problem(s)")
+    print(f"Daily: 360 generated days x (JS, Python, Jr.) + 14 days x 6 other languages checked, {len(res['py'])} Python puzzles vs python3. {len(bad)} problem(s)")
     sys.exit(1 if bad else 0)
 asyncio.run(main())

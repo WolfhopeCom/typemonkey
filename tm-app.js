@@ -1960,16 +1960,34 @@ function dailyCoder(r,c,day=new Date()){
 function dailyOpts(ans,wrong){const A=String(ans),seen=new Set([A]),o=[A];for(const w of wrong){const s=String(w);if(!seen.has(s)&&o.length<4){seen.add(s);o.push(s)}}let k=2;while(o.length<3){const s=String((+A||0)+k++);if(!seen.has(s)){seen.add(s);o.push(s)}}return o}
 function pickLeveled(r,bank,L,n){const pool=bank.filter(([l])=>l===L),lower=bank.filter(([l])=>l<L);const out=[];const src=[...pool];
   while(out.length<n&&(src.length||lower.length)){const from=src.length&&(out.length===0||!lower.length||r()<.7)?src:lower;out.push(from.splice(Math.floor(r()*from.length),1)[0][1])}return out}
-function dailyFromLessons(r,c){  // other languages: puzzles from everything you've learned (newest first), never one from the last week
-  const done=flat(c).filter(x=>x.l.steps&&S.done.includes(x.l.id));const L=done.length?done:flat(c).filter(x=>x.l.steps).slice(0,1);
-  const seen=dailySeen(),recent=L.slice(-10),pools=[];recent.forEach((x,ri)=>(x.l.pool||[]).forEach((p,j)=>pools.push({l:x.l,j,w:ri+1})));
-  const fresh=a=>{const f=a.filter(x=>!seen.has(x.key));return f.length?f:a};
-  pools.forEach(p=>p.key=p.l.id+"#p"+p.j);
+function dailyFromLessons(r,c){  // other languages: 3 puzzles from what you've learned (newest first), none from the last week
+  const all=flat(c).filter(x=>x.l.steps);
+  const done=all.filter(x=>S.done.includes(x.l.id));
+  // Lessons to draw from: the ones you finished, plus (when that's only a few) the next lessons and the rest of unit 1,
+  // so there are always enough different puzzles and the daily never shrinks to one repeated question.
+  let L=done.slice(-12);
+  if(L.length<4){const next=all.filter(x=>!S.done.includes(x.l.id)).slice(0,4-L.length+1),u1=(c.units[0]||{lessons:[]}).lessons.map(l=>all.find(x=>x.l===l)).filter(Boolean);
+    for(const x of [...next,...u1])if(!L.includes(x)&&L.length<6)L.push(x)}
+  if(!L.length)L=all.slice(0,3);
+  const seen=dailySeen(),fresh=a=>{const f=a.filter(x=>!seen.has(x.key));return f.length?f:a};
   const pickW=a=>{const tot=a.reduce((q,x)=>q+x.w,0);let k=r()*tot;for(const x of a){k-=x.w;if(k<=0)return x}return a[a.length-1]};
-  const out=[];let pp=fresh(pools);for(let k=0;k<2&&pp.length;k++){const pk=pickW(pp);pp=pp.filter(x=>x!==pk);const p=pk.l.pool[pk.j];
-    out.push({type:"quiz",q:"What does this print?",code:p[0],opts:[...p[1]],a:0,mono:true,why:`It prints ${p[1][0].includes("\n")?"those lines":p[1][0]}.`,_course:c,_from:pk.l.title,_key:pk.key,_src:{key:pk.key,item:{kind:"pool",lid:pk.l.id,j:pk.j}}})}
-  const codes=[];L.slice(-12).forEach((x,ri)=>x.l.steps.forEach((s,si)=>{if(s.type==="code"&&!s.final&&!s.tests)codes.push({s,l:x.l,key:x.l.id+"#c"+si,w:ri+1})}));
-  if(codes.length){const pk=pickW(fresh(codes));out.push({...pk.s,title:"🎯 Daily code: "+pk.s.title,_course:c,_from:pk.l.title,_key:pk.key})}
+  // practice: "what does this print?" pool items, plus the quiz, fill-in and order steps of those lessons
+  const prac=[];
+  L.forEach((x,ri)=>{const w=ri+1;
+    (x.l.pool||[]).forEach((p,j)=>prac.push({key:x.l.id+"#p"+j,w,l:x.l,make:()=>({type:"quiz",q:"What does this print?",code:p[0],opts:[...p[1]],a:0,mono:true,
+      why:`It prints ${p[1][0].includes("\n")?"those lines":p[1][0]}.`,_src:{key:x.l.id+"#p"+j,item:{kind:"pool",lid:x.l.id,j}}})}));
+    x.l.steps.forEach((st,si)=>{if(["quiz","fill","order"].includes(st.type)&&!st.auto)prac.push({key:x.l.id+"#s"+si,w,l:x.l,make:()=>({...st})})});
+  });
+  const codes=[];L.forEach((x,ri)=>x.l.steps.forEach((st,si)=>{if(st.type==="code"&&!st.final&&!st.tests)codes.push({s:st,l:x.l,key:x.l.id+"#c"+si,w:ri+1})}));
+  const out=[];const useCode=codes.length&&c.runnable;
+  let pp=fresh(prac);
+  for(let k=0;k<(useCode?2:3)&&pp.length;k++){const pk=pickW(pp);pp=pp.filter(x=>x!==pk&&x.l!==pk.l||pp.length<=3&&x!==pk);
+    out.push({...pk.make(),_course:c,_from:pk.l.title,_key:pk.key})}
+  if(useCode){const pk=pickW(fresh(codes));out.push({...pk.s,title:"🎯 Daily code: "+pk.s.title,_course:c,_from:pk.l.title,_key:pk.key})}
+  // still short (a course with very few practice steps): top up with more practice, any lesson
+  if(out.length<3){const more=[...fresh(prac),...prac].filter((x,i,a)=>a.indexOf(x)===i&&!out.some(o=>o._key===x.key));
+    while(out.length<3&&more.length){const pk=more.shift();out.splice(out.length-(useCode?1:0),0,{...pk.make(),_course:c,_from:pk.l.title,_key:pk.key})}}
+  if(out.length<3&&codes.length>1){const pk=codes.find(x=>!out.some(o=>o._key===x.key));if(pk)out.push({...pk.s,title:"🎯 Daily code: "+pk.s.title,_course:c,_from:pk.l.title,_key:pk.key})}
   return out;
 }
 /* --- fresh TypeMonkey Jr. puzzles --- */
@@ -3157,16 +3175,16 @@ function coachStart(kind,s){
    has (for example the web view's storage was wiped), it is merged back in with mergeState() (newest wins, and a
    newer "Erase everything" still wins). Does nothing on the web. */
 const Safe={
-  KEY:"progress",timer:null,last:null,s:null,
+  KEY:"progress",timer:null,last:null,s:null,ready:false,   // ready: the launch check is done (never overwrite the copy before reading it)
   plugin(){try{const C=window.Capacitor,P=C&&C.isNativePlatform&&C.isNativePlatform()&&C.Plugins&&C.Plugins.TMCloud;return P&&P.localSet?P:null}catch(e){return null}},
-  write(){const P=Safe.plugin();if(!P)return;clearTimeout(Safe.timer);Safe.timer=null;
+  write(){const P=Safe.plugin();if(!P||!Safe.ready)return;clearTimeout(Safe.timer);Safe.timer=null;
     try{const v=JSON.stringify(S);if(v===Safe.last)return;Safe.last=v;P.localSet({key:Safe.KEY,value:v}).catch(()=>{})}catch(e){}},
-  queue(){if(!Safe.plugin())return;
+  queue(){if(!Safe.plugin()||!Safe.ready)return;
     if(S!==Safe.s){Safe.s=S;Safe.write();return}          // a whole new state (erase, restore, sync): write right away
     clearTimeout(Safe.timer);Safe.timer=setTimeout(Safe.write,1200)},
   async restore(){const P=Safe.plugin();if(!P)return;
-    try{const r=await P.localGet({key:Safe.KEY});if(!r||!r.value)return Safe.write();
-      const got=JSON.parse(r.value);if(!got||typeof got!=="object")return;
+    try{const r=await P.localGet({key:Safe.KEY});Safe.ready=true;if(!r||!r.value)return Safe.write();
+      const got=JSON.parse(r.value);if(!got||typeof got!=="object")return Safe.write();
       // Restore when the device copy is newer OR simply has more progress (the web view may have been wiped and
       // then saved a fresh state before this ran). mergeState keeps the best of both, and a newer "Erase everything" wins.
       const more=(+got.xp||0)>(+S.xp||0)||(got.done||[]).length>(S.done||[]).length;
@@ -3176,7 +3194,7 @@ const Safe={
       Safe.s=S;renderStats();
       if($("#onb")&&S.onboarded)home();else if(!$("#quit")&&typeof rerender==="function")rerender();
       Safe.write();
-    }catch(e){}}
+    }catch(e){Safe.ready=true}}
 };
 {const _save=save;save=function(){const r=_save.apply(this,arguments);try{Safe.queue()}catch(e){}return r}}
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&Safe.timer)Safe.write()});

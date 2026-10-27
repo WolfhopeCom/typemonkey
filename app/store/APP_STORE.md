@@ -181,7 +181,8 @@ In Xcode: **▶ Run** on your phone to check it, then **Product → Archive → 
 >
 > • Every button, answer and course is now a chunky, tappable block that presses down when you tap it
 > • A clear green or red result bar after every answer
-> • Courses in a neat two-column grid, each with its own language badge
+> • Courses in a neat two-column grid, so you see more at once
+> • Daily challenges for HTML, SQL, C#, C++, Java and Swift now always have 3 fresh puzzles
 > • A cleaner Home that gets you to your next lesson faster
 > • Smooth transitions between screens and livelier progress bars
 > • Lots of small fixes and polish
