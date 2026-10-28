@@ -36,7 +36,8 @@ Also included:
 - **Shop & badges:** spend bananas on outfits for TypeMonkey; earn badges.
 - **Sounds & music:** soft synthesized effects (no audio files): each dance move has its own sound, the monkey goes "nom" on bananas and "bonk" on trees, banana boxes plop higher as they fill. Jr. puzzles play a dance beat or a calm jungle tune. Sounds switch in the top bar and Settings; Music has its own switch in Settings.
 - **Backup code:** Settings → Back up my progress makes a `TM1-` code (or a file) you can paste on another device to restore lessons, bananas and outfits. Codes are checked before anything is replaced.
-- **Progress:** XP, bananas, daily streak and resume-where-you-left-off, saved on the device.
+- **Progress:** XP, bananas, daily streak and resume-where-you-left-off, saved on the device. Output Rush remembers your personal best.
+- **Rating prompt (app only):** after a good moment (new Output Rush best, a perfect daily challenge, a finished course) the app may ask the App Store / Google Play to show its rating sheet. Never in TypeMonkey Jr., never for Jr.-only players, not before 5 lessons and 3 days, at most 3 times, 120+ days apart.
 - **Business model:** Unit 1 of each course is free; a one-time $4.99 unlock opens everything (currently a demo button behind a grown-up check).
 
 Everything runs on the device, including the fonts (bundled Latin subsets of Baloo 2, Nunito and JetBrains Mono, SIL Open Font License; see src/fonts). There are no servers, accounts, API keys, outside services or network requests.
@@ -65,6 +66,7 @@ tests/verify_swift.py          app's Swift runner vs expected outputs
 tests/verify_swift_real.py     app's Swift runner vs a real Swift compiler (set SWIFTC=/path/to/swiftc; skips if unset)
 tests/verify_extras.py         Build Projects and Bug Lab answers vs python3
 tests/verify_daily.py          generated daily challenges (120 days x every level) vs the app runner and python3
+tests/verify_app.py            app behaviour: streak dates, Output Rush timer, backup vs purchase, rating prompt rules, layout
 index.html                     built app (generated)
 ```
 
@@ -79,6 +81,7 @@ python3 tests/verify_course.py    # JavaScript, HTML & CSS, mazes, and structure
 python3 tests/verify_compiled.py  # C++, Python and SQL answers (needs g++, python3, node)
 python3 tests/verify_python_engine.py && python3 tests/verify_sql_engine.py && python3 tests/verify_clike.py
 python3 tests/verify_java.py && python3 tests/verify_swift.py && python3 tests/verify_extras.py && python3 tests/verify_daily.py
+python3 tests/verify_app.py
 SWIFTC=/opt/swiftwasm/swift-wasm-6.0.2-RELEASE/usr/bin/swiftc python3 tests/verify_swift_real.py  # swiftwasm 6.0.2 (Ubuntu 22.04) from GitHub releases
 ```
 

@@ -117,6 +117,14 @@ const platform = window.Capacitor ? window.Capacitor.getPlatform() : "web";   //
 
 The purchase entry point is `unlockFull()` in `src/app.html`: it already runs `grownUpGate()` and then sets `S.pro = true` (demo). In the native app, replace the demo line with the store purchase when `isNative`, and keep the demo (or hide the button) on the web.
 
+## Rating prompt
+
+`@capacitor-community/in-app-review` (in `package.json`) shows Apple's / Google's own rating sheet. `askForReview()` in
+`src/app.html` calls `window.Capacitor.Plugins.InAppReview.requestReview()` only after a good moment and only when
+`reviewAllowed()` says so (see the rules there). Apple decides whether the sheet really appears (at most 3 times a
+year). In a debug build run from Xcode it always appears; in TestFlight it never does. On the web it does nothing.
+After `npm install`, run `python3 build_app.py` so `npx cap sync` adds the plugin to the iOS and Android projects.
+
 ## Next step: the $4.99 "unlock everything" purchase
 
 **Store setup**
