@@ -638,7 +638,7 @@ function home(){
   const inC=js===COURSES[0]?"":` in ${js.name}`;
   const nextPro=!nu&&flat(js).find(x=>x.l.steps&&status(js,x)==="pro");
   const greet=resume?`Welcome back! You were in the middle of ${Q(nu.l.title)}`:
-    nextPro?`You finished every free JavaScript lesson! Unlock the full course to keep going with ${Q(nextPro.l.title)}`:
+    nextPro?`You finished every free ${esc(js.name)} lesson! Unlock the full course to keep going with ${Q(nextPro.l.title)}`:
     S.done.length?(nu?`Nice to see you! Next up${inC}: ${Q(nu.l.title)} Tap the big orange button to keep going.`:"You've finished JavaScript! Try Java, C# or C++ next, or build something in the Playground."):"Hey! I'm TypeMonkey, your coding buddy. Tap the big orange button to write your first line of code. I'll help you every step of the way!";
   $("#screen").innerHTML=`<div class="stack">
     <section class="hero"><h1>Learn to code, one banana at a time.</h1><p>Bite-size lessons, real code you run yourself, quizzes and mini-games. Built for all ages and experience levels.</p></section>
@@ -649,7 +649,7 @@ function home(){
     <div class="courses">${COURSES.filter(c=>!c.extra).map(c=>{
       if(c.soon)return `<button class="course locked" data-c="${c.id}"><span class="pill ${c.kids?"kid":""}">${c.kids?"Kids section":"Coming soon"}</span><h3>${c.name}</h3><span class="tag">${esc(c.tag)}</span></button>`;
       const [d,n,all]=countLessons(c);
-      return `<button class="course ${c.id==="js"?"live":""} ${c.kids?"kids":""}" data-c="${c.id}"><span class="pill ${d===n&&n===all?"ok":c.kids&&!d?"kid":"go"}">${d===n&&n===all?"Complete":d?"In progress":c.id==="js"?"Start here":c.kids?"Kids section":"New"}</span>
+      return `<button class="course ${c.id===js.id?"live":""} ${c.kids?"kids":""}" data-c="${c.id}"><span class="pill ${d===n&&n===all?"ok":c.kids&&!d?"kid":"go"}">${d===n&&n===all?"Complete":d?"In progress":c.id===js.id&&!S.done.length?"Start here":c.id===js.id?"Up next":c.kids?"Kids section":"New"}</span>
         <h3>${c.name}</h3><span class="tag">${esc(c.tag)}</span><span class="meta">${c.units.length} units · ${n} lessons${all>n?" (more coming)":""}</span>
         <div class="mini"><span style="width:${n?d/n*100:0}%"></span></div></button>`}).join("")}</div>
     ${S.pro?`<div class="unlocked">✓ Full version unlocked. Thanks for supporting TypeMonkey!</div>`:`<div class="paywall"><div><h3>Unlock the full version</h3><p>All ${COURSES.reduce((n,c)=>n+countLessons(c)[1],0)} lessons in all ${COURSES.filter(c=>!c.extra).length} courses, every Build Project and Bug Lab level, and everything we add later. One-time purchase, no subscription.</p></div><button class="btn banana" id="homebuy">Unlock · ${STORE.price}</button></div>`}
