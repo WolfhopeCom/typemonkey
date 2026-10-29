@@ -1759,11 +1759,11 @@ function showBadge(){
 function badgesPage(){SFX.stopMusic();
   const back=rerender===badgesPage?home:rerender;rerender=badgesPage;setMode(false);
   const list=badgeList();const got=list.filter(b=>S.badges[b.id]).length;
-  $("#screen").innerHTML=`<div class="stack"><div class="row"><button class="btn ghost sm" id="back">← Back</button></div>
+  $("#screen").innerHTML=`<div class="stack"><div class="row"><button class="btn ghost sm" id="back">← Home</button></div>
     <section class="hero"><div class="label">Badges</div><h1>${got} of ${list.length} earned</h1><p>Every badge comes with bonus bananas. Some are easy, some are legendary.</p></section>
     <div class="progress"><span style="width:${got/list.length*100}%"></span></div>
     <div class="badgegrid">${list.map(b=>{const on=S.badges[b.id];return `<div class="badge ${on?"on":""}"><div class="bicon">${on?b.icon:"🔒"}</div><b>${b.name}</b><span>${b.desc}</span><span class="pill ${on?"ok":"kid"}">${on?new Date(on).toLocaleDateString():`+${b.reward} 🍌`}</span></div>`}).join("")}</div></div>`;
-  $("#back").onclick=()=>back();foot();window.scrollTo(0,0);
+  $("#back").onclick=home;foot();window.scrollTo(0,0);
 }
 
 /* ---------- Smarter review: missed questions come back on a spaced schedule ---------- */
@@ -2113,7 +2113,7 @@ function settingsPage(){SFX.stopMusic();
   const st=S.settings;
   const seg=(id,val,opts)=>`<div class="seg" role="radiogroup" id="${id}">${opts.map(([v,l])=>`<button role="radio" aria-checked="${val===v}" data-v="${v}">${l}</button>`).join("")}</div>`;
   $("#screen").innerHTML=`<div class="stack setpage">
-    <div class="sethead"><button class="btn ghost sm" id="back">← Back</button><h1>Settings</h1></div>
+    <div class="sethead"><button class="btn ghost sm" id="back">← Home</button><h1>Settings</h1></div>
     <div class="card setlist">
       <div class="setrow"><b>Theme</b>${seg("theme",st.theme,[["system","Auto"],["light","Light"],["dark","Dark"]])}</div>
       <div class="setrow"><b>Text size</b>${seg("text",st.text,[["normal","Normal"],["large","Large"]])}</div>
@@ -2131,7 +2131,7 @@ function settingsPage(){SFX.stopMusic();
     <div class="setfoot"><button class="linkbtn" id="sterms">Terms</button><button class="linkbtn" id="sprivacy">Privacy</button><span>Version ${APP_VERSION}</span>
       <span class="credits">No personal data collected. Python by Brython (BSD). Fonts: Baloo 2, Nunito, JetBrains Mono (OFL).</span></div>
   </div>`;
-  $("#back").onclick=()=>back();
+  $("#back").onclick=home;
   const bindSeg=(id,fn)=>$$(`#${id} button`).forEach(b=>b.onclick=()=>{fn(b.dataset.v);save();applySettings();settingsPage()});
   bindSeg("theme",v=>st.theme=v);bindSeg("text",v=>st.text=v);bindSeg("calm",v=>st.calm=v==="on");bindSeg("sound",v=>{st.sound=v==="on";if(st.sound)setTimeout(()=>sfx("correct"),40);else SFX.stopMusic(true)});bindSeg("music",v=>{st.music=v==="on";if(!st.music)SFX.stopMusic(true)});
   bindSeg("cloud",v=>{st.cloud=v==="on";if(st.cloud)setTimeout(async()=>{await Cloud.pull();Cloud.queue(300)},50)});
@@ -2943,7 +2943,7 @@ function decorateMap(c){
     const nextGift=Object.keys(GIFTS).map(Number).find(L=>L>I.lvl);
     const tile=(icon,val,lab,cls="")=>`<div class="ptile ${cls}"><span class="pt-ic" aria-hidden="true">${icon}</span><b>${val}</b><span>${lab}</span></div>`;
     $("#screen").innerHTML=`<div class="stack prof">
-      <div class="row prof-top"><button class="btn ghost sm" id="back">← Back</button><span class="label">Your profile</span></div>
+      <div class="row prof-top"><button class="btn ghost sm" id="back">← Home</button><span class="label">Your profile</span></div>
       <section class="card prof-hero">
         <div class="prof-stage" style="--ms:${size}px"><div class="rays" aria-hidden="true"></div>${withPet("happy")}</div>
         <div class="prof-id">
@@ -2971,7 +2971,7 @@ function decorateMap(c){
       </div>
       <div class="pbtns"><button class="tool" id="pshop"><b>🛍️ Shop</b><span>Outfits for TypeMonkey</span></button><button class="tool" id="pbadges"><b>🏆 Badges</b><span>${got} of ${list.length} earned</span></button></div>
     </div>`;
-    $("#back").onclick=()=>back();$("#pshop").onclick=()=>shop();$("#pbadges").onclick=badgesPage;
+    $("#back").onclick=home;$("#pshop").onclick=()=>shop();$("#pbadges").onclick=badgesPage;
     $$(".pcourse").forEach(b=>b.onclick=()=>coursePage(b.dataset.c));
     try{foot()}catch(e){}window.scrollTo(0,0);
     (window.tmProfileHooks||[]).forEach(f=>{try{f()}catch(e){console.warn(e)}});   // later modules add to the profile here

@@ -149,7 +149,7 @@
     const nextGift=Object.keys(GIFTS).map(Number).find(L=>L>I.lvl);
     const tile=(icon,val,lab,cls="")=>`<div class="ptile ${cls}"><span class="pt-ic" aria-hidden="true">${icon}</span><b>${val}</b><span>${lab}</span></div>`;
     $("#screen").innerHTML=`<div class="stack prof">
-      <div class="row prof-top"><button class="btn ghost sm" id="back">← Back</button><span class="label">Your profile</span></div>
+      <div class="row prof-top"><button class="btn ghost sm" id="back">← Home</button><span class="label">Your profile</span></div>
       <section class="card prof-hero">
         <div class="prof-stage" style="--ms:${size}px"><div class="rays" aria-hidden="true"></div>${withPet("happy")}</div>
         <div class="prof-id">
@@ -177,7 +177,7 @@
       </div>
       <div class="pbtns"><button class="tool" id="pshop"><b>🛍️ Shop</b><span>Outfits for TypeMonkey</span></button><button class="tool" id="pbadges"><b>🏆 Badges</b><span>${got} of ${list.length} earned</span></button></div>
     </div>`;
-    $("#back").onclick=()=>back();$("#pshop").onclick=()=>shop();$("#pbadges").onclick=badgesPage;
+    $("#back").onclick=home;$("#pshop").onclick=()=>shop();$("#pbadges").onclick=badgesPage;
     $$(".pcourse").forEach(b=>b.onclick=()=>coursePage(b.dataset.c));
     try{foot()}catch(e){}window.scrollTo(0,0);
     (window.tmProfileHooks||[]).forEach(f=>{try{f()}catch(e){console.warn(e)}});   // later modules add to the profile here
