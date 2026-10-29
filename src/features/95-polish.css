@@ -69,7 +69,7 @@ h1,h2,h3{letter-spacing:-.012em;text-wrap:balance}
 .course:active{transform:scale(.98)}
 .continue small{text-transform:none;letter-spacing:0;font-size:.85rem}
 /* returning players: skip the big tagline, start with the monkey's greeting */
-.stack.tm-returning>.hero{display:none}
+.stack.tm-returning .hero{display:none}
 
 /* ---------- progress bars with a little shine ---------- */
 .lessonbar .progress{height:14px}

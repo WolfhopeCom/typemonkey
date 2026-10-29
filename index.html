@@ -1025,7 +1025,7 @@ h1,h2,h3{letter-spacing:-.012em;text-wrap:balance}
 .course:active{transform:scale(.98)}
 .continue small{text-transform:none;letter-spacing:0;font-size:.85rem}
 /* returning players: skip the big tagline, start with the monkey's greeting */
-.stack.tm-returning>.hero{display:none}
+.stack.tm-returning .hero{display:none}
 
 /* ---------- progress bars with a little shine ---------- */
 .lessonbar .progress{height:14px}
@@ -1059,6 +1059,38 @@ h1,h2,h3{letter-spacing:-.012em;text-wrap:balance}
 .lines.pick .ln{background:var(--surface);border:2px solid var(--line);border-radius:12px;box-shadow:0 3px 0 var(--line);transition:transform .09s var(--press),box-shadow .09s var(--press)}
 .lines.pick .ln:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
 .lines:not(.pick) .ln{border-radius:10px}
+
+/* ===== 97-ipad: TypeMonkey on iPad (and any wide screen) =====
+   Phones are untouched. From iPad-mini width up: a bit larger type and targets, courses three across, the four
+   practice tools in a row, lessons at a comfortable reading width, bigger Jr. games. In landscape (1024px+), Home
+   splits into "your day" on the left and "your courses" on the right (see 97-ipad.js). */
+@media (min-width:744px){
+  html{font-size:17px}
+  body{font-size:1rem}
+  .app{max-width:980px;padding-inline:28px}
+  .courses{grid-template-columns:repeat(3,1fr);gap:14px}
+  .tools{grid-template-columns:repeat(4,1fr)}
+  .tools .tool:last-child:nth-child(odd){grid-column:auto}
+  .buddy .tm{width:104px;height:104px}
+  /* lessons and Jr. games: readable width, centered */
+  #screen:has(.lessonbar)>*{width:100%;max-width:800px;margin-inline:auto}
+  .maze{width:min(100%,calc(var(--w) * 130px))}
+  .mc{font-size:clamp(1.6rem,3.6vw,2.6rem)}
+  .stage{height:300px}
+  .dancer{width:176px;height:176px;margin-left:-88px}
+  .stage .shadow{width:110px;margin-left:-55px}
+  .shopgrid{grid-template-columns:repeat(4,1fr)}
+  .badges{grid-template-columns:repeat(3,1fr)}
+}
+@media (min-width:1024px){
+  html{font-size:18px}
+  .app{max-width:1200px;padding-inline:36px}
+  .tm-split{display:grid;grid-template-columns:minmax(360px,420px) minmax(0,1fr);gap:28px;align-items:start}
+  .tm-split>.tm-col{display:flex;flex-direction:column;gap:16px;min-width:0}
+  .tm-split .tools{grid-template-columns:repeat(2,1fr)}
+  .tm-split .courses{grid-template-columns:repeat(3,1fr)}
+}
+@media (min-width:744px){.courses .course.kids{grid-column:1/-1}}
 
 </style>
 </head>

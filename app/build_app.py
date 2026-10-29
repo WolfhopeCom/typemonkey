@@ -74,28 +74,27 @@ def patch_podfile():
     """Newer Xcode versions turn Capacitor's 'double-quoted include in framework header' warnings into errors and
     reject iOS 14 targets. Raise the minimum to iOS 15 and silence that one check for the Pods."""
     pod = IOS / "App" / "Podfile"
-    if not pod.exists():
-        return
-    s = pod.read_text()
-    new = s.replace("platform :ios, '14.0'", "platform :ios, '15.0'")
-    if "quoted-include" not in new and "assertDeploymentTarget(installer)" in new:
-        new = new.replace("assertDeploymentTarget(installer)", "assertDeploymentTarget(installer)" + PODFILE_FIX, 1)
-    if new != s:
-        pod.write_text(new)
-        print("patched ios/App/Podfile (iOS 15 minimum, quoted-include check off)")
+    if pod.exists():
+        s = pod.read_text()
+        new = s.replace("platform :ios, '14.0'", "platform :ios, '15.0'")
+        if "quoted-include" not in new and "assertDeploymentTarget(installer)" in new:
+            new = new.replace("assertDeploymentTarget(installer)", "assertDeploymentTarget(installer)" + PODFILE_FIX, 1)
+        if new != s:
+            pod.write_text(new)
+            print("patched ios/App/Podfile (iOS 15 minimum, quoted-include check off)")
     proj = IOS / "App" / "App.xcodeproj" / "project.pbxproj"
     if proj.exists():
         p = proj.read_text()
         q = p.replace("IPHONEOS_DEPLOYMENT_TARGET = 14.0;", "IPHONEOS_DEPLOYMENT_TARGET = 15.0;")
         # Xcode's user-script sandbox blocks CocoaPods' "[CP] Embed Pods Frameworks" step (PhaseScriptExecution failed)
         q = q.replace("ENABLE_USER_SCRIPT_SANDBOXING = YES;", "ENABLE_USER_SCRIPT_SANDBOXING = NO;")
-        # Version 1 is iPhone only (iPads can still run it in iPhone mode): fewer screenshots and checks for review
-        q = q.replace('TARGETED_DEVICE_FAMILY = "1,2";', "TARGETED_DEVICE_FAMILY = 1;")
+        # iPhone and iPad (a real iPad layout since 1.1, not the iPhone app blown up)
+        q = q.replace("TARGETED_DEVICE_FAMILY = 1;", 'TARGETED_DEVICE_FAMILY = "1,2";')
         if "ENABLE_USER_SCRIPT_SANDBOXING" not in q:
             q = q.replace("IPHONEOS_DEPLOYMENT_TARGET = 15.0;", "IPHONEOS_DEPLOYMENT_TARGET = 15.0;\n\t\t\t\tENABLE_USER_SCRIPT_SANDBOXING = NO;")
         if q != p:
             proj.write_text(q)
-            print("set the App target's iOS Deployment Target to 15.0")
+            print("updated the App target settings (iOS 15 minimum, iPhone + iPad)")
 
 
 AUDIO_MARK = "// TypeMonkey: let the app's sounds play even when the iPhone's silent switch is on,"

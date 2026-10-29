@@ -171,14 +171,17 @@ python3 build_app.py --set-version 1.1 --build 4
 python3 build_app.py
 npx cap open ios
 ```
-In Xcode: **▶ Run** on your phone to check it, then **Product → Archive → Distribute App → Upload**.
+In Xcode: check **General → Supported Destinations** lists **iPhone** and **iPad** (the build script sets this), **▶ Run** on your phone (and an iPad or iPad simulator) to check it, then **Product → Archive → Distribute App → Upload**.
+
+1.1 is a real iPad app (no longer the iPhone app scaled up), so the **iPad screenshots matter**: use the new ones in `screenshots/ipad/`.
 
 **App Store Connect:** on the app page, click **+** next to iOS App, type **1.1**, pick build 1.1 (4), paste the text below into
 **What's New in This Version**, replace the screenshots with the new ones, then **Add for Review → Submit**.
 
 **What's New in This Version:**
-> A fresh new look for TypeMonkey!
+> A fresh new look for TypeMonkey, and a real iPad app!
 >
+> • Made for iPad: bigger text and buttons, your courses three across, and in landscape your day on the left and all your courses on the right
 > • Every button, answer and course is now a chunky, tappable block that presses down when you tap it
 > • A clear green or red result bar after every answer
 > • Courses in a neat two-column grid, so you see more at once
